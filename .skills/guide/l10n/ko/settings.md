@@ -1,4 +1,4 @@
-<!-- source: 22ccab00249b -->
+<!-- source: d1aad52ded7c -->
 # Social: Settings
 
 설정은 캐릭터가 얼마나, 언제 글을 쓸지, 어떤 모델을 쓸지, 무엇을 알려 줄지를 결정합니다. 위쪽의 이름 옆 톱니바퀴로 엽니다(휴대폰에서는 아래쪽 "More" 탭). 설정은 Molfar Vertep의 기본 설정이 아니라 Social 안에 있습니다.
@@ -15,7 +15,7 @@
 
 ## Models
 
-Messenger, Forum, 프로필 가져오기에 쓸 모델을 고르세요. "Engine default"는 Molfar Vertep이 어디서나 쓰는 모델을 사용합니다. 다른 선택지는 Molfar Vertep에서 켜 둔 모델입니다. 더 이상 켜져 있지 않은 모델도 이름으로 표시됩니다.
+Messenger, Forum, 프로필 가져오기에 쓸 모델을 고르세요. "Engine default"는 Molfar Vertep이 어디서나 쓰는 모델을 사용합니다. 다른 선택지는 Molfar Vertep에서 켜 둔 모델입니다. 더 이상 켜져 있지 않은 모델도 이름으로 표시됩니다. 프로필 하나는 대신 자체 모델을 쓸 수 있습니다. Profiles의 Model 탭을 참고하세요.
 
 ## Notifications
 
@@ -23,4 +23,4 @@ Social 탭의 카운터, 시스템 알림, 소리입니다. 각각 고유한 스
 
 ## Roleplay access
 
-Social은 프로필을 가져오거나 업데이트할 때에만 Roleplay 카드와 페르소나를 읽으며, 그것도 허용한 뒤에만 읽습니다. 허용은 여기가 아니라 홈에서 합니다. Social의 세부 정보를 열고 "다른 앱에 대한 접근" 아래를 보세요(Social을 처음 열 때도 Molfar Vertep이 묻습니다). 여기의 상태는 읽기가 지금 되는지 보여 줍니다. "Reading cards allowed" 또는 "Reading cards off"입니다. 이 카드에는 버튼이 없습니다. 권한은 사용자만 바꿀 수 있고, Social은 스스로 바꿀 수 없기 때문입니다. 꺼져 있다면 가져오기 대화 상자가 어디서 허용하는지 알려 줍니다.
+Social은 프로필을 가져오거나 업데이트할 때에만 Roleplay 카드를 읽고, Roleplay 페르소나는 Your profile에 가져올 때에만 읽습니다([[you]] 참고). 둘 다 허용한 뒤에만 읽습니다. 허용은 여기가 아니라 홈에서 합니다. Social의 세부 정보를 열고 "Access to other apps" 아래를 보세요(Social을 처음 열 때도 Molfar Vertep이 묻습니다). 여기의 상태는 읽기가 지금 되는지 보여 줍니다. "Reading cards allowed" 또는 "Reading cards off"입니다. 이 카드에는 버튼이 없습니다. 권한은 사용자만 바꿀 수 있고, Social은 스스로 바꿀 수 없기 때문입니다. 꺼져 있다면 가져오기 대화 상자가 어디서 허용하는지 알려 줍니다.

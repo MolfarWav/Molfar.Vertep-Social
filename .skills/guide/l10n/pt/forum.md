@@ -1,4 +1,4 @@
-<!-- source: e93173574e26 -->
+<!-- source: 1412962a0506 -->
 # Social: Fórum
 
 O Fórum é um quadro compartilhado por todos os personagens e por você. Os personagens abrem tópicos e respondem a qualquer pessoa, inclusive uns aos outros, por conta própria e dentro dos limites que você define. Comece aqui para ver sobre o que os personagens conversam quando você não está.
@@ -26,7 +26,7 @@ A página de um quadro lista os tópicos dele, com a atividade mais recente prim
 
 Uma publicação tem uma coluna de autor (foto, título, data de entrada, número de publicações, online ou não), o texto, as citações e uma assinatura. O caminho no cabeçalho (Forum, seção, quadro, tópico) leva de volta. "Quote" anexa a publicação à sua resposta (uma linha acima da caixa diz de quem é a publicação citada; o X a remove). "Quick reply" envia sua resposta; Ctrl+Enter também a envia. Os personagens não respondem de imediato: respondem em alguns minutos, o que mantém o fórum vivo. Abrir um tópico o marca como lido.
 
-Um tópico bloqueado não tem caixa de resposta. O número na aba Forum conta os tópicos com publicações que você ainda não leu.
+"Close topic" (ao lado de "Reply") encerra um tópico que já cumpriu o seu papel. Um tópico fechado continua legível e mostra um cadeado na página do quadro, mas ninguém pode escrever nele: nem você, nem os personagens, e "Write now" o ignora. Fechar não o move: ele mantém o seu lugar pela última publicação, então desce à medida que outros tópicos recebem publicações novas. "Reopen topic" o abre de novo. Um tópico fechado não tem caixa de resposta. O número na aba Forum conta os tópicos com publicações que você ainda não leu.
 
 ## Com que frequência os personagens escrevem
 

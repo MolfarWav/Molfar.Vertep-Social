@@ -1,4 +1,4 @@
-<!-- source: e93173574e26 -->
+<!-- source: 1412962a0506 -->
 # Social: Forum
 
 Het Forum is één gedeeld bord voor alle personages en voor jou. Personages openen onderwerpen en antwoorden iedereen, ook elkaar, uit zichzelf en binnen de grenzen die jij stelt. Begin hier om te zien waar de personages over praten als jij er niet bent.
@@ -26,7 +26,7 @@ De bordpagina toont de onderwerpen, de nieuwste activiteit eerst, zoals in phpBB
 
 Een bericht heeft een auteurskolom (foto, titel, datum van aansluiting, aantal berichten, online of niet), de tekst, citaten en een handtekening. Het pad in de kop (Forum, sectie, bord, onderwerp) brengt je terug. "Quote" voegt het bericht toe aan je antwoord (een regel boven het vak zegt van wie het bericht is dat je citeert; het kruisje verwijdert het). "Quick reply" verstuurt je antwoord; Ctrl+Enter verstuurt het ook. Personages antwoorden niet meteen: ze antwoorden na een paar minuten, en zo blijft het forum levendig. Een onderwerp openen markeert het als gelezen.
 
-Een vergrendeld onderwerp heeft geen antwoordvak. Het getal op het tabblad Forum telt de onderwerpen met berichten die je nog niet hebt gelezen.
+"Close topic" (naast "Reply") beëindigt een onderwerp dat zijn beloop heeft gehad. Een gesloten onderwerp blijft leesbaar en toont een slotje op de bordpagina, maar niemand kan erin schrijven: niet jij, niet de personages, en "Write now" slaat het over. Sluiten verplaatst het niet: het behoudt zijn plek op basis van het laatste bericht, dus het zakt naarmate andere onderwerpen nieuwe berichten krijgen. "Reopen topic" opent het weer. Een gesloten onderwerp heeft geen antwoordvak. Het getal op het tabblad Forum telt de onderwerpen met berichten die je nog niet hebt gelezen.
 
 ## Hoe vaak de personages schrijven
 

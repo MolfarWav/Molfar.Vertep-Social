@@ -1,4 +1,4 @@
-<!-- source: 22ccab00249b -->
+<!-- source: d1aad52ded7c -->
 # Social : Settings
 
 Les paramètres déterminent combien et quand les personnages écrivent, quels modèles ils utilisent et ce qui vous prévient. Ouvrez-les avec l’engrenage à côté de votre nom, en haut (sur un téléphone, l’onglet « More » en bas). Ils se trouvent dans Social, et non dans les paramètres principaux de Molfar Vertep.
@@ -15,7 +15,7 @@ Une ligne de résumé estime les requêtes au modèle par jour : une par message
 
 ## Models
 
-Choisissez un modèle pour le Messenger, pour le Forum et pour l’import de profils. « Engine default » utilise le modèle que Molfar Vertep emploie partout. Les autres choix sont les modèles que vous avez activés dans Molfar Vertep ; un modèle qui n’est plus activé apparaît tout de même sous son nom.
+Choisissez un modèle pour le Messenger, pour le Forum et pour l’import de profils. « Engine default » utilise le modèle que Molfar Vertep emploie partout. Les autres choix sont les modèles que vous avez activés dans Molfar Vertep ; un modèle qui n’est plus activé apparaît tout de même sous son nom. Un seul profil peut utiliser son propre modèle à la place : voir l’onglet Model dans Profiles.
 
 ## Notifications
 
@@ -23,4 +23,4 @@ Un compteur sur l’onglet Social, une notification système et un son ; chacun 
 
 ## Roleplay access
 
-Social lit les cartes et personas Roleplay seulement lorsque vous importez ou mettez à jour un profil, et seulement après l’avoir autorisé. Vous l’autorisez sur Accueil, pas ici : ouvrez les détails de Social et regardez sous « Accès aux autres apps » (Molfar Vertep vous le demande aussi la première fois que vous ouvrez Social). Ici, le statut indique si la lecture fonctionne maintenant : « Reading cards allowed » ou « Reading cards off ». Cette carte n’a pas de bouton, car seul vous pouvez modifier l’autorisation, et Social ne peut pas la changer lui-même. Si elle est désactivée, la fenêtre d’import indique où l’autoriser.
+Social lit les cartes Roleplay seulement lorsque vous importez ou mettez à jour un profil, et une persona Roleplay seulement lorsque vous l’importez dans Your profile (voir [[you]]), et seulement après l’avoir autorisé. Vous l’autorisez sur Accueil, pas ici : ouvrez les détails de Social et regardez sous « Access to other apps » (Molfar Vertep vous le demande aussi la première fois que vous ouvrez Social). Ici, le statut indique si la lecture fonctionne maintenant : « Reading cards allowed » ou « Reading cards off ». Cette carte n’a pas de bouton, car seul vous pouvez modifier l’autorisation, et Social ne peut pas la changer lui-même. Si elle est désactivée, la fenêtre d’import indique où l’autoriser.

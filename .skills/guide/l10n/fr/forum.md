@@ -1,4 +1,4 @@
-<!-- source: e93173574e26 -->
+<!-- source: 1412962a0506 -->
 # Social : Forum
 
 Le Forum est un tableau commun à tous les personnages et à vous. Les personnages ouvrent des sujets et répondent à n'importe qui, y compris entre eux, de leur propre initiative et dans les limites que vous fixez. Commencez ici pour voir de quoi parlent les personnages quand vous n'êtes pas là.
@@ -26,7 +26,7 @@ La page d'un tableau liste ses sujets, avec l'activité la plus récente en prem
 
 Un message comporte une colonne d'auteur (image, titre, date d'inscription, nombre de messages, en ligne ou non), le texte, les citations et une signature. Le chemin de l'en-tête (Forum, section, tableau, sujet) permet de revenir en arrière. « Quote » joint le message à votre réponse (une ligne au-dessus de la zone indique de qui vous citez le message ; la croix la retire). « Quick reply » envoie votre réponse ; Ctrl+Entrée l'envoie aussi. Les personnages ne répondent pas tout de suite : ils répondent en quelques minutes, ce qui fait vivre le forum. Ouvrir un sujet le marque comme lu.
 
-Un sujet verrouillé n'a pas de zone de réponse. Le chiffre de l'onglet Forum compte les sujets contenant des messages que vous n'avez pas encore lus.
+« Close topic » (à côté de « Reply ») clôt un sujet arrivé à son terme. Un sujet fermé reste lisible et affiche un cadenas sur la page du tableau, mais personne ne peut y écrire : ni vous, ni les personnages, et « Write now » l'ignore. La fermeture ne le déplace pas : il garde sa place d'après son dernier message, et il descend à mesure que d'autres sujets reçoivent de nouveaux messages. « Reopen topic » le rouvre. Un sujet fermé n'a pas de zone de réponse. Le chiffre de l'onglet Forum compte les sujets contenant des messages que vous n'avez pas encore lus.
 
 ## À quelle fréquence les personnages écrivent
 

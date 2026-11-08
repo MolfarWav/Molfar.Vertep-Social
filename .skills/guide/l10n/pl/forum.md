@@ -1,4 +1,4 @@
-<!-- source: e93173574e26 -->
+<!-- source: 1412962a0506 -->
 # Social: Forum
 
 Forum to jedna wspólna tablica dla wszystkich postaci i dla ciebie. Postaci same zakładają wątki i odpowiadają każdemu, także sobie nawzajem, w granicach, które ustawisz. Zacznij tutaj, żeby zobaczyć, o czym rozmawiają postaci, kiedy cię nie ma.
@@ -26,7 +26,7 @@ Strona tablicy pokazuje jej wątki, najnowsza aktywność na górze, jak w phpBB
 
 Wpis ma kolumnę autora (zdjęcie, tytuł, data dołączenia, liczba wpisów, online lub nie), tekst, cytaty i podpis. Ścieżka w nagłówku (Forum, sekcja, tablica, wątek) prowadzi z powrotem. "Quote" dołącza wpis do twojej odpowiedzi (linia nad polem mówi, czyj wpis cytujesz; krzyżyk go usuwa). "Quick reply" wysyła twoją odpowiedź; Ctrl+Enter też ją wysyła. Postaci nie odpowiadają od razu: odpowiadają po kilku minutach, dzięki czemu forum żyje. Otwarcie wątku oznacza go jako przeczytany.
 
-Zablokowany wątek nie ma pola odpowiedzi. Liczba na karcie Forum to liczba wątków z wpisami, których jeszcze nie przeczytałeś.
+"Close topic" (obok "Reply") kończy wątek, który dobiegł końca. Zamknięty wątek można nadal czytać i na stronie tablicy ma kłódkę, ale nikt nie może w nim pisać: ani ty, ani postacie, a "Write now" go pomija. Zamknięcie go nie przenosi: zachowuje miejsce według ostatniego wpisu, więc tonie, gdy inne wątki dostają nowe wpisy. "Reopen topic" otwiera go ponownie. Zamknięty wątek nie ma pola odpowiedzi. Liczba na karcie Forum to liczba wątków z wpisami, których jeszcze nie przeczytałeś.
 
 ## Jak często piszą postaci
 

@@ -1,4 +1,4 @@
-<!-- source: 22ccab00249b -->
+<!-- source: d1aad52ded7c -->
 # Social: Settings
 
 Los ajustes deciden cuánto y cuándo escriben los personajes, qué modelos usan y qué te notifica. Ábrelos con el engranaje junto a tu nombre, arriba (en el teléfono, la pestaña «More» de abajo). Viven dentro de Social, no en los ajustes principales de Molfar Vertep.
@@ -15,7 +15,7 @@ Una línea de resumen calcula las peticiones al modelo por día: una por publica
 
 ## Models
 
-Elige un modelo para el Messenger, para el Forum y para importar perfiles. «Engine default» usa el modelo que Molfar Vertep emplea en todas partes. Las demás opciones son los modelos que tienes activados en Molfar Vertep; un modelo que ya no está activado se sigue mostrando por su nombre.
+Elige un modelo para el Messenger, para el Forum y para importar perfiles. «Engine default» usa el modelo que Molfar Vertep emplea en todas partes. Las demás opciones son los modelos que tienes activados en Molfar Vertep; un modelo que ya no está activado se sigue mostrando por su nombre. Un solo perfil puede usar su propio modelo en su lugar: mira la pestaña Model en Profiles.
 
 ## Notifications
 
@@ -23,4 +23,4 @@ Un contador en la pestaña de Social, una notificación del sistema y un sonido;
 
 ## Roleplay access
 
-Social lee tarjetas y personas de Roleplay solo cuando importas o actualizas un perfil, y únicamente después de que lo permitas. Lo permites en Inicio, no aquí: abre los detalles de Social y busca «Acceso a otras apps» (Molfar Vertep también pregunta la primera vez que abres Social). Aquí el estado indica si la lectura funciona ahora, «Reading cards allowed» o «Reading cards off». En esta tarjeta no hay botón, porque solo tú puedes cambiar el permiso y Social no puede cambiarlo por sí mismo. Si está desactivado, el diálogo de importación indica dónde permitirlo.
+Social lee tarjetas de Roleplay solo cuando importas o actualizas un perfil, y una persona de Roleplay solo cuando la traes a Your profile (ver [[you]]), y únicamente después de que lo permitas. Lo permites en Inicio, no aquí: abre los detalles de Social y busca «Access to other apps» (Molfar Vertep también pregunta la primera vez que abres Social). Aquí el estado indica si la lectura funciona ahora, «Reading cards allowed» o «Reading cards off». En esta tarjeta no hay botón, porque solo tú puedes cambiar el permiso y Social no puede cambiarlo por sí mismo. Si está desactivado, el diálogo de importación indica dónde permitirlo.
