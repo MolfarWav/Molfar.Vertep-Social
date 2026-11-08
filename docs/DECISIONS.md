@@ -27,6 +27,11 @@ MolfarWav/Molfar.Vertep#309; follow-up work: MolfarWav/Molfar.Vertep#310. Read `
 - The hint under "Autonomous posts" follows the switch (On / Off text).
 - No memory bridge with Roleplay in v1. One shared forum. Separate models for messenger, forum and import.
 - Roleplay is read only after the user grants it (engine work, issue #310).
+- Characters need a life outside talking to the user (artificial life): their own topics for first messages and forum
+  threads. A second improvement after the first runnable Social, issue MolfarWav/Molfar.Vertep#311 (owner, 2026-11-08).
+  The messenger and forum plugins keep a place for it: first messages and new topics take their subject from one source
+  that can later be the life diary.
+- Quality and correctness over speed: the owner accepts that work moves to another account when tokens run out.
 
 ## State (end of the UI build)
 - PR #1 on `MolfarWav/Molfar.Vertep-Social`, branch `claude/project-thread-cqeckz`. All screens run on mock data.
