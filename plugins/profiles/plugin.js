@@ -196,6 +196,8 @@ export const DEFAULT_SETTINGS = {
   models: { messenger: "", forum: "", import: "" },
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: false,
+  /** The browser's UTC offset in minutes (UTC minus local), stored so schedules run in the user's own time; null until known. */
+  tzOffset: null,
 };
 
 const TIME = /^([01]\d|2[0-3]):[03]0$/;
@@ -228,6 +230,7 @@ export function mergeSettings(base, patch) {
     },
     notify: { tab: bool(n.tab, b.notify.tab), system: bool(n.system, b.notify.system), sound: bool(n.sound, b.notify.sound) },
     roleplayAccess: bool(p.roleplayAccess, b.roleplayAccess),
+    tzOffset: typeof p.tzOffset === "number" && Number.isFinite(p.tzOffset) && Math.abs(p.tzOffset) <= 840 ? Math.round(p.tzOffset) : b.tzOffset === undefined ? null : b.tzOffset,
   };
 }
 
