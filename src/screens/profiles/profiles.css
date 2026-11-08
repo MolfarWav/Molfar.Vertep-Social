@@ -328,3 +328,11 @@
 /* desktop save bar: shows only while the draft is dirty; the phone bar (above) is unchanged */
 .s-profiles .sv-desk { flex: none; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
 .s-profiles .sv-desk .btn { height: 36px; }
+/* app mode: one-line notice for a failed save or delete (index.tsx), dismissible */
+.s-profiles .pf-banner { position: absolute; top: 8px; left: 12px; right: 12px; z-index: 30; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; border: 1px solid var(--bad); border-radius: 10px; background: var(--raised); box-shadow: 0 8px 22px rgb(0 0 0 / 0.35); font-size: 13px; }
+.s-profiles .pf-banner .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-profiles .pf-banner .btn { height: 32px; flex: none; }
+@media (max-width: 767px) {
+  .s-profiles .pf-banner { font-size: 14px; }
+  .s-profiles .pf-banner .btn { height: 44px; }
+}
