@@ -3,7 +3,7 @@
 // be asked for on both layouts. Desktop has no save bar (the board has none);
 // its unsaved changes are asked about when leaving the profile.
 import { useState } from "react";
-import { useT } from "@/i18n/index";
+import { useT, currentLang } from "@/i18n/index";
 import { PREVIEW } from "@/lib/api";
 import { Avatar } from "@/components/Avatar";
 import { useChrome } from "@/shell/nav";
@@ -17,6 +17,7 @@ import { ModelTab } from "./tabs/ModelTab";
 import { TAB_IDS, type TabId } from "./tabs/types";
 import { ActionMenu, type MenuItem } from "./menu";
 import type { FillProps } from "./fill-ui";
+import { cardDateLabel } from "./import-api";
 import { PictureDialog } from "./picture-dialog";
 
 export interface EditorProps {
@@ -85,8 +86,8 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
   const sourceLabel = t(SOURCE_KEY[profile.source]);
   const subtitle = roleplay
     ? phone
-      ? t("profiles.editor.subtitleShort", { source: sourceLabel, date: profile.cardDate ?? "" })
-      : t("profiles.editor.subtitleCard", { card: profile.card ?? "", date: profile.cardDate ?? "" })
+      ? t("profiles.editor.subtitleShort", { source: sourceLabel, date: cardDateLabel(profile.cardDate, currentLang()) })
+      : t("profiles.editor.subtitleCard", { card: profile.card ?? "", date: cardDateLabel(profile.cardDate, currentLang()) })
     : t(profile.source === "own" ? "profiles.editor.subtitleOwn" : "profiles.editor.subtitlePersona");
 
   const fillProps: FillProps = { ...fill, layout: phone ? "phone" : "desk" };

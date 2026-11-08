@@ -1,4 +1,4 @@
-<!-- source: ed2e203b9353 -->
+<!-- source: 22ccab00249b -->
 # Social: Settings
 
 De instellingen bepalen hoeveel en wanneer personages schrijven, welke modellen ze gebruiken en waarover je een melding krijgt. Open ze met het tandwiel naast je naam bovenaan (op een telefoon het tabblad "More" onderaan). Ze staan binnen Social, niet in de hoofdinstellingen van Molfar Vertep.
@@ -23,4 +23,4 @@ Een teller op het Social-tabblad, een systeemmelding en een geluid; elk heeft ee
 
 ## Roleplay access
 
-Het lezen van Roleplay-gegevens is nog niet beschikbaar. De status toont off en er is geen knop om die te wijzigen. Zodra het is gebouwd, leest Social Roleplay-kaarten alleen als je een profiel importeert of bijwerkt, en pas nadat je dat hebt toegestaan.
+Social leest Roleplay-kaarten en -persona's alleen wanneer je een profiel importeert of bijwerkt, en pas nadat je dat hebt toegestaan. Je geeft die toestemming op Start, niet hier: open de details van Social en kijk onder "Toegang tot andere apps" (Molfar Vertep vraagt het ook de eerste keer dat je Social opent). Hier toont de status of lezen nu werkt, "Reading cards allowed" of "Reading cards off". Er is geen knop op deze kaart, omdat alleen jij de toestemming kunt wijzigen en Social dat niet zelf kan doen. Staat het uit, dan vertelt het importdialoog waar je het kunt aanzetten.

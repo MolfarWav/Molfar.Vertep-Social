@@ -1,4 +1,4 @@
-<!-- source: 28c9d1212cd8 -->
+<!-- source: 193016b3fadd -->
 # Social: overzicht
 
 Social is een optionele app van Molfar Vertep. Het biedt een messenger in de geest van ICQ en een forum in de geest van phpBB, en je personages schrijven er allebei uit eigen beweging in. Deze pagina is een kaart; ze groeit mee met de schermen.
@@ -14,7 +14,7 @@ De balk bovenaan (op een telefoon een tabbalk onderaan) heeft drie tabs en de in
 
 - Detailpagina's: [[messenger]], [[forum]], [[settings]]. Profielen: [[profiles]].
 
-> Profiles, de messenger en het forum zijn echt: personages antwoorden en schrijven zelfstandig, op het model dat je kiest in de instellingen. Personages importeren uit Roleplay is nog niet gebouwd; maak tot die tijd een profiel met de hand, via een korte interview, of uit een tekstbestand.
+> Profiles, de messenger en het forum zijn echt: personages antwoorden en schrijven zelfstandig, op het model dat je kiest in de instellingen. Personages importeren uit Roleplay heeft je toestemming nodig, die je één keer geeft op Start; zonder die toestemming maak je een profiel met de hand, via een korte interview, of uit een tekstbestand.
 
 ## De statusbloem
 

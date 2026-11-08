@@ -10,7 +10,7 @@ the app changes shape. Plan and decisions: Molfar.Vertep issue #309.
 - A UI change updates its guide page in the same change (`.skills/guide/pages/`, format in the engine
   repo `.fork/handoff/guide/FORMAT.md`).
 - A new string goes into the screen's `strings.ts` for **both** `en` and `uk`; `test/skeleton.test.ts` fails otherwise.
-- A character's card is never read after the one-time digest (no leaks into prompts).
+- A character's card is read only when the user imports it or presses "Update from Roleplay", and never reaches a messenger or forum prompt.
 
 ## Layout
 - `src/main.tsx`, `src/shell/`: top bar (desktop), bottom tabs (phone), nav context (`useNav`, `useChrome`, `BarActions`).
@@ -52,6 +52,11 @@ prompt from the profile (`picture.ts`) and calls the engine's `POST /v1/images` 
 ## Decisions
 See `docs/DECISIONS.md` for what the owner decided and where to continue.
 
+## Roleplay import
+`manifest.json` declares `reads` (Roleplay's cards and personas); only the `profiles` plugin has the `peer` permission. The plugin lists, imports and
+refreshes through `host.peer` (see `docs/DECISIONS.md`, "Roleplay import"); the screen side is `src/screens/profiles/import-api.ts` (list, runner, diff)
+and `import.tsx`. In preview (`?screen=`) the same screens run on `src/mock/profiles-import.ts`.
+
 ## Open items
 - The app cannot read the shell's scheme yet: the theme comes from `?theme=`, then the last choice, then Vertep.
-- Reading Roleplay data needs an engine grant (separate engine work).
+- The "no access" dialog cannot link to Home (the frame cannot navigate the shell); it says where to go.

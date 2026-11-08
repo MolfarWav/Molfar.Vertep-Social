@@ -184,6 +184,7 @@
 .s-profiles .row .nm { font-weight: 600; }
 .s-profiles .row .s { color: var(--muted); font-size: 12px; }
 .s-profiles .cb { width: 18px; height: 18px; flex: none; margin: 0; accent-color: var(--accent); }
+.s-profiles .tag.muted { border-color: var(--line); color: var(--muted); }
 .s-profiles .tag { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--warn); color: var(--warn); font-size: 12px; font-weight: 600; white-space: nowrap; }
 .s-profiles .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; flex: none; }
 .s-profiles .bar i { display: block; height: 100%; background: var(--accent); }
@@ -205,6 +206,7 @@
 .s-profiles .diff > div { padding: 7px 12px; border-top: 1px solid var(--line); }
 .s-profiles .diff > div:first-child { border-top: 0; }
 .s-profiles .diff .add { background: color-mix(in srgb, var(--ok) 14%, var(--base)); }
+.s-profiles .diff .dl { background: var(--raised); color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 .s-profiles .diff .del { background: color-mix(in srgb, var(--bad) 14%, var(--base)); color: var(--muted); text-decoration: line-through; }
 .s-profiles .linkbtn { display: inline-block; margin: -12px -4px; padding: 12px 4px; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 700; }
 

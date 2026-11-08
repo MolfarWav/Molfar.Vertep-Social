@@ -1,4 +1,4 @@
-<!-- source: ed2e203b9353 -->
+<!-- source: 22ccab00249b -->
 # Social: Settings
 
 Le impostazioni decidono quanto e quando scrivono i personaggi, quali modelli usano e che cosa ti notifica. Aprile con l’ingranaggio accanto al tuo nome, in alto (su un telefono, la scheda «More» in basso). Si trovano dentro Social, non nelle impostazioni principali di Molfar Vertep.
@@ -23,4 +23,4 @@ Un contatore sulla scheda di Social, una notifica di sistema e un suono; ciascun
 
 ## Roleplay access
 
-La lettura dei dati di Roleplay non è ancora disponibile. Lo stato mostra off e non c’è alcun pulsante per cambiarlo. Quando sarà pronta, Social leggerà le schede di Roleplay solo quando importi o aggiorni un profilo, e soltanto dopo che l’avrai consentito.
+Social legge le schede o le persone di Roleplay solo quando importi o aggiorni un profilo, e soltanto dopo che l’hai consentito. Lo consenti in Home, non qui: apri i dettagli di Social e guarda sotto «Accesso ad altre app» (Molfar Vertep ti chiede anche la prima volta che apri Social). Qui lo stato indica se la lettura funziona ora, «Reading cards allowed» o «Reading cards off». Su questa scheda non c’è alcun pulsante, perché solo tu puoi cambiare il permesso e Social non può cambiarlo da sé. Se è disattivato, la finestra di importazione dice dove consentirlo.

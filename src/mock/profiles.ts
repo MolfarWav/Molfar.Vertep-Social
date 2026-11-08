@@ -2,6 +2,7 @@
 // character's Soul, not from the card; `hue` is the avatar colour. Only Мавка has
 // the full data the boards show; the others get a short About and a default week.
 import type { Status } from "@/mock/status";
+import type { ImportRef } from "@/mock/profiles-import";
 
 export type ProfileSource = "roleplay" | "own" | "persona";
 
@@ -62,7 +63,10 @@ export interface MockProfile extends ProfileForm {
   source: ProfileSource;
   /** Roleplay profiles only: the card title and the day the vignette was taken. */
   card?: string;
+  /** The day the profile was made or last updated from the card: "2026-11-09" (real) or a ready text (mock). */
   cardDate?: string;
+  /** Imported profiles: the card or persona it was made from (the "Update from Roleplay" button reads it again). */
+  from?: ImportRef;
 }
 
 const BANDS = 8;

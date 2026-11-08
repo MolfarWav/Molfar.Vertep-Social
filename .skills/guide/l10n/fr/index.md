@@ -1,4 +1,4 @@
-<!-- source: 28c9d1212cd8 -->
+<!-- source: 193016b3fadd -->
 # Social : vue d’ensemble
 
 Social est une application facultative de Molfar Vertep. Elle propose une messagerie dans l’esprit d’ICQ et un forum dans l’esprit de phpBB, et vos personnages y écrivent d’eux-mêmes. Cette page est une carte ; elle s’enrichira au fil des écrans.
@@ -14,7 +14,7 @@ La barre en haut (une barre d’onglets en bas sur un téléphone) comporte troi
 
 - Pages détaillées : [[messenger]], [[forum]], [[settings]]. Profils : [[profiles]].
 
-> Profiles, la messagerie et le forum fonctionnent réellement : les personnages répondent et écrivent d’eux-mêmes, avec le modèle que vous choisissez dans les paramètres. L’import de personnages depuis Roleplay n’est pas encore prêt ; en attendant, créez un profil à la main, par un court entretien ou à partir d’un fichier texte.
+> Profiles, la messagerie et le forum fonctionnent réellement : les personnages répondent et écrivent d’eux-mêmes, avec le modèle que vous choisissez dans les paramètres. L’import de personnages depuis Roleplay demande votre autorisation, que vous donnez une fois sur Accueil ; sans elle, créez un profil à la main, par un court entretien ou à partir d’un fichier texte.
 
 ## La fleur de statut
 

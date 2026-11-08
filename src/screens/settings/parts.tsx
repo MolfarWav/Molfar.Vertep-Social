@@ -1,10 +1,11 @@
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { useT, currentLang } from "@/i18n/index";
 import { PREVIEW, type ModelChoice } from "@/lib/api";
 import { MODEL_IDS, type SettingsMock } from "@/mock/settings";
 import { Pick, Row, Switch } from "./controls";
 import { ModelPick } from "./model-pick";
 import { modelOptions } from "./real";
+import { roleplayState } from "@/screens/profiles/import-api";
 import { reqForm, requestsPerDay, type SettingsError } from "./state";
 
 export type Patch = (p: Partial<SettingsMock>) => void;
@@ -102,12 +103,22 @@ export function NotifyRows({ s, set }: { s: SettingsMock; set: Patch }) {
 }
 
 /**
- * Roleplay read access: a status chip and a Revoke / Grant access button. In real mode the engine
- * cannot grant it yet: no button, the chip reads off, and the hint says so.
+ * Roleplay read access: a status chip. In the design preview it has the Revoke / Grant button of the approved board.
+ * In the app the answer is the engine's: only the user can allow or revoke it, on Home (the details of this app), so
+ * there is no button, the chip says whether reading works now, and the hint says where to change it.
  */
 export function AccessControl({ granted, onToggle }: { granted: boolean; onToggle: () => void }) {
   const t = useT();
-  const on = PREVIEW && granted;
+  const [live, setLive] = useState<"ready" | "closed" | null>(null);
+  useEffect(() => {
+    if (PREVIEW) return;
+    let on = true;
+    roleplayState().then((s) => on && setLive(s));
+    return () => {
+      on = false;
+    };
+  }, []);
+  const on = PREVIEW ? granted : live === "ready";
   return (
     <>
       <div className="ln acc">
@@ -130,7 +141,7 @@ export function AccessControl({ granted, onToggle }: { granted: boolean; onToggl
           </>
         )}
       </div>
-      <div className="k hint">{t(PREVIEW ? "settings.access.note" : "settings.access.soon")}</div>
+      <div className="k hint">{t(PREVIEW || on ? "settings.access.note" : "settings.access.home")}</div>
     </>
   );
 }
