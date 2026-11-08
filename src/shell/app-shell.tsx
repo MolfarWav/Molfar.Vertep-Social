@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Logo } from "@/components/Logo";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/i18n/index";
 import { useIsPhone } from "@/lib/use-phone";
-import { ME } from "@/mock/characters";
 import { NavProvider, useNav, type Tab } from "@/shell/nav";
 import { Messenger } from "@/screens/messenger";
 import { Forum } from "@/screens/forum";
 import { useBadgePoll } from "@/lib/badges";
 import { Profiles } from "@/screens/profiles";
 import { Settings } from "@/screens/settings";
+import { You } from "@/screens/you";
+import { ensureYou, useYou } from "@/screens/you/store";
 
 const MAIN: Tab[] = ["messenger", "forum", "profiles"];
 
@@ -39,6 +40,7 @@ function Screen() {
   if (tab === "forum") return <Forum />;
   if (tab === "profiles") return <Profiles />;
   if (tab === "settings") return <Settings />;
+  if (tab === "you") return <You />;
   return <Messenger />;
 }
 
@@ -48,6 +50,11 @@ function Chrome() {
   const nav = useNav();
   const { tab, go, badges, chrome } = nav;
   useBadgePoll();
+  useEffect(ensureYou, []);
+  const you = useYou();
+  const me = you?.personas.find((p) => p.id === you.active);
+  // a phone has no "You" chip: Settings opens Your profile, so More stays lit while it is open
+  const lit: Tab = tab === "you" ? "settings" : tab;
   const badgeOf = (x: Tab) => (x === "messenger" ? badges.messenger : x === "forum" ? badges.forum : 0);
 
   return (
@@ -65,8 +72,10 @@ function Chrome() {
             ))}
           </nav>
           <div className="me">
-            <Avatar name={t("shell.me")} hue={ME.hue} size={28} />
-            {t("shell.me")}
+            <button type="button" className={`mebtn${tab === "you" ? " on" : ""}`} aria-label={`${me?.name ?? t("shell.me")}: ${t("shell.you")}`} aria-current={tab === "you" ? "page" : undefined} onClick={() => go("you")}>
+              <Avatar name={me?.name ?? t("shell.me")} hue={me?.hue ?? 210} size={28} picture={me?.picture || undefined} />
+              <span className="mename">{me?.name ?? t("shell.me")}</span>
+            </button>
             <button className={`gear${tab === "settings" ? " on" : ""}`} aria-label={t("shell.settings")} onClick={() => go("settings")}>{GEAR}</button>
           </div>
         </header>
@@ -81,7 +90,7 @@ function Chrome() {
       {phone && chrome.tabs && (
         <nav className="ptabs" aria-label="Social">
           {(["messenger", "forum", "profiles", "settings"] as Tab[]).map((x) => (
-            <button key={x} data-tab={x} className={`ptab${tab === x ? " on" : ""}`} aria-current={tab === x ? "page" : undefined} onClick={() => go(x)}>
+            <button key={x} data-tab={x} className={`ptab${lit === x ? " on" : ""}`} aria-current={lit === x ? "page" : undefined} onClick={() => go(x)}>
               <TabIcon tab={x} />
               {t(x === "settings" ? "shell.more" : `shell.${x}`)}
               {badgeOf(x) > 0 && <span className="pbadge">{badgeOf(x)}</span>}

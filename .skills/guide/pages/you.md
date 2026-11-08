@@ -1,0 +1,16 @@
+# Social: Your profile
+
+Your profile says who you are to the characters. It is not a character: it has no chat, no schedule and never appears in the contact list or on the forum. Open it with your name at the top right (on a phone: Settings, the first row).
+
+## Personas
+
+You can keep a few personas, for example one for each way you like to be addressed. Each has a picture, a name and a short About. One persona is active (marked "Active"). In the messenger a character is told the active persona's name and its About, and nothing else about you. The forum does not read it. Without a persona, characters call you "the user".
+
+- Pick a persona in the row at the top to edit it. Change the name or the About, and press "Save"; "Cancel" drops the edit. An unsaved edit is kept while you look at another persona or another tab, but not after the app is closed.
+- "Make active" in the editor switches to the persona you are looking at.
+- The picture button draws a portrait with an image model, as for a profile (see [[profiles]]).
+- "Delete persona" removes it from Social. A persona in Roleplay is never touched. If the active one is deleted, the next one takes its place.
+
+## Adding one
+
+"Add" offers two ways. **Write a new one** opens a blank persona; it needs a name before it can be saved. **Import from Roleplay** lists the personas Roleplay has; press "Add" next to one. Social copies its name and its description once, with no model, and later edits in Roleplay do not follow. A persona already brought in is marked "Already here". Reading Roleplay needs your permission, which you give once on Home (see [[settings]]); without it the dialog says so and tells where to allow it.

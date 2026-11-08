@@ -27,6 +27,6 @@ test("a chip colour comes from its text: the same everywhere, case and spaces as
 test("the source filter counts and picks profiles by where they came from", () => {
   const c = countBySource(PROFILES);
   expect(c.all).toBe(PROFILES.length);
-  expect(c.roleplay + c.own + c.persona).toBe(PROFILES.length);
+  expect(c.roleplay + c.own).toBe(PROFILES.length);
   expect(filterProfiles(PROFILES, "", "own").every((p) => p.source === "own")).toBe(true);
 });

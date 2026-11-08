@@ -99,7 +99,7 @@ test("the scan splits a narrator by its Souls and hides groups and assistants", 
   expect(route(host, "GET", "/profiles/roleplay/status").json.state).toBe("ready");
   const out = route(host, "GET", "/profiles/roleplay").json;
   expect(out.state).toBe("ready");
-  expect(out.hidden).toEqual({ group: 1, assistant: 1, unreadable: 2 });
+  expect(out.hidden).toEqual({ group: 1, assistant: 1, unreadable: 1 });
   const rows = out.characters;
   const by = (n: string) => rows.find((r: any) => r.name === n);
   // a card with a Soul: the Soul's name, not the card's title
@@ -113,10 +113,10 @@ test("the scan splits a narrator by its Souls and hides groups and assistants", 
   expect(members.map((m: any) => m.name)).toEqual(["Горпина", "Чугайстер"]);
   expect(members[0].ref).toEqual({ kind: "card", id: "verhy", key: "Горпина" });
   expect(out.characters.some((r: any) => r.name === "Натовп" || r.name === "Помічник")).toBe(false);
-  // a persona with a name; the nameless one is not offered
-  expect(out.personas.map((p: any) => p.name)).toEqual(["Мандрівник"]);
+  // personas are not profiles: they are offered on Your profile (/you/roleplay) only
+  expect(out.personas).toBeUndefined();
   // every id is a valid profile id and they are all different
-  const ids = [...rows, ...out.personas].map((r: any) => r.id);
+  const ids = rows.map((r: any) => r.id);
   expect(new Set(ids).size).toBe(ids.length);
   for (const id of ids) expect(id).toMatch(/^[A-Za-z0-9_-]{1,60}$/);
   // the scan carries no card text
@@ -235,15 +235,16 @@ test("import: pass A asks the model with the card text in the user message, pass
   expect([...b.files.values()].join("")).not.toContain("SECRET");
 });
 
-test("import: a member of a narrator and a persona", () => {
+test("import: a member of a narrator; a persona is refused (it goes to Your profile)", () => {
   const { host: h1 } = makeHost(ROLEPLAY, { digest: { text: GOOD } });
   const m = route(h1, "POST", "/profiles/import", { kind: "card", id: "verhy", key: "Горпина" }, { stash: { name: "Горпина", title: "Хроніки Верхи" } });
   expect(m.json.profile).toMatchObject({ name: "Горпина", card: "Хроніки Верхи", from: { kind: "card", id: "verhy", key: "Горпина" } });
   expect(m.json.profile.id).toMatch(/^rp-verhy--/);
-  const { host: h2 } = makeHost(ROLEPLAY, { digest: { text: GOOD } });
-  const p = route(h2, "POST", "/profiles/import", { kind: "persona", id: "wanderer" }, { stash: { name: "Мандрівник", title: "" } });
-  expect(p.json.profile).toMatchObject({ id: "pe-wanderer", source: "persona", name: "Мандрівник", from: { kind: "persona", id: "wanderer" } });
-  expect(p.json.profile.card).toBeUndefined();
+  const h2 = makeHost(ROLEPLAY, { digest: { text: GOOD } });
+  const p = route(h2.host, "POST", "/profiles/import", { kind: "persona", id: "wanderer" }, { stash: { name: "Мандрівник", title: "" } });
+  expect(p.status).toBe(400);
+  expect(h2.files.size).toBe(0);
+  expect(h2.requests).toHaveLength(0);
 });
 
 test("import: failures say what happened and file nothing", () => {

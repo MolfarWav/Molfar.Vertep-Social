@@ -8,6 +8,7 @@ export const shell: Bundle = {
     "shell.more": "More",
     "shell.settings": "Settings",
     "shell.me": "You",
+    "shell.you": "Your profile",
     "shell.search": "Search",
   },
   uk: {
@@ -17,6 +18,7 @@ export const shell: Bundle = {
     "shell.more": "Ще",
     "shell.settings": "Налаштування",
     "shell.me": "Ти",
+    "shell.you": "Твій профіль",
     "shell.search": "Пошук",
   },
 };

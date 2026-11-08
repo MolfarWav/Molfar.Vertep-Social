@@ -4,7 +4,7 @@
 import type { Status } from "@/mock/status";
 import type { ImportRef } from "@/mock/profiles-import";
 
-export type ProfileSource = "roleplay" | "own" | "persona";
+export type ProfileSource = "roleplay" | "own";
 
 export interface Habit {
   id: string;
@@ -65,7 +65,7 @@ export interface MockProfile extends ProfileForm {
   card?: string;
   /** The day the profile was made or last updated from the card: "2026-11-09" (real) or a ready text (mock). */
   cardDate?: string;
-  /** Imported profiles: the card or persona it was made from (the "Update from Roleplay" button reads it again). */
+  /** Imported profiles: the card it was made from (the "Update from Roleplay" button reads it again). */
   from?: ImportRef;
 }
 
@@ -169,12 +169,10 @@ export const PROFILES: MockProfile[] = [
   { ...plain("vodianyk", "Водяник", 210, "own", "Мій власний персонаж для тестів."), tags: ["тест", "річка", "ворчун", "ніч"] },
   plain("motrya", "Мотря", 60, "own", "Сусідка з другої вулиці."),
   plain("panas", "Панас", 230, "own", "Старий дід, що пам’ятає всі повені."),
-  plain("mandrivnyk", "Мандрівник", 210, "persona", "Твоя персона: мандрівник без дому."),
 ];
 
 /** The profile's source label key suffix, used by the list and the editor. */
 export const SOURCE_KEY: Record<ProfileSource, string> = {
   roleplay: "profiles.source.roleplay",
   own: "profiles.source.own",
-  persona: "profiles.source.persona",
 };

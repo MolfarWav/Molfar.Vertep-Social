@@ -12,6 +12,7 @@ Answer from these pages, not from the code. Read the page that fits:
 - `messenger`: contacts, statuses, chats
 - `forum`: boards, topics, the autonomy strip
 - `profiles`: import from Roleplay, new profiles, the editor, Fill empty
+- `you`: your own personas, the one characters are told about
 - `settings`: limits, quiet hours, models, notifications, Roleplay access
 
 Only when the guide does not cover it, read the code, and say "the guide does not cover this; from the code: ...".

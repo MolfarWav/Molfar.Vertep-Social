@@ -1,0 +1,40 @@
+/* Your profile. It borrows the Profiles screen's controls (fields, buttons, dialogs, the save bar), so the rules here
+ * only lay the page out. Every rule hangs off .s-you. */
+.s-you { flex-direction: column; }
+.s-you h1 { margin: 0; }
+.s-you .you-head { display: flex; align-items: center; gap: 16px; padding: 20px 24px 8px; flex: none; }
+.s-you .you-head > div:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.s-you .you-h { font: 26px/1.2 Kurale, Georgia, serif; }
+.s-you .you-title { margin: 0; font: 22px/1.2 Kurale, Georgia, serif; }
+.s-you .you-scroll { flex: 1; min-height: 0; overflow: auto; }
+.s-you .you-page { display: flex; flex-direction: column; gap: 16px; max-width: 640px; padding: 12px 24px 24px; }
+.s-you.is-phone .you-page { padding: 14px 16px 24px; }
+.s-you .you-note { padding: 8px 0; }
+
+.s-you .you-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.s-you .you-p { display: flex; align-items: center; gap: 8px; min-height: 48px; max-width: 100%; padding: 6px 12px 6px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); font: inherit; cursor: pointer; }
+.s-you .you-p:hover { background: var(--raised); }
+.s-you .you-p.on { border-color: var(--accent); background: var(--raised); }
+.s-you .you-pn { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-you .you-use { height: 20px; padding: 0 8px; border-color: var(--accent); color: var(--ink); font-size: 11px; }
+
+.s-you .you-ed { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.s-you .you-top { display: flex; align-items: center; gap: 16px; }
+.s-you .you-top-t { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; min-width: 0; }
+.s-you .you-usebtn { height: 36px; }
+.s-you .you-area { min-height: 140px; resize: vertical; }
+.s-you .you-err { color: var(--warn); font-size: 13px; }
+.s-you .you-del { height: 36px; }
+
+.s-you .you-empty { display: flex; flex-direction: column; gap: 14px; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; }
+.s-you .you-empty-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.s-you .you-sv { flex: none; }
+.s-you.is-desk .you-sv { border: 1px solid var(--line); border-radius: 10px; margin: 0 24px 16px; max-width: 640px; }
+.s-you.is-desk .you-sv .btn { height: 36px; }
+
+/* the import list: a row is a button */
+.s-profiles .row.you-pick { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.s-profiles .row.you-pick:hover:not(:disabled) { background: var(--raised); }
+.s-profiles .row.you-pick:disabled { cursor: default; }
+.s-profiles .row.you-pick .chip { flex: none; }

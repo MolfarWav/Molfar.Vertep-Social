@@ -242,7 +242,7 @@ function names(fsx, dir, ext) {
 function readProfile(fsx, id) {
   if (!ID.test(String(id))) return null;
   const p = readJson(fsx, profilePath(id), null);
-  if (!isObj(p) || !str(p.name)) return null;
+  if (!isObj(p) || !str(p.name) || p.source === "persona") return null; // not a writer: Your profile is the user, not a character
   const f = isObj(p.forum) ? p.forum : {};
   return {
     id: String(id),

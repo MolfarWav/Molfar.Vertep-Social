@@ -88,7 +88,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
     ? phone
       ? t("profiles.editor.subtitleShort", { source: sourceLabel, date: cardDateLabel(profile.cardDate, currentLang()) })
       : t("profiles.editor.subtitleCard", { card: profile.card ?? "", date: cardDateLabel(profile.cardDate, currentLang()) })
-    : t(profile.source === "own" ? "profiles.editor.subtitleOwn" : "profiles.editor.subtitlePersona");
+    : t("profiles.editor.subtitleOwn");
 
   const fillProps: FillProps = { ...fill, layout: phone ? "phone" : "desk" };
   const props = { form, set: onSet, name: profile.name, hue: profile.hue, source: profile.source, onRefresh, fill: fillProps };

@@ -30,7 +30,6 @@
   --hue-more: #a1a1aa;
   --hue-roleplay: #fb923c;
   --hue-own: #34d399;
-  --hue-persona: #e879f9;
 }
 
 [data-theme="dark"] {
@@ -58,7 +57,6 @@
   --hue-more: #a1a1aa;
   --hue-roleplay: #fb923c;
   --hue-own: #34d399;
-  --hue-persona: #e879f9;
 }
 
 [data-theme="light"] {
@@ -86,5 +84,4 @@
   --hue-more: #71717a;
   --hue-roleplay: #c2410c;
   --hue-own: #047857;
-  --hue-persona: #a21caf;
 }

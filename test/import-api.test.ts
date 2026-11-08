@@ -9,13 +9,13 @@ test("a scan answer becomes entries; bad rows and a lost narrator are dropped", 
   const scan = readScan({
     state: "ready",
     characters: [row("a"), row("b", { parent: "gone" }), { id: "x" }, row("n", { kind: "narrator", ref: undefined }), row("m", { parent: "n" })],
-    personas: [row("p", { kind: "persona", ref: { kind: "persona", id: "p" } }), row("bad", { ref: { kind: "other", id: "z" } })],
+    personas: [row("p")],
     hidden: { group: 2, assistant: 1, unreadable: -3 },
     truncated: true,
   });
   expect(scan.state).toBe("ready");
   if (scan.state !== "ready") return;
-  expect(scan.entries.map((e) => e.id)).toEqual(["a", "b", "n", "m", "p"]);
+  expect(scan.entries.map((e) => e.id)).toEqual(["a", "b", "n", "m"]);
   expect(scan.entries.find((e) => e.id === "b")?.parent).toBeUndefined();
   expect(scan.entries.find((e) => e.id === "m")?.parent).toBe("n");
   expect(scan.hidden).toEqual({ group: 2, assistant: 1, unreadable: 0 });

@@ -1,4 +1,4 @@
-// Roleplay import: the pick dialog (cards and personas with checkboxes, or the reason there is nothing to pick),
+// Roleplay import: the pick dialog (cards with checkboxes, or the reason there is nothing to pick),
 // the run (progress per card, one card can fail and be retried), and the first-run empty state that opens it.
 // The list comes from the plugin in the app and from the mock in the design preview; the run is an ImportRunner
 // (import-api.ts) that lives outside the dialog, so closing the window does not stop it.
@@ -133,10 +133,7 @@ function PickDialog({ source, taken, models, preview, onClose, onCreate }: PickP
   };
 
   const chosen = profiles.filter((e) => sel.has(e.id));
-  const charEntries = entries.filter((e) => e.kind !== "persona");
-  const personaEntries = entries.filter((e) => e.kind === "persona");
-  const chars = profiles.filter((e) => e.kind !== "persona").map((e) => e.id);
-  const personas = profiles.filter((e) => e.kind === "persona").map((e) => e.id);
+  const chars = profiles.map((e) => e.id);
 
   const rowOf = (e: ImportEntry) => {
     if (e.kind === "narrator") {
@@ -155,8 +152,7 @@ function PickDialog({ source, taken, models, preview, onClose, onCreate }: PickP
     }
     const narrator = e.parent ? entries.find((x) => x.id === e.parent) : undefined;
     const note =
-      e.kind === "persona" ? t("profiles.import.personaNote")
-      : narrator ? t("profiles.import.fromNarrator", { name: narrator.name })
+      narrator ? t("profiles.import.fromNarrator", { name: narrator.name })
       : t("profiles.import.card", { title: e.card });
     const have = taken.has(e.id);
     return (
@@ -199,8 +195,7 @@ function PickDialog({ source, taken, models, preview, onClose, onCreate }: PickP
         <div className="pf-body"><p className="k">{t("profiles.import.empty")}</p></div>
       ) : (
         <div className="pf-list">
-          {chars.length > 0 && group(t("profiles.import.groupChars", { n: chars.length }), chars, charEntries)}
-          {personas.length > 0 && group(t("profiles.import.groupPersonas", { n: personas.length }), personas, personaEntries)}
+          {chars.length > 0 && group(t("profiles.import.groupChars", { n: chars.length }), chars, entries)}
         </div>
       )}
       {!nothing && free.length === 0 && <p className="pf-note">{t("profiles.import.allTaken")}</p>}

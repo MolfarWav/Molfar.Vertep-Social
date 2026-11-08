@@ -18,7 +18,7 @@
 //   dialog=picture   the picture dialog open in the editor (picture=fail | nomodel: the generation fails)
 //   picker=1      with tab=model: the searchable model picker of the installed app, over mock models
 //   q=<text>      prefill the search
-//   source=all|roleplay|own|persona         prefill the source filter
+//   source=all|roleplay|own                 prefill the source filter
 //   dirty=1       the first profile starts with a draft (the save bar shows, phone and desktop)
 //   state=firstrun      no profiles: the first-run state
 //   state=importing     the import run, frozen at 4 of 9

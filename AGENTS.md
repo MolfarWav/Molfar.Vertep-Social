@@ -14,7 +14,7 @@ the app changes shape. Plan and decisions: Molfar.Vertep issue #309.
 
 ## Layout
 - `src/main.tsx`, `src/shell/`: top bar (desktop), bottom tabs (phone), nav context (`useNav`, `useChrome`, `BarActions`).
-- `src/screens/<messenger|forum|profiles|settings>/`: one folder per screen with `index.tsx`, `<name>.css` (every rule scoped
+- `src/screens/<messenger|forum|profiles|settings|you>/`: one folder per screen with `index.tsx`, `<name>.css` (every rule scoped
   under `.s-<name>`), `strings.ts`, and the mock data it needs in `src/mock/`.
 - `src/components/`: `Flower` (status flower + `Envelope`), `Avatar`, `Logo`. Shared, small.
 - `src/styles/`: `tokens.css` (themes Vertep, Dark, Light; names are the ones the design boards use),
@@ -34,7 +34,7 @@ Status flower: five petals around the Vertep eye; colour, centre mark and a word
 
 ## Preview and `?` parameters
 `bun run preview:build`, then `NODE_PATH=$(npm root -g) node scripts/shot.cjs <outDir> "<query>"`.
-Query: `screen=messenger|forum|profiles|settings`, `theme=vertep|dark|light`, `lang=en|uk`, and per-screen `view=` / `state=`
+Query: `screen=messenger|forum|profiles|settings|you`, `theme=vertep|dark|light`, `lang=en|uk`, and per-screen `view=` / `state=`
 values documented in the screen's `index.tsx` header.
 
 ## Model calls
@@ -54,7 +54,7 @@ See `docs/DECISIONS.md` for what the owner decided and where to continue.
 
 ## Roleplay import
 `manifest.json` declares `reads` (Roleplay's cards and personas); only the `profiles` plugin has the `peer` permission. The plugin lists, imports and
-refreshes through `host.peer` (see `docs/DECISIONS.md`, "Roleplay import"); the screen side is `src/screens/profiles/import-api.ts` (list, runner, diff)
+refreshes cards through `host.peer`; a persona goes to Your profile (`/you/*`, `you.json`, `src/screens/you/`), not to the profile list (see `docs/DECISIONS.md`, "Roleplay import"); the screen side is `src/screens/profiles/import-api.ts` (list, runner, diff)
 and `import.tsx`. In preview (`?screen=`) the same screens run on `src/mock/profiles-import.ts`.
 
 ## Open items

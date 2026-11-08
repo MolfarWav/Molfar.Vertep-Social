@@ -30,7 +30,6 @@ const FILTER_KEY: Record<SourceFilter, string> = {
   all: "profiles.filter.all",
   roleplay: "profiles.filter.roleplay",
   own: "profiles.filter.own",
-  persona: "profiles.filter.persona",
 };
 
 const SearchIcon = () => (
