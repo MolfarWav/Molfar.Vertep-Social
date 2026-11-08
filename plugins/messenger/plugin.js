@@ -3,7 +3,7 @@
  * (from the weekly schedule) that decides when a reply comes.
  *
  * Routes (relative to /v1/apps/social):
- *   GET  /messenger/contacts            {contacts: [{id, name, hue, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
+ *   GET  /messenger/contacts            {contacts: [{id, name, hue, picture, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
  *   GET  /messenger/chat?id=<profile>   {chat: {id, status, nextOnline, messages, pending, failed}}
  *   POST /messenger/send {id, text}     adds the user's message; when the profile is online the reply is written now
  *          ({ok, queued, chat} or {ok: false, error, code?, chat}); otherwise the reply is queued (see below)
@@ -190,6 +190,9 @@ const modelRef = (v) => {
   return m && m !== "default" && /^[^\s]{1,200}$/.test(m) ? m : "";
 };
 
+/** The profile's picture: an engine asset URL, or "". */
+const pictureOf = (p) => (isObj(p) && typeof p.picture === "string" && /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/.test(p.picture) ? p.picture : "");
+
 /** The model for a reply: the profile's own (Profiles > Model), else the messenger's in Settings, else "" (the engine's). */
 const messengerModel = (fsx, profile) => {
   const own = isObj(profile) ? modelRef(profile.model) : "";
@@ -245,6 +248,7 @@ function contactsRoute(host) {
       id,
       name: str(p.name),
       hue: Number.isFinite(p.hue) ? p.hue : 200,
+      picture: pictureOf(p),
       source: str(p.source) || "own",
       status: statusAt(p.schedule, new Date(now), tz),
       nextOnline: nextOnline(p.schedule, now, tz),

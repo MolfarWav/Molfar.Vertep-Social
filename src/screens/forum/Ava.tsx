@@ -6,7 +6,11 @@ export const MY_BG = "hsl(210 45% 38%)";
 export const bgOf = (hue: number): string => `hsl(${hue} 40% 32%)`;
 export const initial = (name: string): string => name.trim().slice(0, 1).toUpperCase();
 
-export function Ava({ text, bg, size, font, radius = 6 }: { text: string; bg: string; size: number; font: number; radius?: number }) {
+export function Ava({ text, bg, size, font, radius = 6, picture }: { text: string; bg: string; size: number; font: number; radius?: number; picture?: string }) {
   const style: CSSProperties = { width: size, height: size, fontSize: font, borderRadius: radius, background: bg };
-  return <div className="av" style={style} aria-hidden="true">{text}</div>;
+  return (
+    <div className="av" style={style} aria-hidden="true">
+      {picture ? <img className="av-img" src={picture} alt="" draggable={false} /> : text}
+    </div>
+  );
 }

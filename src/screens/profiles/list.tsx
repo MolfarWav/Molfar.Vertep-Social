@@ -94,7 +94,7 @@ function Rows({ items, query, selectedId, onPick, phone, onClear }: { items: Moc
           aria-current={!phone && p.id === selectedId ? "true" : undefined}
           onClick={() => onPick(p.id)}
         >
-          <Avatar name={p.name} hue={p.hue} size={phone ? 40 : 36} />
+          <Avatar name={p.name} hue={p.hue} size={phone ? 40 : 36} picture={p.picture} />
           <span className="t">
             <Name name={p.name} query={query} />
             <span className="s">{t(SOURCE_KEY[p.source])}</span>

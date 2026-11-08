@@ -59,7 +59,7 @@ export function PostCard({
     return (
       <article className="post post-phone">
         <div className="post-a">
-          <Ava text={initial(name)} bg={bg} size={40} font={17} />
+          <Ava text={initial(name)} bg={bg} size={40} font={17} picture={post.picture} />
           <div>
             <div className="nm" style={{ color }}>{name}</div>
             {post.role && <div className="rk">{post.role}</div>}
@@ -80,7 +80,7 @@ export function PostCard({
   return (
     <article className="post post-desk">
       <div className="post-a">
-        <Ava text={initial(name)} bg={bg} size={96} font={40} radius={8} />
+        <Ava text={initial(name)} bg={bg} size={96} font={40} radius={8} picture={post.picture} />
         <div className="nm" style={{ color }}>{name}</div>
         {post.role && <div>{post.role}</div>}
         <div className="online">

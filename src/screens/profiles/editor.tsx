@@ -2,7 +2,9 @@
 // The draft lives in index.tsx (the store), so leaving with unsaved changes can
 // be asked for on both layouts. Desktop has no save bar (the board has none);
 // its unsaved changes are asked about when leaving the profile.
+import { useState } from "react";
 import { useT } from "@/i18n/index";
+import { PREVIEW } from "@/lib/api";
 import { Avatar } from "@/components/Avatar";
 import { useChrome } from "@/shell/nav";
 import { SOURCE_KEY, type MockProfile, type ProfileForm } from "@/mock/profiles";
@@ -15,6 +17,7 @@ import { ModelTab } from "./tabs/ModelTab";
 import { TAB_IDS, type TabId } from "./tabs/types";
 import { ActionMenu, type MenuItem } from "./menu";
 import type { FillProps } from "./fill-ui";
+import { PictureDialog } from "./picture-dialog";
 
 export interface EditorProps {
   profile: MockProfile;
@@ -55,6 +58,7 @@ export function formOf(p: MockProfile): ProfileForm {
     habits: p.habits,
     habitsAuto: p.habitsAuto,
     model: p.model,
+    picture: p.picture,
     voice: p.voice,
     forum: p.forum,
     schedule: p.schedule,
@@ -75,6 +79,7 @@ const DotsIcon = () => (
 
 export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, onSave, onDiscard, onRefresh, onBack, fill, onDelete }: EditorProps) {
   const t = useT();
+  const [picOpen, setPicOpen] = useState(() => PREVIEW && new URLSearchParams(location.search).get("dialog") === "picture");
   const roleplay = profile.source === "roleplay";
   const sourceLabel = t(SOURCE_KEY[profile.source]);
   const subtitle = roleplay
@@ -96,6 +101,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
         fill.onStart();
       },
     },
+    { key: "picture", label: t("profiles.picture.menu"), onSelect: () => setPicOpen(true) },
     ...(roleplay ? [{ key: "refresh", label: t("profiles.editor.refresh"), onSelect: onRefresh }] : []),
     ...(onDelete ? [{ key: "delete", label: t("profiles.menu.delete"), onSelect: onDelete }] : []),
   ];
@@ -106,6 +112,21 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
     : tab === "forum" ? <ForumTab {...props} />
     : tab === "model" ? <ModelTab {...props} />
     : <HabitsTab {...props} />;
+
+  const picDialog = picOpen && (
+    <PictureDialog
+      name={profile.name}
+      hue={profile.hue}
+      about={form.about}
+      interests={form.interests}
+      current={form.picture}
+      phone={phone}
+      onUse={(picture) => onSet({ picture })}
+      onRemove={() => onSet({ picture: "" })}
+      onClose={() => setPicOpen(false)}
+    />
+  );
+  const picLabel = t("profiles.picture.open", { name: profile.name });
 
   const tabs = (
     <div className={phone ? "pills" : "etabs"} role="tablist" aria-label={t("profiles.editor.sections")}>
@@ -131,7 +152,9 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
           <button type="button" className="hbtn" aria-label={t("profiles.editor.back")} onClick={onBack}>
             <BackIcon />
           </button>
-          <Avatar name={profile.name} hue={profile.hue} size={36} />
+          <button type="button" className="pic-btn" aria-label={picLabel} onClick={() => setPicOpen(true)}>
+            <Avatar name={profile.name} hue={profile.hue} size={36} picture={form.picture || undefined} />
+          </button>
           <div className="hd-title">
             <span className="hd-name">{profile.name}</span>
             <span className="k">{subtitle}</span>
@@ -145,6 +168,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
           <button type="button" className="btn" disabled={!dirty} onClick={onDiscard}>{t("profiles.save.cancel")}</button>
           <button type="button" className="btn cta" disabled={!dirty} onClick={onSave}>{t("profiles.save.save")}</button>
         </div>
+        {picDialog}
       </div>
     );
   }
@@ -152,7 +176,12 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
   return (
     <section className="ed" aria-label={profile.name}>
       <div className="ed-head">
-        <Avatar name={profile.name} hue={profile.hue} size={64} radius={8} />
+        <button type="button" className="pic-btn pic-btn-big" aria-label={picLabel} title={t("profiles.picture.menu")} onClick={() => setPicOpen(true)}>
+          <Avatar name={profile.name} hue={profile.hue} size={64} radius={8} picture={form.picture || undefined} />
+          <span className="pic-badge" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+          </span>
+        </button>
         <div className="ed-title">
           <div className="ed-name">
             <span className="ed-h">{profile.name}</span>
@@ -172,6 +201,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
           <button type="button" className="btn cta" onClick={onSave}>{t("profiles.save.save")}</button>
         </div>
       )}
+      {picDialog}
     </section>
   );
 }

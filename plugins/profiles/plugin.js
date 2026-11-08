@@ -22,6 +22,8 @@
  */
 
 const ID = /^[A-Za-z0-9_-]{1,60}$/;
+/** A picture is an engine asset (a generated one): a same-origin URL, never an outside address. */
+const PICTURE = /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/;
 const MODEL_REF = /^[^\s]{1,200}$/;
 const STATUSES = ["online", "away", "dnd", "na", "off"];
 const SOURCES = ["roleplay", "own", "persona"];
@@ -125,6 +127,7 @@ export function cleanProfile(raw, id, now, prev) {
     habits,
     habitsAuto: raw.habitsAuto !== false,
     model,
+    picture: typeof raw.picture === "string" && PICTURE.test(raw.picture.trim()) ? raw.picture.trim() : "",
     voice: {
       text: multi(v.text, 1500),
       length: clampInt(v.length, 0, 2, 1),

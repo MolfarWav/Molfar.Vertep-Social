@@ -21,7 +21,7 @@ export function ContactRow({ c, phone, on, onPick }: { c: Contact; phone: boolea
   const cls = ["crow", phone && "p", on && "on", c.unread && "unread"].filter(Boolean).join(" ");
   return (
     <button type="button" className={cls} aria-current={on ? "true" : undefined} onClick={onPick}>
-      <Avatar name={c.name} hue={c.hue} size={phone ? 40 : 32} dim={c.status === "off"} />
+      <Avatar name={c.name} hue={c.hue} size={phone ? 40 : 32} dim={c.status === "off"} picture={c.picture} />
       <span className="t">
         <span className="n">{c.name}</span>
         <span className="s">{c.line}</span>

@@ -7,6 +7,8 @@ export interface MockProfile {
   name: string;
   hue: number;
   status: Status;
+  /** An engine asset URL of the profile's picture (real mode); absent = the letter avatar. */
+  picture?: string;
 }
 
 export const PROFILES: MockProfile[] = [

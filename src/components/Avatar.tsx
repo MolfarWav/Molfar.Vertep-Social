@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 /** A square letter avatar. The hue comes from the profile; `dim` is for offline contacts. */
-export function Avatar({ name, hue, size = 32, dim = false, radius = 6 }: { name: string; hue: number; size?: number; dim?: boolean; radius?: number }) {
+export function Avatar({ name, hue, size = 32, dim = false, radius = 6, picture }: { name: string; hue: number; size?: number; dim?: boolean; radius?: number; picture?: string }) {
   const style: CSSProperties = {
     width: size,
     height: size,
@@ -11,7 +11,7 @@ export function Avatar({ name, hue, size = 32, dim = false, radius = 6 }: { name
   };
   return (
     <div className="av" style={style} aria-hidden="true">
-      {name.trim().slice(0, 1).toUpperCase()}
+      {picture ? <img className="av-img" src={picture} alt="" draggable={false} style={dim ? { opacity: 0.55 } : undefined} /> : name.trim().slice(0, 1).toUpperCase()}
     </div>
   );
 }

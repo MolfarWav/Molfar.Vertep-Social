@@ -253,6 +253,7 @@ function readProfile(fsx, id) {
     habits: Array.isArray(p.habits) ? p.habits : [],
     voice: isObj(p.voice) ? p.voice : {},
     model: modelRef(p.model),
+    picture: typeof p.picture === "string" && /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/.test(p.picture) ? p.picture : "",
     schedule: p.schedule,
     createdAt: num(p.createdAt),
     forum: {
@@ -732,6 +733,7 @@ function topicRoute(req, host) {
     authors[p.by] = {
       name: prof ? prof.name : p.name,
       hue: prof ? prof.hue : p.hue,
+      picture: prof ? prof.picture : "",
       rank: prof ? prof.forum.rank : "",
       signature: prof ? prof.forum.signature : "",
       count: counts[p.by] || 0,

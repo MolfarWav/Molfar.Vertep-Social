@@ -210,7 +210,7 @@ export function Messenger() {
           <>
             <section className="col chat">
               <div className="tbar chat-tbar">
-                <Avatar name={cur.name} hue={cur.hue} size={36} dim={cur.status === "off"} />
+                <Avatar name={cur.name} hue={cur.hue} size={36} dim={cur.status === "off"} picture={cur.picture} />
                 <div className="hcol">
                   <span className="hname">{cur.name}</span>
                   <span className="hsub">
@@ -238,7 +238,7 @@ export function Messenger() {
             </section>
 
             <aside className="col info">
-              <Avatar name={cur.name} hue={cur.hue} size={112} radius={10} dim={cur.status === "off"} />
+              <Avatar name={cur.name} hue={cur.hue} size={112} radius={10} dim={cur.status === "off"} picture={cur.picture} />
               <div className="nm">{cur.name}</div>
               <div className="st">
                 <Flower status={cur.status} size={20} />

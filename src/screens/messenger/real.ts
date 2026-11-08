@@ -11,6 +11,7 @@ export interface EngineContact {
   id: string;
   name: string;
   hue: number;
+  picture?: string;
   source: string;
   status: Status;
   nextOnline: number | null;
@@ -105,6 +106,7 @@ export function contactFromEngine(e: EngineContact, lang: string, t: Translate):
     id: e.id,
     name: e.name,
     hue: e.hue,
+    ...(e.picture ? { picture: e.picture } : {}),
     status: e.status,
     line: e.line,
     unread: e.unread,

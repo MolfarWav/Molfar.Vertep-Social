@@ -365,3 +365,15 @@
 .s-profiles .opts { color: var(--muted); font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
 .s-profiles .pickno { padding: 14px 10px; color: var(--muted); font-size: 13px; }
 .s-profiles.is-phone .tab-model .sel { height: 44px; }
+
+/* profile picture: the avatar is a button, and the dialog */
+.s-profiles .pic-btn { position: relative; display: block; flex: none; padding: 0; border: 0; background: none; border-radius: 8px; cursor: pointer; }
+.s-profiles .pic-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.s-profiles .pic-badge { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--raised); color: var(--ink); border: 1px solid var(--line); }
+.s-profiles .pic-btn-big:hover .pic-badge { background: var(--accent); color: #fff; }
+.s-profiles .pic-body { overflow: auto; }
+.s-profiles .pic-view { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.s-profiles .pic-busy { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+.s-profiles .form-err { color: var(--bad); font-size: 13px; }
+.s-profiles .pic-body .sel { width: 100%; justify-content: space-between; }
+.s-profiles .pic-body .sel > select { flex: 1; }
