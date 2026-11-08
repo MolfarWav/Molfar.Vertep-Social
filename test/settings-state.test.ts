@@ -8,7 +8,10 @@ const plugin = await import(path.resolve(import.meta.dir, "../plugins/profiles/p
 test("the screen's defaults are the plugin's defaults (plus usedToday, which the forum fills later)", () => {
   const { usedToday, ...rest } = REAL_DEFAULTS;
   expect(usedToday).toBe(0);
-  expect(rest).toEqual(plugin.DEFAULT_SETTINGS);
+  // tzOffset is stored by the app shell (the browser's offset), not edited on this screen
+  const { tzOffset, ...engine } = plugin.DEFAULT_SETTINGS;
+  expect(tzOffset).toBeNull();
+  expect(rest).toEqual(engine);
 });
 
 test("fromEngine adds usedToday as 0", () => {
