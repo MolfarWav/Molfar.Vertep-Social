@@ -33,9 +33,17 @@ MolfarWav/Molfar.Vertep#309; follow-up work: MolfarWav/Molfar.Vertep#310. Read `
   that can later be the life diary.
 - Quality and correctness over speed: the owner accepts that work moves to another account when tokens run out.
 
-## State (end of the UI build)
-- PR #1 on `MolfarWav/Molfar.Vertep-Social`, branch `claude/project-thread-cqeckz`. All screens run on mock data.
-- Plugins `profiles`, `messenger`, `forum` are stubs (501). Model calls are fakes.
+## State (2026-11-08, evening)
+- The UI was built on mock data (PRs #1, #2). A URL with `?screen=` is the design preview and stays on mock data
+  (`PREVIEW` in `src/lib/api.ts`); the installed app opens without it and is real.
+- Real: the `profiles` plugin (profile store, settings, interview, Fill empty), the `messenger` plugin (chats, replies in
+  the profile's voice, statuses from the schedule, a one-minute tick for queued replies) and their screens.
+  The `forum` plugin is a stub; the Forum tab shows a "not built yet" page in the app.
+- The browser's UTC offset is stored in `settings.json` (`tzOffset`) on every open, because the plugin sandbox does not
+  reliably know the machine's time zone; schedules run in the user's own time.
+- Roleplay import is not offered in the app (needs the engine grant, issue #310); a profile is made by hand, by interview,
+  or from a text file.
+- The app ships `data/README.md` because the engine's fs service refuses to write while the data folder does not exist.
 - Guide pages: `.skills/guide/pages/` (index, messenger, forum, profiles, settings); translations (`l10n/`) are not made.
 
 ## Known, left on purpose
