@@ -79,3 +79,4 @@ one topic page) and a "not built yet" page in the installed app (`src/shell/foru
 4. First messages from characters with a daily limit and quiet hours (messenger), topic source shared with the forum.
 5. Shell theme (an app cannot read the shell's colour scheme yet), "My status" in the contact list footer is fixed, guide translations (`l10n/`).
 6. Life diary and world feed (#311), close topics (#312).
+7. Emoji picker in the messenger and the forum composer, characters' emoji, extra packs (#316; owner: very important, do it right after the forum composer exists, or earlier in the messenger).

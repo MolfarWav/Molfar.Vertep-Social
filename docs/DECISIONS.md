@@ -61,6 +61,8 @@ The owner installed the app from the PR branch and sent screenshots.
   deleting a profile also deletes its chat.
 - Deferred to issues in MolfarWav/Molfar.Vertep: #313 (Model tab per profile, picture generation), #314 (own persona
   separate from characters, tags, colour), #315 (forum must not post the whole daily limit at once).
+- Owner marked as very important (2026-11-08, issue #316): an emoji picker in the messenger and the forum, characters sending
+  emoji (the profile's Emoji level already feeds the prompt, default 0), and a check for extra emoji packs. Plan and findings are in the issue.
 - The owner works on several machines and may continue from another account: everything needed is in this file,
   `docs/FORUM-PLAN.md`, issues #310 to #315 and the PR #3 description.
 
