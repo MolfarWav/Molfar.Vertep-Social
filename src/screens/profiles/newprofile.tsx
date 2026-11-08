@@ -31,7 +31,8 @@ export interface NewProfileProps {
   phone: boolean;
   start?: NewStart;
   onClose: () => void;
-  onRoleplay: () => void;
+  /** The "Import from Roleplay" choice. Not given in the app (no grant yet), so the choice is not shown. */
+  onRoleplay?: () => void;
   /** Creates the own profile and closes the flow. */
   onCreate: (p: MockProfile) => void;
   /** The blank profile's name until the user saves a nick. */
@@ -238,7 +239,7 @@ export function NewProfileFlow({ phone, start, onClose, onRoleplay, onCreate, un
           <Row icon={<PencilIcon />} title={t("profiles.new.blank")} hint={t("profiles.new.blankHint")} onClick={blank} />
           <Row icon={<ChatIcon />} title={t("profiles.new.interview")} hint={t("profiles.new.interviewHint")} onClick={() => goStage("ask")} />
           <Row icon={<PageIcon />} title={t("profiles.new.file")} hint={t("profiles.new.fileHint")} onClick={() => goStage("file")} />
-          <Row icon={<DownloadIcon />} title={t("profiles.import")} hint={t("profiles.new.importHint")} onClick={onRoleplay} />
+          {onRoleplay && <Row icon={<DownloadIcon />} title={t("profiles.import")} hint={t("profiles.new.importHint")} onClick={onRoleplay} />}
         </div>
       </>
     );

@@ -17,8 +17,9 @@ test("each plugin has a manifest and answers only its own paths", async () => {
     const m = JSON.parse(fs.readFileSync(path.join(root, "plugins", id, "manifest.json"), "utf8"));
     expect(m.permissions).toContain("routes");
     const mod = await import(path.join(root, "plugins", id, "plugin.js"));
-    expect(mod.handleRoute({ path: "/other", method: "GET" })).toBeNull();
-    expect(mod.handleRoute({ path: `/${id}/x`, method: "GET" }).status).toBe(501);
+    expect(mod.handleRoute({ path: "/other", method: "GET" }, {})).toBeNull();
+    // profiles and messenger are real (their own test files); the forum is a stub until built
+    if (id === "forum") expect(mod.handleRoute({ path: `/${id}/x`, method: "GET" }).status).toBe(501);
   }
 });
 

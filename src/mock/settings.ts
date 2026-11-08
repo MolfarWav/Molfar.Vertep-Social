@@ -17,7 +17,8 @@ export interface SettingsMock {
   messengerFirst: boolean;
   messengerPerDay: number;
   messengerQuiet: ChatHours;
-  models: { messenger: ModelId; forum: ModelId; import: ModelId };
+  /** Model choices: preview uses the four ids below; real mode uses "provider/model" or "" (engine default). */
+  models: { messenger: string; forum: string; import: string };
   notify: { tab: boolean; system: boolean; sound: boolean };
   roleplayAccess: boolean;
   /** Forum model requests already made today (a count from the server in the real app). */

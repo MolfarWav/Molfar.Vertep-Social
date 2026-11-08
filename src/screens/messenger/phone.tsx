@@ -11,6 +11,10 @@ import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./part
 
 export interface PhoneListProps {
   empty: boolean;
+  /** Real mode: the empty block says "No profiles yet". */
+  real: boolean;
+  /** Real mode, before the contact list has answered: no empty block and no hits. */
+  loading: boolean;
   list: Contact[];
   query: string;
   searchOpen: boolean;
@@ -65,10 +69,13 @@ export function PhoneList(p: PhoneListProps) {
       )}
       <div className="plist">
         {p.empty ? (
-          <EmptyBlock title={t("messenger.empty.title")} text={t("messenger.empty.text")}>
+          <EmptyBlock
+            title={t(p.real ? "messenger.empty.noProfiles" : "messenger.empty.title")}
+            text={t(p.real ? "messenger.empty.noProfilesText" : "messenger.empty.text")}
+          >
             <button type="button" className="btn cta" onClick={p.onProfiles}>{t("messenger.empty.cta")}</button>
           </EmptyBlock>
-        ) : p.list.length === 0 ? (
+        ) : p.loading ? null : p.list.length === 0 ? (
           <EmptyBlock title={t("messenger.nohits", { q: p.query.trim() })}>
             <button type="button" className="btn" onClick={p.onClearSearch}>{t("messenger.nohits.clear")}</button>
           </EmptyBlock>
@@ -82,16 +89,24 @@ export function PhoneList(p: PhoneListProps) {
 
 export interface PhoneChatProps {
   c: Contact;
+  contacts: Contact[];
   items: LogItem[];
+  dayLine: string;
   draft: string;
   failed: boolean;
+  failError?: string;
   noModel: boolean;
+  queued: boolean;
+  real: boolean;
+  busy: boolean;
   onDraft: (v: string) => void;
   onSend: () => void;
   onClear: () => void;
   onBack: () => void;
   onRetry: () => void;
   onSettings: () => void;
+  /** Real mode: the profile button goes to Profiles. */
+  onProfile?: () => void;
 }
 
 /** The chat on phone. Mounting it hides the top bar and the tabs; unmounting (back) shows them again. */
@@ -113,10 +128,16 @@ export function PhoneChat(p: PhoneChatProps) {
           <span className="hname">{c.name}</span>
           <span className="hsub">
             <Flower status={c.status} size={14} />
-            {statusWord} · {c.note}
+            {statusWord}
+            {c.note && <> · {c.note}</>}
           </span>
         </div>
-        <button type="button" className="ib flat" aria-label={t("messenger.profile.label", { of: c.of, name: c.name })}>
+        <button
+          type="button"
+          className="ib flat"
+          aria-label={p.real ? t("messenger.profile.labelPlain", { name: c.name }) : t("messenger.profile.label", { of: c.of, name: c.name })}
+          onClick={p.onProfile}
+        >
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8" />
             <path d="M12 11v6M12 7.5h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -125,15 +146,20 @@ export function PhoneChat(p: PhoneChatProps) {
       </div>
       <ChatLog
         c={c}
+        contacts={p.contacts}
         items={p.items}
-        typing={c.typing}
+        dayLine={p.dayLine}
+        typing={c.typing || p.busy}
         failed={p.failed}
+        failError={p.failError}
         noModel={p.noModel}
+        queued={p.queued}
+        real={p.real}
         phone
         onRetry={p.onRetry}
         onSettings={p.onSettings}
       />
-      <Composer c={c} value={p.draft} phone onChange={p.onDraft} onSend={p.onSend} onClear={p.onClear} />
+      <Composer c={c} value={p.draft} phone real={p.real} busy={p.busy} onChange={p.onDraft} onSend={p.onSend} onClear={p.onClear} />
     </div>
   );
 }

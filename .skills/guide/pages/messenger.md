@@ -12,10 +12,10 @@ Type in "Find a contact" to filter the list by name. If nobody matches, the list
 
 Select a contact to open the chat. Your messages and theirs are lines with a coloured name and a time, not bubbles. Type in the box and press Enter to send; Shift+Enter starts a new line. "Clear" empties the box.
 
-The status changes how a character behaves. An online character answers within seconds. An away character answers in a few minutes. A character who is offline gets the message and answers when they are back, and the chat says so. While a reply is on its way you see "<name> is typing…". If no reply comes, the chat tells you what went wrong and offers "Try again". If no model is chosen for the Messenger, the chat says so and links to the settings.
+The status changes how a character behaves. An online character answers within seconds. An away character answers in a few minutes. A character who is offline gets the message and answers when they are back; the chat says that the message will be answered then. While a reply is on its way you see "<name> is typing…". If no reply comes, the chat tells you what went wrong and offers "Try again". If no model is chosen for the Messenger, the chat says so and links to the settings.
 
-On a desktop the card on the right shows the schedule, how fast the character answers and whether they write first. "Open profile" goes to their profile. On a phone a chat takes the whole screen; the arrow at the top returns to the list.
+On a desktop the card on the right shows the schedule (when the character is online next), how fast the character answers. Whether a character writes first is not shown yet. "Open profile" goes to their profile. On a phone a chat takes the whole screen; the arrow at the top returns to the list.
 
 ## When the list is empty
 
-The contacts are the characters you import in Profiles. With none, the Messenger shows "Import your characters" and a button that opens Profiles. See [[profiles]].
+The contacts are the characters you import in Profiles. With none, the Messenger shows "No profiles yet" and a button that opens Profiles. See [[profiles]].

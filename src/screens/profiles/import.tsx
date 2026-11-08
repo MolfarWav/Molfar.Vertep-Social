@@ -234,14 +234,15 @@ export function ImportRun({ entries, preview, onFinish }: { entries: ImportEntry
 
 const avatar = (e: ImportEntry, size = 28) => <Avatar name={e.name} hue={e.hue} size={size} radius={6} />;
 
-/** The empty first run: no profiles yet, with the Import call to action. */
-export function FirstRun({ phone, onImport }: { phone: boolean; onImport: () => void }) {
+/** The empty first run: no profiles yet. Preview shows the Import call to action; the app shows "New profile" only. */
+export function FirstRun({ phone, onImport, onNew }: { phone: boolean; onImport?: () => void; onNew?: () => void }) {
   const t = useT();
   return (
     <section className={`first${phone ? " first-p" : ""}`}>
       <h2 className="first-h">{t("profiles.firstrun.title")}</h2>
-      <p className="k first-text">{t("profiles.firstrun.text")}</p>
-      <button type="button" className="btn cta" onClick={onImport}>{t("profiles.import")}</button>
+      <p className="k first-text">{t(onImport ? "profiles.firstrun.text" : "profiles.firstrun.textNew")}</p>
+      {onImport && <button type="button" className="btn cta" onClick={onImport}>{t("profiles.import")}</button>}
+      {onNew && <button type="button" className="btn cta" onClick={onNew}>{t("profiles.new")}</button>}
     </section>
   );
 }
