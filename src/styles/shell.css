@@ -8,8 +8,9 @@
 .soc .tab.on { background: var(--raised); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
 .soc .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: var(--onacc); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .soc .me { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
-.soc .me .gear { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-left: 2px; border: 0; border-radius: 8px; background: none; color: var(--muted); padding: 0; }
-.soc .me .gear:hover, .soc .me .gear.on { background: var(--hover); color: var(--ink); }
+.soc .me .gear { position: relative; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; margin-left: 6px; border: 0; background: none; color: var(--muted); padding: 0; }
+.soc .me .gear::before { content: ""; position: absolute; inset: -8px; }
+.soc .me .gear:hover, .soc .me .gear.on { color: var(--ink); }
 .soc .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
 /* phone */
