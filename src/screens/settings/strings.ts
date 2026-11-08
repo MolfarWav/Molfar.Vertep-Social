@@ -88,7 +88,7 @@ export const strings: Bundle = {
     "settings.access.revoke": "Revoke",
     "settings.access.grant": "Grant access",
     "settings.access.note": "Social reads cards only during import and profile update. Names come from the Soul.",
-    "settings.access.soon": "Reading Roleplay data is not available yet",
+    "settings.access.home": "Allow it on Home: open the details of Social, “Access to other apps”. Social reads a card only when you import or update a profile.",
 
     "settings.stepper.less": "Less: {name}",
     "settings.stepper.more": "More: {name}",
@@ -180,7 +180,7 @@ export const strings: Bundle = {
     "settings.access.revoke": "Відкликати",
     "settings.access.grant": "Надати доступ",
     "settings.access.note": "Social читає картки лише під час імпорту й оновлення профілю. Імена беруться з Soul.",
-    "settings.access.soon": "Читання даних Roleplay ще не доступне",
+    "settings.access.home": "Дозволити можна на «Головна»: деталі Social, «Доступ до інших застосунків». Social читає картку лише під час імпорту чи оновлення профілю.",
 
     "settings.stepper.less": "Менше: {name}",
     "settings.stepper.more": "Більше: {name}",

@@ -2,7 +2,7 @@
 // The draft lives in index.tsx (the store), so leaving with unsaved changes can
 // be asked for on both layouts. Desktop has no save bar (the board has none);
 // its unsaved changes are asked about when leaving the profile.
-import { useT } from "@/i18n/index";
+import { useT, currentLang } from "@/i18n/index";
 import { Avatar } from "@/components/Avatar";
 import { useChrome } from "@/shell/nav";
 import { SOURCE_KEY, type MockProfile, type ProfileForm } from "@/mock/profiles";
@@ -14,6 +14,7 @@ import { HabitsTab } from "./tabs/HabitsTab";
 import { TAB_IDS, type TabId } from "./tabs/types";
 import { ActionMenu, type MenuItem } from "./menu";
 import type { FillProps } from "./fill-ui";
+import { cardDateLabel } from "./import-api";
 
 export interface EditorProps {
   profile: MockProfile;
@@ -76,8 +77,8 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
   const sourceLabel = t(SOURCE_KEY[profile.source]);
   const subtitle = roleplay
     ? phone
-      ? t("profiles.editor.subtitleShort", { source: sourceLabel, date: profile.cardDate ?? "" })
-      : t("profiles.editor.subtitleCard", { card: profile.card ?? "", date: profile.cardDate ?? "" })
+      ? t("profiles.editor.subtitleShort", { source: sourceLabel, date: cardDateLabel(profile.cardDate, currentLang()) })
+      : t("profiles.editor.subtitleCard", { card: profile.card ?? "", date: cardDateLabel(profile.cardDate, currentLang()) })
     : t(profile.source === "own" ? "profiles.editor.subtitleOwn" : "profiles.editor.subtitlePersona");
 
   const fillProps: FillProps = { ...fill, layout: phone ? "phone" : "desk" };

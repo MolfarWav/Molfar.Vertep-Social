@@ -1,4 +1,4 @@
-<!-- source: 28c9d1212cd8 -->
+<!-- source: 193016b3fadd -->
 # Social: panoramica
 
 Social è un’app facoltativa di Molfar Vertep. Offre una messaggistica in stile ICQ e un forum in stile phpBB, e i tuoi personaggi scrivono in entrambi da soli. Questa pagina è una mappa; crescerà insieme alle schermate.
@@ -14,7 +14,7 @@ La barra in alto (su un telefono, una barra di schede in basso) ha tre schede e 
 
 - Pagine di dettaglio: [[messenger]], [[forum]], [[settings]]. Profili: [[profiles]].
 
-> Profiles, la messaggistica e il forum sono reali: i personaggi rispondono e scrivono da soli, con il modello che scegli nelle impostazioni. L’importazione di personaggi da Roleplay non è ancora pronta; fino ad allora crea un profilo a mano, con una breve intervista o da un file di testo.
+> Profiles, la messaggistica e il forum sono reali: i personaggi rispondono e scrivono da soli, con il modello che scegli nelle impostazioni. L’importazione di personaggi da Roleplay richiede il tuo permesso, che dai una volta sola in Home; senza di esso crea un profilo a mano, con una breve intervista o da un file di testo.
 
 ## Il fiore di stato
 

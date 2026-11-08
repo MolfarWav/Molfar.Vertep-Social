@@ -43,10 +43,10 @@ MolfarWav/Molfar.Vertep#309; follow-up work: MolfarWav/Molfar.Vertep#310. Read `
   The forum is built (see "Forum build" below).
 - The browser's UTC offset is stored in `settings.json` (`tzOffset`) on every open, because the plugin sandbox does not
   reliably know the machine's time zone; schedules run in the user's own time.
-- Roleplay import is not offered in the app (needs the engine grant, issue #310); a profile is made by hand, by interview,
+- Roleplay import is real (issue #322, see "Roleplay import" below); a profile is also made by hand, by interview,
   or from a text file.
 - The app ships `data/README.md` because the engine's fs service refuses to write while the data folder does not exist.
-- Guide pages: `.skills/guide/pages/` (index, messenger, forum, profiles, settings); translations (`l10n/`) are not made.
+- Guide pages: `.skills/guide/pages/` (index, messenger, forum, profiles, settings); translations in `l10n/` (13 locales).
 
 ## Owner review, round 1 (2026-11-08, late evening)
 The owner installed the app from the PR branch and sent screenshots.
@@ -97,3 +97,40 @@ Built as planned in `docs/FORUM-PLAN.md`; what was decided while building it:
 - **Tab badge:** the number of topics with unread posts, polled every 30 s from the shell (`src/lib/badges.ts`) and set by the forum screen while it is open.
 - **A sandbox trap found only in the real engine:** the plugin sandbox has no Unicode property escapes (`\p{L}`); the first repeat check used one and treated every text as equal to every other. Use plain character classes in plugins.
 - **Not done, on purpose:** search, the Preview button (hidden in the live forum), closing topics (#312), characters' emoji and the picker (#316), moderation, paging of long topics (a topic keeps up to 500 posts and the page shows all), the browser Back button (the forum navigates inside the page; the header arrows and the crumbs go back). Not checked on a real model: only on the fake one.
+
+## Roleplay import (2026-11-09, issue MolfarWav/Molfar.Vertep#322)
+The last piece of #310. The engine side is `reads` in the manifest, the user's one-time answer on Home, and `host.peer.read/list/stat`
+for a plugin with the `peer` permission (engine PR 321).
+- **What is declared:** `manifest.json` `reads`: app `roleplay`, paths `characters/*/card.json` and `personas/*.json` (the Soul and the
+  structured profile live inside the card, the persona's profile inside the persona file, so nothing more is needed). The `why` text
+  is what the consent dialog shows. Only the `profiles` plugin has the `peer` permission (`test/profiles-import.test.ts` pins both).
+- **Who may read, and when:** a card is read in two situations only: the user imports it, or presses "Update from Roleplay". No tick,
+  route or prompt reads a card on its own. A card's text never goes into a messenger or forum prompt; the model that makes the digest
+  gets it once. What the digest model reads: description, personality, scenario, first message, the Soul line (pronouns, class toward
+  the user, extreme traits, coping) and the structured profile lines the text does not already say. Never: example dialogue, system
+  prompt, notes for people, avatar, the private note, the sexuality and trauma sections. A card is cut to about 12000 characters.
+- **Routes** (`plugins/profiles/plugin.js`): `GET /profiles/roleplay/status` (ready or closed), `GET /profiles/roleplay` (the list: titles
+  and names only, no card text), `POST /profiles/import {kind, id, key?, model?}` (one card, one profile; the reply is the saved profile),
+  `POST /profiles/refresh {profileId, model?}` (a proposal from a new reading; nothing is saved). The screen imports one card per request,
+  so progress and "Try again" are per card.
+- **Profile ids are derived from the source** (`importId`): `rp-<card id>` (and `--<name>-<hash>` for a narrator's member), `pe-<persona id>`.
+  So "already imported" needs no record: the row is marked "Imported" when a profile with that id exists. The profile keeps
+  `from: {kind, id, key?}` (read by "Update from Roleplay") and `cardDate` as an ISO day (the screen shows it in the UI language).
+- **Names and splitting:** the name is the Soul name; a card with one Soul takes it, a card with none keeps its title (`soul: false`, shown as
+  "No Soul: name from card"); a narrator card with two or more Souls gives a group row and one row per name, and each member's digest gets
+  that member's `### Name` part of the card text. Cards of type `group` and `assistant` are hidden. A card Social cannot read (a link, a broken
+  file, over 2 MB) is counted as "could not read".
+- **The run** lives in `ImportRunner` (`src/screens/profiles/import-api.ts`), outside React: closing the window does not stop it, a failed
+  card stays failed until "Try again", Stop lets the running card finish. When the run ends while the window is closed, a notice says so.
+- **Update from Roleplay** changes About, the writing manner and adds interests the profile does not have; it never touches habits, forum
+  fields or the schedule. Accepting puts the values into the draft; the card date moves when the draft is saved.
+- **No access:** the plugin sees only `host.peer.apps()`, so it cannot tell "not installed" from "not allowed"; the dialog says both and tells
+  where to allow it (Home, the details of Social, "Access to other apps"). It is text, not a link: the app frame cannot navigate the shell
+  (sandbox without `allow-top-navigation`). A real link would need a shell call (engine work, not done). Settings > Roleplay access shows the real state
+  (no button: only the user can change it).
+- **Checked:** `bun test` (plugin with a fake peer, the runner, the diff), and a real engine in a throwaway folder with a stub Roleplay app
+  and a mock model: ask, allow, scan, import (single, narrator member, persona), model refusing, a card that is a symlink (refused by the
+  engine), traversal ids (refused), refresh, revoke; then the screens in a browser (1280 dark and light, 390 uk). **Not checked:** a real
+  model. The digest prompt is `DIGEST_SYSTEM` in the plugin; free small models may answer in broken JSON, which the screen shows as a failed
+  card with "Try again".
+
