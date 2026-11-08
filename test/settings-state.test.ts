@@ -73,13 +73,13 @@ test("adoptEngine ignores engine keys that are missing", () => {
 
 test("model options: the engine default first, then the switched-on models", () => {
   const choices = [
-    { ref: "a/one", label: "One" },
-    { ref: "b/two", label: "Two" },
+    { ref: "a/one", label: "One", provider: "Alpha" },
+    { ref: "b/two", label: "Two", provider: "Beta" },
   ];
   expect(modelOptions(choices, "", "Engine default")).toEqual([
     { value: "", label: "Engine default" },
-    { value: "a/one", label: "One" },
-    { value: "b/two", label: "Two" },
+    { value: "a/one", label: "One", group: "Alpha", sub: "one" },
+    { value: "b/two", label: "Two", group: "Beta", sub: "two" },
   ]);
 });
 

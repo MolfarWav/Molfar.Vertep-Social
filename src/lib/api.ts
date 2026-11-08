@@ -46,6 +46,8 @@ export interface ModelChoice {
   /** "<provider>/<model>", the reference a plugin request takes. */
   ref: string;
   label: string;
+  /** The connection the model comes from, for grouping. */
+  provider?: string;
 }
 
 /** The models the user has switched on (GET /v1/models). An engine that does not answer gives an empty list. */
@@ -53,8 +55,8 @@ export async function listModels(): Promise<ModelChoice[]> {
   try {
     const res = await fetch("/v1/models");
     if (!res.ok) return [];
-    const json = (await res.json()) as { models?: { provider: string; modelId: string; label?: string }[] };
-    return (json.models ?? []).map((m) => ({ ref: `${m.provider}/${m.modelId}`, label: m.label || m.modelId }));
+    const json = (await res.json()) as { models?: { provider: string; modelId: string; label?: string; connectionName?: string }[] };
+    return (json.models ?? []).map((m) => ({ ref: `${m.provider}/${m.modelId}`, label: m.label || m.modelId, provider: m.connectionName || m.provider }));
   } catch {
     return [];
   }

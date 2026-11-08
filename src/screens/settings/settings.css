@@ -11,10 +11,12 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   align-content: start;
+  /* rows take their content's height: a card clips its overflow, so without this the rows shrink to the window and cut cards off */
+  grid-auto-rows: max-content;
 }
 .s-settings .sec { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
 .s-settings .sec.tall { grid-row: span 2; }
-.s-settings .sh { display: flex; align-items: center; gap: 10px; height: 40px; margin: 0; padding: 0 14px; font-weight: 600; font-size: 13px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-settings .sh { display: flex; align-items: center; gap: 10px; height: 46px; margin: 0; padding: 0 14px; font-weight: 600; font-size: 15px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
 .s-settings .sb { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
 .s-settings .ln { display: flex; align-items: center; gap: 12px; min-height: 40px; }
 .s-settings .ln .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -53,6 +55,23 @@
 .s-settings .sel { height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--base); color: var(--ink); font: 600 13px Inter, system-ui, sans-serif; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 240px; }
 .s-settings .sel select { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: inherit; font: inherit; appearance: none; -webkit-appearance: none; cursor: pointer; padding: 0; }
 .s-settings .sel select option { background: var(--panel); color: var(--ink); }
+
+/* searchable model picker (real app): the list is fixed-positioned because the cards clip their content */
+.s-settings .sel-wrap { display: flex; min-width: 0; }
+.s-settings .sel-wrap .sel { width: 100%; cursor: pointer; text-align: left; }
+.s-settings .pickval { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-settings.is-phone .sub .sel-wrap { width: 100%; }
+.s-settings .pickpop { position: fixed; z-index: 50; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45); overflow: hidden; }
+.s-settings .picksearch { flex: none; height: 40px; margin: 8px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--base); color: var(--ink); font: 500 14px Inter, system-ui, sans-serif; }
+.s-settings .picksearch:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.s-settings .picklist { flex: 1; min-height: 0; overflow: auto; padding: 0 6px 6px; }
+.s-settings .pickgrp { position: sticky; top: 0; z-index: 1; padding: 8px 8px 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--panel); }
+.s-settings .opt { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; min-height: 40px; padding: 6px 10px; border: 0; border-radius: 8px; background: none; color: var(--ink); text-align: left; cursor: pointer; }
+.s-settings .opt:hover, .s-settings .opt:focus-visible { background: var(--raised); outline: none; }
+.s-settings .opt.on { background: color-mix(in srgb, var(--accent) 22%, var(--panel)); }
+.s-settings .optl { font: 600 14px Inter, system-ui, sans-serif; }
+.s-settings .opts { color: var(--muted); font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+.s-settings .pickno { padding: 14px 10px; color: var(--muted); font-size: 13px; }
 
 /* new topics slider */
 /* The input is 22 px wider than its track, so the thumb centre travels 0..100% of the track, as on the board. */

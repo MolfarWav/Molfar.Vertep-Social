@@ -5,6 +5,9 @@ import { TIME_OPTIONS } from "@/mock/settings";
 export interface Opt<T extends string> {
   value: T;
   label: string;
+  /** Picker only: the group heading (the provider) and the small line under the label (the model id). */
+  group?: string;
+  sub?: string;
 }
 
 /** A label row: title, optional hint, and the control. The control gets the id of the title. */

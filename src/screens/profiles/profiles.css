@@ -34,7 +34,7 @@
 .s-profiles .f { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .s-profiles .f-wide { width: 100%; }
 .s-profiles .f-grow { flex: 1; min-width: 200px; }
-.s-profiles .lb { font-weight: 700; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.s-profiles .lb { font-weight: 700; font-size: 14px; color: var(--ink); }
 .s-profiles .inp { display: block; width: 100%; min-height: 40px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 9px 12px; font: inherit; }
 .s-profiles .inp-area { min-height: 92px; resize: none; padding: 10px 12px; line-height: 1.45; }
 .s-profiles .inp-tall { min-height: 62px; }

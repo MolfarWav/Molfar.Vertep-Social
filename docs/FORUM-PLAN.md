@@ -48,6 +48,9 @@ one topic page) and a "not built yet" page in the installed app (`src/shell/foru
    plugins cannot import each other), the board or the last ~8 posts of the topic with author names, "write one forum post, 1-4 sentences".
    A new topic asks for JSON `{title, text}`. Topic subject comes from ONE function `pickSubject(profile, world)` that returns the profile's interests
    today, so the life diary and the world feed (#311) can replace it later.
+   Spreading (owner, 2026-11-08, issue #315): the daily limit must never fire at once. Besides the average gap, keep a hard minimum
+   gap between autonomous posts and a cap per 10 minutes, in every activity mode; counters live in `forum/log.json` so a restart
+   does not reset them. Only "Write now" ignores the gap, and it still counts toward the day.
 6. A failed model call posts nothing and is logged; the strip shows the last error. No retry storm: wait for the next slot.
 
 ## UI plan
@@ -70,9 +73,9 @@ one topic page) and a "not built yet" page in the installed app (`src/shell/foru
 
 ## Other open work (in order)
 1. Forum plugin and screens (this plan).
-2. Engine: read-only access to Roleplay data (security code, ask the owner first, tests in `test/security.test.ts` and `test/malicious-plugin.test.ts`).
+2. Engine: read-only access to Roleplay data (security code; the owner gave permission on 2026-11-08, so no need to ask again, but no cheap models, tests in `test/security.test.ts` and `test/malicious-plugin.test.ts`).
    Until then profiles are made by hand, interview or file.
-3. Engine: app notifications (tab count + bottom-right popup, per-app switch, 14 locales). Ask first.
+3. Engine: app notifications (tab count + bottom-right popup, per-app switch, 14 locales). Owner's permission given 2026-11-08.
 4. First messages from characters with a daily limit and quiet hours (messenger), topic source shared with the forum.
 5. Shell theme (an app cannot read the shell's colour scheme yet), "My status" in the contact list footer is fixed, guide translations (`l10n/`).
 6. Life diary and world feed (#311), close topics (#312).

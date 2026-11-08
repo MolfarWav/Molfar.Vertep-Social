@@ -82,7 +82,10 @@ export function adoptEngine<T extends object>(local: T, sent: object, engine: ob
  * A saved reference that is not in the list still shows, as its own text.
  */
 export function modelOptions(choices: ModelChoice[], current: string, engineDefault: string): Opt<string>[] {
-  const opts: Opt<string>[] = [{ value: "", label: engineDefault }, ...choices.map((c) => ({ value: c.ref, label: c.label }))];
+  const opts: Opt<string>[] = [
+    { value: "", label: engineDefault },
+    ...choices.map((c) => ({ value: c.ref, label: c.label, group: c.provider, sub: c.ref.slice(c.ref.indexOf("/") + 1) })),
+  ];
   if (current && !choices.some((c) => c.ref === current)) opts.push({ value: current, label: current });
   return opts;
 }

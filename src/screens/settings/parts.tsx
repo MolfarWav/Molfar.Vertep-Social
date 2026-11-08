@@ -3,6 +3,7 @@ import { useT, currentLang } from "@/i18n/index";
 import { PREVIEW, type ModelChoice } from "@/lib/api";
 import { MODEL_IDS, type SettingsMock } from "@/mock/settings";
 import { Pick, Row, Switch } from "./controls";
+import { ModelPick } from "./model-pick";
 import { modelOptions } from "./real";
 import { reqForm, requestsPerDay, type SettingsError } from "./state";
 
@@ -63,15 +64,20 @@ export function ModelRows({ s, set, choices }: { s: SettingsMock; set: Patch; ch
       {rows.map((r) => (
         <Row key={r.key} title={r.title}>
           {(id) => (
-            <Pick
-              labelledBy={id}
-              value={s.models[r.key]}
-              options={PREVIEW ? previewOptions : modelOptions(choices, s.models[r.key], t("settings.model.engineDefault"))}
-              onChange={(v) => set({ models: { ...s.models, [r.key]: v } })}
-            />
+            PREVIEW ? (
+              <Pick labelledBy={id} value={s.models[r.key]} options={previewOptions} onChange={(v) => set({ models: { ...s.models, [r.key]: v } })} />
+            ) : (
+              <ModelPick
+                labelledBy={id}
+                value={s.models[r.key]}
+                options={modelOptions(choices, s.models[r.key], t("settings.model.engineDefault"))}
+                onChange={(v) => set({ models: { ...s.models, [r.key]: v } })}
+              />
+            )
           )}
         </Row>
       ))}
+      {!PREVIEW && <div className="k hint">{t("settings.models.engineHint")}</div>}
     </>
   );
 }
