@@ -27,6 +27,8 @@ export interface TopicViewProps {
   /** Sends a reply; resolves to an error text, or null when it worked. */
   onSend: (text: string, quoteOf: string | null) => Promise<string | null>;
   onRetry: () => void;
+  /** Closes (true) or reopens (false) the topic; resolves to an error text, or null when it worked. Real forum only. */
+  onSetLocked?: (locked: boolean) => Promise<string | null>;
 }
 
 export function TopicView(p: TopicViewProps) {
@@ -38,6 +40,25 @@ export function TopicView(p: TopicViewProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const posts = p.posts ?? [];
   const postsLabel = countLabel(t, "posts", posts.length);
+
+  const [locking, setLocking] = useState(false);
+  const [lockError, setLockError] = useState("");
+  const setLocked = async (locked: boolean) => {
+    if (!p.onSetLocked || locking) return;
+    setLocking(true);
+    setLockError("");
+    const err = await p.onSetLocked(locked);
+    setLocking(false);
+    if (err) setLockError(err);
+  };
+  // the owner's own switch: close an open topic, reopen a closed one (the real forum only)
+  const lockButton = p.onSetLocked && (
+    <button type="button" className="btn" onClick={() => void setLocked(!p.locked)} disabled={locking} aria-busy={locking}>
+      {p.locked ? (locking ? t("forum.topic.reopening") : t("forum.topic.reopen")) : locking ? t("forum.topic.closing") : t("forum.topic.close")}
+    </button>
+  );
+  const lockErrLine = lockError && <div className="form-err" role="alert">{t("forum.topic.lockFailed", { error: lockError })}</div>;
+  const lockedText = t(p.onSetLocked ? "forum.topic.lockedYours" : "forum.topic.locked");
 
   const focusReply = () => ref.current?.focus();
   const pick = (post: ShownPost) => {
@@ -118,11 +139,13 @@ export function TopicView(p: TopicViewProps) {
         </header>
         <div key="topic" className="fscroll pg">
           {crumbs}
-          {p.live && (
+          {(p.live || p.onSetLocked) && (
             <div className="tools">
-              <WriteNowButton busy={p.writing} onClick={p.onWriteNow} />
+              {p.live && !p.locked && <WriteNowButton busy={p.writing} onClick={p.onWriteNow} />}
+              {lockButton}
             </div>
           )}
+          {lockErrLine}
           <NoticeLine notice={p.notice} onClose={p.onCloseNotice} />
           {state}
           {posts.map((post) => (
@@ -132,7 +155,7 @@ export function TopicView(p: TopicViewProps) {
         {p.locked ? (
           <div className="rep lock-rep">
             <LockIcon size={18} />
-            {t("forum.topic.locked")}
+            <span className="lock-text">{lockedText}</span>
           </div>
         ) : (
           <div className="rep col">
@@ -167,9 +190,11 @@ export function TopicView(p: TopicViewProps) {
             <span className="ttl-meta">
               {t("forum.topic.page", { page: 1, pages: 1 })} · {postsLabel}
             </span>
-            {p.live && <WriteNowButton busy={p.writing} onClick={p.onWriteNow} />}
+            {p.live && !p.locked && <WriteNowButton busy={p.writing} onClick={p.onWriteNow} />}
+            {lockButton}
             {!p.locked && <button type="button" className="btn cta" onClick={focusReply}>{t("forum.topic.reply")}</button>}
           </div>
+          {lockErrLine}
           <NoticeLine notice={p.notice} onClose={p.onCloseNotice} />
           {state}
           {posts.map((post) => (
@@ -178,7 +203,7 @@ export function TopicView(p: TopicViewProps) {
           {p.locked ? (
             <div className="lockbox">
               <LockIcon />
-              {t("forum.topic.locked")}
+              <span className="lock-text">{lockedText}</span>
             </div>
           ) : (
             <div className="qr">

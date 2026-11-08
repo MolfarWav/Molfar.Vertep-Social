@@ -18,6 +18,8 @@
  *   POST /forum/topic {board, title, text}    the user opens a topic
  *   POST /forum/reply {topic, text, quoteOf?} the user replies
  *   POST /forum/read {topic}          clears the topic's unread mark
+ *   POST /forum/lock {topic, locked}  the user closes (locked: true) or reopens a topic; a closed topic takes no
+ *          new posts (the user's or the characters'), keeps its place by its last post and shows a lock
  *   POST /forum/force {board?, topic?, count?}  "Write now": characters write at once (1 to 3 posts), ignoring the
  *          daily limit, the quiet hours, the schedule and the gaps; the posts still count toward the day
  *
@@ -821,6 +823,22 @@ function readRoute(req, host) {
   return ok({ ok: true });
 }
 
+/**
+ * The user closes or reopens a topic. A closed topic takes no posts from anybody: the replies route and the planner
+ * refuse it. Closing changes nothing else: `lastAt` stays, so the topic is not bumped and sinks as others rise.
+ * The replies a character still owed the user are dropped, so nobody answers after a reopen out of date.
+ */
+function lockRoute(req, host) {
+  const b = isObj(req.body) ? req.body : {};
+  const topic = readTopic(host.fs, String(b.topic || ""));
+  if (!topic) return ok({ error: "no such topic" }, 404);
+  if (typeof b.locked !== "boolean") return ok({ error: "locked must be true or false" }, 400);
+  topic.locked = b.locked;
+  if (b.locked) topic.owe = 0;
+  writeTopic(host.fs, topic);
+  return ok({ ok: true, locked: topic.locked });
+}
+
 /** "Write now": up to three posts at once, requested together in the first pass, filed in order in the second. */
 function forceRoute(req, host) {
   const fsx = host.fs;
@@ -917,6 +935,7 @@ export function handleRoute(req, host) {
   if (path === "/forum/topic" && method === "POST") return newTopicRoute(req, host);
   if (path === "/forum/reply" && method === "POST") return replyRoute(req, host);
   if (path === "/forum/read" && method === "POST") return readRoute(req, host);
+  if (path === "/forum/lock" && method === "POST") return lockRoute(req, host);
   if (path === "/forum/force" && method === "POST") return forceRoute(req, host);
   return ok({ error: "not found" }, 404);
 }

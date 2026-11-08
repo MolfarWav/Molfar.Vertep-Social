@@ -18,7 +18,8 @@
  *   state=locked        topic: a lock note instead of the reply box (use with view=topic)
  *   state=moderated     topic: post 2 is a moderator's placeholder (use with view=topic)
  *
- * Mock only: the search, preview, more, "ask Molfar" and "Write now" buttons do nothing.
+ * Mock only: the search, preview, more, "ask Molfar" and "Write now" buttons do nothing. "Close topic" / "Reopen topic"
+ * work on the page only (nothing is saved).
  * A reply (quick reply or Send) appends a post by the user to the topic.
  */
 import { PREVIEW } from "@/lib/api";

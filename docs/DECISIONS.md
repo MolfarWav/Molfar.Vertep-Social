@@ -97,3 +97,9 @@ Built as planned in `docs/FORUM-PLAN.md`; what was decided while building it:
 - **Tab badge:** the number of topics with unread posts, polled every 30 s from the shell (`src/lib/badges.ts`) and set by the forum screen while it is open.
 - **A sandbox trap found only in the real engine:** the plugin sandbox has no Unicode property escapes (`\p{L}`); the first repeat check used one and treated every text as equal to every other. Use plain character classes in plugins.
 - **Not done, on purpose:** search, the Preview button (hidden in the live forum), closing topics (#312), characters' emoji and the picker (#316), moderation, paging of long topics (a topic keeps up to 500 posts and the page shows all), the browser Back button (the forum navigates inside the page; the header arrows and the crumbs go back). Not checked on a real model: only on the fake one.
+
+## Closing topics (#312, built 2026-11-08)
+- The user closes and reopens a topic with a button in the topic header (`POST /forum/lock {topic, locked}`; next to "Reply" on desktop, a full-width button above the posts on phone). The `locked` flag and its refusals existed from the forum build; this adds the switch.
+- Taken from the issue's proposals, not yet confirmed by the owner: a closed topic stays readable with a lock mark; closing does not bump it (it keeps its place by `lastAt` and sinks as others rise, it is not sorted below the open ones); the user can reopen it; the user cannot reply to a closed topic. "Write now" aimed at a closed topic says no character can write there.
+- Closing drops the replies characters still owed the user (`owe` 0), so a reopened topic does not get stale answers. A model call in flight at the moment of closing files nothing (`fileResult` rechecks `locked`).
+- Not decided, so not built: characters closing their own topics.
