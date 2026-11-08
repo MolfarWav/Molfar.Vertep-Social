@@ -131,7 +131,7 @@ export function ProfileListDesktop(props: ListProps) {
       <div className="tbar">{t("profiles.listTitle", { n: props.profiles.length })}</div>
       <div className="desk-btns">
         <button type="button" className="btn cta" onClick={props.onNew}>{t("profiles.new")}</button>
-        <button type="button" className="btn" onClick={props.onImport}>{t("profiles.import")}</button>
+        {props.onImport && <button type="button" className="btn" onClick={props.onImport}>{t("profiles.import")}</button>}
       </div>
       <SearchBox value={props.query} onChange={props.onQuery} phone={false} />
       <div className="seg seg-small" role="radiogroup" aria-label={t("profiles.filter.label")}>
@@ -163,9 +163,11 @@ export function ProfileListPhone(props: ListProps) {
     <div className="pl-phone">
       <header className="hd-list">
         <h1 className="title">{t("profiles.title")}</h1>
-        <button type="button" className="hbtn" aria-label={t("profiles.import")} onClick={props.onImport}>
-          <ImportIcon />
-        </button>
+        {props.onImport && (
+          <button type="button" className="hbtn" aria-label={t("profiles.import")} onClick={props.onImport}>
+            <ImportIcon />
+          </button>
+        )}
       </header>
       <SearchBox value={props.query} onChange={props.onQuery} phone>
         {props.query !== "" && (

@@ -38,7 +38,7 @@ Query: `screen=messenger|forum|profiles|settings`, `theme=vertep|dark|light`, `l
 values documented in the screen's `index.tsx` header.
 
 ## Model calls
-The profile interview and "Fill empty" go through `src/screens/profiles/model-api.ts`, a fake shaped like the Roleplay `profile` plugin routes (`/profile/persona-ideas`, `/profile/fill`). The real calls come from adapting `plugins/profile/plugin.js` of Roleplay into `plugins/profiles/`.
+The profile interview and "Fill empty" go through `src/screens/profiles/model-api.ts`. In preview (`?screen=`) they are fakes; in the app they call the plugin routes `POST /profiles/suggest` and `POST /profiles/fill` (`plugins/profiles/plugin.js`, adapted from Roleplay's profile plugin). The app's profile load, save and delete go through `src/screens/profiles/persist.ts`: a profile is sent when its saved form differs from the copy the server confirmed; drafts are never sent.
 
 ## Decisions
 See `docs/DECISIONS.md` for what the owner decided and where to continue.

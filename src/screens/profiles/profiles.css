@@ -34,7 +34,7 @@
 .s-profiles .f { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .s-profiles .f-wide { width: 100%; }
 .s-profiles .f-grow { flex: 1; min-width: 200px; }
-.s-profiles .lb { font-weight: 700; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.s-profiles .lb { font-weight: 700; font-size: 14px; color: var(--ink); }
 .s-profiles .inp { display: block; width: 100%; min-height: 40px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 9px 12px; font: inherit; }
 .s-profiles .inp-area { min-height: 92px; resize: none; padding: 10px 12px; line-height: 1.45; }
 .s-profiles .inp-tall { min-height: 62px; }
@@ -328,3 +328,20 @@
 /* desktop save bar: shows only while the draft is dirty; the phone bar (above) is unchanged */
 .s-profiles .sv-desk { flex: none; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
 .s-profiles .sv-desk .btn { height: 36px; }
+/* app mode: one-line notice for a failed save or delete (index.tsx), dismissible */
+.s-profiles .pf-banner { position: absolute; top: 8px; left: 12px; right: 12px; z-index: 30; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; border: 1px solid var(--bad); border-radius: 10px; background: var(--raised); box-shadow: 0 8px 22px rgb(0 0 0 / 0.35); font-size: 13px; }
+.s-profiles .pf-banner .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-profiles .pf-banner .btn { height: 32px; flex: none; }
+@media (max-width: 767px) {
+  .s-profiles .pf-banner { font-size: 14px; }
+  .s-profiles .pf-banner .btn { height: 44px; }
+}
+
+.s-profiles .chip-rm { display: inline-flex; align-items: center; gap: 2px; }
+.s-profiles .chip-x { width: 24px; height: 24px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: 600 15px/1 Inter, "Inter Variable", system-ui, sans-serif; cursor: pointer; }
+.s-profiles .chip-x:hover { color: var(--ink); background: var(--raised); }
+.s-profiles .chip-in { height: 28px; width: 140px; padding: 0 10px; border-radius: 999px; font-size: 12px; }
+@media (max-width: 767px) {
+  .s-profiles .chip-x { width: 32px; height: 32px; }
+  .s-profiles .chip-in { height: 36px; font-size: 14px; }
+}

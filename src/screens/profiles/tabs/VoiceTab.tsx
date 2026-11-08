@@ -1,7 +1,7 @@
 // "Манера письма": how the profile writes. The preview shows one sample line
 // in the chosen voice; it is a mock, not a model call.
 import { useT } from "@/i18n/index";
-import { Chip, Field, Seg, Slider } from "../ui";
+import { AddChip, Chip, Field, Seg, Slider, withItem } from "../ui";
 import type { TabProps } from "./types";
 
 export function VoiceTab({ form, set, name }: TabProps) {
@@ -63,9 +63,9 @@ export function VoiceTab({ form, set, name }: TabProps) {
           <span className="lb">{t("profiles.voice.neverWrites")}</span>
           <div className="chips">
             {v.never.map((x) => (
-              <Chip key={x}>{x}</Chip>
+              <Chip key={x} onRemove={() => setVoice({ never: v.never.filter((y) => y !== x) })} removeLabel={t("profiles.chip.remove", { name: x })}>{x}</Chip>
             ))}
-            <button type="button" className="chip">{t("profiles.about.addChip")}</button>
+            <AddChip label={t("profiles.about.addChip")} inputLabel={t("profiles.chip.new")} onAdd={(x) => setVoice({ never: withItem(v.never, x) })} />
           </div>
         </div>
       </div>

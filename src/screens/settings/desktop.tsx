@@ -1,10 +1,12 @@
 import { useT } from "@/i18n/index";
 import { LIMITS, type SettingsMock } from "@/mock/settings";
+import type { ModelChoice } from "@/lib/api";
 import { Row, Segmented, Slider, Stepper, Switch, TimeRange, type Opt } from "./controls";
-import { AccessControl, Card, ModelRows, NotifyRows, Patch, Summary } from "./parts";
+import { AccessControl, Card, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
+import type { SettingsError } from "./state";
 
 /** Desktop layout: two columns of cards, the same order and placement as the approved board. */
-export function DesktopSettings({ s, set }: { s: SettingsMock; set: Patch }) {
+export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; set: Patch; choices: ModelChoice[]; error: SettingsError | null }) {
   const t = useT();
   const activity: Opt<SettingsMock["activity"]>[] = [
     { value: "quiet", label: t("settings.activity.quiet") },
@@ -23,6 +25,7 @@ export function DesktopSettings({ s, set }: { s: SettingsMock; set: Patch }) {
 
   return (
     <div className="s-settings">
+      <Notice error={error} />
       <Card title={t("settings.section.forum")} className="tall">
         <Row title={t("settings.autonomous")} hint={t(s.autonomous ? "settings.autonomous.hintOn" : "settings.autonomous.hint")}>
           {(id) => <Switch labelledBy={id} checked={s.autonomous} onChange={(v) => set({ autonomous: v })} />}
@@ -94,7 +97,7 @@ export function DesktopSettings({ s, set }: { s: SettingsMock; set: Patch }) {
       </Card>
 
       <Card title={t("settings.section.models")}>
-        <ModelRows s={s} set={set} />
+        <ModelRows s={s} set={set} choices={choices} />
         <div className="k hint">{t("settings.models.hint")}</div>
       </Card>
 
@@ -104,7 +107,6 @@ export function DesktopSettings({ s, set }: { s: SettingsMock; set: Patch }) {
 
       <Card title={t("settings.section.access")}>
         <AccessControl granted={s.roleplayAccess} onToggle={() => set({ roleplayAccess: !s.roleplayAccess })} />
-        <div className="k hint">{t("settings.access.note")}</div>
       </Card>
     </div>
   );

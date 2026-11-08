@@ -5,6 +5,11 @@
 // run), the update diff, the unsaved-changes question on leaving, "Fill empty"
 // (review of the model's proposals) and "New profile" (choice, short interview).
 //
+// App mode (no `?screen=`): the profiles load from the plugin on mount, a saved
+// change is sent to it (persist.ts), and "Delete profile" removes one. The
+// Roleplay import is not offered yet (it needs an engine grant). Preview mode
+// keeps the mock data and the mock model calls.
+//
 // Preview parameters (`?screen=profiles&...`, read once on load):
 //   view=editor   phone only: open the editor of the first profile
 //   view=import   no profiles yet, with the import dialog open
@@ -48,6 +53,7 @@
 import "./profiles.css";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/i18n/index";
+import { PREVIEW, call } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
 import { PROFILES, type MockProfile, type ProfileForm } from "@/mock/profiles";
 import { IMPORT_ENTRIES, UPDATE_DIFF, profileFromEntry, type ImportEntry } from "@/mock/profiles-import";
@@ -55,9 +61,10 @@ import { fillEmpty, mockScript, previewFile, previewInterview, previewProposal }
 import { ProfileEditor, PhoneEditor, formOf } from "./editor";
 import { ProfileListDesktop, ProfileListPhone } from "./list";
 import { ImportDialog, ImportRun, FirstRun, type RunPreview } from "./import";
-import { DiffDialog, UnsavedDialog } from "./states";
+import { DeleteDialog, DiffDialog, UnsavedDialog } from "./states";
 import { FillReview, type FillPhase } from "./fill-ui";
 import { applyProposals, emptyKeys, itemsOf, recordOf, type FillItem } from "./fill";
+import { errorText, fullProfile, stripStamps, sync } from "./persist";
 import { NewProfileFlow, type NewStart } from "./newprofile";
 import { isFilter, type SourceFilter } from "./search";
 import { isTab, type TabId } from "./tabs/types";
@@ -120,6 +127,8 @@ interface Store {
 }
 
 function makeStore(pv: Preview): Store {
+  // The app starts empty and loads the profiles from the plugin.
+  if (!PREVIEW) return { all: [], saved: {}, drafts: {} };
   const none = pv.state === "firstrun" || pv.view === "import";
   const all = none ? [] : PROFILES.map((p) => (pv.state === "habits-empty" && p.id === "mavka" ? { ...p, habits: [] } : p));
   const saved = Object.fromEntries(all.map((p) => [p.id, formOf(p)]));
@@ -149,6 +158,12 @@ const dropDraft = (s: Store, id: string): Store => {
   const drafts = { ...s.drafts };
   delete drafts[id];
   return { ...s, drafts };
+};
+/** The profile removed: its saved form and its draft go with it. */
+const dropProfile = (s: Store, id: string): Store => {
+  const saved = { ...s.saved };
+  delete saved[id];
+  return { ...dropDraft(s, id), all: s.all.filter((p) => p.id !== id), saved };
 };
 
 /** Which editor sections differ from the saved form, as translation keys. */
@@ -209,6 +224,12 @@ export function Profiles() {
   useEffect(() => () => {
     fillCount.current += 1;
   }, []);
+  // App mode: the profiles are loaded once (Try again loads them again); a failed save or delete shows a notice.
+  const [loaded, setLoaded] = useState(PREVIEW);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadTry, setLoadTry] = useState(0);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [newMode, setNewMode] = useState<{ start: NewStart } | null>(() => {
     if (pv.view === "new") return { start: { stage: "choose" } };
     if (pv.view === "interview") return { start: { stage: "ask" } };
@@ -225,6 +246,60 @@ export function Profiles() {
     if (pv.state === "importfail") return { kind: "run", entries: RUN_ENTRIES, preview: "importfail" };
     return null;
   });
+
+  // App mode: load the profiles once; the copies the server returns are the saved ones, so nothing is sent back.
+  useEffect(() => {
+    if (PREVIEW) return;
+    let live = true;
+    setLoadError(null);
+    call<{ profiles: (MockProfile & { createdAt?: string; updatedAt?: string })[] }>("GET", "/profiles").then(
+      (res) => {
+        if (!live) return;
+        const all = res.profiles.map(stripStamps);
+        for (const p of all) sync.seed(fullProfile(p, formOf(p)));
+        setStore({ all, saved: Object.fromEntries(all.map((p) => [p.id, formOf(p)])), drafts: {} });
+        setLoaded(true);
+      },
+      (e: unknown) => {
+        if (live) setLoadError(errorText(e));
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [loadTry]);
+
+  // App mode: a profile whose saved form differs from the copy the server has is sent. Drafts are not saved forms.
+  useEffect(() => {
+    if (PREVIEW || !loaded) return;
+    for (const p of store.all) {
+      const full = fullProfile(p, store.saved[p.id]);
+      sync.track(full);
+      if (sync.isConfirmed(full)) continue;
+      sync.save(full).then(
+        () => setNotice(null),
+        (e: unknown) => setNotice(t("profiles.saveFailed", { message: errorText(e) })),
+      );
+    }
+  }, [store.all, store.saved, loaded]);
+
+  /** Delete profile, confirmed: removed on the engine first; then the next profile is selected (phone: the list). */
+  const confirmDelete = (id: string) => {
+    const at = store.all.findIndex((p) => p.id === id);
+    const rest = store.all.filter((p) => p.id !== id);
+    const next = rest[at] ?? rest[0];
+    setDeleting(null);
+    sync.remove(id).then(
+      () => {
+        setStore((s) => dropProfile(s, id));
+        setSelectedId(next?.id ?? "");
+        setOpenId(null);
+        setUnsaved((u) => (u?.id === id ? null : u));
+        setFill((f) => (f?.id === id ? null : f));
+      },
+      (e: unknown) => setNotice(t("profiles.deleteFailed", { message: errorText(e) })),
+    );
+  };
 
   const byId = (id: string | null) => (id ? store.all.find((p) => p.id === id) : undefined);
   const deskProfile = byId(selectedId) ?? store.all[0];
@@ -328,7 +403,8 @@ export function Profiles() {
   });
 
   const openImport = () => setImportMode({ kind: "pick" });
-  const list = { profiles: store.all, query, onQuery: setQuery, source, onSource: setSource, onImport: openImport, onNew: () => setNewMode({ start: { stage: "choose" } }) };
+  // The Roleplay import is offered in preview only (the app needs an engine grant first).
+  const list = { profiles: store.all, query, onQuery: setQuery, source, onSource: setSource, onImport: PREVIEW ? openImport : undefined, onNew: () => setNewMode({ start: { stage: "choose" } }) };
 
   const editorFor = (p: MockProfile) => ({
     profile: p,
@@ -349,14 +425,23 @@ export function Profiles() {
     onDiscard: () => setStore((s) => dropDraft(s, p.id)),
     onRefresh: () => setDiffOpen(true),
     fill: fillPropsFor(p.id),
+    onDelete: PREVIEW ? undefined : () => setDeleting(p.id),
   });
 
   const unsavedProfile = unsaved ? byId(unsaved.id) : undefined;
   const run = importMode?.kind === "run" ? importMode : null;
+  const deletingProfile = deleting ? byId(deleting) : undefined;
 
   let body;
-  if (store.all.length === 0) {
-    body = <FirstRun phone={phone} onImport={openImport} />;
+  if (!loaded) {
+    body = loadError ? (
+      <section className={`first${phone ? " first-p" : ""}`} role="alert">
+        <p className="k first-text">{t("profiles.loadFailed", { message: loadError })}</p>
+        <button type="button" className="btn cta" onClick={() => setLoadTry((n) => n + 1)}>{t("profiles.retry")}</button>
+      </section>
+    ) : null;
+  } else if (store.all.length === 0) {
+    body = PREVIEW ? <FirstRun phone={phone} onImport={openImport} /> : <FirstRun phone={phone} onNew={() => setNewMode({ start: { stage: "choose" } })} />;
   } else if (phone) {
     body = phoneProfile ? (
       <PhoneEditor key={phoneProfile.id} {...editorFor(phoneProfile)} phone onBack={() => leave(() => setOpenId(null))} />
@@ -375,6 +460,12 @@ export function Profiles() {
   return (
     <div className={`s-profiles ${phone ? "is-phone" : "is-desk"}`}>
       {body}
+      {notice && (
+        <div className="pf-banner" role="alert">
+          <span className="t">{notice}</span>
+          <button type="button" className="btn" onClick={() => setNotice(null)}>{t("profiles.dismiss")}</button>
+        </div>
+      )}
       {importMode?.kind === "pick" && (
         <ImportDialog onClose={() => setImportMode(null)} onCreate={(entries) => setImportMode({ kind: "run", entries })} />
       )}
@@ -389,15 +480,22 @@ export function Profiles() {
           unnamed={unnamed}
           seed={pv.seed}
           onClose={() => setNewMode(null)}
-          onRoleplay={() => {
-            setNewMode(null);
-            openImport();
-          }}
+          onRoleplay={
+            PREVIEW
+              ? () => {
+                  setNewMode(null);
+                  openImport();
+                }
+              : undefined
+          }
           onCreate={(p) => {
             setNewMode(null);
             leave(() => finishCreate(p));
           }}
         />
+      )}
+      {deletingProfile && (
+        <DeleteDialog name={deletingProfile.name} onCancel={() => setDeleting(null)} onConfirm={() => confirmDelete(deletingProfile.id)} />
       )}
       {diffOpen && editing && (
         <DiffDialog name={editing.name} profileId={editing.id} onClose={() => setDiffOpen(false)} onAccept={() => acceptDiff(editing.id)} />

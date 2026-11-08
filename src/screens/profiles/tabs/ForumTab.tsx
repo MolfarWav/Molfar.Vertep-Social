@@ -3,7 +3,7 @@
 import { useT } from "@/i18n/index";
 import { Avatar } from "@/components/Avatar";
 import type { ForumForm } from "@/mock/profiles";
-import { Chip, Field, Slider, Switch } from "../ui";
+import { AddChip, Chip, Field, Slider, Switch } from "../ui";
 import type { TabProps } from "./types";
 
 export function ForumTab({ form, set, name, hue }: TabProps) {
@@ -47,11 +47,20 @@ export function ForumTab({ form, set, name, hue }: TabProps) {
                 key={c.name}
                 on={c.on}
                 onClick={() => setF({ favourites: f.favourites.map((x, j) => (j === i ? { ...x, on: !x.on } : x)) })}
+                onRemove={() => setF({ favourites: f.favourites.filter((_, j) => j !== i) })}
+                removeLabel={t("profiles.chip.remove", { name: c.name })}
               >
                 {c.name}
               </Chip>
             ))}
-            <button type="button" className="chip">{t("profiles.about.addChip")}</button>
+            <AddChip
+              label={t("profiles.about.addChip")}
+              inputLabel={t("profiles.chip.new")}
+              onAdd={(name) => {
+                const n = name.trim();
+                if (n && f.favourites.length < 20 && !f.favourites.some((x) => x.name === n)) setF({ favourites: [...f.favourites, { name: n, on: true }] });
+              }}
+            />
           </div>
         </div>
       </div>

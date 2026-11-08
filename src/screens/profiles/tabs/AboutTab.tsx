@@ -2,11 +2,12 @@
 // wrote itself. The user's own habits are in the Habits tab.
 import { useT } from "@/i18n/index";
 import type { Habit } from "@/mock/profiles";
-import { Chip, Field } from "../ui";
+import { PREVIEW } from "@/lib/api";
+import { AddChip, Chip, Field, withItem } from "../ui";
 import { FillActions } from "../fill-ui";
 import type { TabProps } from "./types";
 
-export function AboutTab({ form, set, onRefresh, fill }: TabProps) {
+export function AboutTab({ form, set, onRefresh, fill, source }: TabProps) {
   const t = useT();
   const selfHabits = form.habits.filter((h) => h.by === "self");
   const removeHabit = (h: Habit) => set({ habits: form.habits.filter((x) => x.id !== h.id) });
@@ -14,11 +15,15 @@ export function AboutTab({ form, set, onRefresh, fill }: TabProps) {
   return (
     <div className="tab-stack tab-about">
       <div className="note-row">
-        <p className="note">
-          {t("profiles.about.note")}{" "}
-          <button type="button" className="linkbtn" onClick={onRefresh}>{t("profiles.editor.refresh")}</button>{" "}
-          {t("profiles.about.refreshHint")}
-        </p>
+        {PREVIEW || source === "roleplay" ? (
+          <p className="note">
+            {t("profiles.about.note")}{" "}
+            <button type="button" className="linkbtn" onClick={onRefresh}>{t("profiles.editor.refresh")}</button>{" "}
+            {t("profiles.about.refreshHint")}
+          </p>
+        ) : (
+          <p className="note">{t("profiles.about.noteOwn")}</p>
+        )}
         {fill?.layout === "desk" && <FillActions fill={fill} />}
       </div>
       {fill?.layout === "phone" && <FillActions fill={fill} />}
@@ -43,9 +48,9 @@ export function AboutTab({ form, set, onRefresh, fill }: TabProps) {
         <span className="lb">{t("profiles.about.interests")}</span>
         <div className="chips">
           {form.interests.map((x) => (
-            <Chip key={x}>{x}</Chip>
+            <Chip key={x} onRemove={() => set({ interests: form.interests.filter((y) => y !== x) })} removeLabel={t("profiles.chip.remove", { name: x })}>{x}</Chip>
           ))}
-          <button type="button" className="chip">{t("profiles.about.addChip")}</button>
+          <AddChip label={t("profiles.about.addChip")} inputLabel={t("profiles.chip.new")} onAdd={(x) => set({ interests: withItem(form.interests, x) })} />
         </div>
       </div>
 

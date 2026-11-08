@@ -1,14 +1,16 @@
 // The model calls of the Profiles screen, as the screen sees them. Both
-// functions take and return the shapes of the Roleplay profile plugin
-// (plugins/profile/plugin.js): POST /profile/persona-ideas ("suggest") and
-// POST /profile/fill ("fillEmpty"). Here they are fakes: no network, canned
-// Ukrainian text, a fixed delay. Wiring them to the app means replacing the
-// bodies only; the screen does not change. Nothing else in the screen fakes a call.
+// functions take and return the shapes of the Social profiles plugin
+// (plugins/profiles/plugin.js): POST /profiles/suggest and POST /profiles/fill.
+// In preview mode (`?screen=`) they are fakes: no network, canned Ukrainian
+// text, a fixed delay. In the app they call the plugin routes.
 //
 // Preview states (mockScript) pick the outcome of the next calls:
 //   newfail / fillfail   the first call fails, the next ones succeed
 //   newnomodel / fillnomodel   every call says no model is chosen
 //   fillnone   the first fill call proposes nothing
+
+import { PREVIEW, call } from "@/lib/api";
+import { errorText, flushProfile } from "./persist";
 
 export type FieldKey = "about" | "interests" | "habits" | "voiceText" | "rank" | "signature";
 
@@ -104,7 +106,8 @@ export function previewFile(): PickedText {
 }
 
 /** Three drafts and up to two quick questions from a few words. */
-export async function suggest(_input: SuggestInput): Promise<SuggestResult> {
+export async function suggest(input: SuggestInput): Promise<SuggestResult> {
+  if (!PREVIEW) return suggestReal(input);
   await wait(2000);
   const outcome = next("suggest");
   if (outcome === "no-model") return { ok: false, error: "no model is chosen", code: "no-model" };
@@ -121,12 +124,32 @@ export function previewProposal(fields: FieldKey[]): Partial<Record<FieldKey, st
 
 /** Proposals for the requested empty fields only. The mock ignores the profile's text. */
 export async function fillEmpty(input: FillInput): Promise<FillResult> {
+  if (!PREVIEW) return fillReal(input);
   await wait(1500);
   const outcome = next("fill");
   if (outcome === "no-model") return { ok: false, error: "no model is chosen", code: "no-model" };
   if (outcome === "fail") return { ok: false, error: "model did not answer" };
   if (outcome === "none") return { ok: true, proposal: {} };
   return { ok: true, proposal: previewProposal(input.fields) };
+}
+
+/** The app: the suggest route. A failed call becomes a failed result, as the fake returns one. */
+async function suggestReal(input: SuggestInput): Promise<SuggestResult> {
+  try {
+    return await call<SuggestResult>("POST", "/profiles/suggest", { idea: input.idea, wish: input.wish, image: input.image });
+  } catch (e) {
+    return { ok: false, error: errorText(e) };
+  }
+}
+
+/** The app: the saved copy goes to the engine first, because the route reads it there. */
+async function fillReal(input: FillInput): Promise<FillResult> {
+  try {
+    await flushProfile(input.profileId);
+    return await call<FillResult>("POST", "/profiles/fill", { profileId: input.profileId, fields: input.fields });
+  } catch (e) {
+    return { ok: false, error: errorText(e) };
+  }
 }
 
 const CANNED_FILL: Record<FieldKey, string | string[]> = {

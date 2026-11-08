@@ -2,8 +2,10 @@ import { useState, type ReactNode } from "react";
 import { useNav } from "@/shell/nav";
 import { useT } from "@/i18n/index";
 import { LIMITS, type SettingsMock } from "@/mock/settings";
+import { PREVIEW, type ModelChoice } from "@/lib/api";
 import { Row, Segmented, Stepper, Switch, TimeRange, type Opt } from "./controls";
-import { AccessControl, ModelRows, NotifyRows, Patch, Summary } from "./parts";
+import { AccessControl, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
+import type { SettingsError } from "./state";
 
 type Open = "quiet" | "models" | "notify" | "access" | null;
 
@@ -31,7 +33,7 @@ function Disclosure({ id, open, onToggle, title, hint, children }: { id: Exclude
 }
 
 /** Phone layout: one scrolling page with its own header. The shell's bottom tabs stay (tab "More"). */
-export function PhoneSettings({ s, set }: { s: SettingsMock; set: Patch }) {
+export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set: Patch; choices: ModelChoice[]; error: SettingsError | null }) {
   const t = useT();
   const { go } = useNav();
   const [open, setOpen] = useState<Open>(null);
@@ -57,6 +59,7 @@ export function PhoneSettings({ s, set }: { s: SettingsMock; set: Patch }) {
       </header>
 
       <div className="pg">
+        <Notice error={error} />
         <h2 className="gl">{t("settings.group.forum")}</h2>
         <section className="sec" aria-label={t("settings.group.forum")}>
           <Row title={t("settings.autonomous.phone")}>
@@ -97,7 +100,7 @@ export function PhoneSettings({ s, set }: { s: SettingsMock; set: Patch }) {
         <h2 className="gl">{t("settings.group.other")}</h2>
         <section className="sec" aria-label={t("settings.group.other")}>
           <Disclosure id="models" open={open} onToggle={toggle} title={t("settings.section.models")} hint={t("settings.models.phone.hint")}>
-            <ModelRows s={s} set={set} />
+            <ModelRows s={s} set={set} choices={choices} />
           </Disclosure>
           <Disclosure id="notify" open={open} onToggle={toggle} title={t("settings.section.notify")} hint={t("settings.notify.phone.hint")}>
             <NotifyRows s={s} set={set} />
@@ -107,10 +110,9 @@ export function PhoneSettings({ s, set }: { s: SettingsMock; set: Patch }) {
             open={open}
             onToggle={toggle}
             title={t("settings.section.access")}
-            hint={t(s.roleplayAccess ? "settings.access.on" : "settings.access.off")}
+            hint={t(PREVIEW && s.roleplayAccess ? "settings.access.on" : "settings.access.off")}
           >
             <AccessControl granted={s.roleplayAccess} onToggle={() => set({ roleplayAccess: !s.roleplayAccess })} />
-            <div className="k hint">{t("settings.access.note")}</div>
           </Disclosure>
         </section>
       </div>

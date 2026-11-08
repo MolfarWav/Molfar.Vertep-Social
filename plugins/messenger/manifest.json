@@ -1,8 +1,9 @@
 {
   "name": "Social messenger",
-  "version": "0.1.0",
-  "description": "Messenger: chats, statuses by schedule, first messages. Stub: no routes yet.",
+  "version": "0.2.0",
+  "description": "Messenger: one chat per profile, replies in the profile's own voice on a model, and a status from the weekly schedule that decides when a reply comes (queued replies are written on a one-minute tick). Chats live in the app's data folder (chats/<profileId>.json).",
   "origin": "local",
-  "permissions": ["routes"],
-  "priority": 30
+  "permissions": ["routes", "fs", "llm", "schedule"],
+  "schedule": { "intervalMs": 60000 },
+  "priority": 40
 }

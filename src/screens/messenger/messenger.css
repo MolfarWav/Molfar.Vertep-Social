@@ -56,7 +56,8 @@
 .s-messenger .time { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
 .s-messenger .sys { align-self: center; max-width: 100%; text-align: center; color: var(--muted); font-size: 12px; padding: 2px 12px; border: 1px dashed var(--line); border-radius: 999px; }
 .s-messenger .note { align-self: center; max-width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 14px; text-align: center; color: var(--muted); font-size: 12px; border: 1px dashed var(--line); border-radius: 10px; }
-.s-messenger .link { min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--cta); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.s-messenger .note .err { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.s-messenger .link {min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--cta); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
 
 .s-messenger .comp { padding: 12px 16px; border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; gap: 8px; flex: none; }
 .s-messenger .inp { width: 100%; min-height: 72px; resize: none; border: 1px solid var(--line); background: var(--base); color: var(--ink); border-radius: 8px; padding: 10px 12px; font: inherit; }
