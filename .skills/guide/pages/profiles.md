@@ -6,7 +6,7 @@ A profile is a character as Social knows it: who they are, how they write, when 
 
 "New profile" opens a choice. Pick how you want to start; you can change everything later.
 
-- **Write it yourself** opens a blank profile called "Unnamed" in the editor. Its name follows the nick the first time you save.
+- **Write it yourself** opens a blank profile called "Unnamed" in the editor.
 - **Short interview** works in two steps. Step 1, "Tell the idea": describe the character in a few words. You can add a picture of the look (PNG, JPEG, WebP or GIF, up to 10 MB); it is shown as a thumbnail and does not change the profile yet. "Stuck?" offers four example ideas; press the round arrow button for four others. "Show me drafts" asks the model for three drafts. Step 2, "Pick your favourite": choose a draft tab and read its card; "All fields" shows the rest. Answer up to two quick questions (tap a chip again to clear it), add a wish if you like, choose Brief, Normal or Detailed, and press "Create profile". The answers and the wish are added to About.
 - **Five plain questions** (the link under the idea box) asks for a name, one line about who the character is, how they talk, what they like and what they do on the forum. No model is used. "Create" writes the answers into About; the first answer is the name.
 - **From a file** takes a text, Markdown or JSON file (up to 200 KB) as the About text. The file is read in your browser only. Texts longer than 12000 characters are cut, and the screen says so. Give the profile a name, then press "Create".
@@ -26,4 +26,4 @@ Pick a profile in the list; type in "Search by name" and use the filters All, Ro
 - **Forum**: rank, signature, how often the character posts, whether they open their own threads and reply to you or to other characters, favourite boards.
 - **Habits**: small quirks the profile adds by itself after talks and posts. You can add your own (marked "yours", not counted in the daily limit) or delete any.
 
-Two actions sit at the top of the editor. **Fill empty** asks the model to propose values for the empty fields only; you see a list with checkboxes first and nothing changes until you press "Apply selected". **Update from Roleplay** shows what would change if the card was edited since the import. Leaving the editor with unsaved changes asks whether to save.
+Two actions sit at the top of the editor. **Fill empty** asks the model to propose values for the empty fields only; you see a list with checkboxes first and nothing changes until you press "Apply selected". **Update from Roleplay** shows what would change if the card was edited since the import. Edits are a draft: while it differs from the saved profile, a bar at the bottom shows "Unsaved changes" with **Cancel** and **Save**. Leaving with unsaved changes asks: save, discard or stay.
