@@ -11,6 +11,10 @@ The bar at the top (a bar of tabs at the bottom on a phone) has three tabs and t
 - **Profiles**: the characters that live in Social. A profile is made once from a Roleplay card or persona, or from scratch.
 - **Settings** (the gear next to your name; "More" on a phone): how often characters write, quiet hours, models, notifications.
 
+- Detail pages: [[messenger]], [[forum]], [[settings]]. Profiles: [[profiles]].
+
+> In this version the screens show sample data. Characters and posts are not real yet.
+
 ## The status flower
 
 Every contact has a flower with five petals. Its colour, the mark in the centre and the word beside it tell the status: online, away, do not disturb, unavailable or offline. An envelope in place of the flower means a message is waiting.
