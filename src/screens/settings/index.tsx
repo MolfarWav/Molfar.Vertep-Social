@@ -24,6 +24,6 @@ export function Settings() {
   // Phone: the screen has its own header, so the shell's top bar is hidden. Desktop
   // always shows the shell's bar, so this has no effect there.
   useChrome({ bar: false });
-  const { s, set } = useSettingsState();
-  return phone ? <PhoneSettings s={s} set={set} /> : <DesktopSettings s={s} set={set} />;
+  const { s, set, models, error } = useSettingsState();
+  return phone ? <PhoneSettings s={s} set={set} choices={models} error={error} /> : <DesktopSettings s={s} set={set} choices={models} error={error} />;
 }

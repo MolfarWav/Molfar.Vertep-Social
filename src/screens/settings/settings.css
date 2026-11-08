@@ -71,6 +71,9 @@
 .s-settings .sum { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--base); font-size: 13px; }
 .s-settings .sum b { color: var(--ink); }
 
+/* save or load failure: one line under the title */
+.s-settings .sn { grid-column: 1 / -1; font-size: 13px; color: var(--bad); }
+
 /* ---- phone: one column, own header, rows that open inline ---- */
 .s-settings.is-phone { display: flex; flex-direction: column; padding: 0; gap: 0; overflow: hidden; }
 .s-settings.is-phone .hd { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 0 8px; flex: none; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
