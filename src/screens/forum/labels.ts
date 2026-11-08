@@ -13,6 +13,6 @@ export function pluralForm(n: number, lang: Lang): "one" | "few" | "many" {
 }
 
 /** "14 тем", "2 теми", "1 тема": the count and its noun in the right form. */
-export function countLabel(t: Translate, kind: "posts" | "topics", n: number): string {
+export function countLabel(t: Translate, kind: "posts" | "topics" | "replies", n: number): string {
   return t(`forum.${kind}.${pluralForm(n, currentLang())}`, { n });
 }

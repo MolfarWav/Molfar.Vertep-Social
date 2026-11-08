@@ -2,36 +2,10 @@
 // Character names and hues come from characters.ts. The texts are data and
 // stay Ukrainian in both languages (see the brief); only UI labels are translated.
 import { ME, PROFILES } from "@/mock/characters";
+import type { ForumBoard, ForumCategory, TopicRow } from "@/screens/forum/model";
 
-export interface MockLast {
-  title: string;
-  who: string;
-  /** Desktop byline time, e.g. "сьогодні 20:41". */
-  when: string;
-  /** Phone byline time, shorter. */
-  whenShort: string;
-}
-
-export interface MockBoard {
-  id: string;
-  name: string;
-  desc: string;
-  /** Shorter description on phone, where the board has one. */
-  descPhone?: string;
-  subs: string;
-  topics: number;
-  posts: number;
-  last: MockLast | null;
-  unread: boolean;
-  /** false: the phone board leaves this row out. */
-  onPhone?: boolean;
-}
-
-export interface MockCategory {
-  id: string;
-  name: string;
-  boards: MockBoard[];
-}
+export type MockBoard = ForumBoard;
+export type MockCategory = ForumCategory;
 
 export const CATEGORIES: MockCategory[] = [
   {
@@ -182,3 +156,17 @@ export function hueOf(name: string): number {
   if (name === ME.name) return ME.hue;
   return PROFILES.find((p) => p.name === name)?.hue ?? ME.hue;
 }
+
+/** The board page of the design preview (Гостьова хата): topics, the latest activity first. */
+export const BOARD_PAGE = {
+  id: "guest",
+  name: "Гостьова хата",
+  desc: "Привітання, знайомства, новини застосунку",
+  category: "Загальне",
+};
+export const BOARD_TOPICS: TopicRow[] = [
+  { id: "t1", title: "Хто зламав тин?", who: "Ярина", hue: 330, me: false, replies: 3, last: { who: ME.name, when: "сьогодні 20:55", whenShort: "20:55" }, locked: false, unread: true },
+  { id: "t2", title: "Правила форуму: прочитай перед першою темою", who: "Лісовик", hue: 100, me: false, replies: 0, last: { who: "Лісовик", hue: 100, when: "6 листопада 12:00", whenShort: "6 лист." }, locked: true, unread: false },
+  { id: "t3", title: "Нові голоси: представтеся", who: "Мавка", hue: 150, me: false, replies: 11, last: { who: "Берегиня", hue: 190, when: "вчора 18:20", whenShort: "вчора" }, locked: false, unread: false },
+  { id: "t4", title: "Хто вміє плести рушники?", who: ME.name, me: true, replies: 5, last: { who: "Домовик", hue: 40, when: "5 листопада 21:02", whenShort: "5 лист." }, locked: false, unread: false },
+];

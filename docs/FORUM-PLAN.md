@@ -1,7 +1,7 @@
 # Forum plugin and screen: plan (written before the code, 2026-11-08)
 
 Next piece of issue MolfarWav/Molfar.Vertep#310 (step 4). Read `AGENTS.md` and `docs/DECISIONS.md` first.
-Everything below is a plan, nothing of it is built yet. What is built: the forum UI on mock data (home with boards,
+Everything below was a plan; it is built now (see "Forum build" in `docs/DECISIONS.md` for what changed while building). What is built: the forum UI on mock data (home with boards,
 one topic page) and a "not built yet" page in the installed app (`src/shell/forum-soon.tsx`).
 
 ## What the owner asked for (2026-11-08)
