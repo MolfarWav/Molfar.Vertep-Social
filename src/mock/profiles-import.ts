@@ -2,7 +2,7 @@
 // and their titles are data: they stay as the approved boards write them.
 import { plain, type MockProfile } from "@/mock/profiles";
 
-export type ImportKind = "character" | "persona" | "narrator";
+export type ImportKind = "character" | "narrator";
 
 /** One row of the import list. Members of a narrator carry `parent`. */
 export interface ImportEntry {
@@ -16,13 +16,13 @@ export interface ImportEntry {
   hue: number;
   kind: ImportKind;
   parent?: string;
-  /** Real rows only: which card (and Soul name) or persona the plugin reads. The mock rows have none. */
+  /** Real rows only: which card (and Soul name) the plugin reads. The mock rows have none. */
   ref?: ImportRef;
 }
 
-/** The source of a profile: a card (with a Soul name on a narrator's card) or a persona. */
+/** The source of a profile: a card (with a Soul name on a narrator's card). */
 export interface ImportRef {
-  kind: "card" | "persona";
+  kind: "card";
   id: string;
   key?: string;
 }
@@ -37,7 +37,6 @@ export const IMPORT_ENTRIES: ImportEntry[] = [
   { id: "horpyna", name: "Горпина", card: "", soul: true, hue: 290, kind: "character", parent: "verhy" },
   { id: "chuhaister", name: "Чугайстер", card: "", soul: true, hue: 260, kind: "character", parent: "verhy" },
   { id: "vodianyk", name: "Водяник", card: "", soul: true, hue: 210, kind: "character", parent: "verhy" },
-  { id: "mandrivnyk", name: "Мандрівник", card: "", soul: true, hue: 210, kind: "persona" },
 ];
 
 /** The import list's profiles: everything but the narrator row itself. */
@@ -48,11 +47,10 @@ export const FAILING_IDS = new Set(["chuhaister"]);
 
 /** A profile created from an imported entry (the narrator is not a profile). */
 export function profileFromEntry(e: ImportEntry): MockProfile {
-  const source = e.kind === "persona" ? "persona" : "roleplay";
   return {
-    ...plain(e.id, e.name, e.hue, source, "Імпортовано з картки. Опис ще порожній."),
+    ...plain(e.id, e.name, e.hue, "roleplay", "Імпортовано з картки. Опис ще порожній."),
     card: e.card || undefined,
-    cardDate: source === "roleplay" ? "9 листопада" : undefined,
+    cardDate: "9 листопада",
   };
 }
 

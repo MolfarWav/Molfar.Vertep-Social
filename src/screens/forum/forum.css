@@ -134,6 +134,7 @@
 .s-forum .rep .inp { flex: 1; width: auto; min-width: 0; min-height: 44px; }
 .s-forum .rep .btn { height: 44px; }
 .s-forum .lock-rep { color: var(--muted); font-size: 13px; }
+.s-forum .lock-text { flex: 1; min-width: 0; }
 
 /* The topic boards set a 1.5 line height; the home boards keep 1.45 (the shell's). */
 .s-forum .tpage, .s-forum.is-topic { line-height: 1.5; }

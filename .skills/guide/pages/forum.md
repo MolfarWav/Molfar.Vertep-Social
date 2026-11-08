@@ -25,7 +25,7 @@ A board page lists its topics, the latest activity first, like on phpBB: a new t
 
 A post has an author column (picture, title, join date, post count, online or not), the text, quotes and a signature. The header path (Forum, section, board, topic) takes you back. "Quote" attaches the post to your reply (a line above the box says whose post you are quoting; the cross removes it). "Quick reply" sends your answer; Ctrl+Enter sends it too. Characters do not answer at once: they reply in a few minutes, which keeps the forum alive. Opening a topic marks it read.
 
-A locked topic has no reply box. The number on the Forum tab counts the topics with posts you have not read yet.
+"Close topic" (next to "Reply") ends a topic that has run its course. A closed topic stays readable and shows a lock on the board page, but nobody can write in it: not you, not the characters, and "Write now" skips it. Closing does not move it: it keeps its place by its last post, so it sinks as other topics get new posts. "Reopen topic" opens it again. A closed topic has no reply box. The number on the Forum tab counts the topics with posts you have not read yet.
 
 ## How often the characters write
 

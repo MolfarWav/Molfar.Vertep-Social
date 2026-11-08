@@ -392,6 +392,22 @@ test("the reply prompt carries the board, the recent posts with names, and who i
   expect(msg).toContain("answering the user's post");
 });
 
+test("a post is asked of the author's own model first, then the forum's model in Settings", () => {
+  const ask = (own: string) => {
+    const h = makeHost();
+    seedBoards(h);
+    seedProfile(h, "m1", "Мавка", own ? { model: own } : {});
+    seedSettings(h, { newTopicShare: 0, models: { forum: "prov/app" } });
+    const now = at("2026-11-10T11:50:00Z");
+    Date.now = () => now + 600000;
+    seedTopic(h, "mine", "b1", now, [{ id: "u1", by: "me", name: "", hue: 200, at: now, text: "Hello" }], { owe: 1 });
+    plugin.onTick({}, h.host);
+    return h.requests[0].req.model;
+  };
+  expect(ask("prov/own")).toBe("prov/own");
+  expect(ask("")).toBe("prov/app");
+});
+
 test("a reply to the user's post carries a quote and uses up one owed reply", () => {
   const h = makeHost();
   seedBoards(h);
@@ -495,6 +511,66 @@ test("a locked topic refuses replies; the topic route carries the authors' facts
   expect(t.authors.m1.rank).toBe("Elder");
   expect(t.authors.m1.count).toBe(1);
   expect(t.authors.m1.online).toBe(true);
+});
+
+test("the user closes a topic and reopens it: no posts meanwhile, the place stays, nothing owed is left", () => {
+  const h = makeHost();
+  seedBoards(h);
+  seedProfile(h, "m1", "Мавка");
+  seedTopic(h, "a", "b1", 1000, [{ id: "p1", by: "me", name: "", hue: 200, at: 1000, text: "Hello all" }], { owe: 2 });
+  seedTopic(h, "b", "b1", 2000);
+  const order = () => route(h, "GET", "/forum/board", undefined, { id: "b1" }).json.topics.map((t: any) => [t.id, t.locked]);
+  expect(order()).toEqual([["b", false], ["a", false]]);
+  // closing: the answer says so, the topic keeps lastAt (no bump), the debt of replies is dropped
+  expect(route(h, "POST", "/forum/lock", { topic: "a", locked: true }).json).toEqual({ ok: true, locked: true });
+  const closed = get(h, "forum/topics/a.json");
+  expect(closed.locked).toBe(true);
+  expect(closed.lastAt).toBe(1000);
+  expect(closed.owe).toBe(0);
+  expect(order()).toEqual([["b", false], ["a", true]]);
+  // nobody writes in it: not the user, not a character on the tick, not "Write now" aimed at it
+  expect(route(h, "POST", "/forum/reply", { topic: "a", text: "x" }).status).toBe(409);
+  expect(plan(h, seeded(1), { mode: "force", scope: { topic: "a" } })).toBeNull();
+  expect(route(h, "POST", "/forum/force", { topic: "a" }).json.code).toBe("no-target");
+  // a model call that was in flight when the topic was closed files nothing
+  const late = plugin.fileResult(h.host.fs, { kind: "reply", author: "m1", topic: "a", quote: "" }, { text: "too late" }, 5000, plugin.readBoards(h.host.fs));
+  expect(late.post).toBeUndefined();
+  expect(get(h, "forum/topics/a.json").posts.length).toBe(1);
+  // a new post elsewhere rises above it; the closed one stays where it was
+  Date.now = () => 9000;
+  route(h, "POST", "/forum/reply", { topic: "b", text: "up" });
+  expect(order()).toEqual([["b", false], ["a", true]]);
+  // the topic page and the home page still read it
+  expect(route(h, "GET", "/forum/topic", undefined, { id: "a" }).json.topic.locked).toBe(true);
+  // reopening: replies work again, the topic is not bumped by the reopening itself
+  expect(route(h, "POST", "/forum/lock", { topic: "a", locked: false }).json).toEqual({ ok: true, locked: false });
+  expect(get(h, "forum/topics/a.json").lastAt).toBe(1000);
+  expect(route(h, "POST", "/forum/reply", { topic: "a", text: "back" }).json.ok).toBe(true);
+  expect(order()[0][0]).toBe("a");
+});
+
+test("a closed topic is left out of the characters' own choices on the tick", () => {
+  const h = makeHost();
+  seedBoards(h);
+  seedProfile(h, "m1", "Мавка");
+  const base = at("2026-11-10T12:00:00Z");
+  seedTopic(h, "a", "b1", base - 60000, [{ id: "p1", by: "me", name: "", hue: 200, at: base - 60000, text: "Hello Мавка" }], { owe: 3, locked: true });
+  for (let i = 0; i < 20; i++) {
+    const p = plan(h, seeded(i + 1));
+    // the only topic is closed: a character can only open a new topic, never reply
+    expect(p && p.kind).not.toBe("reply");
+  }
+});
+
+test("the lock route checks its input", () => {
+  const h = makeHost();
+  seedBoards(h);
+  seedTopic(h, "a", "b1", 1000);
+  expect(route(h, "POST", "/forum/lock", { topic: "nope", locked: true }).status).toBe(404);
+  expect(route(h, "POST", "/forum/lock", { topic: "a" }).status).toBe(400);
+  expect(route(h, "POST", "/forum/lock", { topic: "a", locked: "yes" }).status).toBe(400);
+  expect(route(h, "POST", "/forum/lock", { topic: "../x", locked: true }).status).toBe(404);
+  expect(get(h, "forum/topics/a.json").locked).toBe(false);
 });
 
 test("the home strip reports the state, the count and the next slot", () => {

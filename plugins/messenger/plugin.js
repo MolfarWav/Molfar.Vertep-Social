@@ -3,7 +3,7 @@
  * (from the weekly schedule) that decides when a reply comes.
  *
  * Routes (relative to /v1/apps/social):
- *   GET  /messenger/contacts            {contacts: [{id, name, hue, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
+ *   GET  /messenger/contacts            {contacts: [{id, name, hue, picture, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
  *   GET  /messenger/chat?id=<profile>   {chat: {id, status, nextOnline, messages, pending, failed}}
  *   POST /messenger/send {id, text}     adds the user's message; when the profile is online the reply is written now
  *          ({ok, queued, chat} or {ok: false, error, code?, chat}); otherwise the reply is queued (see below)
@@ -81,8 +81,16 @@ export function awayDelayMs(at) {
 function readProfile(fsx, id) {
   if (!ID.test(String(id))) return null;
   const p = readJson(fsx, profilePath(id), null);
-  if (!isObj(p) || !str(p.name)) return null;
+  if (!isObj(p) || !str(p.name) || p.source === "persona") return null; // an early build filed personas as profiles: they are not contacts
   return p;
+}
+
+/** The active persona of Your profile ({name, about}), or null: what a character is told about the person writing. */
+export function youOf(fsx) {
+  const y = readJson(fsx, "you.json", null);
+  if (!isObj(y) || !Array.isArray(y.personas)) return null;
+  const p = y.personas.find((x) => isObj(x) && x.id === y.active) || y.personas.find((x) => isObj(x) && str(x.name));
+  return isObj(p) && str(p.name) ? { name: cut(str(p.name), 80), about: cut(str(p.about), 600) } : null;
 }
 
 function emptyChat(id) {
@@ -138,14 +146,16 @@ const EMOJI_WORDS = ["Never use emoji.", "Use an emoji only now and then.", "Use
 const MAX_TOKENS = [200, 400, 800];
 
 /** The system prompt that makes the model write as this profile. */
-export function systemPromptFor(p, userName) {
+export function systemPromptFor(p, you) {
+  const user = isObj(you) ? you : { name: typeof you === "string" ? you : "", about: "" };
   const v = isObj(p.voice) ? p.voice : {};
   const length = [0, 1, 2].includes(v.length) ? v.length : 1;
   const emoji = [0, 1, 2].includes(v.emoji) ? v.emoji : 0;
   const formality = Number.isFinite(v.formality) ? v.formality : 30;
   const lines = [
-    "You are " + str(p.name) + ", a character chatting in a messenger with " + (userName || "the user") + ". Stay in character at all times.",
+    "You are " + str(p.name) + ", a character chatting in a messenger with " + (str(user.name) || "the user") + ". Stay in character at all times.",
   ];
+  if (str(user.about)) lines.push("About the person you are writing to (what they told you about themselves): " + cut(str(user.about), 600));
   if (str(p.about)) lines.push("Who you are: " + cut(str(p.about), 1500));
   if (Array.isArray(p.interests) && p.interests.length) lines.push("Your interests: " + p.interests.slice(0, 12).join(", ") + ".");
   if (Array.isArray(p.habits) && p.habits.length) lines.push("Your habits: " + p.habits.slice(0, 10).map((h) => str(h && h.text)).filter(Boolean).join("; ") + ".");
@@ -185,19 +195,29 @@ const tzOf = (fsx) => {
   return isObj(s) && Number.isFinite(s.tzOffset) && Math.abs(s.tzOffset) <= 840 ? s.tzOffset : null;
 };
 
-const messengerModel = (fsx) => {
-  const s = readJson(fsx, "settings.json", null);
-  const m = isObj(s) && isObj(s.models) ? str(s.models.messenger) : "";
+const modelRef = (v) => {
+  const m = str(v);
   return m && m !== "default" && /^[^\s]{1,200}$/.test(m) ? m : "";
+};
+
+/** The profile's picture: an engine asset URL, or "". */
+const pictureOf = (p) => (isObj(p) && typeof p.picture === "string" && /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/.test(p.picture) ? p.picture : "");
+
+/** The model for a reply: the profile's own (Profiles > Model), else the messenger's in Settings, else "" (the engine's). */
+const messengerModel = (fsx, profile) => {
+  const own = isObj(profile) ? modelRef(profile.model) : "";
+  if (own) return own;
+  const s = readJson(fsx, "settings.json", null);
+  return modelRef(isObj(s) && isObj(s.models) ? s.models.messenger : "");
 };
 
 /** Asks the model for the reply to the chat's last user message. */
 function requestReply(host, key, profile, chat) {
-  const model = messengerModel(host.fs);
+  const model = messengerModel(host.fs, profile);
   const length = isObj(profile.voice) && [0, 1, 2].includes(profile.voice.length) ? profile.voice.length : 1;
   host.llm.request(key, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(profile),
+    systemPrompt: systemPromptFor(profile, youOf(host.fs)),
     messages: historyFor(chat.messages),
     presetParams: { temperature: 0.85, max_tokens: MAX_TOKENS[length] },
   });
@@ -238,6 +258,7 @@ function contactsRoute(host) {
       id,
       name: str(p.name),
       hue: Number.isFinite(p.hue) ? p.hue : 200,
+      picture: pictureOf(p),
       source: str(p.source) || "own",
       status: statusAt(p.schedule, new Date(now), tz),
       nextOnline: nextOnline(p.schedule, now, tz),

@@ -18,6 +18,8 @@
  *   POST /forum/topic {board, title, text}    the user opens a topic
  *   POST /forum/reply {topic, text, quoteOf?} the user replies
  *   POST /forum/read {topic}          clears the topic's unread mark
+ *   POST /forum/lock {topic, locked}  the user closes (locked: true) or reopens a topic; a closed topic takes no
+ *          new posts (the user's or the characters'), keeps its place by its last post and shows a lock
  *   POST /forum/force {board?, topic?, count?}  "Write now": characters write at once (1 to 3 posts), ignoring the
  *          daily limit, the quiet hours, the schedule and the gaps; the posts still count toward the day
  *
@@ -125,6 +127,12 @@ const DEFAULTS = {
 };
 const clampInt = (v, lo, hi, d) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : d);
 
+/** A model reference ("provider/model"), or "" for the engine's default. */
+const modelRef = (v) => {
+  const m = typeof v === "string" ? v.trim() : "";
+  return m && m !== "default" && /^[^\s]{1,200}$/.test(m) ? m : "";
+};
+
 /** The settings the forum reads from settings.json (the profiles plugin writes them), with the defaults. */
 export function readSettings(fsx) {
   const raw = readJson(fsx, "settings.json", null);
@@ -141,7 +149,7 @@ export function readSettings(fsx) {
     quietTo: time(r.quietTo, DEFAULTS.quietTo),
     writers: r.writers === "equal" ? "equal" : "profile",
     tzOffset: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
-    model: model && model !== "default" && /^[^\s]{1,200}$/.test(model) ? model : "",
+    model: modelRef(model),
   };
 }
 
@@ -234,7 +242,7 @@ function names(fsx, dir, ext) {
 function readProfile(fsx, id) {
   if (!ID.test(String(id))) return null;
   const p = readJson(fsx, profilePath(id), null);
-  if (!isObj(p) || !str(p.name)) return null;
+  if (!isObj(p) || !str(p.name) || p.source === "persona") return null; // not a writer: Your profile is the user, not a character
   const f = isObj(p.forum) ? p.forum : {};
   return {
     id: String(id),
@@ -244,6 +252,8 @@ function readProfile(fsx, id) {
     interests: Array.isArray(p.interests) ? p.interests.filter((x) => typeof x === "string") : [],
     habits: Array.isArray(p.habits) ? p.habits : [],
     voice: isObj(p.voice) ? p.voice : {},
+    model: modelRef(p.model),
+    picture: typeof p.picture === "string" && /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/.test(p.picture) ? p.picture : "",
     schedule: p.schedule,
     createdAt: num(p.createdAt),
     forum: {
@@ -562,8 +572,10 @@ export function planAction(c, rand) {
 // ---------- requests and filing ----------
 
 function requestPost(host, key, settings, author, userMessage, maxTokens) {
+  // the author's own model (Profiles > Model) wins over the forum's model in Settings
+  const model = author.model || settings.model;
   host.llm.request(key, {
-    ...(settings.model ? { model: settings.model } : {}),
+    ...(model ? { model } : {}),
     systemPrompt: systemPromptFor(author),
     messages: [{ role: "user", content: userMessage }],
     presetParams: { temperature: 0.9, max_tokens: maxTokens },
@@ -721,6 +733,7 @@ function topicRoute(req, host) {
     authors[p.by] = {
       name: prof ? prof.name : p.name,
       hue: prof ? prof.hue : p.hue,
+      picture: prof ? prof.picture : "",
       rank: prof ? prof.forum.rank : "",
       signature: prof ? prof.forum.signature : "",
       count: counts[p.by] || 0,
@@ -821,6 +834,22 @@ function readRoute(req, host) {
   return ok({ ok: true });
 }
 
+/**
+ * The user closes or reopens a topic. A closed topic takes no posts from anybody: the replies route and the planner
+ * refuse it. Closing changes nothing else: `lastAt` stays, so the topic is not bumped and sinks as others rise.
+ * The replies a character still owed the user are dropped, so nobody answers after a reopen out of date.
+ */
+function lockRoute(req, host) {
+  const b = isObj(req.body) ? req.body : {};
+  const topic = readTopic(host.fs, String(b.topic || ""));
+  if (!topic) return ok({ error: "no such topic" }, 404);
+  if (typeof b.locked !== "boolean") return ok({ error: "locked must be true or false" }, 400);
+  topic.locked = b.locked;
+  if (b.locked) topic.owe = 0;
+  writeTopic(host.fs, topic);
+  return ok({ ok: true, locked: topic.locked });
+}
+
 /** "Write now": up to three posts at once, requested together in the first pass, filed in order in the second. */
 function forceRoute(req, host) {
   const fsx = host.fs;
@@ -917,6 +946,7 @@ export function handleRoute(req, host) {
   if (path === "/forum/topic" && method === "POST") return newTopicRoute(req, host);
   if (path === "/forum/reply" && method === "POST") return replyRoute(req, host);
   if (path === "/forum/read" && method === "POST") return readRoute(req, host);
+  if (path === "/forum/lock" && method === "POST") return lockRoute(req, host);
   if (path === "/forum/force" && method === "POST") return forceRoute(req, host);
   return ok({ error: "not found" }, 404);
 }

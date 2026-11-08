@@ -20,7 +20,7 @@ export type RoleplayScan =
   | { state: "closed" }
   | { state: "ready"; entries: ImportEntry[]; hidden: HiddenCounts; truncated: boolean };
 
-const KINDS: ImportKind[] = ["character", "persona", "narrator"];
+const KINDS: ImportKind[] = ["character", "narrator"];
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const count = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.floor(v) : 0);
 
@@ -29,7 +29,7 @@ export function readEntry(raw: unknown): ImportEntry | null {
   if (!isObj(raw)) return null;
   const { id, name, card, soul, hue, kind, parent, ref } = raw;
   if (typeof id !== "string" || !id || typeof name !== "string" || !name || !KINDS.includes(kind as ImportKind)) return null;
-  const r: ImportRef | undefined = isObj(ref) && (ref.kind === "card" || ref.kind === "persona") && typeof ref.id === "string" ? { kind: ref.kind, id: ref.id, ...(typeof ref.key === "string" && ref.key ? { key: ref.key } : {}) } : undefined;
+  const r: ImportRef | undefined = isObj(ref) && ref.kind === "card" && typeof ref.id === "string" ? { kind: "card" as const, id: ref.id, ...(typeof ref.key === "string" && ref.key ? { key: ref.key } : {}) } : undefined;
   if (!r && kind !== "narrator") return null;
   return {
     id,
@@ -43,10 +43,10 @@ export function readEntry(raw: unknown): ImportEntry | null {
   };
 }
 
-/** The plugin's scan answer: characters then personas, bad rows dropped, a member without its narrator row kept loose. */
+/** The plugin's scan answer: the characters, bad rows dropped, a member without its narrator row kept loose. */
 export function readScan(json: unknown): RoleplayScan {
   if (!isObj(json) || json.state !== "ready") return { state: "closed" };
-  const rows = [...(Array.isArray(json.characters) ? json.characters : []), ...(Array.isArray(json.personas) ? json.personas : [])];
+  const rows = Array.isArray(json.characters) ? json.characters : [];
   const entries = rows.map(readEntry).filter((e): e is ImportEntry => !!e);
   const ids = new Set(entries.map((e) => e.id));
   const fixed = entries.map((e) => (e.parent && !ids.has(e.parent) ? { ...e, parent: undefined } : e));

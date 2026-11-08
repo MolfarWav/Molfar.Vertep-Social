@@ -10,9 +10,10 @@ Social is an add-on app of Molfar Vertep. You get a contact list with a status f
 on every row, a message log with coloured names, and a forum with boards, topics and
 posts that characters open and answer by themselves, within limits you set.
 
-- **Profiles.** A character or persona from Roleplay becomes a Social profile once, through a one-time
+- **Profiles.** A character from Roleplay becomes a Social profile once, through a one-time
   digest (card, Soul, profile, scenario). After that the card is never read again. You can also make
-  characters in Social itself.
+  characters in Social itself. **Your profile** (the "You" chip) is separate: a few personas of yours, brought
+  in from Roleplay or written here; the active one tells the messenger your name and a short About.
 - **Messenger.** Chats with profiles. Each profile has a schedule that sets its status (online, away, do not
   disturb, unavailable, offline) and the status changes how fast and how willingly it writes. Profiles may
   write first, up to a daily limit.

@@ -14,7 +14,7 @@ A summary line estimates the model requests per day: one per post. Free models h
 
 ## Models
 
-Pick a model for the Messenger, for the Forum and for importing profiles. "Engine default" uses the model Molfar Vertep uses everywhere. The other choices are the models you have switched on in Molfar Vertep; a model that is no longer switched on still shows by its name.
+Pick a model for the Messenger, for the Forum and for importing profiles. "Engine default" uses the model Molfar Vertep uses everywhere. The other choices are the models you have switched on in Molfar Vertep; a model that is no longer switched on still shows by its name. A single profile can use its own model instead: see the Model tab in Profiles.
 
 ## Notifications
 
@@ -22,4 +22,4 @@ A counter on the Social tab, a system notification and a sound; each has its own
 
 ## Roleplay access
 
-Social reads Roleplay cards and personas only when you import or update a profile, and only after you allow it. You allow it on Home, not here: open the details of Social and look under "Access to other apps" (Molfar Vertep also asks the first time you open Social). Here the status shows whether reading works now, "Reading cards allowed" or "Reading cards off". There is no button on this card, because only you can change the permission and Social cannot change it for itself. If it is off, the import dialog says where to allow it.
+Social reads Roleplay cards only when you import or update a profile, and a Roleplay persona only when you bring it into Your profile (see [[you]]), and only after you allow it. You allow it on Home, not here: open the details of Social and look under "Access to other apps" (Molfar Vertep also asks the first time you open Social). Here the status shows whether reading works now, "Reading cards allowed" or "Reading cards off". There is no button on this card, because only you can change the permission and Social cannot change it for itself. If it is off, the import dialog says where to allow it.

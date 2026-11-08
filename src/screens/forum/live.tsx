@@ -158,6 +158,16 @@ export function ForumLive() {
           }
         }}
         onRetry={() => void topic.reload()}
+        onSetLocked={async (locked) => {
+          try {
+            await call("POST", "/forum/lock", { topic: route.id, locked });
+            await topic.reload();
+            void home.reload();
+            return null;
+          } catch (e) {
+            return messageOf(e);
+          }
+        }}
       />
     );
   }

@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from "react";
+import { Avatar } from "@/components/Avatar";
 import { useNav } from "@/shell/nav";
+import { useYou } from "@/screens/you/store";
 import { useT } from "@/i18n/index";
 import { LIMITS, type SettingsMock } from "@/mock/settings";
 import { PREVIEW, type ModelChoice } from "@/lib/api";
@@ -36,6 +38,8 @@ function Disclosure({ id, open, onToggle, title, hint, children }: { id: Exclude
 export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set: Patch; choices: ModelChoice[]; error: SettingsError | null }) {
   const t = useT();
   const { go } = useNav();
+  const you = useYou();
+  const me = you?.personas.find((p) => p.id === you.active);
   const [open, setOpen] = useState<Open>(null);
   const toggle = (id: Open) => setOpen(id);
 
@@ -60,6 +64,16 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
 
       <div className="pg">
         <Notice error={error} />
+        <section className="sec" aria-label={t("you.title")}>
+          <button type="button" className="ln row" onClick={() => go("you")}>
+            <Avatar name={me?.name ?? t("shell.me")} hue={me?.hue ?? 210} size={36} picture={me?.picture || undefined} />
+            <span className="t">
+              <b>{t("you.title")}</b>
+              <span className="k">{me ? me.name : t("you.subtitle")}</span>
+            </span>
+            <span className="go" aria-hidden="true">›</span>
+          </button>
+        </section>
         <h2 className="gl">{t("settings.group.forum")}</h2>
         <section className="sec" aria-label={t("settings.group.forum")}>
           <Row title={t("settings.autonomous.phone")}>

@@ -57,7 +57,8 @@ export function ForumPreview() {
 
   useChrome(phone ? { bar: view === "home", tabs: view === "home" || view === "board" } : {});
 
-  const locked = preview === "locked";
+  const [closed, setClosed] = useState<boolean | null>(null); // the mock "Close topic" button; null = what the state says
+  const locked = closed ?? preview === "locked";
   const selfName = t("shell.me");
   const base = TOPIC.posts.map((p) => shown(p, selfName)).map((p) => (preview === "moderated" && p.n === 2 ? { ...p, removed: true } : p));
   const posts = [...base, ...replies];
@@ -127,6 +128,10 @@ export function ForumPreview() {
         posts={posts}
         error=""
         locked={locked}
+        onSetLocked={async (next) => {
+          setClosed(next);
+          return null;
+        }}
         writing={false}
         notice={notice}
         onCloseNotice={() => setNotice(null)}

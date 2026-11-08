@@ -70,7 +70,7 @@ export function ForumTab({ form, set, name, hue }: TabProps) {
         <div className="post-wrap">
           <div className="post">
             <div className="au">
-              <Avatar name={name} hue={hue} size={48} />
+              <Avatar name={name} hue={hue} size={48} picture={form.picture || undefined} />
               <b style={{ color: "var(--acct)" }}>{name}</b>
               <span className="k">{f.rank}</span>
             </div>

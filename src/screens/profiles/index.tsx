@@ -14,9 +14,11 @@
 // Preview parameters (`?screen=profiles&...`, read once on load):
 //   view=editor   phone only: open the editor of the first profile
 //   view=import   no profiles yet, with the import dialog open
-//   tab=about|voice|statuses|forum|habits   the editor tab (desktop and phone)
+//   tab=about|voice|statuses|forum|habits|model   the editor tab (desktop and phone)
+//   dialog=picture   the picture dialog open in the editor (picture=fail | nomodel: the generation fails)
+//   picker=1      with tab=model: the searchable model picker of the installed app, over mock models
 //   q=<text>      prefill the search
-//   source=all|roleplay|own|persona         prefill the source filter
+//   source=all|roleplay|own                 prefill the source filter
 //   dirty=1       the first profile starts with a draft (the save bar shows, phone and desktop)
 //   state=firstrun      no profiles: the first-run state
 //   state=importing     the import run, frozen at 4 of 9
@@ -174,10 +176,12 @@ function changedKeys(a: ProfileForm, b: ProfileForm): string[] {
   const same = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
   if (a.nick !== b.nick || a.about !== b.about) out.push("profiles.tab.about");
   if (!same(a.interests, b.interests)) out.push("profiles.about.interests");
+  if (!same(a.tags, b.tags)) out.push("profiles.about.tags");
   if (!same(a.habits, b.habits) || a.habitsAuto !== b.habitsAuto) out.push("profiles.tab.habits");
   if (!same(a.voice, b.voice)) out.push("profiles.tab.voice");
   if (!same(a.schedule, b.schedule)) out.push("profiles.tab.statuses");
   if (!same(a.forum, b.forum)) out.push("profiles.tab.forum");
+  if (a.model !== b.model) out.push("profiles.tab.model");
   return out;
 }
 

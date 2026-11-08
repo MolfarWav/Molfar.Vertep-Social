@@ -48,10 +48,21 @@ export function AboutTab({ form, set, onRefresh, fill, source }: TabProps) {
         <span className="lb">{t("profiles.about.interests")}</span>
         <div className="chips">
           {form.interests.map((x) => (
-            <Chip key={x} onRemove={() => set({ interests: form.interests.filter((y) => y !== x) })} removeLabel={t("profiles.chip.remove", { name: x })}>{x}</Chip>
+            <Chip key={x} hued={x} onRemove={() => set({ interests: form.interests.filter((y) => y !== x) })} removeLabel={t("profiles.chip.remove", { name: x })}>{x}</Chip>
           ))}
           <AddChip label={t("profiles.about.addChip")} inputLabel={t("profiles.chip.new")} onAdd={(x) => set({ interests: withItem(form.interests, x) })} />
         </div>
+      </div>
+
+      <div className="f">
+        <span className="lb">{t("profiles.about.tags")}</span>
+        <div className="chips">
+          {form.tags.map((x) => (
+            <Chip key={x} hued={x} onRemove={() => set({ tags: form.tags.filter((y) => y !== x) })} removeLabel={t("profiles.chip.remove", { name: x })}>{x}</Chip>
+          ))}
+          <AddChip label={t("profiles.about.addChip")} inputLabel={t("profiles.chip.newTag")} onAdd={(x) => set({ tags: withItem(form.tags, x.slice(0, 24), 8) })} />
+        </div>
+        <p className="k">{t("profiles.about.tagsNote")}</p>
       </div>
 
       <div className="f">

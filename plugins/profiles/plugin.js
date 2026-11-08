@@ -17,9 +17,15 @@
  *   GET    /settings                  the app settings (settings.json merged over the defaults)
  *   PUT    /settings                  save a partial patch of them; the reply is the full settings
  *   GET    /profiles/roleplay/status  {state: "ready" | "closed"}: may Social read Roleplay right now
- *   GET    /profiles/roleplay         what can be imported: {state, characters, personas, hidden, truncated}
- *   POST   /profiles/import {kind, id, key?, model?}   one card or persona -> one profile (the one-time digest)
+ *   GET    /profiles/roleplay         what can be imported: {state, characters, hidden, truncated}
+ *   POST   /profiles/import {kind: "card", id, key?, model?}   one card -> one profile (the one-time digest)
  *   POST   /profiles/refresh {profileId, model?}       a new digest of the source, as a proposal: nothing is saved
+ *   GET    /you                       Your profile: {you: {active, personas: [...]}} (the user's own personas, not characters)
+ *   PUT    /you/<id>                  save one persona (create or replace): {ok, persona, you}
+ *   DELETE /you/<id>                  remove it (the active one passes to the first left)
+ *   PUT    /you/active {id}           the persona the messenger tells characters about
+ *   GET    /you/roleplay              the Roleplay personas to pick from: {state, personas: [{id, name, hue}], truncated}
+ *   POST   /you/import {id}           one Roleplay persona -> one persona here (no model; name and description are copied)
  *
  * Roleplay is read through `host.peer` (read only, only the paths the manifest declares, only after the user allowed
  * it on Home). A card is read when the user imports or updates a profile and at no other time: no route, tick or
@@ -28,9 +34,11 @@
  */
 
 const ID = /^[A-Za-z0-9_-]{1,60}$/;
+/** A picture is an engine asset (a generated one): a same-origin URL, never an outside address. */
+const PICTURE = /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/;
 const MODEL_REF = /^[^\s]{1,200}$/;
 const STATUSES = ["online", "away", "dnd", "na", "off"];
-const SOURCES = ["roleplay", "own", "persona"];
+const SOURCES = ["roleplay", "own"];
 const BANDS = 8;
 const DAYS = 7;
 
@@ -83,11 +91,11 @@ function cleanSchedule(v) {
   return out;
 }
 
-/** Where an imported profile came from: {kind: "card" | "persona", id, key?} (key: a Soul name on a narrator card). */
+/** Where an imported profile came from: {kind: "card", id, key?} (key: a Soul name on a narrator card). */
 function cleanFrom(v) {
-  if (!isObj(v) || (v.kind !== "card" && v.kind !== "persona") || !validSourceId(v.id)) return null;
+  if (!isObj(v) || v.kind !== "card" || !validSourceId(v.id)) return null;
   const key = plain(v.key, 80);
-  return { kind: v.kind, id: String(v.id), ...(key ? { key } : {}) };
+  return { kind: "card", id: String(v.id), ...(key ? { key } : {}) };
 }
 
 /**
@@ -123,6 +131,8 @@ export function cleanProfile(raw, id, now, prev) {
   const source = SOURCES.includes(raw.source) ? raw.source : "own";
   const card = plain(raw.card, 120);
   const cardDate = plain(raw.cardDate, 40);
+  // "provider/model" for this profile alone; "" = the app's model for the task (Settings > Models)
+  const model = typeof raw.model === "string" && raw.model !== "default" && MODEL_REF.test(raw.model.trim()) ? raw.model.trim() : "";
   const from = cleanFrom(raw.from);
   return {
     id: String(id),
@@ -131,12 +141,15 @@ export function cleanProfile(raw, id, now, prev) {
     source,
     ...(source === "roleplay" && card ? { card } : {}),
     ...(source === "roleplay" && cardDate ? { cardDate } : {}),
-    ...(source !== "own" && from ? { from } : {}),
+    ...(source === "roleplay" && from ? { from } : {}),
     nick: plain(raw.nick, 80) || name,
     about: multi(raw.about, 4000),
     interests: list(raw.interests, 12, 40),
+    tags: list(raw.tags, 8, 24),
     habits,
     habitsAuto: raw.habitsAuto !== false,
+    model,
+    picture: typeof raw.picture === "string" && PICTURE.test(raw.picture.trim()) ? raw.picture.trim() : "",
     voice: {
       text: multi(v.text, 1500),
       length: clampInt(v.length, 0, 2, 1),
@@ -173,6 +186,7 @@ function listProfiles(fsx) {
     const m = /^([A-Za-z0-9_-]{1,60})\.json$/.exec(n);
     if (!m) continue;
     const raw = readJson(fsx, profilePath(m[1]), null);
+    if (isObj(raw) && raw.source === "persona") continue; // an early build filed personas here: they belong to Your profile
     const p = isObj(raw) ? cleanProfile(raw, m[1], Number.isFinite(raw.updatedAt) ? raw.updatedAt : 0, raw) : null;
     if (p) out.push(p);
   }
@@ -564,11 +578,11 @@ export function cardRows(cardId, card) {
   return { rows: [{ id: base, name, card: title, soul: souls.length === 1, hue: hueOf(name), kind: "character", ref: { kind: "card", id: String(cardId) } }], hidden: "" };
 }
 
-/** The import row of one persona file, or null when it has no name. */
+/** The pick row of one persona file in Roleplay, or null when it has no name. */
 export function personaRow(personaId, doc) {
   const name = plain(doc && doc.name, 80);
   if (!name) return null;
-  return { id: importId("persona", personaId), name, card: "", soul: true, hue: hueOf(name), kind: "persona", ref: { kind: "persona", id: String(personaId) } };
+  return { id: String(personaId), name, hue: hueOf(name) };
 }
 
 /** The Roleplay reader when Social may use it right now, else null. */
@@ -610,11 +624,10 @@ function listRoleplay(peer, dir) {
   }
 }
 
-/** What can be imported: cards (split by Soul) and personas. Only titles and names are kept; no card text leaves here. */
+/** What can be imported as profiles: cards (split by Soul). Only titles and names are kept; no card text leaves here. */
 function scanRoleplay(peer) {
   const t0 = Date.now();
   const characters = [];
-  const personas = [];
   const hidden = { group: 0, assistant: 0, unreadable: 0 };
   let truncated = false;
   const ids = listRoleplay(peer, "characters");
@@ -633,6 +646,14 @@ function scanRoleplay(peer) {
     if (got.hidden) hidden[got.hidden]++;
     for (const row of got.rows) characters.push(row);
   }
+  return { characters, hidden, truncated };
+}
+
+/** The Roleplay personas the user can bring into Your profile: [{id, name, hue}] (names only). */
+function scanPersonas(peer) {
+  const t0 = Date.now();
+  const personas = [];
+  let truncated = false;
   const files = listRoleplay(peer, "personas").filter((n) => /\.json$/.test(n));
   for (let i = 0; i < files.length; i++) {
     if (i >= SCAN_PERSONAS || Date.now() - t0 > SCAN_MS) {
@@ -644,9 +665,8 @@ function scanRoleplay(peer) {
     const r = readRoleplayJson(peer, "personas/" + files[i]);
     const row = r.doc ? personaRow(pid, r.doc) : null;
     if (row) personas.push(row);
-    else hidden.unreadable++;
   }
-  return { characters, personas, hidden, truncated };
+  return { personas, truncated };
 }
 
 // ----- the material for the digest -----
@@ -750,25 +770,11 @@ export function profileLines(profile, key, text) {
 /**
  * What the model reads for one import: {name, title, text}. A card gives its description, personality and scenario
  * (for a narrator's member: that member's part), the Soul line, the profile lines and the first message; never the
- * example dialogue, the notes for people, the system prompt, the avatar or anything else. A persona gives its
+ * example dialogue, the notes for people, the system prompt, the avatar or anything else.
  * description and profile lines. `null` when the document has nothing to read.
  */
 export function buildMaterial(ref, doc) {
   const d = isObj(doc) ? doc : {};
-  if (ref.kind === "persona") {
-    const name = plain(d.name, 80);
-    if (!name) return null;
-    const description = clip(d.description, MATERIAL.description);
-    const lines = [];
-    lines.push("Persona: " + name);
-    const title = plain(d.title, 80);
-    if (title) lines.push("Title: " + title);
-    if (PRONOUN_WORDS[d.pronouns] || plain(d.pronouns, 30)) lines.push("Pronouns: " + (PRONOUN_WORDS[d.pronouns] || plain(d.pronouns, 30)));
-    if (description) lines.push("Description:\n" + description);
-    const prof = profileLines(d.profile, "", description);
-    if (prof) lines.push("From the structured profile:\n" + prof);
-    return { name, title: "", text: lines.join("\n\n") };
-  }
   const souls = soulsOf(d);
   const key = ref.key ? plain(ref.key, 80) : "";
   const chosen = key ? souls.find((s) => s.name === key) : souls.length === 1 ? souls[0] : null;
@@ -795,7 +801,7 @@ export function buildMaterial(ref, doc) {
 }
 
 const DIGEST_SYSTEM = [
-  "You turn a roleplay character card (or the user's persona) into a short profile for a messenger and a public forum.",
+  "You turn a roleplay character card into a short profile for a messenger and a public forum.",
   "The character will chat and post there in their own manner, outside the story. Build the profile from the material; do not retell scenes, do not quote the card at length.",
   "Keep it fit for a public forum profile: leave out sexual details and secrets the character hides.",
   "Return only JSON, no prose, in this shape:",
@@ -836,15 +842,14 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 /** The profile an import files: the digest on the default week, forum and voice settings. */
 export function profileFromDigest(ref, material, digest, now) {
-  const persona = ref.kind === "persona";
-  const id = importId(ref.kind, ref.id, ref.key);
+  const id = importId("card", ref.id, ref.key);
   return cleanProfile(
     {
       name: material.name,
-      source: persona ? "persona" : "roleplay",
-      card: persona ? "" : material.title,
+      source: "roleplay",
+      card: material.title,
       cardDate: today(),
-      from: { kind: ref.kind, id: ref.id, ...(ref.key ? { key: ref.key } : {}) },
+      from: { kind: "card", id: ref.id, ...(ref.key ? { key: ref.key } : {}) },
       nick: material.name,
       about: digest.about,
       interests: digest.interests,
@@ -858,14 +863,14 @@ export function profileFromDigest(ref, material, digest, now) {
   );
 }
 
-/** The source named by a request: {kind, id, key?} or null. */
+/** The card named by a request: {kind: "card", id, key?} or null. A persona is not a profile: it goes to /you/import. */
 function cleanRef(b) {
-  if (!isObj(b) || (b.kind !== "card" && b.kind !== "persona") || !validSourceId(b.id)) return null;
+  if (!isObj(b) || b.kind !== "card" || !validSourceId(b.id)) return null;
   const key = plain(b.key, 80);
-  return { kind: b.kind, id: String(b.id), ...(key && b.kind === "card" ? { key } : {}) };
+  return { kind: "card", id: String(b.id), ...(key ? { key } : {}) };
 }
 
-const refPath = (ref) => (ref.kind === "persona" ? "personas/" + ref.id + ".json" : "characters/" + ref.id + "/card.json");
+const refPath = (ref) => "characters/" + ref.id + "/card.json";
 
 /** Pass A of an import or a refresh: read the source and ask the model. Returns a reply, or the pending marker. */
 function digestPass(host, ref, model) {
@@ -888,9 +893,9 @@ function digestPass(host, ref, model) {
 function importRoute(req, host) {
   const b = isObj(req.body) ? req.body : {};
   const ref = cleanRef(b);
-  if (!ref) return ok({ error: "kind and id are needed" }, 400);
+  if (!ref) return ok({ error: b.kind === "persona" ? "a persona is imported into Your profile (POST /you/import)" : "kind \"card\" and an id are needed" }, 400);
   const fsx = host.fs;
-  const id = importId(ref.kind, ref.id, ref.key);
+  const id = importId("card", ref.id, ref.key);
   const have = readJson(fsx, profilePath(id), null);
   if (isObj(have)) {
     const p = cleanProfile(have, id, Number.isFinite(have.updatedAt) ? have.updatedAt : 0, have);
@@ -935,12 +940,156 @@ function roleplayRoute(req, host, path) {
   return ok({ ok: true, state: "ready", ...scan });
 }
 
+// ---------- Your profile: the user's own personas ----------
+//
+// Not characters: a persona is who the user is, so it is kept apart from profiles/ (no chat, no schedule, no forum
+// posts) and never listed as a contact or a forum writer. One of them is active; its name and About are what the
+// messenger tells a character about the person writing. Read from Roleplay once, on import, without a model.
+
+const YOU_FILE = "you.json";
+const MAX_PERSONAS = 12;
+const ABOUT_YOU = 1500;
+const RESERVED = ["active", "roleplay", "import"];
+
+/** One persona as the screen shows it. Null without a usable id or a name. */
+export function cleanPersona(raw, id, now, prev) {
+  if (!isObj(raw) || !ID.test(String(id))) return null;
+  const name = plain(raw.name, 80);
+  if (!name) return null;
+  const from = isObj(raw.from) && validSourceId(raw.from.id) ? { kind: "persona", id: String(raw.from.id) } : null;
+  return {
+    id: String(id),
+    name,
+    hue: clampInt(raw.hue, 0, 359, hueOf(name)),
+    about: multi(raw.about, ABOUT_YOU),
+    picture: typeof raw.picture === "string" && PICTURE.test(raw.picture.trim()) ? raw.picture.trim() : "",
+    ...(from ? { from } : {}),
+    createdAt: prev && Number.isFinite(prev.createdAt) ? prev.createdAt : now,
+    updatedAt: now,
+  };
+}
+
+/** The stored personas and which one is active. */
+export function readYou(fsx) {
+  const raw = readJson(fsx, YOU_FILE, null);
+  const personas = [];
+  for (const x of isObj(raw) && Array.isArray(raw.personas) ? raw.personas : []) {
+    const p = isObj(x) ? cleanPersona(x, x.id, Number.isFinite(x.updatedAt) ? x.updatedAt : 0, x) : null;
+    if (p && !personas.some((o) => o.id === p.id)) personas.push(p);
+    if (personas.length === MAX_PERSONAS) break;
+  }
+  const want = isObj(raw) ? String(raw.active || "") : "";
+  const active = personas.some((p) => p.id === want) ? want : personas.length ? personas[0].id : "";
+  return { active, personas };
+}
+
+const writeYou = (fsx, you) => fsx.write(YOU_FILE, JSON.stringify({ active: you.active, personas: you.personas }, null, 2));
+
+/** Personas an early build filed as profiles (source "persona") move here, once; their chats go with them. */
+function adoptLegacyPersonas(fsx, you) {
+  let names = [];
+  try {
+    names = fsx.list("profiles");
+  } catch {
+    return you;
+  }
+  let changed = false;
+  for (const n of names) {
+    const m = /^([A-Za-z0-9_-]{1,60})\.json$/.exec(n);
+    if (!m) continue;
+    const raw = readJson(fsx, profilePath(m[1]), null);
+    if (!isObj(raw) || raw.source !== "persona") continue;
+    const p = cleanPersona({ ...raw, from: isObj(raw.from) && raw.from.kind === "persona" ? raw.from : null }, m[1], Number.isFinite(raw.updatedAt) ? raw.updatedAt : 0, raw);
+    if (p && !you.personas.some((o) => o.id === p.id) && you.personas.length < MAX_PERSONAS) {
+      you.personas.push(p);
+      changed = true;
+    }
+    try {
+      fsx.remove(profilePath(m[1]));
+      fsx.remove("chats/" + m[1] + ".json");
+    } catch {
+      /* no chat file */
+    }
+  }
+  if (changed) {
+    if (!you.active) you.active = you.personas[0].id;
+    writeYou(fsx, you);
+  }
+  return you;
+}
+
+const youReply = (you) => ({ active: you.active, personas: you.personas });
+
+function youRoute(req, host, path) {
+  const fsx = host.fs;
+  const method = req.method;
+  if (path === "/you" && method === "GET") return ok({ you: youReply(adoptLegacyPersonas(fsx, readYou(fsx))) });
+  if (path === "/you/roleplay") {
+    if (method !== "GET") return ok({ error: "method not allowed" }, 405);
+    const peer = roleplayPeer(host);
+    if (!peer) return ok({ ok: true, state: "closed" });
+    return ok({ ok: true, state: "ready", ...scanPersonas(peer) });
+  }
+  if (path === "/you/import") {
+    if (method !== "POST") return ok({ error: "method not allowed" }, 405);
+    const b = isObj(req.body) ? req.body : {};
+    if (!validSourceId(b.id)) return ok({ error: "a persona id is needed" }, 400);
+    const you = readYou(fsx);
+    const id = importId("persona", b.id);
+    const have = you.personas.find((p) => p.id === id);
+    if (have) return ok({ ok: true, existed: true, persona: have, you: youReply(you) });
+    if (you.personas.length >= MAX_PERSONAS) return ok({ error: "too many personas (" + MAX_PERSONAS + ")" }, 400);
+    const peer = roleplayPeer(host);
+    if (!peer) return ok({ ok: false, code: "no-access", error: CLOSED_TEXT });
+    const got = readRoleplayJson(peer, "personas/" + b.id + ".json");
+    if (!got.doc) return ok({ ok: false, code: got.gone ? "gone" : "unreadable", error: got.gone ? "the persona is not in Roleplay any more" : "could not read it: " + got.error });
+    const row = personaRow(b.id, got.doc);
+    if (!row) return ok({ ok: false, code: "empty", error: "the persona has no name" });
+    const p = cleanPersona({ name: row.name, about: clip(got.doc.description, ABOUT_YOU), from: { kind: "persona", id: String(b.id) } }, id, Date.now(), null);
+    you.personas.push(p);
+    if (!you.active) you.active = p.id;
+    writeYou(fsx, you);
+    return ok({ ok: true, persona: p, you: youReply(you) });
+  }
+  if (path === "/you/active") {
+    if (method !== "PUT") return ok({ error: "method not allowed" }, 405);
+    const you = readYou(fsx);
+    const id = String((isObj(req.body) && req.body.id) || "");
+    if (!you.personas.some((p) => p.id === id)) return ok({ error: "no such persona" }, 404);
+    you.active = id;
+    writeYou(fsx, you);
+    return ok({ ok: true, you: youReply(you) });
+  }
+  const m = /^\/you\/([A-Za-z0-9_-]{1,60})$/.exec(path);
+  if (!m || RESERVED.includes(m[1])) return ok({ error: "not found" }, 404);
+  const you = readYou(fsx);
+  const at = you.personas.findIndex((p) => p.id === m[1]);
+  if (method === "PUT") {
+    if (at < 0 && you.personas.length >= MAX_PERSONAS) return ok({ error: "too many personas (" + MAX_PERSONAS + ")" }, 400);
+    const p = cleanPersona(req.body, m[1], Date.now(), at >= 0 ? you.personas[at] : null);
+    if (!p) return ok({ error: "a persona needs a valid id and a name" }, 400);
+    if (at >= 0) you.personas[at] = p;
+    else you.personas.push(p);
+    if (!you.active) you.active = p.id;
+    writeYou(fsx, you);
+    return ok({ ok: true, persona: p, you: youReply(you) });
+  }
+  if (method === "DELETE") {
+    if (at >= 0) you.personas.splice(at, 1);
+    if (you.active === m[1]) you.active = you.personas.length ? you.personas[0].id : "";
+    writeYou(fsx, you);
+    return ok({ ok: true, you: youReply(you) });
+  }
+  return ok({ error: "method not allowed" }, 405);
+}
+
 // ---------- routing ----------
 
 export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   const method = req && req.method;
   if (path === "/settings") return settingsRoute(req, host);
+  if (path === "/you" || path.startsWith("/you/")) return youRoute(req, host, path);
   if (path !== "/profiles" && !path.startsWith("/profiles/")) return null;
   if (path === "/profiles" && method === "GET") return ok({ profiles: listProfiles(host.fs) });
   if (path === "/profiles/suggest" && method === "POST") return suggestRoute(req, host);

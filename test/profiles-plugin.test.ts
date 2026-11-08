@@ -109,6 +109,16 @@ test("cleanProfile strips markup, caps lengths and fixes shapes", () => {
   expect(p.schedule).toHaveLength(8);
 });
 
+test("a profile keeps its own model; a bad or default value means the app's model", () => {
+  const { host } = makeHost();
+  expect(route(host, "PUT", "/profiles/a", { name: "A" }).json.profile.model).toBe("");
+  expect(route(host, "PUT", "/profiles/a", { name: "A", model: " prov/fast " }).json.profile.model).toBe("prov/fast");
+  expect(route(host, "GET", "/profiles").json.profiles[0].model).toBe("prov/fast");
+  expect(route(host, "PUT", "/profiles/a", { name: "A", model: "default" }).json.profile.model).toBe("");
+  expect(route(host, "PUT", "/profiles/a", { name: "A", model: "has space" }).json.profile.model).toBe("");
+  expect(route(host, "PUT", "/profiles/a", { name: "A", model: 5 }).json.profile.model).toBe("");
+});
+
 test("settings: defaults, a partial patch, bad values dropped, models kept per task", () => {
   const { host } = makeHost();
   expect(route(host, "GET", "/settings").json.settings.postsPerDay).toBe(30);

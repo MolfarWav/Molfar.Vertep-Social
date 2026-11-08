@@ -2,7 +2,7 @@
 import type { MockProfile, ProfileSource } from "@/mock/profiles";
 
 export type SourceFilter = "all" | ProfileSource;
-export const FILTERS: SourceFilter[] = ["all", "roleplay", "own", "persona"];
+export const FILTERS: SourceFilter[] = ["all", "roleplay", "own"];
 export const isFilter = (v: unknown): v is SourceFilter => typeof v === "string" && (FILTERS as string[]).includes(v);
 
 /** Case-insensitive substring match on the name. An empty query matches everything. */
@@ -24,7 +24,7 @@ export function splitMatch(name: string, query: string): { before: string; hit: 
 
 /** Counts per filter, for the "Roleplay 8" style labels. */
 export function countBySource(list: MockProfile[]): Record<SourceFilter, number> {
-  const c: Record<SourceFilter, number> = { all: list.length, roleplay: 0, own: 0, persona: 0 };
+  const c: Record<SourceFilter, number> = { all: list.length, roleplay: 0, own: 0 };
   for (const p of list) c[p.source] += 1;
   return c;
 }

@@ -123,7 +123,7 @@ export function PhoneChat(p: PhoneChatProps) {
             <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <Avatar name={c.name} hue={c.hue} size={36} dim={c.status === "off"} />
+        <Avatar name={c.name} hue={c.hue} size={36} dim={c.status === "off"} picture={c.picture} />
         <div className="hcol">
           <span className="hname">{c.name}</span>
           <span className="hsub">

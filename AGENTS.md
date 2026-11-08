@@ -14,7 +14,7 @@ the app changes shape. Plan and decisions: Molfar.Vertep issue #309.
 
 ## Layout
 - `src/main.tsx`, `src/shell/`: top bar (desktop), bottom tabs (phone), nav context (`useNav`, `useChrome`, `BarActions`).
-- `src/screens/<messenger|forum|profiles|settings>/`: one folder per screen with `index.tsx`, `<name>.css` (every rule scoped
+- `src/screens/<messenger|forum|profiles|settings|you>/`: one folder per screen with `index.tsx`, `<name>.css` (every rule scoped
   under `.s-<name>`), `strings.ts`, and the mock data it needs in `src/mock/`.
 - `src/components/`: `Flower` (status flower + `Envelope`), `Avatar`, `Logo`. Shared, small.
 - `src/styles/`: `tokens.css` (themes Vertep, Dark, Light; names are the ones the design boards use),
@@ -34,11 +34,17 @@ Status flower: five petals around the Vertep eye; colour, centre mark and a word
 
 ## Preview and `?` parameters
 `bun run preview:build`, then `NODE_PATH=$(npm root -g) node scripts/shot.cjs <outDir> "<query>"`.
-Query: `screen=messenger|forum|profiles|settings`, `theme=vertep|dark|light`, `lang=en|uk`, and per-screen `view=` / `state=`
+Query: `screen=messenger|forum|profiles|settings|you`, `theme=vertep|dark|light`, `lang=en|uk`, and per-screen `view=` / `state=`
 values documented in the screen's `index.tsx` header.
 
 ## Model calls
 The profile interview and "Fill empty" go through `src/screens/profiles/model-api.ts`. In preview (`?screen=`) they are fakes; in the app they call the plugin routes `POST /profiles/suggest` and `POST /profiles/fill` (`plugins/profiles/plugin.js`, adapted from Roleplay's profile plugin). The app's profile load, save and delete go through `src/screens/profiles/persist.ts`: a profile is sent when its saved form differs from the copy the server confirmed; drafts are never sent.
+
+A profile may carry its own `model` ("provider/model", "" = the app's model). The messenger and forum plugins read it before
+`settings.models.<task>`; a profile may also carry a `picture` (an engine asset URL, `/v1/assets/<id>`, checked in `cleanProfile`;
+the messenger contact list and the forum authors pass it on). The picture dialog (`src/screens/profiles/picture-dialog.tsx`) builds a
+prompt from the profile (`picture.ts`) and calls the engine's `POST /v1/images` and `GET /v1/images/models` (open to every app,
+`picture-api.ts`). The Model tab (`src/screens/profiles/tabs/ModelTab.tsx`) edits it with the settings' `ModelPick`.
 
 ## The forum
 `plugins/forum/plugin.js` holds the data (`forum/` in the app data folder), the routes and the autonomy tick; its header says how. The screens are `src/screens/forum/`: `live.tsx` (real) and `preview.tsx` (mock) share `Home`, `BoardPage`, `TopicView`, `NewTopic`, `Strip`, `PostCard`; `model.ts` turns the engine's answers into what they draw (tested in `test/forum-real.test.ts`). Tests: `test/forum-plugin.test.ts` (a simulated day with a restart, bump order, flags, the two-pass flow).
@@ -48,7 +54,7 @@ See `docs/DECISIONS.md` for what the owner decided and where to continue.
 
 ## Roleplay import
 `manifest.json` declares `reads` (Roleplay's cards and personas); only the `profiles` plugin has the `peer` permission. The plugin lists, imports and
-refreshes through `host.peer` (see `docs/DECISIONS.md`, "Roleplay import"); the screen side is `src/screens/profiles/import-api.ts` (list, runner, diff)
+refreshes cards through `host.peer`; a persona goes to Your profile (`/you/*`, `you.json`, `src/screens/you/`), not to the profile list (see `docs/DECISIONS.md`, "Roleplay import"); the screen side is `src/screens/profiles/import-api.ts` (list, runner, diff)
 and `import.tsx`. In preview (`?screen=`) the same screens run on `src/mock/profiles-import.ts`.
 
 ## Open items

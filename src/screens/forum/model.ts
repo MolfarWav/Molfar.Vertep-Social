@@ -58,6 +58,8 @@ export interface ShownPost {
   who: string;
   me?: boolean;
   hue?: number;
+  /** The author's picture (an engine asset URL); empty = the letter. */
+  picture?: string;
   role: string;
   count: number;
   joined: string;
@@ -154,6 +156,7 @@ export interface EnginePost {
 export interface EngineAuthor {
   name: string;
   hue: number;
+  picture?: string;
   rank: string;
   signature: string;
   count: number;
@@ -292,6 +295,7 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
       who: me ? t("shell.me") : (a?.name ?? p.name),
       me,
       hue: me ? undefined : (a?.hue ?? p.hue),
+      picture: me ? undefined : (a?.picture || undefined),
       role: me ? t("forum.role.owner") : (a?.rank ?? ""),
       count: a?.count ?? 0,
       joined: a ? joinedLabel(a.joined) : "",

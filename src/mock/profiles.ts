@@ -4,7 +4,7 @@
 import type { Status } from "@/mock/status";
 import type { ImportRef } from "@/mock/profiles-import";
 
-export type ProfileSource = "roleplay" | "own" | "persona";
+export type ProfileSource = "roleplay" | "own";
 
 export interface Habit {
   id: string;
@@ -46,6 +46,12 @@ export interface ProfileForm {
   forum: ForumForm;
   /** The profile may add habits itself (the switch in the Habits tab). */
   habitsAuto: boolean;
+  /** "provider/model" used for this profile alone; "" = the app's model (Settings > Models). */
+  model: string;
+  /** An engine asset URL ("/v1/assets/<id>") of a generated picture; "" = the letter avatar. */
+  picture: string;
+  /** Short labels shown under the name in the list (at most 8, 24 characters each). */
+  tags: string[];
   /** schedule[band][day]: 8 time bands (00-03 .. 21-24) by 7 days (Mon..Sun). */
   schedule: Status[][];
 }
@@ -59,7 +65,7 @@ export interface MockProfile extends ProfileForm {
   card?: string;
   /** The day the profile was made or last updated from the card: "2026-11-09" (real) or a ready text (mock). */
   cardDate?: string;
-  /** Imported profiles: the card or persona it was made from (the "Update from Roleplay" button reads it again). */
+  /** Imported profiles: the card it was made from (the "Update from Roleplay" button reads it again). */
   from?: ImportRef;
 }
 
@@ -102,6 +108,9 @@ export function plain(id: string, name: string, hue: number, source: ProfileSour
     interests: [],
     habits: [],
     habitsAuto: true,
+    model: "",
+    picture: "",
+    tags: [],
     voice: { ...DEFAULT_VOICE, never: [] },
     forum: { ...DEFAULT_FORUM, favourites: [] },
     schedule: week(DEFAULT_DAY, DEFAULT_DAY, DEFAULT_DAY),
@@ -119,12 +128,15 @@ export const PROFILES: MockProfile[] = [
     nick: "Мавка",
     about: "Мешканка озера. Говорить повільно, любить тишу й дрібні новини з берега.",
     interests: ["очерет", "вода", "чутки"],
+    tags: ["озеро", "тиха", "стара знайома"],
     habits: [
       { id: "h1", text: "Пише вечорами, коротко", by: "self", date: "2 листопада" },
       { id: "h2", text: "Часто згадує Лісовика", by: "self", date: "5 листопада" },
       { id: "h3", text: "Не любить, коли її перебивають", by: "you" },
     ],
     habitsAuto: true,
+    model: "",
+    picture: "",
     voice: {
       text: "Повільна, тиха, ставить крапки замість окликів. Рідко питає про себе.",
       length: 1,
@@ -147,22 +159,20 @@ export const PROFILES: MockProfile[] = [
     },
     schedule: week(MAVKA_WEEKDAY, MAVKA_SAT, MAVKA_SUN),
   },
-  plain("yaryna", "Ярина", 330, "roleplay", "Господиня хутора, тримає все в голові."),
+  { ...plain("yaryna", "Ярина", 330, "roleplay", "Господиня хутора, тримає все в голові."), tags: ["хутір", "господиня"] },
   plain("lisovyk", "Лісовик", 100, "roleplay", "Говорить мало, але чує все в лісі."),
   plain("pereles", "Перелесник", 20, "roleplay", "Любить обманювати і любить, коли його ловлять."),
   plain("berehynia", "Берегиня", 190, "roleplay", "Береже човни й рибалок на переправі."),
   plain("domovyk", "Домовик", 40, "roleplay", "Сердиться, коли в хаті безладно."),
   plain("chuhaister", "Чугайстер", 260, "roleplay", "Ходить горами, ночами, з великим кроком."),
   plain("horpyna", "Горпина", 290, "roleplay", "Торгує на базарі й знає ціни всім."),
-  plain("vodianyk", "Водяник", 210, "own", "Мій власний персонаж для тестів."),
+  { ...plain("vodianyk", "Водяник", 210, "own", "Мій власний персонаж для тестів."), tags: ["тест", "річка", "ворчун", "ніч"] },
   plain("motrya", "Мотря", 60, "own", "Сусідка з другої вулиці."),
   plain("panas", "Панас", 230, "own", "Старий дід, що пам’ятає всі повені."),
-  plain("mandrivnyk", "Мандрівник", 210, "persona", "Твоя персона: мандрівник без дому."),
 ];
 
 /** The profile's source label key suffix, used by the list and the editor. */
 export const SOURCE_KEY: Record<ProfileSource, string> = {
   roleplay: "profiles.source.roleplay",
   own: "profiles.source.own",
-  persona: "profiles.source.persona",
 };
