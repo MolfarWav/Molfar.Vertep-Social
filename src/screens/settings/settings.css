@@ -1,1 +1,108 @@
-/* settings screen styles, all scoped under .s-settings */
+/* Settings screen. Values come from the approved boards Settings-desktop and
+ * Settings-phone. Every rule is under .s-settings; the phone layout adds .is-phone. */
+
+/* ---- desktop: two columns of cards ---- */
+.s-settings {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-content: start;
+}
+.s-settings .sec { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.s-settings .sec.tall { grid-row: span 2; }
+.s-settings .sh { display: flex; align-items: center; gap: 10px; height: 40px; margin: 0; padding: 0 14px; font-weight: 600; font-size: 13px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-settings .sb { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
+.s-settings .ln { display: flex; align-items: center; gap: 12px; min-height: 40px; }
+.s-settings .ln .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.s-settings .ln .grow { flex: 1; }
+.s-settings .k { color: var(--muted); font-size: 12px; }
+.s-settings .hint { margin-top: 0; }
+.s-settings .blk { display: flex; flex-direction: column; }
+.s-settings .lbl { font-weight: 600; margin-bottom: 6px; }
+.s-settings .blk .hint { margin-top: 6px; }
+.s-settings .split { display: flex; justify-content: space-between; }
+
+/* switch */
+.s-settings .sw { width: 40px; height: 22px; border-radius: 11px; background: var(--line); position: relative; flex: none; border: 0; padding: 0; }
+.s-settings .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); }
+.s-settings .sw.on { background: var(--accent); }
+.s-settings .sw.on::after { left: 21px; background: var(--onacc); }
+
+/* segmented control */
+.s-settings .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; width: max-content; max-width: 100%; }
+.s-settings .seg button { height: 36px; padding: 0 14px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--muted); background: none; border: 0; border-right: 1px solid var(--line); white-space: nowrap; }
+.s-settings .seg button:last-child { border-right: 0; }
+.s-settings .seg button[aria-checked="true"] { background: var(--raised); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+
+/* stepper: − value + (and the quiet-hours variant with two time boxes) */
+.s-settings .stp { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--base); flex: none; }
+.s-settings .stp .b { height: 38px; min-width: 38px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--muted); font-size: 18px; background: none; border: 0; padding: 0; }
+.s-settings .stp button.b:disabled { opacity: 0.35; cursor: default; }
+.s-settings .stp .v { height: 38px; min-width: 48px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--ink); border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+.s-settings .stp .tm { height: 38px; min-width: 52px; padding: 0 8px; border: 0; border-left: 1px solid var(--line); border-right: 1px solid var(--line); background: transparent; color: var(--ink); font: 600 14px Inter, system-ui, sans-serif; text-align: center; text-align-last: center; appearance: none; -webkit-appearance: none; border-radius: 0; }
+.s-settings .stp .tm.first { border-left: 0; }
+.s-settings .stp .tm.last { border-right: 0; }
+.s-settings .stp.time .b { min-width: 38px; padding: 0; }
+.s-settings .stp .tm.first, .s-settings .stp .tm.last { min-width: 48px; padding: 0; }
+
+/* model select: a box with the current value and a ▾ */
+.s-settings .sel { height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--base); color: var(--ink); font: 600 13px Inter, system-ui, sans-serif; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 240px; }
+.s-settings .sel select { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: inherit; font: inherit; appearance: none; -webkit-appearance: none; cursor: pointer; padding: 0; }
+.s-settings .sel select option { background: var(--panel); color: var(--ink); }
+
+/* new topics slider */
+/* The input is 22 px wider than its track, so the thumb centre travels 0..100% of the track, as on the board. */
+.s-settings .sl-in { -webkit-appearance: none; appearance: none; width: calc(100% + 22px); height: 22px; margin: 3px -11px; padding: 0; background: linear-gradient(to right, transparent 0 11px, var(--accent) 11px var(--stop), var(--line) var(--stop) calc(100% - 11px), transparent calc(100% - 11px)) center / 100% 6px no-repeat; cursor: pointer; }
+.s-settings .sl-in::-webkit-slider-runnable-track { background: transparent; height: 22px; }
+.s-settings .sl-in::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); border: 3px solid var(--accent); box-sizing: border-box; }
+.s-settings .sl-in::-moz-range-track { background: transparent; height: 22px; }
+.s-settings .sl-in::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--ink); border: 3px solid var(--accent); box-sizing: border-box; }
+.s-settings .sll { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }
+
+/* access */
+.s-settings .chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--muted); font-size: 12px; font-weight: 600; }
+.s-settings .btn { padding: 0 14px; display: flex; align-items: center; gap: 8px; }
+
+/* estimate box */
+.s-settings .sum { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--base); font-size: 13px; }
+.s-settings .sum b { color: var(--ink); }
+
+/* ---- phone: one column, own header, rows that open inline ---- */
+.s-settings.is-phone { display: flex; flex-direction: column; padding: 0; gap: 0; overflow: hidden; }
+.s-settings.is-phone .hd { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 0 8px; flex: none; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-settings.is-phone .hd-back { width: 44px; height: 44px; border-radius: 8px; border: 0; background: transparent; color: var(--ink); display: flex; align-items: center; justify-content: center; flex: none; padding: 0; }
+.s-settings.is-phone .hd-title { flex: 1; margin: 0; font: 400 20px/1.2 Kurale, Georgia, serif; }
+.s-settings.is-phone .pg { flex: 1; min-height: 0; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.s-settings.is-phone .gl { margin: 0; padding: 4px 4px 0; font-weight: 700; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.s-settings.is-phone .sec { overflow: visible; min-width: 0; border-radius: 10px; }
+.s-settings.is-phone .sum-line { padding: 0 4px; }
+.s-settings.is-phone .ln { min-height: 52px; padding: 6px 12px; border-top: 1px solid var(--line); gap: 12px; }
+.s-settings.is-phone .ln:first-child { border-top: 0; }
+.s-settings.is-phone .ln.col { flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 0 0; min-height: 0; }
+.s-settings.is-phone .ln.col > b { padding: 0 12px; }
+.s-settings.is-phone .ln.col .seg { margin: 0 12px 12px; width: auto; }
+.s-settings.is-phone .ln.col .seg button { flex: 1; height: 44px; padding: 0 4px; font-size: 13px; }
+.s-settings.is-phone .sw { width: 48px; height: 28px; border-radius: 14px; }
+.s-settings.is-phone .sw::after { top: 4px; left: 4px; width: 20px; height: 20px; }
+.s-settings.is-phone .sw.on::after { left: 24px; }
+.s-settings.is-phone .stp .b { height: 44px; min-width: 44px; font-size: 20px; }
+.s-settings.is-phone .stp .v { height: 44px; min-width: 52px; }
+.s-settings.is-phone .stp .tm { height: 44px; min-width: 64px; font-size: 15px; }
+.s-settings.is-phone button.ln.row { width: 100%; border: 0; border-top: 1px solid var(--line); background: none; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.s-settings.is-phone .ln.row .go { color: var(--muted); font-size: 20px; line-height: 1; transition: transform 0.15s; }
+.s-settings.is-phone .ln.row .go.on { transform: rotate(90deg); }
+.s-settings.is-phone .sub { display: flex; flex-direction: column; gap: 12px; padding: 4px 12px 14px; border-top: 1px solid var(--line); }
+.s-settings.is-phone .sub .ln { min-height: 0; padding: 0; border: 0; flex-direction: column; align-items: stretch; gap: 6px; }
+.s-settings.is-phone .sub .ln .t { flex: none; flex-direction: row; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.s-settings.is-phone .sub .sel { min-width: 0; width: 100%; height: 44px; }
+.s-settings.is-phone .sub .acc { flex-direction: row; align-items: center; flex-wrap: wrap; }
+.s-settings.is-phone .sub .sw { align-self: flex-end; }
+.s-settings.is-phone .sub .stp { align-self: flex-start; }
+.s-settings.is-phone .sub .chip { height: 28px; padding: 0 10px; }
+.s-settings.is-phone .sub .btn { height: 44px; }
+.s-settings.is-phone .sub .sl-in { height: 44px; }
+.s-settings.is-phone .hint { margin: 0; }

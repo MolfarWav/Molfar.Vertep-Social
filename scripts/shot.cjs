@@ -1,5 +1,5 @@
 // Browser check helper: screenshots of the built app (dist/) in themes and sizes.
-//   bun run preview:build
+//   bun run preview:build          (or: bun build ./index.html --outdir /some/dir, then SOCIAL_DIST=/some/dir)
 //   NODE_PATH=$(npm root -g) node scripts/shot.cjs <outDir> "<query>" [themes=vertep,dark,light] [sizes=1280x800,390x844]
 // <query> is the URL query without the theme, e.g. "screen=forum&view=topic".
 // Prints console errors and page errors, and horizontal overflow of the page.
@@ -10,7 +10,7 @@ const path = require("node:path");
 
 const [outDir, query = "", themesArg = "vertep,dark,light", sizesArg = "1280x800,390x844"] = process.argv.slice(2);
 if (!outDir) { console.error("usage: shot.cjs <outDir> <query> [themes] [sizes]"); process.exit(2); }
-const dist = path.resolve(__dirname, "..", "dist");
+const dist = path.resolve(process.env.SOCIAL_DIST || path.join(__dirname, "..", "dist"));
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2", ".woff": "font/woff", ".svg": "image/svg+xml", ".png": "image/png" };
 
 const server = http.createServer((req, res) => {

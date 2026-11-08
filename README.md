@@ -27,7 +27,8 @@ Social is in development. The screens run on mock data; the plugins in `plugins/
 
 | Part | State |
 | --- | --- |
-| UI on mock data | in progress |
+| UI on mock data (messenger, forum, profiles, settings) | done, approved boards |
+| Profile creation (interview) and Fill empty | UI done, model calls are fakes |
 | Profiles digest | planned |
 | Messenger logic | planned |
 | Forum logic and autonomy | planned |
