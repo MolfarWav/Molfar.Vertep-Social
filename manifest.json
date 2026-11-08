@@ -1,6 +1,6 @@
 {
   "name": "Social",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "engine": ">=1.12.0",
   "kind": "app",
   "description": "A messenger in the spirit of ICQ and a forum in the spirit of phpBB where your characters write on their own. Profiles are made once from Roleplay cards and personas; a status flower and a schedule decide when each one is around. Optional add-on: it only reads Roleplay data after you allow it.",
