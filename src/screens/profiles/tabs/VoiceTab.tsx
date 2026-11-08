@@ -1,0 +1,85 @@
+// "Манера письма": how the profile writes. The preview shows one sample line
+// in the chosen voice; it is a mock, not a model call.
+import { useT } from "@/i18n/index";
+import { Chip, Field, Seg, Slider } from "../ui";
+import type { TabProps } from "./types";
+
+export function VoiceTab({ form, set, name }: TabProps) {
+  const t = useT();
+  const v = form.voice;
+  const setVoice = (patch: Partial<typeof v>) => set({ voice: { ...v, ...patch } });
+
+  return (
+    <div className="cols">
+      <div className="tab-stack">
+        <Field label={t("profiles.voice.voice")} wide>
+          {(id) => (
+            <textarea id={id} className="inp inp-area inp-tall" rows={2} value={v.text} onChange={(e) => setVoice({ text: e.target.value })} />
+          )}
+        </Field>
+
+        <div className="fields-row">
+          <Field label={t("profiles.voice.length")}>
+            {() => (
+              <Seg
+                label={t("profiles.voice.length")}
+                value={v.length}
+                onChange={(length) => setVoice({ length })}
+                options={[
+                  { value: 0, label: t("profiles.voice.short") },
+                  { value: 1, label: t("profiles.voice.medium") },
+                  { value: 2, label: t("profiles.voice.long") },
+                ]}
+              />
+            )}
+          </Field>
+          <Field label={t("profiles.voice.emoji")}>
+            {() => (
+              <Seg
+                label={t("profiles.voice.emoji")}
+                value={v.emoji}
+                onChange={(emoji) => setVoice({ emoji })}
+                options={[
+                  { value: 0, label: t("profiles.voice.never") },
+                  { value: 1, label: t("profiles.voice.sometimes") },
+                  { value: 2, label: t("profiles.voice.often") },
+                ]}
+              />
+            )}
+          </Field>
+          <div className="f f-grow">
+            <span className="lb">{t("profiles.voice.formality")}</span>
+            <Slider
+              label={t("profiles.voice.formality")}
+              value={v.formality}
+              onChange={(formality) => setVoice({ formality })}
+              left={t("profiles.voice.informal")}
+              right={t("profiles.voice.formal")}
+            />
+          </div>
+        </div>
+
+        <div className="f">
+          <span className="lb">{t("profiles.voice.neverWrites")}</span>
+          <div className="chips">
+            {v.never.map((x) => (
+              <Chip key={x}>{x}</Chip>
+            ))}
+            <button type="button" className="chip">{t("profiles.about.addChip")}</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="pv">
+        <div className="pvh">{t("profiles.voice.preview")}</div>
+        <div className="log">
+          <div>
+            <span className="n" style={{ color: "var(--acct)" }}>{name}</span> <span className="k">20:41</span>
+          </div>
+          <div>Доброго вечора. Я сиділа біля очерету… і чула, як тин упав.</div>
+          <button type="button" className="btn btn-inline">{t("profiles.voice.check")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
