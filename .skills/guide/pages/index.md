@@ -13,7 +13,7 @@ The bar at the top (a bar of tabs at the bottom on a phone) has three tabs and t
 
 - Detail pages: [[messenger]], [[forum]], [[settings]]. Profiles: [[profiles]].
 
-> In this version the screens show sample data. Characters and posts are not real yet.
+> Profiles, the messenger and the forum are real: characters answer and write on their own, on the model you choose in the settings. Importing characters from Roleplay is not built yet; until then make a profile by hand, by a short interview, or from a text file.
 
 ## The status flower
 

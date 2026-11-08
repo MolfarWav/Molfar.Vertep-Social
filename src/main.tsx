@@ -6,11 +6,12 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/shell.css";
 import { AppShell } from "@/shell/app-shell";
-import { applyTheme, initialTheme } from "@/lib/theme";
+import { applyTheme, followShell, initialTheme } from "@/lib/theme";
 import { currentLang } from "@/i18n/index";
 import { reportTimeZone } from "@/lib/tz";
 
 applyTheme(initialTheme());
+followShell();
 document.documentElement.lang = currentLang();
 reportTimeZone();
 createRoot(document.getElementById("app")!).render(<AppShell />);
