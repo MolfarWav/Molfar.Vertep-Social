@@ -11,7 +11,7 @@
 //   tab=about|voice|statuses|forum|habits   the editor tab (desktop and phone)
 //   q=<text>      prefill the search
 //   source=all|roleplay|own|persona         prefill the source filter
-//   dirty=1       the first profile starts with a draft (the phone save bar shows)
+//   dirty=1       the first profile starts with a draft (the save bar shows, phone and desktop)
 //   state=firstrun      no profiles: the first-run state
 //   state=importing     the import run, frozen at 4 of 9
 //   state=importfail    the import run, one card failed

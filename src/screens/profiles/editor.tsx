@@ -158,6 +158,13 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
       </div>
       {tabs}
       <div className="ed-body">{body}</div>
+      {dirty && (
+        <div className="sv sv-desk" role="region" aria-label={t("profiles.save.unsaved")}>
+          <span className="warn">{t("profiles.save.unsaved")}</span>
+          <button type="button" className="btn" onClick={onDiscard}>{t("profiles.save.cancel")}</button>
+          <button type="button" className="btn cta" onClick={onSave}>{t("profiles.save.save")}</button>
+        </div>
+      )}
     </section>
   );
 }

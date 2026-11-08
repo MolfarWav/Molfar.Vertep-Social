@@ -40,6 +40,9 @@ values documented in the screen's `index.tsx` header.
 ## Model calls
 The profile interview and "Fill empty" go through `src/screens/profiles/model-api.ts`, a fake shaped like the Roleplay `profile` plugin routes (`/profile/persona-ideas`, `/profile/fill`). The real calls come from adapting `plugins/profile/plugin.js` of Roleplay into `plugins/profiles/`.
 
+## Decisions
+See `docs/DECISIONS.md` for what the owner decided and where to continue.
+
 ## Open items
 - The app cannot read the shell's scheme yet: the theme comes from `?theme=`, then the last choice, then Vertep.
 - Reading Roleplay data needs an engine grant (separate engine work).

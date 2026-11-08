@@ -24,7 +24,7 @@ export function DesktopSettings({ s, set }: { s: SettingsMock; set: Patch }) {
   return (
     <div className="s-settings">
       <Card title={t("settings.section.forum")} className="tall">
-        <Row title={t("settings.autonomous")} hint={t("settings.autonomous.hint")}>
+        <Row title={t("settings.autonomous")} hint={t(s.autonomous ? "settings.autonomous.hintOn" : "settings.autonomous.hint")}>
           {(id) => <Switch labelledBy={id} checked={s.autonomous} onChange={(v) => set({ autonomous: v })} />}
         </Row>
 

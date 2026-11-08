@@ -188,7 +188,7 @@
 .s-profiles .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; flex: none; }
 .s-profiles .bar i { display: block; height: 100%; background: var(--accent); }
 .s-profiles .run-row { display: flex; align-items: center; gap: 10px; min-height: 40px; }
-.s-profiles .st { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.s-profiles .run-row .st { font-size: 12px; font-weight: 600; white-space: nowrap; }
 .s-profiles .st-done { color: var(--ok); }
 .s-profiles .st-reading { color: var(--warn); }
 .s-profiles .st-queued { color: var(--muted); }
@@ -322,3 +322,9 @@
   .s-profiles .drop { min-height: 56px; }
 }
 .s-profiles .hidden { display: none; }
+
+/* the choice rows' icon square (newprofile.tsx) */
+.s-profiles .choice-ico { display: flex; align-items: center; justify-content: center; flex: none; width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); color: var(--muted); }
+/* desktop save bar: shows only while the draft is dirty; the phone bar (above) is unchanged */
+.s-profiles .sv-desk { flex: none; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.s-profiles .sv-desk .btn { height: 36px; }

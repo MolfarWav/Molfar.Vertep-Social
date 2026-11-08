@@ -235,10 +235,10 @@ export function NewProfileFlow({ phone, start, onClose, onRoleplay, onCreate, un
       <>
         <p className="pf-sub">{t("profiles.new.sub")}</p>
         <div className="choices" role="group" aria-label={t("profiles.new")}>
-          <Row title={t("profiles.new.blank")} hint={t("profiles.new.blankHint")} onClick={blank} />
-          <Row title={t("profiles.new.interview")} hint={t("profiles.new.interviewHint")} onClick={() => goStage("ask")} />
-          <Row title={t("profiles.new.file")} hint={t("profiles.new.fileHint")} onClick={() => goStage("file")} />
-          <Row title={t("profiles.import")} hint={t("profiles.new.importHint")} onClick={onRoleplay} />
+          <Row icon={<PencilIcon />} title={t("profiles.new.blank")} hint={t("profiles.new.blankHint")} onClick={blank} />
+          <Row icon={<ChatIcon />} title={t("profiles.new.interview")} hint={t("profiles.new.interviewHint")} onClick={() => goStage("ask")} />
+          <Row icon={<PageIcon />} title={t("profiles.new.file")} hint={t("profiles.new.fileHint")} onClick={() => goStage("file")} />
+          <Row icon={<DownloadIcon />} title={t("profiles.import")} hint={t("profiles.new.importHint")} onClick={onRoleplay} />
         </div>
       </>
     );
@@ -443,9 +443,36 @@ export function NewProfileFlow({ phone, start, onClose, onRoleplay, onCreate, un
 }
 
 
-function Row({ title, hint, onClick }: { title: string; hint: string; onClick: () => void }) {
+/** The choice rows' icons: 20 px strokes in a 40 px square (the CSS draws the square). */
+const ICON_PROPS = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+const PencilIcon = () => (
+  <svg {...ICON_PROPS}>
+    <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+    <path d="M13.5 6.5l4 4" />
+  </svg>
+);
+const ChatIcon = () => (
+  <svg {...ICON_PROPS}>
+    <path d="M4 6.5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H6a2 2 0 0 1-2-2z" />
+    <path d="M18 9.5h.5a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5H19v2.5l-2.8-2.5H12" />
+  </svg>
+);
+const PageIcon = () => (
+  <svg {...ICON_PROPS}>
+    <path d="M7 3h7l4 4v14H7z" />
+    <path d="M10 12h6M10 16h6M10 8h2" />
+  </svg>
+);
+const DownloadIcon = () => (
+  <svg {...ICON_PROPS}>
+    <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+  </svg>
+);
+
+function Row({ icon, title, hint, onClick }: { icon: ReactNode; title: string; hint: string; onClick: () => void }) {
   return (
     <button type="button" className="choice" onClick={onClick}>
+      <span className="choice-ico">{icon}</span>
       <span className="choice-main">
         <span className="choice-t">{title}</span>
         <span className="choice-h">{hint}</span>
