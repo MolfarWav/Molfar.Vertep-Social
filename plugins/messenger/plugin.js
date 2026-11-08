@@ -3,8 +3,8 @@
  * (from the weekly schedule) that decides when a reply comes.
  *
  * Routes (relative to /v1/apps/social):
- *   GET  /messenger/contacts            {contacts: [{id, name, hue, source, status, line, unread, lastAt, pending}], now}
- *   GET  /messenger/chat?id=<profile>   {chat: {id, status, messages, pending, failed}}
+ *   GET  /messenger/contacts            {contacts: [{id, name, hue, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
+ *   GET  /messenger/chat?id=<profile>   {chat: {id, status, nextOnline, messages, pending, failed}}
  *   POST /messenger/send {id, text}     adds the user's message; when the profile is online the reply is written now
  *          ({ok, queued, chat} or {ok: false, error, code?, chat}); otherwise the reply is queued (see below)
  *   POST /messenger/retry {id}          asks again for the reply to the last message (after a failure, or a queued one now)
@@ -114,6 +114,7 @@ function viewOf(chat, profile, now, tz) {
   return {
     id: chat.id,
     status: statusAt(profile.schedule, new Date(now), tz),
+    nextOnline: nextOnline(profile.schedule, now, tz),
     messages: chat.messages,
     pending: chat.pending,
     failed: chat.failed,
@@ -239,6 +240,7 @@ function contactsRoute(host) {
       hue: Number.isFinite(p.hue) ? p.hue : 200,
       source: str(p.source) || "own",
       status: statusAt(p.schedule, new Date(now), tz),
+      nextOnline: nextOnline(p.schedule, now, tz),
       line: lineOf(chat),
       unread: chat.unread,
       lastAt: last ? last.at : 0,

@@ -7,6 +7,8 @@ import { ME } from "@/mock/characters";
 import { NavProvider, useNav, type Tab } from "@/shell/nav";
 import { Messenger } from "@/screens/messenger";
 import { Forum } from "@/screens/forum";
+import { ForumSoon } from "@/shell/forum-soon";
+import { PREVIEW } from "@/lib/api";
 import { Profiles } from "@/screens/profiles";
 import { Settings } from "@/screens/settings";
 
@@ -29,7 +31,7 @@ const GEAR = (
 
 function Screen() {
   const { tab } = useNav();
-  if (tab === "forum") return <Forum />;
+  if (tab === "forum") return PREVIEW ? <Forum /> : <ForumSoon />;
   if (tab === "profiles") return <Profiles />;
   if (tab === "settings") return <Settings />;
   return <Messenger />;

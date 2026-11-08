@@ -100,6 +100,7 @@ test("sending to an online profile writes the reply in two passes and stores bot
   const contacts = route(first.host, "GET", "/messenger/contacts").json.contacts;
   expect(contacts[0]).toMatchObject({ id: "mavka", name: "Мавка", status: "online", unread: false, pending: false });
   expect(contacts[0].line).toBe("Тихо тут. Заходь.");
+  expect(typeof contacts[0].nextOnline).not.toBe("undefined");
 });
 
 test("a profile that is not online queues the message; no model call is made", () => {
