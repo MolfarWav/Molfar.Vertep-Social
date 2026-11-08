@@ -1,4 +1,6 @@
-/* Social colour tokens, one block per theme. The names and values are the ones
+/* The --hue-* tokens tint the phone tab icons like Roleplay's rail (messenger = Chats rose, forum = Groups cyan,
+ * profiles = Characters violet, more = Settings zinc; Tailwind 400 on dark, 600 on light).
+ * Social colour tokens, one block per theme. The names and values are the ones
  * the approved boards use (see AGENTS.md): Vertep (default), Dark and Light
  * follow the shell's built-in schemes. `data-theme` is set on <html> by
  * src/lib/theme.ts. */
@@ -22,6 +24,10 @@
   --bad: #f2777a;
   --hover: rgba(240, 233, 220, 0.07);
   --them-l: 68%;
+  --hue-messenger: #fb7185;
+  --hue-forum: #22d3ee;
+  --hue-profiles: #a78bfa;
+  --hue-more: #a1a1aa;
 }
 
 [data-theme="dark"] {
@@ -43,6 +49,10 @@
   --bad: #f2777a;
   --hover: rgba(255, 255, 255, 0.07);
   --them-l: 68%;
+  --hue-messenger: #fb7185;
+  --hue-forum: #22d3ee;
+  --hue-profiles: #a78bfa;
+  --hue-more: #a1a1aa;
 }
 
 [data-theme="light"] {
@@ -64,4 +74,8 @@
   --bad: #c4373a;
   --hover: rgba(0, 0, 0, 0.06);
   --them-l: 34%;
+  --hue-messenger: #e11d48;
+  --hue-forum: #0891b2;
+  --hue-profiles: #7c3aed;
+  --hue-more: #71717a;
 }

@@ -72,7 +72,7 @@ function Chrome() {
       {phone && chrome.tabs && (
         <nav className="ptabs" aria-label="Social">
           {(["messenger", "forum", "profiles", "settings"] as Tab[]).map((x) => (
-            <button key={x} className={`ptab${tab === x ? " on" : ""}`} aria-current={tab === x ? "page" : undefined} onClick={() => go(x)}>
+            <button key={x} data-tab={x} className={`ptab${tab === x ? " on" : ""}`} aria-current={tab === x ? "page" : undefined} onClick={() => go(x)}>
               <TabIcon tab={x} />
               {t(x === "settings" ? "shell.more" : `shell.${x}`)}
               {badgeOf(x) > 0 && <span className="pbadge">{badgeOf(x)}</span>}

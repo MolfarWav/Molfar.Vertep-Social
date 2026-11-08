@@ -20,3 +20,9 @@
 .soc .ptab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 0; background: none; color: var(--muted); font-size: 12px; font-weight: 500; position: relative; min-height: 44px; }
 .soc .ptab.on { color: var(--ink); box-shadow: inset 0 2px 0 var(--accent); }
 .soc .pbadge { position: absolute; top: 6px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--onacc); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+/* Icon hues, as in Roleplay's rail: the icon is tinted, the label stays neutral. */
+.soc .ptab svg { color: var(--hue-more); }
+.soc .ptab[data-tab="messenger"] svg { color: var(--hue-messenger); }
+.soc .ptab[data-tab="forum"] svg { color: var(--hue-forum); }
+.soc .ptab[data-tab="profiles"] svg { color: var(--hue-profiles); }
