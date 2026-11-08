@@ -161,3 +161,57 @@
 .s-profiles.is-phone .grid-scroll .grid { min-width: 640px; }
 .s-profiles.is-phone .post { grid-template-columns: 110px minmax(0, 1fr); }
 .s-profiles.is-phone .pg .tab-stack, .s-profiles.is-phone .pg .cols { padding-top: 0; }
+
+/* dialogs: rendered into <body> in a layer that carries .s-profiles */
+.s-profiles.pf-layer { position: fixed; inset: 0; z-index: 50; flex: none; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgb(0 0 0 / 0.55); color: var(--ink); font: 14px/1.45 Inter, "Inter Variable", system-ui, sans-serif; }
+.s-profiles.pf-layer *, .s-profiles.pf-layer *::before, .s-profiles.pf-layer *::after { box-sizing: border-box; }
+.s-profiles .pf-dlg { display: flex; flex-direction: column; min-height: 0; max-height: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); overflow: hidden; box-shadow: 0 24px 60px rgb(0 0 0 / 0.5); }
+.s-profiles .pf-dlg:focus { outline: none; }
+.s-profiles .pf-head { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 16px; flex: none; font-weight: 600; font-size: 15px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-profiles .pf-body { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; flex: none; min-height: 0; }
+.s-profiles .pf-body p { margin: 0; }
+.s-profiles .pf-body.run { overflow: auto; }
+.s-profiles .access { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.s-profiles .pf-list { flex: 1; min-height: 0; overflow: auto; border-top: 1px solid var(--line); }
+.s-profiles .pf-note { margin: 0; padding: 8px 16px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); flex: none; }
+.s-profiles .pf-foot { display: flex; align-items: center; gap: 10px; padding: 12px 16px; flex: none; flex-wrap: wrap; background: var(--raised); border-top: 1px solid var(--line); }
+.s-profiles .pf-foot .strong { font-weight: 600; }
+.s-profiles .grow { flex: 1; min-width: 0; }
+.s-profiles .grp { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 16px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: var(--raised); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.s-profiles .row { display: flex; align-items: center; gap: 12px; min-height: 38px; padding: 1px 16px; }
+.s-profiles .row.sub { padding-left: 48px; }
+.s-profiles .row .t, .s-profiles .run-row .t { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.s-profiles .row .nm { font-weight: 600; }
+.s-profiles .row .s { color: var(--muted); font-size: 12px; }
+.s-profiles .cb { width: 18px; height: 18px; flex: none; margin: 0; accent-color: var(--accent); }
+.s-profiles .tag { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--warn); color: var(--warn); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.s-profiles .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; flex: none; }
+.s-profiles .bar i { display: block; height: 100%; background: var(--accent); }
+.s-profiles .run-row { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+.s-profiles .st { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.s-profiles .st-done { color: var(--ok); }
+.s-profiles .st-reading { color: var(--warn); }
+.s-profiles .st-queued { color: var(--muted); }
+.s-profiles .st-failed { color: var(--bad); }
+.s-profiles .run-fail { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--bad); border-radius: 8px; }
+.s-profiles .run-fail .t { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.s-profiles .run-fail .btn { height: 36px; flex: none; }
+.s-profiles .first { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; text-align: center; }
+.s-profiles .first-h, .s-profiles .empty-h { margin: 0; font: 24px/1.2 Kurale, Georgia, serif; color: var(--ink); }
+.s-profiles .empty-h { font-size: 20px; }
+.s-profiles .first-text, .s-profiles .empty-text { max-width: 420px; margin: 0; }
+.s-profiles .habits-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 16px; text-align: center; }
+.s-profiles .diff { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 13px; }
+.s-profiles .diff > div { padding: 7px 12px; border-top: 1px solid var(--line); }
+.s-profiles .diff > div:first-child { border-top: 0; }
+.s-profiles .diff .add { background: color-mix(in srgb, var(--ok) 14%, var(--base)); }
+.s-profiles .diff .del { background: color-mix(in srgb, var(--bad) 14%, var(--base)); color: var(--muted); text-decoration: line-through; }
+.s-profiles .linkbtn { display: inline-block; margin: -12px -4px; padding: 12px 4px; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 700; }
+
+/* touch sizes on the phone (dialogs open over the phone screen too) */
+@media (max-width: 767px) {
+  .s-profiles .cb { width: 24px; height: 24px; }
+  .s-profiles .row, .s-profiles .run-row { min-height: 48px; }
+  .s-profiles .pf-foot .btn { height: 44px; }
+  .s-profiles .run-fail .btn { height: 44px; }
+}

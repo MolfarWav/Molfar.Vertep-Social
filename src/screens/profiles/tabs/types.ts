@@ -8,6 +8,8 @@ export interface TabProps {
   name: string;
   /** Hue of the profile's avatar, for the names in the previews. */
   hue: number;
+  /** Opens the "update from Roleplay" dialog (About's note links to it). */
+  onRefresh?: () => void;
 }
 
 export type TabId = "about" | "voice" | "statuses" | "forum" | "habits";

@@ -1,5 +1,6 @@
 // "Звички": habits the profile wrote (by her) and the ones the user added
 // (yours). Adding and removing work on the draft; the limits are mock numbers.
+// With no habits yet, the tab says so and offers to add one.
 import { useState } from "react";
 import { useT } from "@/i18n/index";
 import type { Habit } from "@/mock/profiles";
@@ -17,6 +18,7 @@ const nextId = () => `new-${++seq}`;
 export function HabitsTab({ form, set }: TabProps) {
   const t = useT();
   const [draft, setDraft] = useState("");
+  const [adding, setAdding] = useState(false);
 
   const add = () => {
     const text = draft.trim();
@@ -26,6 +28,26 @@ export function HabitsTab({ form, set }: TabProps) {
     setDraft("");
   };
   const remove = (id: string) => set({ habits: form.habits.filter((h) => h.id !== id) });
+
+  const auto = (
+    <>
+      <Switch on={form.habitsAuto} onChange={(habitsAuto) => set({ habitsAuto })}>{t("profiles.habits.auto")}</Switch>
+      <div className="k">{t("profiles.habits.autoNote")}</div>
+    </>
+  );
+
+  if (form.habits.length === 0 && !adding) {
+    return (
+      <div className="tab-stack">
+        <div className="habits-empty">
+          <h3 className="empty-h">{t("profiles.habits.emptyTitle")}</h3>
+          <p className="k empty-text">{t("profiles.habits.emptyText")}</p>
+          <button type="button" className="btn" onClick={() => setAdding(true)}>{t("profiles.habits.emptyAdd")}</button>
+        </div>
+        {auto}
+      </div>
+    );
+  }
 
   return (
     <div className="cols">
@@ -51,6 +73,7 @@ export function HabitsTab({ form, set }: TabProps) {
             value={draft}
             placeholder={t("profiles.habit.placeholder")}
             aria-label={t("profiles.habit.placeholder")}
+            autoFocus={adding}
             onChange={(e) => setDraft(e.target.value)}
           />
           <button type="submit" className="btn cta" disabled={!draft.trim()}>{t("profiles.habit.add")}</button>
@@ -70,8 +93,7 @@ export function HabitsTab({ form, set }: TabProps) {
             <div className="k">{t("profiles.habits.yoursNote")}</div>
           </div>
         </div>
-        <Switch on={form.habitsAuto} onChange={(habitsAuto) => set({ habitsAuto })}>{t("profiles.habits.auto")}</Switch>
-        <div className="k">{t("profiles.habits.autoNote")}</div>
+        {auto}
       </div>
     </div>
   );

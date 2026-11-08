@@ -5,7 +5,7 @@ import type { Habit } from "@/mock/profiles";
 import { Chip, Field } from "../ui";
 import type { TabProps } from "./types";
 
-export function AboutTab({ form, set }: TabProps) {
+export function AboutTab({ form, set, onRefresh }: TabProps) {
   const t = useT();
   const selfHabits = form.habits.filter((h) => h.by === "self");
   const removeHabit = (h: Habit) => set({ habits: form.habits.filter((x) => x.id !== h.id) });
@@ -13,7 +13,9 @@ export function AboutTab({ form, set }: TabProps) {
   return (
     <div className="tab-stack tab-about">
       <p className="note">
-        {t("profiles.about.note")} <b>{t("profiles.editor.refresh")}</b> {t("profiles.about.refreshHint")}
+        {t("profiles.about.note")}{" "}
+        <button type="button" className="linkbtn" onClick={onRefresh}>{t("profiles.editor.refresh")}</button>{" "}
+        {t("profiles.about.refreshHint")}
       </p>
 
       <Field label={t("profiles.about.nick")}>

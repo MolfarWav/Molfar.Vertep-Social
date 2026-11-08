@@ -85,7 +85,7 @@ const DEFAULT_FORUM: ForumForm = {
   favourites: [],
 };
 
-function plain(id: string, name: string, hue: number, source: ProfileSource, about: string): MockProfile {
+export function plain(id: string, name: string, hue: number, source: ProfileSource, about: string): MockProfile {
   return {
     id,
     name,

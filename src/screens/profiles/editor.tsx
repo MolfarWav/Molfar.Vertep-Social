@@ -1,7 +1,7 @@
 // The profile editor: header, the five tabs, and on the phone a save bar.
-// Desktop edits apply straight to the draft (the board has no save bar); the
-// phone keeps a saved copy so Cancel and Save mean something.
-import { useState } from "react";
+// The draft lives in index.tsx (the store), so leaving with unsaved changes can
+// be asked for on both layouts. Desktop has no save bar (the board has none);
+// its unsaved changes are asked about when leaving the profile.
 import { useT } from "@/i18n/index";
 import { Avatar } from "@/components/Avatar";
 import { useChrome } from "@/shell/nav";
@@ -15,13 +15,19 @@ import { TAB_IDS, type TabId } from "./tabs/types";
 
 export interface EditorProps {
   profile: MockProfile;
+  /** The draft (or the saved form when nothing is edited). */
+  form: ProfileForm;
+  dirty: boolean;
   tab: TabId;
   onTab: (tab: TabId) => void;
   phone: boolean;
-  /** Phone: back to the list. */
+  onSet: (patch: Partial<ProfileForm>) => void;
+  onSave: () => void;
+  onDiscard: () => void;
+  /** Opens "Оновити з Roleplay: що зміниться". */
+  onRefresh: () => void;
+  /** Phone: back to the list (index asks first when there are unsaved changes). */
   onBack?: () => void;
-  /** Preview only (`dirty=1`): start with unsaved changes so the save bar shows. */
-  initialDirty?: boolean;
 }
 
 const TAB_LABEL: Record<TabId, { desk: string; phone: string }> = {
@@ -58,25 +64,8 @@ const DotsIcon = () => (
   </svg>
 );
 
-export function ProfileEditor({ profile, tab, onTab, phone, onBack, initialDirty }: EditorProps) {
+export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, onSave, onDiscard, onRefresh, onBack }: EditorProps) {
   const t = useT();
-  const [saved, setSaved] = useState<ProfileForm>(() => formOf(profile));
-  const [form, setForm] = useState<ProfileForm>(saved);
-  const [dirty, setDirty] = useState(!!initialDirty);
-
-  const set = (patch: Partial<ProfileForm>) => {
-    setForm((f) => ({ ...f, ...patch }));
-    setDirty(true);
-  };
-  const cancel = () => {
-    setForm(saved);
-    setDirty(false);
-  };
-  const save = () => {
-    setSaved(form);
-    setDirty(false);
-  };
-
   const roleplay = profile.source === "roleplay";
   const sourceLabel = t(SOURCE_KEY[profile.source]);
   const subtitle = roleplay
@@ -85,7 +74,7 @@ export function ProfileEditor({ profile, tab, onTab, phone, onBack, initialDirty
       : t("profiles.editor.subtitleCard", { card: profile.card ?? "", date: profile.cardDate ?? "" })
     : t(profile.source === "own" ? "profiles.editor.subtitleOwn" : "profiles.editor.subtitlePersona");
 
-  const props = { form, set, name: profile.name, hue: profile.hue };
+  const props = { form, set: onSet, name: profile.name, hue: profile.hue, onRefresh };
   const body =
     tab === "about" ? <AboutTab {...props} />
     : tab === "voice" ? <VoiceTab {...props} />
@@ -130,8 +119,8 @@ export function ProfileEditor({ profile, tab, onTab, phone, onBack, initialDirty
         <div className="pg">{body}</div>
         <div className="sv">
           <span className="warn">{dirty ? t("profiles.save.unsaved") : ""}</span>
-          <button type="button" className="btn" disabled={!dirty} onClick={cancel}>{t("profiles.save.cancel")}</button>
-          <button type="button" className="btn cta" disabled={!dirty} onClick={save}>{t("profiles.save.save")}</button>
+          <button type="button" className="btn" disabled={!dirty} onClick={onDiscard}>{t("profiles.save.cancel")}</button>
+          <button type="button" className="btn cta" disabled={!dirty} onClick={onSave}>{t("profiles.save.save")}</button>
         </div>
       </div>
     );
@@ -148,7 +137,7 @@ export function ProfileEditor({ profile, tab, onTab, phone, onBack, initialDirty
           </div>
           <div className="k">{subtitle}</div>
         </div>
-        {roleplay && <button type="button" className="btn">{t("profiles.editor.refresh")}</button>}
+        {roleplay && <button type="button" className="btn" onClick={onRefresh}>{t("profiles.editor.refresh")}</button>}
         <button type="button" className="btn btn-icon" aria-label={t("profiles.editor.more")}>⋯</button>
       </div>
       {tabs}
