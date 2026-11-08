@@ -66,6 +66,12 @@ The owner installed the app from the PR branch and sent screenshots.
 - The owner works on several machines and may continue from another account: everything needed is in this file,
   `docs/FORUM-PLAN.md`, issues #310 to #315 and the PR #3 description.
 
+## Manifest `engine` (fixed 2026-11-08)
+- `engine` in `manifest.json` is the app contract number (`>=1.0.0`), not the Molfar Vertep release number. The engine
+  checks it against its contract (`APP_API_VERSION`, 1.0.x). `>=1.12.0` made the Updates dialog warn that Social "needs a
+  different version" on engine 1.12.1, and would have refused every Social update with a 409. Raise it only when
+  Molfar Vertep raises the contract; `test/skeleton.test.ts` guards the value.
+
 ## Known, left on purpose
 - Forum phone home: the second category sits 4 px lower in the board than in the build (cause not found).
 - "31 тем" in the Forum phone board is printed "31 тема" (correct plural).

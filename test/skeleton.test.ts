@@ -12,6 +12,14 @@ test("app manifest is a Social app", () => {
   expect(m.repository).toContain("Molfar.Vertep-Social");
 });
 
+test("manifest engine names the app contract, not the engine release", () => {
+  // The engine checks this range against its app contract (1.0.x), never
+  // against its own release number. ">=1.12.0" would block every update of
+  // the app and show a warning in the Updates dialog.
+  const m = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
+  expect(m.engine).toBe(">=1.0.0");
+});
+
 test("each plugin has a manifest and answers only its own paths", async () => {
   for (const id of ["profiles", "messenger", "forum"]) {
     const m = JSON.parse(fs.readFileSync(path.join(root, "plugins", id, "manifest.json"), "utf8"));
