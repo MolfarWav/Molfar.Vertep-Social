@@ -13,7 +13,8 @@
 // Preview parameters (`?screen=profiles&...`, read once on load):
 //   view=editor   phone only: open the editor of the first profile
 //   view=import   no profiles yet, with the import dialog open
-//   tab=about|voice|statuses|forum|habits   the editor tab (desktop and phone)
+//   tab=about|voice|statuses|forum|habits|model   the editor tab (desktop and phone)
+//   picker=1      with tab=model: the searchable model picker of the installed app, over mock models
 //   q=<text>      prefill the search
 //   source=all|roleplay|own|persona         prefill the source filter
 //   dirty=1       the first profile starts with a draft (the save bar shows, phone and desktop)
@@ -176,6 +177,7 @@ function changedKeys(a: ProfileForm, b: ProfileForm): string[] {
   if (!same(a.voice, b.voice)) out.push("profiles.tab.voice");
   if (!same(a.schedule, b.schedule)) out.push("profiles.tab.statuses");
   if (!same(a.forum, b.forum)) out.push("profiles.tab.forum");
+  if (a.model !== b.model) out.push("profiles.tab.model");
   return out;
 }
 

@@ -45,6 +45,8 @@ export interface ProfileForm {
   forum: ForumForm;
   /** The profile may add habits itself (the switch in the Habits tab). */
   habitsAuto: boolean;
+  /** "provider/model" used for this profile alone; "" = the app's model (Settings > Models). */
+  model: string;
   /** schedule[band][day]: 8 time bands (00-03 .. 21-24) by 7 days (Mon..Sun). */
   schedule: Status[][];
 }
@@ -98,6 +100,7 @@ export function plain(id: string, name: string, hue: number, source: ProfileSour
     interests: [],
     habits: [],
     habitsAuto: true,
+    model: "",
     voice: { ...DEFAULT_VOICE, never: [] },
     forum: { ...DEFAULT_FORUM, favourites: [] },
     schedule: week(DEFAULT_DAY, DEFAULT_DAY, DEFAULT_DAY),
@@ -121,6 +124,7 @@ export const PROFILES: MockProfile[] = [
       { id: "h3", text: "Не любить, коли її перебивають", by: "you" },
     ],
     habitsAuto: true,
+    model: "",
     voice: {
       text: "Повільна, тиха, ставить крапки замість окликів. Рідко питає про себе.",
       length: 1,

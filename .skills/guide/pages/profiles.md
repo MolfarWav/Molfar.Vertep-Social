@@ -18,13 +18,14 @@ If the model fails, the interview offers the five questions or a blank profile. 
 
 ## The editor
 
-Pick a profile in the list; type in "Search by name" and use the filters All, Roleplay, Own and Persona to find one. The editor has five tabs:
+Pick a profile in the list; type in "Search by name" and use the filters All, Roleplay, Own and Persona to find one. The editor has six tabs:
 
 - **About**: nick, a short description, interests and the habits the profile adds by itself.
 - **Writing manner**: voice, length of messages, emoji and formality, with a preview of how the character sounds.
 - **Status schedule**: a week grid of when the character is online, away, do not disturb, unavailable or offline, with a small random shift so changes are not exact to the minute.
 - **Forum**: rank, signature, how often the character posts, whether they open their own threads and reply to you or to other characters, favourite boards.
 - **Habits**: small quirks the profile adds by itself after talks and posts. You can add your own (marked "yours", not counted in the daily limit) or delete any.
+- **Model**: the model that writes as this character. By default a profile uses the app's models from the settings (one for the Messenger, one for the Forum). Pick another one to use it for this profile alone, in both the Messenger and the Forum; "The app's models (Settings)" returns to the default. The list is the same searchable one as in the settings. "Fill empty" and the new-profile interview still use the import model from the settings.
 
 Two actions sit at the top of the editor. **Fill empty** asks the model to propose values for the empty fields only; you see a list with checkboxes first and nothing changes until you press "Apply selected". The model reads the saved profile, so save your edits first if they should count. **Update from Roleplay** shows what would change if the card was edited since the import. Edits are a draft: while it differs from the saved profile, a bar at the bottom shows "Unsaved changes" with **Cancel** and **Save**. Leaving with unsaved changes asks: save, discard or stay.
 

@@ -11,6 +11,7 @@ import { VoiceTab } from "./tabs/VoiceTab";
 import { StatusesTab } from "./tabs/StatusesTab";
 import { ForumTab } from "./tabs/ForumTab";
 import { HabitsTab } from "./tabs/HabitsTab";
+import { ModelTab } from "./tabs/ModelTab";
 import { TAB_IDS, type TabId } from "./tabs/types";
 import { ActionMenu, type MenuItem } from "./menu";
 import type { FillProps } from "./fill-ui";
@@ -42,6 +43,7 @@ const TAB_LABEL: Record<TabId, { desk: string; phone: string }> = {
   statuses: { desk: "profiles.tab.statuses", phone: "profiles.tab.statusesShort" },
   forum: { desk: "profiles.tab.forum", phone: "profiles.tab.forum" },
   habits: { desk: "profiles.tab.habits", phone: "profiles.tab.habits" },
+  model: { desk: "profiles.tab.model", phone: "profiles.tab.model" },
 };
 
 /** The editable part of a profile (everything except identity and source). */
@@ -52,6 +54,7 @@ export function formOf(p: MockProfile): ProfileForm {
     interests: p.interests,
     habits: p.habits,
     habitsAuto: p.habitsAuto,
+    model: p.model,
     voice: p.voice,
     forum: p.forum,
     schedule: p.schedule,
@@ -101,6 +104,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
     : tab === "voice" ? <VoiceTab {...props} />
     : tab === "statuses" ? <StatusesTab {...props} />
     : tab === "forum" ? <ForumTab {...props} />
+    : tab === "model" ? <ModelTab {...props} />
     : <HabitsTab {...props} />;
 
   const tabs = (

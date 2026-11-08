@@ -127,6 +127,12 @@ const DEFAULTS = {
 };
 const clampInt = (v, lo, hi, d) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : d);
 
+/** A model reference ("provider/model"), or "" for the engine's default. */
+const modelRef = (v) => {
+  const m = typeof v === "string" ? v.trim() : "";
+  return m && m !== "default" && /^[^\s]{1,200}$/.test(m) ? m : "";
+};
+
 /** The settings the forum reads from settings.json (the profiles plugin writes them), with the defaults. */
 export function readSettings(fsx) {
   const raw = readJson(fsx, "settings.json", null);
@@ -143,7 +149,7 @@ export function readSettings(fsx) {
     quietTo: time(r.quietTo, DEFAULTS.quietTo),
     writers: r.writers === "equal" ? "equal" : "profile",
     tzOffset: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
-    model: model && model !== "default" && /^[^\s]{1,200}$/.test(model) ? model : "",
+    model: modelRef(model),
   };
 }
 
@@ -246,6 +252,7 @@ function readProfile(fsx, id) {
     interests: Array.isArray(p.interests) ? p.interests.filter((x) => typeof x === "string") : [],
     habits: Array.isArray(p.habits) ? p.habits : [],
     voice: isObj(p.voice) ? p.voice : {},
+    model: modelRef(p.model),
     schedule: p.schedule,
     createdAt: num(p.createdAt),
     forum: {
@@ -564,8 +571,10 @@ export function planAction(c, rand) {
 // ---------- requests and filing ----------
 
 function requestPost(host, key, settings, author, userMessage, maxTokens) {
+  // the author's own model (Profiles > Model) wins over the forum's model in Settings
+  const model = author.model || settings.model;
   host.llm.request(key, {
-    ...(settings.model ? { model: settings.model } : {}),
+    ...(model ? { model } : {}),
     systemPrompt: systemPromptFor(author),
     messages: [{ role: "user", content: userMessage }],
     presetParams: { temperature: 0.9, max_tokens: maxTokens },

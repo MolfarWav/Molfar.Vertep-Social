@@ -110,6 +110,8 @@ export function cleanProfile(raw, id, now, prev) {
   const source = SOURCES.includes(raw.source) ? raw.source : "own";
   const card = plain(raw.card, 120);
   const cardDate = plain(raw.cardDate, 40);
+  // "provider/model" for this profile alone; "" = the app's model for the task (Settings > Models)
+  const model = typeof raw.model === "string" && raw.model !== "default" && MODEL_REF.test(raw.model.trim()) ? raw.model.trim() : "";
   return {
     id: String(id),
     name,
@@ -122,6 +124,7 @@ export function cleanProfile(raw, id, now, prev) {
     interests: list(raw.interests, 12, 40),
     habits,
     habitsAuto: raw.habitsAuto !== false,
+    model,
     voice: {
       text: multi(v.text, 1500),
       length: clampInt(v.length, 0, 2, 1),

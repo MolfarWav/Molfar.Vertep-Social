@@ -391,6 +391,22 @@ test("the reply prompt carries the board, the recent posts with names, and who i
   expect(msg).toContain("answering the user's post");
 });
 
+test("a post is asked of the author's own model first, then the forum's model in Settings", () => {
+  const ask = (own: string) => {
+    const h = makeHost();
+    seedBoards(h);
+    seedProfile(h, "m1", "Мавка", own ? { model: own } : {});
+    seedSettings(h, { newTopicShare: 0, models: { forum: "prov/app" } });
+    const now = at("2026-11-10T11:50:00Z");
+    Date.now = () => now + 600000;
+    seedTopic(h, "mine", "b1", now, [{ id: "u1", by: "me", name: "", hue: 200, at: now, text: "Hello" }], { owe: 1 });
+    plugin.onTick({}, h.host);
+    return h.requests[0].req.model;
+  };
+  expect(ask("prov/own")).toBe("prov/own");
+  expect(ask("")).toBe("prov/app");
+});
+
 test("a reply to the user's post carries a quote and uses up one owed reply", () => {
   const h = makeHost();
   seedBoards(h);

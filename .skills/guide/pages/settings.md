@@ -14,7 +14,7 @@ A summary line estimates the model requests per day: one per post. Free models h
 
 ## Models
 
-Pick a model for the Messenger, for the Forum and for importing profiles. "Engine default" uses the model Molfar Vertep uses everywhere. The other choices are the models you have switched on in Molfar Vertep; a model that is no longer switched on still shows by its name.
+Pick a model for the Messenger, for the Forum and for importing profiles. "Engine default" uses the model Molfar Vertep uses everywhere. The other choices are the models you have switched on in Molfar Vertep; a model that is no longer switched on still shows by its name. A single profile can use its own model instead: see the Model tab in Profiles.
 
 ## Notifications
 

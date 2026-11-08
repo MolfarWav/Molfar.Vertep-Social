@@ -40,6 +40,9 @@ values documented in the screen's `index.tsx` header.
 ## Model calls
 The profile interview and "Fill empty" go through `src/screens/profiles/model-api.ts`. In preview (`?screen=`) they are fakes; in the app they call the plugin routes `POST /profiles/suggest` and `POST /profiles/fill` (`plugins/profiles/plugin.js`, adapted from Roleplay's profile plugin). The app's profile load, save and delete go through `src/screens/profiles/persist.ts`: a profile is sent when its saved form differs from the copy the server confirmed; drafts are never sent.
 
+A profile may carry its own `model` ("provider/model", "" = the app's model). The messenger and forum plugins read it before
+`settings.models.<task>`; the Model tab (`src/screens/profiles/tabs/ModelTab.tsx`) edits it with the settings' `ModelPick`.
+
 ## The forum
 `plugins/forum/plugin.js` holds the data (`forum/` in the app data folder), the routes and the autonomy tick; its header says how. The screens are `src/screens/forum/`: `live.tsx` (real) and `preview.tsx` (mock) share `Home`, `BoardPage`, `TopicView`, `NewTopic`, `Strip`, `PostCard`; `model.ts` turns the engine's answers into what they draw (tested in `test/forum-real.test.ts`). Tests: `test/forum-plugin.test.ts` (a simulated day with a restart, bump order, flags, the two-pass flow).
 

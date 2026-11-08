@@ -185,15 +185,22 @@ const tzOf = (fsx) => {
   return isObj(s) && Number.isFinite(s.tzOffset) && Math.abs(s.tzOffset) <= 840 ? s.tzOffset : null;
 };
 
-const messengerModel = (fsx) => {
-  const s = readJson(fsx, "settings.json", null);
-  const m = isObj(s) && isObj(s.models) ? str(s.models.messenger) : "";
+const modelRef = (v) => {
+  const m = str(v);
   return m && m !== "default" && /^[^\s]{1,200}$/.test(m) ? m : "";
+};
+
+/** The model for a reply: the profile's own (Profiles > Model), else the messenger's in Settings, else "" (the engine's). */
+const messengerModel = (fsx, profile) => {
+  const own = isObj(profile) ? modelRef(profile.model) : "";
+  if (own) return own;
+  const s = readJson(fsx, "settings.json", null);
+  return modelRef(isObj(s) && isObj(s.models) ? s.models.messenger : "");
 };
 
 /** Asks the model for the reply to the chat's last user message. */
 function requestReply(host, key, profile, chat) {
-  const model = messengerModel(host.fs);
+  const model = messengerModel(host.fs, profile);
   const length = isObj(profile.voice) && [0, 1, 2].includes(profile.voice.length) ? profile.voice.length : 1;
   host.llm.request(key, {
     ...(model ? { model } : {}),

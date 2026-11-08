@@ -103,6 +103,21 @@ test("sending to an online profile writes the reply in two passes and stores bot
   expect(typeof contacts[0].nextOnline).not.toBe("undefined");
 });
 
+test("a reply uses the profile's own model first, then the messenger's model in Settings", () => {
+  const ask = (profileExtra: object, settings?: object) => {
+    const h = makeHost();
+    seed(h, "mavka", "online", profileExtra);
+    if (settings) h.files.set("settings.json", JSON.stringify(settings));
+    route(h.host, "POST", "/messenger/send", { id: "mavka", text: "Привіт!" });
+    return h.requests[0].req.model;
+  };
+  expect(ask({ model: "prov/own" }, { models: { messenger: "prov/app" } })).toBe("prov/own");
+  expect(ask({ model: "" }, { models: { messenger: "prov/app" } })).toBe("prov/app");
+  expect(ask({}, { models: { messenger: "prov/app" } })).toBe("prov/app");
+  expect(ask({ model: "default" }, { models: { messenger: "prov/app" } })).toBe("prov/app");
+  expect(ask({ model: "has space" })).toBeUndefined();
+});
+
 test("a profile that is not online queues the message; no model call is made", () => {
   for (const status of ["dnd", "na", "off", "away"]) {
     const h = makeHost();

@@ -17,6 +17,6 @@ export interface TabProps {
   fill?: FillProps;
 }
 
-export type TabId = "about" | "voice" | "statuses" | "forum" | "habits";
-export const TAB_IDS: TabId[] = ["about", "voice", "statuses", "forum", "habits"];
+export type TabId = "about" | "voice" | "statuses" | "forum" | "habits" | "model";
+export const TAB_IDS: TabId[] = ["about", "voice", "statuses", "forum", "habits", "model"];
 export const isTab = (v: unknown): v is TabId => typeof v === "string" && (TAB_IDS as string[]).includes(v);
