@@ -188,7 +188,7 @@
 .s-profiles .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; flex: none; }
 .s-profiles .bar i { display: block; height: 100%; background: var(--accent); }
 .s-profiles .run-row { display: flex; align-items: center; gap: 10px; min-height: 40px; }
-.s-profiles .st { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.s-profiles .run-row .st { font-size: 12px; font-weight: 600; white-space: nowrap; }
 .s-profiles .st-done { color: var(--ok); }
 .s-profiles .st-reading { color: var(--warn); }
 .s-profiles .st-queued { color: var(--muted); }
