@@ -40,7 +40,7 @@ MolfarWav/Molfar.Vertep#309; follow-up work: MolfarWav/Molfar.Vertep#310. Read `
   (`PREVIEW` in `src/lib/api.ts`); the installed app opens without it and is real.
 - Real: the `profiles` plugin (profile store, settings, interview, Fill empty), the `messenger` plugin (chats, replies in
   the profile's voice, statuses from the schedule, a one-minute tick for queued replies) and their screens.
-  The `forum` plugin is a stub; the Forum tab shows a "not built yet" page in the app.
+  The forum is built (see "Forum build" below).
 - The browser's UTC offset is stored in `settings.json` (`tzOffset`) on every open, because the plugin sandbox does not
   reliably know the machine's time zone; schedules run in the user's own time.
 - Roleplay import is not offered in the app (needs the engine grant, issue #310); a profile is made by hand, by interview,
@@ -83,6 +83,17 @@ The owner installed the app from the PR branch and sent screenshots.
 1. Build check: `bun install`, `bun run typecheck`, `bun test test/`, `bun run preview:build`, then
    `NODE_PATH=$(npm root -g) node scripts/shot.cjs <outDir> "screen=forum&lang=uk" vertep,dark,light 1280x800,390x844`.
 2. Preview parameters per screen are documented in each `src/screens/<name>/index.tsx` header.
-3. Next steps in order: `docs/FORUM-PLAN.md` (read it with #315 for the spreading rule) (forum plugin and screens, then the engine work, notifications, first messages). Profiles and messenger are done.
+3. Next steps in order: the engine work (read-only access to Roleplay data, app notifications), first messages from characters, then #311 and #312. Profiles, messenger and the forum are done.
 4. Rules that bit during the build: no model names in commits or files; a new string goes into `en` and `uk`
    (`test/skeleton.test.ts`); never start a Ukrainian label with a lone "З" (Inter draws it like "3").
+
+## Forum build (2026-11-08, issue MolfarWav/Molfar.Vertep#317)
+Built as planned in `docs/FORUM-PLAN.md`; what was decided while building it:
+- **Where it lives:** `plugins/forum/plugin.js` (data, routes, tick), `src/screens/forum/`. One topic is one file (`forum/topics/<id>.json`); a post carries a copy of the author's name and colour, so a deleted profile's posts still read. The board page is new (not in the mocks): crumbs, a header with Write now and New topic, a table (cards on phone), an empty state.
+- **Bump order** is the topics sorted by `lastAt`; a user or a character post sets it. Tested in `test/forum-plugin.test.ts`.
+- **Spreading (#315):** the next slot `nextAt` is the average gap (waking hours / posts per day x the activity scale) with jitter 0.5x to 1.5x, never under the hard minimum of 2 minutes; at most 3 autonomous posts in any 10 minutes in every mode; the daily limit and the limit per author; quiet hours in the user's time zone. Counters live in `forum/log.json`. A user's post moves the slot up to 2 to 4 minutes ahead (never past the hard gap), so characters answer in a few minutes. A failed call waits 10 minutes (no retry storm). The simulated-day tests cover a restart in the middle.
+- **Who writes what:** the author is weighted by the profile's frequency (or equal); away profiles count 0.4, the last author 0.3; then, in order: a user's post still owed replies (`owe` 1 to 3, set when the user posts), a mention of the author, a new topic by chance (the "new topics" share, a favourite board first), a live topic (newer ones and favourite boards weigh more). The profile's three flags (opens topics, answers you, answers others) are respected. The subject of a new topic comes from one function, `pickSubject`, for #311.
+- **Write now** is `POST /forum/force` (1 to 3 posts, requested in parallel in the first pass, filed in the second); the strip, a board page and a topic page have the button (scope: everything, the board, the topic). It still counts toward the day and does not move the slot.
+- **Tab badge:** the number of topics with unread posts, polled every 30 s from the shell (`src/lib/badges.ts`) and set by the forum screen while it is open.
+- **A sandbox trap found only in the real engine:** the plugin sandbox has no Unicode property escapes (`\p{L}`); the first repeat check used one and treated every text as equal to every other. Use plain character classes in plugins.
+- **Not done, on purpose:** search, the Preview button (hidden in the live forum), closing topics (#312), characters' emoji and the picker (#316), moderation, paging of long topics (a topic keeps up to 500 posts and the page shows all), the browser Back button (the forum navigates inside the page; the header arrows and the crumbs go back). Not checked on a real model: only on the fake one.

@@ -137,3 +137,59 @@
 
 /* The topic boards set a 1.5 line height; the home boards keep 1.45 (the shell's). */
 .s-forum .tpage, .s-forum.is-topic { line-height: 1.5; }
+
+/* ---- Real forum additions: strip buttons, notice, board page, forms ---- */
+.s-forum .pad { padding: 16px; }
+.s-forum .small { font-size: 12px; }
+.s-forum .post-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.s-forum .strip-acts { display: flex; align-items: center; gap: 8px; flex: none; }
+.s-forum.is-phone .strip { flex-wrap: wrap; }
+.s-forum.is-phone .strip-text { flex-basis: calc(100% - 40px); }
+.s-forum.is-phone .strip-acts { width: 100%; }
+.s-forum.is-phone .strip-acts .btn { flex: 1; }
+.s-forum .btn:disabled { opacity: 0.55; cursor: default; }
+
+/* The line under the strip after "Write now" */
+.s-forum .notice { display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); font-size: 13px; }
+.s-forum .notice.ok { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); background: color-mix(in srgb, var(--ok) 12%, var(--panel)); }
+.s-forum .notice.error { border-color: color-mix(in srgb, var(--bad) 55%, var(--line)); background: color-mix(in srgb, var(--bad) 12%, var(--panel)); }
+.s-forum .notice-text { flex: 1; min-width: 0; }
+.s-forum .notice .linkbtn { color: var(--acct); font-weight: 600; }
+.s-forum .notice-x { flex: none; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
+.s-forum .notice-x:hover { color: var(--ink); background: var(--raised); }
+.s-forum.is-phone .notice-x { width: 44px; height: 44px; }
+
+/* The buttons row of a phone page (Write now, New topic) */
+.s-forum .tools { display: flex; gap: 8px; }
+.s-forum .tools .btn { flex: 1; justify-content: center; }
+
+/* Board page */
+.s-forum .ttl-sub { font: 400 13px/1.4 Inter, "Inter Variable", system-ui, sans-serif; color: var(--muted); margin-top: 2px; }
+.s-forum .catbar.trowbar, .s-forum .frow.trow { grid-template-columns: minmax(0, 1fr) 88px 248px; }
+.s-forum .frow.trow { min-height: 64px; }
+.s-forum .linkbtn.ft.trow-name { display: flex; align-items: center; gap: 6px; }
+.s-forum .trow-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-forum .newmark { flex: none; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; padding: 1px 6px; border-radius: 6px; color: var(--ctaink); background: var(--cta); }
+.s-forum .pcard .trow-title { white-space: normal; }
+
+/* Forms: new topic, new board */
+.s-forum .field { display: flex; flex-direction: column; gap: 6px; }
+.s-forum .field label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.s-forum .line { height: 40px; width: 100%; border: 1px solid var(--line); background: var(--base); color: var(--ink); border-radius: 8px; padding: 0 12px; font: inherit; }
+.s-forum .line:focus-visible, .s-forum .inp:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.s-forum .inp.tall { min-height: 220px; resize: vertical; }
+.s-forum .newform { display: flex; flex-direction: column; gap: 14px; }
+.s-forum .form-acts { display: flex; justify-content: flex-end; gap: 8px; }
+.s-forum .form-acts.pad { border-top: 1px solid var(--line); background: var(--raised); }
+.s-forum .form-err { color: var(--bad); font-size: 13px; }
+.s-forum .newboard { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); max-width: 520px; }
+.s-forum .empty .newboard { width: 100%; text-align: left; }
+.s-forum.is-phone .line { height: 44px; }
+.s-forum.is-phone .newform { padding: 16px 12px; }
+.s-forum .rep .grow { flex: 1; }
+.s-forum .rep.col { flex-direction: column; align-items: stretch; gap: 6px; }
+.s-forum .rep-row { display: flex; gap: 8px; align-items: flex-end; }
+.s-forum .rep-row .inp { flex: 1; width: auto; min-width: 0; }
+
+/* The quote chip above the reply box */
+.s-forum .qchip { display: flex; align-items: center; gap: 8px; align-self: flex-start; max-width: 100%; padding: 2px 4px 2px 12px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; background: var(--base); color: var(--muted); font-size: 13px; }

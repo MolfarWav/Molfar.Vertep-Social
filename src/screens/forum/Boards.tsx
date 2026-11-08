@@ -1,16 +1,17 @@
 // The board list: a table per category on desktop (topics, posts, last post
 // columns), cards per category on phone. Both open a topic on click (mock).
 import { useT } from "@/i18n/index";
-import { hueOf, type MockBoard, type MockCategory } from "@/mock/forum";
+import { hueOf } from "@/mock/forum";
+import type { ForumBoard, ForumCategory } from "./model";
 import { Ava, bgOf, initial } from "./Ava";
 import { ChatIcon } from "./Icons";
 import { countLabel } from "./labels";
 
-function iconColor(b: MockBoard): string {
+function iconColor(b: ForumBoard): string {
   return b.unread ? "var(--accent)" : "var(--muted)";
 }
 
-export function BoardTable({ categories, onOpen }: { categories: MockCategory[]; onOpen: () => void }) {
+export function BoardTable({ categories, onBoard, onTopic }: { categories: ForumCategory[]; onBoard: (id: string) => void; onTopic: (id?: string) => void }) {
   const t = useT();
   return (
     <>
@@ -29,20 +30,22 @@ export function BoardTable({ categories, onOpen }: { categories: MockCategory[];
                 <ChatIcon color={iconColor(b)} />
               </div>
               <div style={{ minWidth: 0 }}>
-                <button type="button" className="linkbtn ft" onClick={onOpen}>{b.name}</button>
+                <button type="button" className="linkbtn ft" onClick={() => onBoard(b.id)}>{b.name}</button>
                 <div className="fd">{b.desc}</div>
-                <div className="fs">
-                  {t("forum.subs")} <b>{b.subs}</b>
-                </div>
+                {b.subs && (
+                  <div className="fs">
+                    {t("forum.subs")} <b>{b.subs}</b>
+                  </div>
+                )}
               </div>
               <div className="num">{b.topics}</div>
               <div className="num">{b.posts}</div>
               <div className="last">
                 {b.last ? (
                   <>
-                    <Ava text={initial(b.last.who)} bg={bgOf(hueOf(b.last.who))} size={28} font={13} />
+                    <Ava text={initial(b.last.who)} bg={bgOf((b.last.hue ?? hueOf(b.last.who)))} size={28} font={13} />
                     <div className="t">
-                      <button type="button" className="linkbtn lt" onClick={onOpen}>{b.last.title}</button>
+                      <button type="button" className="linkbtn lt" onClick={() => onTopic(b.last?.topicId)}>{b.last.title}</button>
                       <span className="lw">{t("forum.byDesk", { who: b.last.who, when: b.last.when })}</span>
                     </div>
                   </>
@@ -63,7 +66,7 @@ export function BoardTable({ categories, onOpen }: { categories: MockCategory[];
   );
 }
 
-export function BoardCards({ categories, onOpen }: { categories: MockCategory[]; onOpen: () => void }) {
+export function BoardCards({ categories, onBoard, onTopic }: { categories: ForumCategory[]; onBoard: (id: string) => void; onTopic: (id?: string) => void }) {
   const t = useT();
   return (
     <>
@@ -79,7 +82,7 @@ export function BoardCards({ categories, onOpen }: { categories: MockCategory[];
                     <ChatIcon color={iconColor(b)} />
                   </div>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <button type="button" className="linkbtn ft" onClick={onOpen}>{b.name}</button>
+                    <button type="button" className="linkbtn ft" onClick={() => onBoard(b.id)}>{b.name}</button>
                     <div className="fd">{b.descPhone ?? b.desc}</div>
                   </div>
                 </div>
@@ -89,9 +92,9 @@ export function BoardCards({ categories, onOpen }: { categories: MockCategory[];
                 <div className="plast">
                   {b.last ? (
                     <>
-                      <Ava text={initial(b.last.who)} bg={bgOf(hueOf(b.last.who))} size={24} font={12} />
+                      <Ava text={initial(b.last.who)} bg={bgOf((b.last.hue ?? hueOf(b.last.who)))} size={24} font={12} />
                       <span className="plast-text">
-                        <button type="button" className="linkbtn lt" onClick={onOpen}>{b.last.title}</button>
+                        <button type="button" className="linkbtn lt" onClick={() => onTopic(b.last?.topicId)}>{b.last.title}</button>
                         {" · "}
                         {t("forum.byPhone", { who: b.last.who, when: b.last.whenShort })}
                       </span>
