@@ -32,6 +32,8 @@ export interface EditorProps {
   onBack?: () => void;
   /** "Fill empty": the run's state and actions; the layout comes from `phone`. */
   fill: Omit<FillProps, "layout">;
+  /** Opens the delete question. Not given in preview, so the menu has no delete item there. */
+  onDelete?: () => void;
 }
 
 const TAB_LABEL: Record<TabId, { desk: string; phone: string }> = {
@@ -68,7 +70,7 @@ const DotsIcon = () => (
   </svg>
 );
 
-export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, onSave, onDiscard, onRefresh, onBack, fill }: EditorProps) {
+export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, onSave, onDiscard, onRefresh, onBack, fill, onDelete }: EditorProps) {
   const t = useT();
   const roleplay = profile.source === "roleplay";
   const sourceLabel = t(SOURCE_KEY[profile.source]);
@@ -92,6 +94,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
       },
     },
     ...(roleplay ? [{ key: "refresh", label: t("profiles.editor.refresh"), onSelect: onRefresh }] : []),
+    ...(onDelete ? [{ key: "delete", label: t("profiles.menu.delete"), onSelect: onDelete }] : []),
   ];
   const body =
     tab === "about" ? <AboutTab {...props} />

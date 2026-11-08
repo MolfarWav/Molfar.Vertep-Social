@@ -42,6 +42,23 @@ export function DiffDialog({ name, profileId, onClose, onAccept }: { name: strin
   );
 }
 
+/** "Delete profile": the question before the profile is removed on the engine. */
+export function DeleteDialog({ name, onCancel, onConfirm }: { name: string; onCancel: () => void; onConfirm: () => void }) {
+  const t = useT();
+  return (
+    <Dialog title={t("profiles.delete.title", { name })} width={520} onClose={onCancel}>
+      <div className="pf-body">
+        <p>{t("profiles.delete.text")}</p>
+      </div>
+      <div className="pf-foot">
+        <span className="grow" />
+        <button type="button" className="btn" onClick={onCancel}>{t("profiles.delete.cancel")}</button>
+        <button type="button" className="btn cta" onClick={onConfirm}>{t("profiles.delete.confirm")}</button>
+      </div>
+    </Dialog>
+  );
+}
+
 export function UnsavedDialog({ name, sections, onDiscard, onStay, onSave }: { name: string; sections: string[]; onDiscard: () => void; onStay: () => void; onSave: () => void }) {
   const t = useT();
   const list = sections.map((k) => t(k)).join(", ");
