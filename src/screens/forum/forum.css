@@ -1,1 +1,139 @@
-/* forum screen styles, all scoped under .s-forum */
+/* Forum screen styles. Every rule is scoped under .s-forum; the phone layout
+ * adds .is-phone (and .is-topic for the topic page). Values are the ones of the
+ * Forum and Topic boards, desktop and phone. */
+
+.s-forum { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--ink); }
+.s-forum .fscroll { flex: 1; min-height: 0; overflow: auto; }
+.s-forum .mut { color: var(--muted); }
+.s-forum .btn { display: flex; align-items: center; gap: 8px; }
+.s-forum .btn.sm { height: 32px; padding: 0 12px; font-size: 13px; background: transparent; }
+.s-forum .linkbtn { margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.s-forum .linkbtn:hover { text-decoration: underline; }
+.s-forum .linkbtn.ft { display: block; width: 100%; font-weight: 700; font-size: 15px; }
+
+/* Banner and strip */
+.s-forum .ban { display: flex; align-items: center; gap: 24px; padding: 20px 24px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius: 10px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 24%, var(--raised)), color-mix(in srgb, var(--accent) 6%, var(--panel))); }
+.s-forum .ban-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.s-forum .ban-title { font: 32px/1.2 Kurale, Georgia, serif; }
+.s-forum .search { height: 40px; width: 240px; border-radius: 8px; border: 1px solid var(--line); background: var(--base); color: var(--ink); padding: 0 12px; font: inherit; }
+.s-forum .strip { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--muted); font-size: 13px; }
+.s-forum .strip b { color: var(--ink); }
+.s-forum .strip-text { flex: 1; min-width: 0; }
+.s-forum .strip.warn { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, var(--panel)); }
+
+/* Board table (desktop) */
+.s-forum .cat { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+.s-forum .catbar, .s-forum .frow { display: grid; grid-template-columns: 44px minmax(0, 1fr) 72px 104px 288px; gap: 12px; align-items: center; padding: 0 16px; }
+.s-forum .catbar { min-height: 40px; font-weight: 700; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-forum .catbar .c { text-align: center; text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--muted); }
+.s-forum .frow { min-height: 84px; border-top: 1px solid var(--line); padding-top: 12px; padding-bottom: 12px; }
+.s-forum .ico { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); background: var(--raised); flex: none; }
+.s-forum .fd { color: var(--muted); font-size: 13px; }
+.s-forum .fs { font-size: 12px; color: var(--muted); }
+.s-forum .fs b { color: var(--acct); font-weight: 600; }
+.s-forum .num { text-align: center; color: var(--ink); font-weight: 600; }
+.s-forum .last { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.s-forum .last .t { display: flex; flex-direction: column; min-width: 0; }
+.s-forum .lt { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--acct); font-weight: 600; }
+.s-forum .lw { color: var(--muted); font-size: 12px; }
+
+/* Who is on the forum, statistics */
+.s-forum .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.s-forum .box { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow: hidden; }
+.s-forum .box .h { padding: 0 16px; min-height: 36px; display: flex; align-items: center; font-weight: 700; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; background: var(--raised); border-bottom: 1px solid var(--line); }
+.s-forum .box .b { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.s-forum .box .self { color: var(--acct); }
+
+/* Empty home */
+.s-forum .empty { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 32px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.s-forum .empty-title { font: 22px/1.3 Kurale, Georgia, serif; }
+.s-forum .empty-text { color: var(--muted); max-width: 480px; }
+.s-forum .empty-acts { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* Desktop home layout */
+.s-forum .wrap { max-width: 1120px; width: 100%; margin: 0 auto; padding: 24px 0; display: flex; flex-direction: column; gap: 16px; }
+
+/* Desktop topic page */
+.s-forum .tpage { padding: 20px 0; gap: 14px; }
+.s-forum .crumbs { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.s-forum .crumbs .linkbtn { color: var(--acct); font-weight: 600; }
+.s-forum .crumbs .here { color: var(--muted); }
+.s-forum .ttl { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); }
+.s-forum .ttl-title { flex: 1; min-width: 0; font: 22px/1.3 Kurale, Georgia, serif; }
+.s-forum .ttl-meta { color: var(--muted); font-size: 13px; }
+
+/* Posts (shared parts) */
+.s-forum .post { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+.s-forum .post-b { display: flex; flex-direction: column; min-width: 0; }
+.s-forum .post-sig { border-top: 1px dashed var(--line); color: var(--muted); font-size: 12px; }
+.s-forum .post-act { display: flex; justify-content: flex-end; gap: 8px; }
+.s-forum .post-mod { color: var(--muted); font-size: 13px; font-style: italic; }
+.s-forum .quote { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--base); padding: 8px 12px; border-radius: 6px; color: var(--muted); font-size: 13px; }
+.s-forum .quote .q { font-weight: 700; font-size: 12px; color: var(--ink); }
+
+/* Desktop post: author column on the left */
+.s-forum .post-desk { display: grid; grid-template-columns: 184px minmax(0, 1fr); }
+.s-forum .post-desk .post-a { background: var(--raised); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; border-right: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.s-forum .post-desk .nm { font-weight: 700; font-size: 14px; }
+.s-forum .post-desk .online { display: flex; align-items: center; gap: 6px; color: var(--ink); }
+.s-forum .post-desk .cnt { margin-top: 6px; }
+.s-forum .post-desk .post-b { padding: 12px 16px; gap: 10px; }
+.s-forum .post-h { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.s-forum .post-h b { color: var(--ink); font-size: 13px; }
+.s-forum .post-desk .post-sig { padding-top: 8px; }
+
+/* Quick reply and lock note (desktop) */
+.s-forum .qr { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow: hidden; }
+.s-forum .qr-h { padding: 0 16px; min-height: 36px; display: flex; align-items: center; font-weight: 700; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; background: var(--raised); border-bottom: 1px solid var(--line); }
+.s-forum .qr-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.s-forum .qr-row { display: flex; align-items: center; gap: 12px; }
+.s-forum .qr-note { flex: 1; color: var(--muted); font-size: 12px; }
+.s-forum .inp { width: 100%; min-height: 72px; resize: none; border: 1px solid var(--line); background: var(--base); color: var(--ink); border-radius: 8px; padding: 10px 12px; font: inherit; }
+.s-forum .lockbox { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--muted); }
+
+/* ---- Phone ---- */
+.s-forum.is-phone .pg { padding: 12px 12px 12px; display: flex; flex-direction: column; gap: 12px; }
+.s-forum.is-phone .ban { padding: 12px 14px; gap: 12px; }
+.s-forum.is-phone .ban-title { font: 26px/1.2 Kurale, Georgia, serif; }
+.s-forum.is-phone .btn { height: 44px; padding: 0 14px; gap: 6px; }
+.s-forum.is-phone .strip { padding: 10px 12px; gap: 10px; font-size: 12px; }
+.s-forum.is-phone .strip .btn { height: 44px; }
+.s-forum.is-phone .fd { font-size: 13px; }
+.s-forum.is-phone .empty { padding: 24px 16px; }
+
+/* Phone boards: a card per board */
+.s-forum .pcat { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+.s-forum .pbar { display: flex; align-items: center; min-height: 36px; padding: 0 14px; font-weight: 700; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-forum .pcard { padding: 12px 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.s-forum .phead { display: flex; gap: 12px; align-items: center; }
+.s-forum .pcnt { color: var(--muted); font-size: 12px; }
+.s-forum .plast { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); min-width: 0; }
+.s-forum .plast .lt { display: inline; }
+.s-forum .plast-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Phone topic page: own header, scrolling posts, reply bar at the bottom */
+.s-forum.is-topic { background: var(--base); }
+.s-forum.is-phone .hd { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 0 8px; flex: none; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-forum .hd-btn { width: 44px; height: 44px; border-radius: 8px; border: 0; background: transparent; color: var(--ink); display: flex; align-items: center; justify-content: center; flex: none; padding: 0; }
+.s-forum .hd-text { flex: 1; min-width: 0; }
+.s-forum .hd-title { font: 18px/1.2 Kurale, Georgia, serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-forum .hd-sub { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-forum.is-phone.is-topic .pg { padding: 12px; gap: 10px; }
+.s-forum.is-phone .crumbs { font-size: 12px; }
+.s-forum.is-phone .post-phone { display: block; background: var(--panel); }
+.s-forum .post-phone .post-a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--raised); border-bottom: 1px solid var(--line); }
+.s-forum .post-phone .nm { font-weight: 700; font-size: 14px; }
+.s-forum .post-phone .rk { font-size: 12px; color: var(--muted); }
+.s-forum .post-phone .pn { margin-left: auto; font-size: 12px; color: var(--muted); text-align: right; }
+.s-forum .post-phone .post-b { padding: 10px 12px; gap: 8px; }
+.s-forum .post-phone .post-sig { padding-top: 6px; }
+.s-forum .post-phone .post-act { gap: 6px; }
+.s-forum .post-phone .btn.sm { height: 44px; font-size: 13px; }
+.s-forum .post-phone .quote { padding: 8px 10px; }
+.s-forum .rep { display: flex; gap: 8px; padding: 8px 12px 12px; border-top: 1px solid var(--line); background: var(--panel); flex: none; align-items: center; }
+.s-forum .rep .inp { flex: 1; width: auto; min-width: 0; min-height: 44px; }
+.s-forum .rep .btn { height: 44px; }
+.s-forum .lock-rep { color: var(--muted); font-size: 13px; }
+
+/* The topic boards set a 1.5 line height; the home boards keep 1.45 (the shell's). */
+.s-forum .tpage, .s-forum.is-topic { line-height: 1.5; }
