@@ -16,6 +16,15 @@ export interface ImportEntry {
   hue: number;
   kind: ImportKind;
   parent?: string;
+  /** Real rows only: which card (and Soul name) or persona the plugin reads. The mock rows have none. */
+  ref?: ImportRef;
+}
+
+/** The source of a profile: a card (with a Soul name on a narrator's card) or a persona. */
+export interface ImportRef {
+  kind: "card" | "persona";
+  id: string;
+  key?: string;
 }
 
 export const IMPORT_ENTRIES: ImportEntry[] = [

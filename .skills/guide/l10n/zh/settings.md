@@ -1,4 +1,4 @@
-<!-- source: ed2e203b9353 -->
+<!-- source: 22ccab00249b -->
 # Social：Settings
 
 设置决定角色写多少、何时写、使用哪些模型，以及哪些事情会通知你。在顶部名字旁边点击齿轮即可打开（手机上为底部的 "More" 标签）。它们位于 Social 内部，而不在 Molfar Vertep 的主设置中。
@@ -23,4 +23,4 @@ Social 标签页上的计数器、系统通知和声音；每项都有各自的�
 
 ## Roleplay access
 
-读取 Roleplay 数据目前尚不可用。状态显示为 off，也没有用于更改它的按钮。功能完成后，Social 只会在你导入或更新资料时读取 Roleplay 卡片，并且只有在你允许之后才会读取。
+Social 只会在你导入或更新资料时读取 Roleplay 卡片和人设，并且只有在你允许之后才会读取。你在主页上允许它，而不在这里：打开 Social 的详细信息，在 "其他应用的访问权限" 下查找（Molfar Vertep 在你第一次打开 Social 时也会询问）。这里的状态显示读取现在是否可用："Reading cards allowed" 或 "Reading cards off"。此卡片上没有按钮，因为只有你能更改该权限，Social 无法自行更改。如果已关闭，导入对话框会告诉你在哪里允许。

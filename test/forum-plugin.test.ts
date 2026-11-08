@@ -204,14 +204,18 @@ test("topics are ordered by the last post: a new topic and a topic with a new re
   seedTopic(h, "c", "b1", 3000);
   const order = () => route(h, "GET", "/forum/board", undefined, { id: "b1" }).json.topics.map((t: any) => t.id);
   expect(order()).toEqual(["c", "b", "a"]);
+  // each step is a separate moment: two writes in one millisecond would tie and the order would be down to luck
+  const base = realNow();
+  Date.now = () => base + 1000;
   // the user replies to the oldest topic: it jumps to the top
   expect(route(h, "POST", "/forum/reply", { topic: "a", text: "up" }).json.ok).toBe(true);
   expect(order()[0]).toBe("a");
   // the user opens a new topic: it is the top now
+  Date.now = () => base + 2000;
   const made = route(h, "POST", "/forum/topic", { board: "b1", title: "Brand new", text: "hello" }).json;
   expect(order()[0]).toBe(made.topic);
   // a character's reply to an older topic also bumps it
-  const r = plugin.fileResult(h.host.fs, { kind: "reply", author: "m1", topic: "c", quote: "" }, { text: "bump" }, realNow() + 10000, plugin.readBoards(h.host.fs));
+  const r = plugin.fileResult(h.host.fs, { kind: "reply", author: "m1", topic: "c", quote: "" }, { text: "bump" }, base + 10000, plugin.readBoards(h.host.fs));
   expect(r.post).toBeTruthy();
   expect(order()[0]).toBe("c");
   // the home page counts per board and names the last post

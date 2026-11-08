@@ -1,25 +1,39 @@
-// Two question dialogs of the editor: "Оновити з Roleplay: що зміниться" (the
-// diff a new card reading would make) and leaving with unsaved changes.
+// The question dialogs of the editor: "Оновити з Roleplay: що зміниться" (the
+// diff a new card reading would make), deleting a profile, and leaving with unsaved changes.
+import { Fragment } from "react";
 import { useT } from "@/i18n/index";
-import { UPDATE_DIFF } from "@/mock/profiles-import";
 import { Dialog } from "./dialog";
+import type { DiffRow, UpdateDiff } from "./import-api";
 
-export function DiffDialog({ name, profileId, onClose, onAccept }: { name: string; profileId: string; onClose: () => void; onAccept: () => void }) {
+/** What the update dialog shows: the card is being read again, the read failed, or the result (null: no change). */
+export type DiffView = { phase: "busy" } | { phase: "fail"; message: string } | { phase: "diff"; diff: UpdateDiff | null; cardDate?: string };
+
+const FIELD_KEY: Record<DiffRow["field"], string> = { about: "profiles.tab.about", voice: "profiles.tab.voice", interests: "profiles.about.interests" };
+
+export function DiffDialog({ name, view, labels, onClose, onAccept, onRetry }: { name: string; view: DiffView; labels: boolean; onClose: () => void; onAccept: () => void; onRetry: () => void }) {
   const t = useT();
-  // The mock diff is for Мавка's card; other cards report no change.
-  const hasDiff = profileId === "mavka";
+  const diff = view.phase === "diff" ? view.diff : null;
   return (
     <Dialog title={t("profiles.diff.title", { name })} width={620} onClose={onClose}>
-      <div className="pf-body">
-        {hasDiff ? (
+      <div className="pf-body" aria-busy={view.phase === "busy"}>
+        {view.phase === "busy" ? (
+          <p className="k">{t("profiles.diff.busy")}</p>
+        ) : view.phase === "fail" ? (
+          <p role="alert">{t("profiles.diff.failed", { message: view.message })}</p>
+        ) : diff ? (
           <>
             <p className="k">{t("profiles.diff.intro")}</p>
             <div className="diff">
-              {UPDATE_DIFF.removed.map((x) => (
-                <div key={x} className="del">{x}</div>
-              ))}
-              {UPDATE_DIFF.added.map((x) => (
-                <div key={x} className="add">{x}</div>
+              {diff.rows.map((row) => (
+                <Fragment key={row.field}>
+                  {labels && <div className="dl">{t(FIELD_KEY[row.field])}</div>}
+                  {row.removed.map((x) => (
+                    <div key={`d-${x}`} className="del">{x}</div>
+                  ))}
+                  {row.added.map((x) => (
+                    <div key={`a-${x}`} className="add">{x}</div>
+                  ))}
+                </Fragment>
               ))}
             </div>
           </>
@@ -29,13 +43,18 @@ export function DiffDialog({ name, profileId, onClose, onAccept }: { name: strin
       </div>
       <div className="pf-foot">
         <span className="grow" />
-        {hasDiff ? (
+        {view.phase === "fail" ? (
+          <>
+            <button type="button" className="btn" onClick={onClose}>{t("profiles.diff.close")}</button>
+            <button type="button" className="btn cta" onClick={onRetry}>{t("profiles.retry")}</button>
+          </>
+        ) : diff ? (
           <>
             <button type="button" className="btn" onClick={onClose}>{t("profiles.diff.keep")}</button>
             <button type="button" className="btn cta" onClick={onAccept}>{t("profiles.diff.accept")}</button>
           </>
         ) : (
-          <button type="button" className="btn" onClick={onClose}>{t("profiles.diff.close")}</button>
+          <button type="button" className="btn" onClick={onClose}>{view.phase === "busy" ? t("profiles.import.cancel") : t("profiles.diff.close")}</button>
         )}
       </div>
     </Dialog>

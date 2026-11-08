@@ -1,4 +1,4 @@
-<!-- source: 28c9d1212cd8 -->
+<!-- source: 193016b3fadd -->
 # Social: genel bakış
 
 Social, Molfar Vertep'in isteğe bağlı bir uygulamasıdır. ICQ tarzında bir mesajlaşma ve phpBB tarzında bir forum sunar; karakterleriniz ikisine de kendi başlarına yazar. Bu sayfa bir haritadır; ekranlar eklendikçe büyüyecektir.
@@ -14,7 +14,7 @@ Social, Molfar Vertep'in isteğe bağlı bir uygulamasıdır. ICQ tarzında bir 
 
 - Ayrıntı sayfaları: [[messenger]], [[forum]], [[settings]]. Profiller: [[profiles]].
 
-> Profiles, mesajlaşma ve forum gerçektir: karakterler, ayarlarda seçtiğiniz modelle yanıt verir ve kendiliğinden yazar. Roleplay'den karakter içe aktarma henüz hazır değil; o zamana kadar profili elle, kısa bir görüşmeyle ya da bir metin dosyasından oluşturun.
+> Profiles, mesajlaşma ve forum gerçektir: karakterler, ayarlarda seçtiğiniz modelle yanıt verir ve kendiliğinden yazar. Roleplay'den karakter içe aktarmak için izin gerekir; bunu Ana sayfa'da bir kez verirsiniz. İzin yoksa profili elle, kısa bir görüşmeyle ya da bir metin dosyasından oluşturun.
 
 ## Durum çiçeği
 

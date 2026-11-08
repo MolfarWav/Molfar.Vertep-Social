@@ -7,7 +7,8 @@
 //
 // App mode (no `?screen=`): the profiles load from the plugin on mount, a saved
 // change is sent to it (persist.ts), and "Delete profile" removes one. The
-// Roleplay import is not offered yet (it needs an engine grant). Preview mode
+// Roleplay import and "Update from Roleplay" go through the plugin (import-api.ts),
+// which reads Roleplay only after the user allowed it on Home. Preview mode
 // keeps the mock data and the mock model calls.
 //
 // Preview parameters (`?screen=profiles&...`, read once on load):
@@ -53,15 +54,16 @@
 import "./profiles.css";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/i18n/index";
-import { PREVIEW, call } from "@/lib/api";
+import { PREVIEW, call, listModels, type ModelChoice } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
 import { PROFILES, type MockProfile, type ProfileForm } from "@/mock/profiles";
-import { IMPORT_ENTRIES, UPDATE_DIFF, profileFromEntry, type ImportEntry } from "@/mock/profiles-import";
+import { FAILING_IDS, IMPORT_ENTRIES, UPDATE_DIFF, profileFromEntry, type ImportEntry } from "@/mock/profiles-import";
 import { fillEmpty, mockScript, previewFile, previewInterview, previewProposal } from "./model-api";
 import { ProfileEditor, PhoneEditor, formOf } from "./editor";
 import { ProfileListDesktop, ProfileListPhone } from "./list";
-import { ImportDialog, ImportRun, FirstRun, type RunPreview } from "./import";
-import { DeleteDialog, DiffDialog, UnsavedDialog } from "./states";
+import { ImportDialog, ImportRun, FirstRun, type ImportSource } from "./import";
+import { ImportRunner, importOne, makeDiff, refreshOne, scanRoleplay, type Exec, type RunStatus, type UpdateDiff } from "./import-api";
+import { DeleteDialog, DiffDialog, UnsavedDialog, type DiffView } from "./states";
 import { FillReview, type FillPhase } from "./fill-ui";
 import { applyProposals, emptyKeys, itemsOf, recordOf, type FillItem } from "./fill";
 import { errorText, fullProfile, stripStamps, sync } from "./persist";
@@ -180,8 +182,39 @@ function changedKeys(a: ProfileForm, b: ProfileForm): string[] {
 }
 
 const RUN_ENTRIES = IMPORT_ENTRIES.filter((e) => e.kind !== "narrator");
+const PREVIEW_SOURCE: ImportSource = { phase: "ready", entries: IMPORT_ENTRIES, hidden: { group: 1, assistant: 1, unreadable: 0 }, truncated: false };
 
-type ImportMode = { kind: "pick" } | { kind: "run"; entries: ImportEntry[]; preview?: RunPreview } | null;
+/** The design preview's run: 700 ms a card, and the card in FAILING_IDS fails once. */
+function previewExec(): Exec {
+  const failed = new Set<string>();
+  return (e) =>
+    new Promise((resolve, reject) => {
+      window.setTimeout(() => {
+        if (FAILING_IDS.has(e.id) && !failed.has(e.id)) {
+          failed.add(e.id);
+          reject(new Error(""));
+        } else resolve(profileFromEntry(e));
+      }, 700);
+    });
+}
+
+/** The frozen runs of the preview states `importing` (4 of 9) and `importfail` (one card failed). */
+function frozenRun(state: "importing" | "importfail"): Record<string, RunStatus> {
+  return Object.fromEntries(
+    RUN_ENTRIES.map((e, i): [string, RunStatus] => [e.id, state === "importing" ? (i < 3 ? "done" : i === 3 ? "reading" : "queued") : FAILING_IDS.has(e.id) ? "failed" : "done"]),
+  );
+}
+
+/** "Update from Roleplay" on the design preview: Мавка has a change, the others have none. */
+function previewDiff(id: string): UpdateDiff | null {
+  if (id !== "mavka") return null;
+  return {
+    rows: [{ field: "about", removed: UPDATE_DIFF.removed, added: UPDATE_DIFF.added }],
+    patch: {},
+  };
+}
+
+type ImportMode = "pick" | "run" | null;
 type Unsaved = { id: string; pending: (() => void) | null } | null;
 
 export function Profiles() {
@@ -196,11 +229,15 @@ export function Profiles() {
   const [store, setStore] = useState(() => makeStore(pv));
   const fillPreview = pv.state?.startsWith("fill") === true;
   const [query, setQuery] = useState(pv.q);
-  const [source, setSource] = useState<SourceFilter>(isFilter(pv.source) ? pv.source : "all");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>(isFilter(pv.source) ? pv.source : "all");
   const [selectedId, setSelectedId] = useState(() => (fillPreview ? YARYNA : store.all[0]?.id ?? ""));
   const [openId, setOpenId] = useState<string | null>(() => (pv.view === "editor" ? store.all[0]?.id ?? null : fillPreview ? YARYNA : null));
   const [tab, setTab] = useState<TabId>(() => (isTab(pv.tab) ? pv.tab : pv.state === "habits-empty" ? "habits" : "about"));
-  const [diffOpen, setDiffOpen] = useState(pv.state === "diff");
+  // "Update from Roleplay": the profile it belongs to and what the dialog shows (reading, failed, the diff).
+  const [refresh, setRefresh] = useState<{ id: string; view: DiffView } | null>(() => (pv.state === "diff" ? { id: "mavka", view: { phase: "diff", diff: previewDiff("mavka") } } : null));
+  const refreshCount = useRef(0);
+  // The card date a refresh will set once its draft is saved (the date moves with the text, not before it).
+  const [pendingDate, setPendingDate] = useState<Record<string, string>>({});
   const [unsaved, setUnsaved] = useState<Unsaved>(() => (pv.state === "unsaved" && store.all[0] ? { id: store.all[0].id, pending: null } : null));
   const [fill, setFill] = useState<FillRun | null>(() => {
     const p = store.all.find((x) => x.id === YARYNA);
@@ -241,11 +278,27 @@ export function Profiles() {
     return null;
   });
   const [importMode, setImportMode] = useState<ImportMode>(() => {
-    if (pv.view === "import") return { kind: "pick" };
-    if (pv.state === "importing") return { kind: "run", entries: RUN_ENTRIES, preview: "importing" };
-    if (pv.state === "importfail") return { kind: "run", entries: RUN_ENTRIES, preview: "importfail" };
+    if (pv.view === "import") return "pick";
+    if (pv.state === "importing" || pv.state === "importfail") return "run";
     return null;
   });
+  // The list the pick dialog shows (the plugin's scan of Roleplay; the mock in the design preview) and the models to choose from.
+  const [source, setSource] = useState<ImportSource>(PREVIEW ? PREVIEW_SOURCE : { phase: "loading" });
+  const [models, setModels] = useState<ModelChoice[] | null>(null);
+  const scanCount = useRef(0);
+  // The run lives in a runner outside the dialog: closing the window does not stop it.
+  const [runner, setRunner] = useState<ImportRunner | null>(() =>
+    pv.state === "importing" || pv.state === "importfail" ? new ImportRunner(RUN_ENTRIES, previewExec(), () => undefined, frozenRun(pv.state)) : null,
+  );
+  const importOpen = useRef(false);
+  importOpen.current = importMode !== null;
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   // App mode: load the profiles once; the copies the server returns are the saved ones, so nothing is sent back.
   useEffect(() => {
@@ -322,33 +375,128 @@ export function Profiles() {
     }
     const id = unsaved.id;
     const pending = unsaved.pending;
-    setStore((s) => (how === "save" ? saveDraft(s, id) : dropDraft(s, id)));
+    setStore((s) => (how === "save" ? saveWithDate(s, id) : dropDraft(s, id)));
+    clearPending(id);
     setUnsaved(null);
     pending?.();
   };
 
-  const finishImport = (doneIds: string[], entries: ImportEntry[]) => {
-    const fresh = entries
-      .filter((e) => e.kind !== "narrator" && doneIds.includes(e.id))
-      .map(profileFromEntry)
-      .filter((p) => !store.saved[p.id]);
-    if (fresh.length > 0) {
-      setStore((s) => ({
-        ...s,
-        all: [...s.all, ...fresh],
-        saved: { ...s.saved, ...Object.fromEntries(fresh.map((p) => [p.id, formOf(p)])) },
-      }));
+  /** A saved draft; if an "Update from Roleplay" was accepted into it, the profile's card date moves with the text. */
+  const saveWithDate = (s: Store, id: string): Store => {
+    const next = saveDraft(s, id);
+    const date = pendingDate[id];
+    return date ? { ...next, all: next.all.map((x) => (x.id === id ? { ...x, cardDate: date } : x)) } : next;
+  };
+  const clearPending = (id: string) =>
+    setPendingDate((d) => {
+      if (!(id in d)) return d;
+      const { [id]: _gone, ...rest } = d;
+      return rest;
+    });
+
+  /** A profile the import made joins the list. The plugin already filed it, so nothing is sent back. */
+  const addImported = (p: MockProfile) => {
+    if (!mounted.current) return;
+    if (!PREVIEW) sync.seed(fullProfile(p, formOf(p)));
+    setStore((s) => (s.all.some((x) => x.id === p.id) ? s : { ...s, all: [...s.all, p], saved: { ...s.saved, [p.id]: formOf(p) } }));
+  };
+
+  /** The pick dialog's list: the plugin reads Roleplay (names and kinds only). */
+  const loadSource = () => {
+    if (PREVIEW) {
+      setSource(PREVIEW_SOURCE);
+      return;
+    }
+    const mine = ++scanCount.current;
+    setSource({ phase: "loading" });
+    scanRoleplay().then(
+      (res) => {
+        if (scanCount.current !== mine || !mounted.current) return;
+        setSource(res.state === "closed" ? { phase: "closed" } : { phase: "ready", entries: res.entries, hidden: res.hidden, truncated: res.truncated });
+      },
+      (e: unknown) => {
+        if (scanCount.current === mine && mounted.current) setSource({ phase: "error", message: errorText(e) });
+      },
+    );
+  };
+
+  const openImport = () => {
+    if (runner && !runner.finished) {
+      setImportMode("run");
+      return;
+    }
+    setImportMode("pick");
+    loadSource();
+    if (!PREVIEW && models === null) listModels().then((m) => mounted.current && setModels(m));
+  };
+
+  /** Create: one card at a time, a failing card stops only itself. */
+  const startImport = (entries: ImportEntry[], model: string) => {
+    const picked = entries.filter((e) => e.kind !== "narrator");
+    const r = new ImportRunner(picked, PREVIEW ? previewExec() : (e) => importOne(e, model), addImported);
+    setRunner(r);
+    setImportMode("run");
+    // closed while it runs: say so when it ends
+    const off = r.subscribe(() => {
+      if (!r.finished || importOpen.current || !mounted.current) return;
+      off();
+      setNotice(t("profiles.import.doneTitle", { n: r.doneIds().length, m: picked.length }));
+      setRunner((cur) => (cur === r ? null : cur));
+    });
+    r.start();
+  };
+
+  /** The run window closed (To profiles, Skip, Escape, Stop): a finished run is put away, a running one goes on. */
+  const closeRun = () => {
+    if (runner) {
+      if (PREVIEW) for (const id of runner.doneIds()) {
+        const e = RUN_ENTRIES.find((x) => x.id === id);
+        if (e) addImported(profileFromEntry(e));
+      }
+      const first = runner.doneIds().map((id) => runner.profileOf(id)).find((p) => !!p);
+      if (first && !PREVIEW) setSelectedId(first.id);
+      if (runner.finished) setRunner(null);
     }
     setImportMode(null);
   };
 
+  /** "Update from Roleplay": the plugin reads the card again and the dialog shows what would change. */
+  const startRefresh = (id: string) => {
+    const mine = ++refreshCount.current;
+    if (PREVIEW) {
+      setRefresh({ id, view: { phase: "diff", diff: previewDiff(id) } });
+      return;
+    }
+    setRefresh({ id, view: { phase: "busy" } });
+    refreshOne(id).then(
+      ({ digest, cardDate }) => {
+        if (refreshCount.current === mine) setRefresh({ id, view: { phase: "diff", diff: makeDiff(formFor(id), digest), cardDate } });
+      },
+      (e: unknown) => {
+        if (refreshCount.current === mine) setRefresh({ id, view: { phase: "fail", message: errorText(e) } });
+      },
+    );
+  };
+
+  const closeRefresh = () => {
+    refreshCount.current += 1;
+    setRefresh(null);
+  };
+
   const acceptDiff = (id: string) => {
-    setStore((s) => {
-      const base = s.drafts[id] ?? s.saved[id];
-      const interests = base.interests.includes(UPDATE_DIFF.interest) ? base.interests : [...base.interests, UPDATE_DIFF.interest];
-      return withDraft(s, id, { about: UPDATE_DIFF.about, interests });
-    });
-    setDiffOpen(false);
+    const view = refresh?.view;
+    if (PREVIEW) {
+      setStore((s) => {
+        const base = s.drafts[id] ?? s.saved[id];
+        const interests = base.interests.includes(UPDATE_DIFF.interest) ? base.interests : [...base.interests, UPDATE_DIFF.interest];
+        return withDraft(s, id, { about: UPDATE_DIFF.about, interests });
+      });
+    } else if (view?.phase === "diff" && view.diff) {
+      const { patch } = view.diff;
+      setStore((s) => withDraft(s, id, patch));
+      if (view.cardDate) setPendingDate((d) => ({ ...d, [id]: view.cardDate as string }));
+    }
+    setRefresh(null);
   };
 
   /** Fill empty: asks the model for the empty fields, then opens the review. */
@@ -402,9 +550,7 @@ export function Profiles() {
     onStop: stopFill,
   });
 
-  const openImport = () => setImportMode({ kind: "pick" });
-  // The Roleplay import is offered in preview only (the app needs an engine grant first).
-  const list = { profiles: store.all, query, onQuery: setQuery, source, onSource: setSource, onImport: PREVIEW ? openImport : undefined, onNew: () => setNewMode({ start: { stage: "choose" } }) };
+  const list = { profiles: store.all, query, onQuery: setQuery, source: sourceFilter, onSource: setSourceFilter, onImport: openImport, onNew: () => setNewMode({ start: { stage: "choose" } }) };
 
   const editorFor = (p: MockProfile) => ({
     profile: p,
@@ -413,23 +559,27 @@ export function Profiles() {
     tab,
     onTab: setTab,
     onSet: (patch: Partial<ProfileForm>) => setStore((s) => withDraft(s, p.id, patch)),
-    onSave: () =>
+    onSave: () => {
       setStore((s) => {
-        const next = saveDraft(s, p.id);
+        const next = saveWithDate(s, p.id);
         const cur = s.all.find((x) => x.id === p.id);
         // An own profile made without a name takes its nick as its name on the first save.
         if (cur?.source !== "own" || cur.name !== unnamed) return next;
         const nick = next.saved[p.id].nick.trim();
         return { ...next, all: next.all.map((x) => (x.id === p.id ? { ...x, name: nick || unnamed } : x)) };
-      }),
-    onDiscard: () => setStore((s) => dropDraft(s, p.id)),
-    onRefresh: () => setDiffOpen(true),
+      });
+      clearPending(p.id);
+    },
+    onDiscard: () => {
+      setStore((s) => dropDraft(s, p.id));
+      clearPending(p.id);
+    },
+    onRefresh: () => startRefresh(p.id),
     fill: fillPropsFor(p.id),
     onDelete: PREVIEW ? undefined : () => setDeleting(p.id),
   });
 
   const unsavedProfile = unsaved ? byId(unsaved.id) : undefined;
-  const run = importMode?.kind === "run" ? importMode : null;
   const deletingProfile = deleting ? byId(deleting) : undefined;
 
   let body;
@@ -441,7 +591,7 @@ export function Profiles() {
       </section>
     ) : null;
   } else if (store.all.length === 0) {
-    body = PREVIEW ? <FirstRun phone={phone} onImport={openImport} /> : <FirstRun phone={phone} onNew={() => setNewMode({ start: { stage: "choose" } })} />;
+    body = PREVIEW ? <FirstRun phone={phone} onImport={openImport} /> : <FirstRun phone={phone} onImport={openImport} onNew={() => setNewMode({ start: { stage: "choose" } })} />;
   } else if (phone) {
     body = phoneProfile ? (
       <PhoneEditor key={phoneProfile.id} {...editorFor(phoneProfile)} phone onBack={() => leave(() => setOpenId(null))} />
@@ -466,10 +616,18 @@ export function Profiles() {
           <button type="button" className="btn" onClick={() => setNotice(null)}>{t("profiles.dismiss")}</button>
         </div>
       )}
-      {importMode?.kind === "pick" && (
-        <ImportDialog onClose={() => setImportMode(null)} onCreate={(entries) => setImportMode({ kind: "run", entries })} />
+      {importMode === "pick" && (
+        <ImportDialog
+          source={source}
+          taken={new Set(store.all.map((p) => p.id))}
+          models={PREVIEW ? null : models ?? []}
+          preview={PREVIEW}
+          onClose={() => setImportMode(null)}
+          onCreate={startImport}
+          onRetry={loadSource}
+        />
       )}
-      {run && <ImportRun entries={run.entries} preview={run.preview} onFinish={(ids) => finishImport(ids, run.entries)} />}
+      {importMode === "run" && runner && <ImportRun runner={runner} preview={PREVIEW} onClose={closeRun} />}
       {fill && fill.phase === "review" && editing && fill.id === editing.id && (
         <FillReview items={fill.items} onDiscard={() => setFill(null)} onApply={(chosen) => applyFill(editing.id, chosen)} />
       )}
@@ -480,14 +638,10 @@ export function Profiles() {
           unnamed={unnamed}
           seed={pv.seed}
           onClose={() => setNewMode(null)}
-          onRoleplay={
-            PREVIEW
-              ? () => {
-                  setNewMode(null);
-                  openImport();
-                }
-              : undefined
-          }
+          onRoleplay={() => {
+            setNewMode(null);
+            openImport();
+          }}
           onCreate={(p) => {
             setNewMode(null);
             leave(() => finishCreate(p));
@@ -497,8 +651,8 @@ export function Profiles() {
       {deletingProfile && (
         <DeleteDialog name={deletingProfile.name} onCancel={() => setDeleting(null)} onConfirm={() => confirmDelete(deletingProfile.id)} />
       )}
-      {diffOpen && editing && (
-        <DiffDialog name={editing.name} profileId={editing.id} onClose={() => setDiffOpen(false)} onAccept={() => acceptDiff(editing.id)} />
+      {refresh && editing && refresh.id === editing.id && (
+        <DiffDialog name={editing.name} view={refresh.view} labels={!PREVIEW} onClose={closeRefresh} onAccept={() => acceptDiff(editing.id)} onRetry={() => startRefresh(editing.id)} />
       )}
       {unsaved && unsavedProfile && (
         <UnsavedDialog

@@ -22,4 +22,4 @@ A counter on the Social tab, a system notification and a sound; each has its own
 
 ## Roleplay access
 
-Reading Roleplay data is not available yet. The status shows off and there is no button to change it. When it is built, Social will read Roleplay cards only when you import or update a profile, and only after you allow it.
+Social reads Roleplay cards and personas only when you import or update a profile, and only after you allow it. You allow it on Home, not here: open the details of Social and look under "Access to other apps" (Molfar Vertep also asks the first time you open Social). Here the status shows whether reading works now, "Reading cards allowed" or "Reading cards off". There is no button on this card, because only you can change the permission and Social cannot change it for itself. If it is off, the import dialog says where to allow it.

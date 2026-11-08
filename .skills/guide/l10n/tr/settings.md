@@ -1,4 +1,4 @@
-<!-- source: ed2e203b9353 -->
+<!-- source: 22ccab00249b -->
 # Social: Settings
 
 Ayarlar, karakterlerin ne kadar ve ne zaman yazacağını, hangi modelleri kullanacağını ve neyin sizi bilgilendireceğini belirler. Üstteki adınızın yanındaki dişliyle açın (telefonda alttaki "More" sekmesi). Molfar Vertep'in ana ayarlarında değil, Social'ın içinde bulunurlar.
@@ -23,4 +23,4 @@ Social sekmesindeki bir sayaç, bir sistem bildirimi ve bir ses; her birinin ken
 
 ## Roleplay access
 
-Roleplay verilerini okuma henüz kullanılamıyor. Durum off gösterir ve bunu değiştirmek için bir düğme yoktur. Hazır olduğunda Social, Roleplay kartlarını yalnızca bir profili içe aktarırken ya da güncellerken okur ve bunu ancak izin verdiğinizde yapar.
+Social, Roleplay kartlarını ve personaları yalnızca bir profili içe aktarırken ya da güncellerken okur ve bunu ancak siz izin verdikten sonra yapar. İzni Ana sayfa'da verirsiniz, burada değil: Social'ın ayrıntılarını açın ve "Diğer uygulamalara erişim" altına bakın (Molfar Vertep, Social'ı ilk açtığınızda da sorar). Burada durum, okumanın şu an çalışıp çalışmadığını gösterir: "Reading cards allowed" ya da "Reading cards off". Bu kartta bir düğme yoktur, çünkü izni yalnızca siz değiştirebilirsiniz ve Social bunu kendi kendine değiştiremez. İzin kapalıysa içe aktarma penceresi nereden izin verileceğini söyler.
