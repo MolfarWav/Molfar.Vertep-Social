@@ -1,8 +1,8 @@
 {
   "name": "Social profiles",
-  "version": "0.1.0",
-  "description": "Profiles: one-time digests of Roleplay cards and personas into Social profiles, own characters, habits. Stub: no routes yet.",
+  "version": "0.2.0",
+  "description": "Profiles: the profile store (one file per profile in the app's data folder), the new-profile interview and \"Fill empty\" on a model, and the app settings. Never reads a Roleplay card.",
   "origin": "local",
-  "permissions": ["routes"],
+  "permissions": ["routes", "fs", "llm"],
   "priority": 30
 }
