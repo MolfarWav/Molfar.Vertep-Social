@@ -1,1 +1,82 @@
-/* messenger screen styles, all scoped under .s-messenger */
+/* Messenger screen styles, all scoped under .s-messenger (AGENTS.md). Values come
+ * from the Messenger boards: desktop (.desk, three columns) and phone (.pscreen,
+ * list and full-screen chat). Shared pieces (.soc, .av, .btn, .ib) live in base.css. */
+
+.s-messenger { flex: 1; min-height: 0; min-width: 0; display: flex; }
+.s-messenger .desk { flex: 1; min-height: 0; min-width: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr) 288px; }
+.s-messenger .col { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.s-messenger .pscreen { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; background: var(--base); }
+
+/* title bar (desktop list and chat) */
+.s-messenger .tbar { display: flex; align-items: center; gap: 10px; padding: 0 12px; min-height: 44px; font-weight: 600; font-size: 13px; flex: none; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-messenger .tbar.chat-tbar { min-height: 56px; font-size: 15px; }
+
+/* phone title bar of the chat */
+.s-messenger .hd { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 0 8px; flex: none; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-messenger .hcol { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.s-messenger .hname { font-weight: 600; font-size: 15px; }
+.s-messenger .hsub { display: flex; align-items: center; gap: 6px; font-weight: 400; font-size: 12px; color: var(--muted); }
+.s-messenger .ib.flat { width: 44px; height: 44px; border: 0; background: transparent; color: var(--ink); flex: none; }
+.s-messenger .ib.big { width: 44px; height: 44px; }
+
+/* list (both layouts) */
+.s-messenger .list { background: var(--panel); border-right: 1px solid var(--line); }
+.s-messenger .search { margin: 8px 12px; height: 36px; border-radius: 8px; border: 1px solid var(--line); background: var(--base); color: var(--ink); padding: 0 12px; font: inherit; flex: none; }
+.s-messenger .sbar { padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--panel); flex: none; }
+.s-messenger .sbar .search { margin: 0; width: 100%; }
+.s-messenger .plist { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+.s-messenger .ggroup { display: flex; flex-direction: column; flex: none; }
+.s-messenger .grp { display: flex; align-items: center; gap: 6px; width: 100%; height: 32px; padding: 0 12px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: var(--raised); border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); flex: none; text-align: left; }
+.s-messenger .grp.p { padding: 0 16px; }
+
+.s-messenger .crow { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 12px; width: 100%; border: 0; background: transparent; color: inherit; text-align: left; flex: none; }
+.s-messenger .desk .crow:hover { background: var(--hover); }
+.s-messenger .crow.on { background: var(--hover); }
+.s-messenger .crow .t { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.s-messenger .crow .n { font-weight: 500; }
+.s-messenger .crow.unread .n { font-weight: 700; }
+.s-messenger .crow .s { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-messenger .crow.p { min-height: 56px; padding: 6px 16px; gap: 12px; }
+.s-messenger .crow.p .av { font-size: 17px !important; }
+
+.s-messenger .mine { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 12px; border-top: 1px solid var(--line); background: var(--raised); flex: none; }
+.s-messenger .mine.p { height: 52px; padding: 0 16px; gap: 10px; border-top: 0; border-bottom: 1px solid var(--line); background: var(--panel); }
+.s-messenger .mystat { flex: 1; font-weight: 600; }
+
+/* empty and no-hit blocks */
+.s-messenger .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px 16px; text-align: center; }
+.s-messenger .etitle { font-weight: 600; font-size: 15px; }
+.s-messenger .etext { margin: 0; max-width: 260px; color: var(--muted); font-size: 13px; }
+
+/* chat (both layouts) */
+.s-messenger .chat { background: var(--base); }
+.s-messenger .log { flex: 1; min-height: 0; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow: auto; }
+.s-messenger .log.p { padding: 16px; }
+.s-messenger .who { font-weight: 700; font-size: 13px; }
+.s-messenger .time { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+.s-messenger .sys { align-self: center; max-width: 100%; text-align: center; color: var(--muted); font-size: 12px; padding: 2px 12px; border: 1px dashed var(--line); border-radius: 999px; }
+.s-messenger .note { align-self: center; max-width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 14px; text-align: center; color: var(--muted); font-size: 12px; border: 1px dashed var(--line); border-radius: 10px; }
+.s-messenger .link { min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--cta); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+
+.s-messenger .comp { padding: 12px 16px; border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; gap: 8px; flex: none; }
+.s-messenger .inp { width: 100%; min-height: 72px; resize: none; border: 1px solid var(--line); background: var(--base); color: var(--ink); border-radius: 8px; padding: 10px 12px; font: inherit; }
+.s-messenger .comp-row { display: flex; align-items: center; gap: 12px; }
+.s-messenger .hint { flex: 1; color: var(--muted); font-size: 12px; }
+.s-messenger .comp.p { flex-direction: row; align-items: flex-end; gap: 8px; padding: 8px 12px 12px; }
+.s-messenger .inp.p { flex: 1; min-width: 0; width: auto; min-height: 44px; padding: 10px 12px; }
+
+.s-messenger .msg { display: block; }
+
+/* info card (desktop) */
+.s-messenger .info { background: var(--panel); border-left: 1px solid var(--line); padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start; overflow: auto; }
+.s-messenger .info .av { font-size: 48px !important; }
+.s-messenger .info .nm { font: 24px Kurale, Georgia, serif; }
+.s-messenger .info .st { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.s-messenger .info .k { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.s-messenger .info p { margin: 2px 0 0; }
+.s-messenger .btn.wide { width: 100%; }
+
+/* phone: 44 px touch targets for every button in the screen */
+.s-messenger .pscreen .btn { height: 44px; }
+.s-messenger .comp.p .btn { border: 0; }
+.s-messenger .pscreen .note .btn { height: 44px; }
