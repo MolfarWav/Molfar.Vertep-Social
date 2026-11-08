@@ -55,6 +55,7 @@ export function formOf(p: MockProfile): ProfileForm {
     nick: p.nick,
     about: p.about,
     interests: p.interests,
+    tags: p.tags,
     habits: p.habits,
     habitsAuto: p.habitsAuto,
     model: p.model,

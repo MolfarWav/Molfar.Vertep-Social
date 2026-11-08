@@ -124,6 +124,7 @@ export function cleanProfile(raw, id, now, prev) {
     nick: plain(raw.nick, 80) || name,
     about: multi(raw.about, 4000),
     interests: list(raw.interests, 12, 40),
+    tags: list(raw.tags, 8, 24),
     habits,
     habitsAuto: raw.habitsAuto !== false,
     model,

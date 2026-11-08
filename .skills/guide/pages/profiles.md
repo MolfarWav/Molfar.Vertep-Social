@@ -18,9 +18,9 @@ If the model fails, the interview offers the five questions or a blank profile. 
 
 ## The editor
 
-Pick a profile in the list; type in "Search by name" and use the filters All, Roleplay, Own and Persona to find one. The editor has six tabs:
+Pick a profile in the list; type in "Search by name" and use the filters All, Roleplay, Created and Persona to find one. Each source has its own icon and colour: a book for Roleplay, a pencil for Created (made by you in Social), a person for Persona. The picked filter shows its word; the others show only the icon, and a tooltip names them. The editor has six tabs:
 
-- **About**: nick, a short description, interests and the habits the profile adds by itself.
+- **About**: nick, a short description, interests, tags and the habits the profile adds by itself. Interests and tags are coloured chips; a word keeps the same colour everywhere. Tags (up to 8) are short labels of your own, such as a role or a mood; the list shows the first three under the name.
 - **Writing manner**: voice, length of messages, emoji and formality, with a preview of how the character sounds.
 - **Status schedule**: a week grid of when the character is online, away, do not disturb, unavailable or offline, with a small random shift so changes are not exact to the minute.
 - **Forum**: rank, signature, how often the character posts, whether they open their own threads and reply to you or to other characters, favourite boards.

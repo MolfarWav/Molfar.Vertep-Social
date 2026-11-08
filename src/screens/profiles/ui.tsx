@@ -1,6 +1,6 @@
 // Small controls the editor tabs share: fields, a segmented choice, a slider,
 // a switch and a chip. Plain buttons and inputs, styled in profiles.css.
-import { useId, useState, type ReactNode } from "react";
+import { useId, useState, type CSSProperties, type ReactNode } from "react";
 import { PREVIEW } from "@/lib/api";
 
 export function Field({ label, children, wide }: { label: string; children: (id: string) => ReactNode; wide?: boolean }) {
@@ -57,13 +57,25 @@ export function Switch({ on, onChange, children }: { on: boolean; onChange: (v: 
   );
 }
 
-export function Chip({ on, onClick, onRemove, removeLabel, children }: { on?: boolean; onClick?: () => void; onRemove?: () => void; removeLabel?: string; children: ReactNode }) {
+/** A hue (0-359) from a text, so the same interest or tag has the same colour everywhere. */
+export function chipHue(text: string): number {
+  let h = 0;
+  for (const ch of text.trim().toLowerCase()) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return h;
+}
+
+/** The inline style that colours a chip by a hue (see `.chip.hued` in profiles.css). */
+export const hueStyle = (text: string): CSSProperties => ({ "--h": chipHue(text) }) as CSSProperties;
+
+export function Chip({ on, onClick, onRemove, removeLabel, hued, children }: { on?: boolean; onClick?: () => void; onRemove?: () => void; removeLabel?: string; /** colour the chip by its text */ hued?: string; children: ReactNode }) {
+  const tint = hued === undefined ? "" : " hued";
+  const style = hued === undefined ? undefined : hueStyle(hued);
   const chip = onClick ? (
-    <button type="button" aria-pressed={!!on} className={`chip${on ? " on" : ""}`} onClick={onClick}>
+    <button type="button" aria-pressed={!!on} className={`chip${on ? " on" : ""}${tint}`} style={style} onClick={onClick}>
       {children}
     </button>
   ) : (
-    <span className={`chip${on ? " on" : ""}`}>{children}</span>
+    <span className={`chip${on ? " on" : ""}${tint}`} style={style}>{children}</span>
   );
   // the approved boards draw plain chips: the remove button is the app's only
   if (!onRemove || PREVIEW) return chip;

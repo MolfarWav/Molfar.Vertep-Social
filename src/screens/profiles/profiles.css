@@ -377,3 +377,21 @@
 .s-profiles .form-err { color: var(--bad); font-size: 13px; }
 .s-profiles .pic-body .sel { width: 100%; justify-content: space-between; }
 .s-profiles .pic-body .sel > select { flex: 1; }
+
+/* colour: chips tinted by their text, source icons, tags in the list */
+.s-profiles .chip.hued { color: hsl(var(--h) 62% var(--them-l)); background: hsl(var(--h) 45% 50% / 0.14); border-color: hsl(var(--h) 45% 50% / 0.45); }
+.s-profiles .crow .s { display: flex; align-items: center; gap: 5px; }
+.s-profiles .tagrow { display: flex; align-items: center; gap: 4px; margin-top: 3px; min-width: 0; overflow: hidden; }
+.s-profiles .chip.tagchip { height: 18px; padding: 0 7px; font-size: 11px; font-weight: 600; flex: none; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+.s-profiles .tagmore { color: var(--muted); font-size: 11px; font-weight: 600; }
+.s-profiles .seg.seg-small button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+.s-profiles .pill { gap: 6px; }
+.s-profiles .seg.seg-small { overflow: hidden; }
+.s-profiles .seg.seg-small button { flex: 1 1 auto; padding: 0 5px; gap: 3px; }
+.s-profiles .seg.seg-small .fl { overflow: hidden; text-overflow: ellipsis; }
+.s-profiles .seg.seg-small .fn { color: var(--muted); font-weight: 600; font-size: 11px; }
+.s-profiles .seg.seg-small button.on .fn { color: inherit; }
+/* desktop filter: the icons carry the sources; the picked one (and All) also shows its word, the others keep it for screen readers and the tooltip */
+.s-profiles .seg.seg-small button { position: relative; }
+.s-profiles .seg.seg-small button:not(.on) .fl:not(.all) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.s-profiles .crow:has(.tagrow) { padding-block: 9px; }

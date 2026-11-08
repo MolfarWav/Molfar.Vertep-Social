@@ -7,6 +7,8 @@ import { Avatar } from "@/components/Avatar";
 import { useChrome } from "@/shell/nav";
 import { SOURCE_KEY, type MockProfile } from "@/mock/profiles";
 import { FILTERS, countBySource, filterProfiles, splitMatch, type SourceFilter } from "./search";
+import { SourceIcon } from "./source-icon";
+import { hueStyle } from "./ui";
 
 export interface ListProps {
   /** All profiles (the total in "Found N of M" and the title). */
@@ -97,7 +99,18 @@ function Rows({ items, query, selectedId, onPick, phone, onClear }: { items: Moc
           <Avatar name={p.name} hue={p.hue} size={phone ? 40 : 36} picture={p.picture} />
           <span className="t">
             <Name name={p.name} query={query} />
-            <span className="s">{t(SOURCE_KEY[p.source])}</span>
+            <span className="s">
+              <SourceIcon source={p.source} size={13} />
+              {t(SOURCE_KEY[p.source])}
+            </span>
+            {p.tags.length > 0 && (
+              <span className="tagrow">
+                {p.tags.slice(0, 3).map((x) => (
+                  <span key={x} className="chip hued tagchip" style={hueStyle(x)}>{x}</span>
+                ))}
+                {p.tags.length > 3 && <span className="tagmore">+{p.tags.length - 3}</span>}
+              </span>
+            )}
           </span>
         </button>
       ))}
@@ -142,9 +155,12 @@ export function ProfileListDesktop(props: ListProps) {
             role="radio"
             aria-checked={props.source === f}
             className={props.source === f ? "on" : ""}
+            title={t(FILTER_KEY[f])}
             onClick={() => props.onSource(f)}
           >
-            {t(FILTER_KEY[f])} {counts[f]}
+            {f !== "all" && <SourceIcon source={f} size={14} />}
+            <span className={`fl${f === "all" ? " all" : ""}`}>{t(FILTER_KEY[f])}</span>
+            <span className="fn">{counts[f]}</span>
           </button>
         ))}
       </div>
@@ -186,6 +202,7 @@ export function ProfileListPhone(props: ListProps) {
             className={`pill${props.source === f ? " on" : ""}`}
             onClick={() => props.onSource(f)}
           >
+            {f !== "all" && <SourceIcon source={f} size={14} />}
             {t(FILTER_KEY[f])}
           </button>
         ))}

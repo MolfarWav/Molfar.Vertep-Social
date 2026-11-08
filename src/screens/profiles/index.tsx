@@ -174,6 +174,7 @@ function changedKeys(a: ProfileForm, b: ProfileForm): string[] {
   const same = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
   if (a.nick !== b.nick || a.about !== b.about) out.push("profiles.tab.about");
   if (!same(a.interests, b.interests)) out.push("profiles.about.interests");
+  if (!same(a.tags, b.tags)) out.push("profiles.about.tags");
   if (!same(a.habits, b.habits) || a.habitsAuto !== b.habitsAuto) out.push("profiles.tab.habits");
   if (!same(a.voice, b.voice)) out.push("profiles.tab.voice");
   if (!same(a.schedule, b.schedule)) out.push("profiles.tab.statuses");
