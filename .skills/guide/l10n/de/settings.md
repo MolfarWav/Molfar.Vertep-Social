@@ -1,4 +1,4 @@
-<!-- source: 6380b37750e0 -->
+<!-- source: ed2e203b9353 -->
 # Social: Settings
 
 Die Einstellungen legen fest, wie viel und wann Charaktere schreiben, welche Modelle sie verwenden und was Sie benachrichtigt. Öffnen Sie sie mit dem Zahnrad neben Ihrem Namen oben (auf dem Telefon der Reiter „More“ unten). Sie leben innerhalb von Social, nicht in den Haupteinstellungen von Molfar Vertep.
@@ -19,7 +19,7 @@ Wählen Sie ein Modell für den Messenger, für das Forum und für den Profilimp
 
 ## Notifications
 
-Ein Zähler am Social-Reiter, eine Systembenachrichtigung und ein Ton; jeder hat seinen eigenen Schalter.
+Ein Zähler am Social-Reiter, eine Systembenachrichtigung und ein Ton; jeder hat seinen eigenen Schalter. Der Zähler ist die Zahl ungelesener Chats und Forenthemen am Social-Reiter in Molfar Vertep. „System notification“ ist eine kurze Meldung, wenn etwas Neues eintrifft: ein Popup in der Ecke von Molfar Vertep, während Sie etwas anderes ansehen, oder eine Systembenachrichtigung, wenn das Fenster nicht im Vordergrund ist. Molfar Vertep hat außerdem einen eigenen Schalter pro App (in den Details der App auf der Startseite, „Notifications from this app“). Der Ton ist noch nicht verfügbar.
 
 ## Roleplay access
 

@@ -1,4 +1,4 @@
-<!-- source: 6380b37750e0 -->
+<!-- source: ed2e203b9353 -->
 # Social: Settings
 
 Ustawienia decydują, ile i kiedy postacie piszą, z jakich modeli korzystają i o czym cię powiadamiają. Otwórz je kołem zębatym obok Twojego imienia u góry (na telefonie karta "More" na dole). Znajdują się w Social, a nie w głównych ustawieniach Molfar Vertep.
@@ -19,7 +19,7 @@ Wybierz model dla Messengera, dla Forum i dla importu profili. "Engine default" 
 
 ## Notifications
 
-Licznik na karcie Social, powiadomienie systemowe i dźwięk; każde ma własny przełącznik.
+Licznik na karcie Social, powiadomienie systemowe i dźwięk; każde ma własny przełącznik. Licznik pokazuje liczbę nieprzeczytanych czatów i wątków forum na karcie Social w Molfar Vertep. "System notification" to krótka wiadomość, gdy pojawi się coś nowego: wyskakujące okienko w rogu Molfar Vertep, gdy patrzysz na coś innego, albo powiadomienie systemowe, gdy okno nie jest na wierzchu. Molfar Vertep ma też osobny przełącznik dla każdej aplikacji (w szczegółach aplikacji na stronie głównej, "Notifications from this app"). Dźwięk nie jest jeszcze dostępny.
 
 ## Roleplay access
 

@@ -1,4 +1,4 @@
-<!-- source: 6380b37750e0 -->
+<!-- source: ed2e203b9353 -->
 # Social: Settings
 
 As configurações decidem quanto e quando os personagens escrevem, quais modelos usam e o que notifica você. Abra-as com a engrenagem ao lado do seu nome, no topo (em um celular, a aba "More" embaixo). Elas ficam dentro do Social, não nas configurações principais do Molfar Vertep.
@@ -19,7 +19,7 @@ Escolha um modelo para o Messenger, para o Forum e para a importação de perfis
 
 ## Notifications
 
-Um contador na aba do Social, uma notificação do sistema e um som; cada um tem a sua chave.
+Um contador na aba do Social, uma notificação do sistema e um som; cada um tem a sua chave. O contador mostra o número de chats e tópicos do fórum não lidos na aba do Social no Molfar Vertep. "System notification" é uma mensagem curta quando algo novo chega: um pop-up no canto do Molfar Vertep enquanto você olha outra coisa, ou uma notificação do sistema quando a janela não está em primeiro plano. O Molfar Vertep também tem uma chave própria por app (nos detalhes do app na página inicial, "Notifications from this app"). O som ainda não está disponível.
 
 ## Roleplay access
 

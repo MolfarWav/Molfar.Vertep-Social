@@ -743,7 +743,13 @@ function topicRoute(req, host) {
   });
 }
 
-const unreadRoute = (host) => ok({ unread: loadTopics(host.fs).filter((t) => t.unread).length });
+/** The topics with posts the user has not seen, and the newest of those posts (for the shell's message). */
+function unreadRoute(host) {
+  const unread = loadTopics(host.fs).filter((t) => t.unread);
+  const newest = unread.slice().sort((x, y) => y.lastAt - x.lastAt)[0];
+  const last = newest ? newest.posts[newest.posts.length - 1] : null;
+  return ok({ unread: unread.length, latest: newest && last ? { title: newest.title, who: last.by === SELF ? "" : last.name, at: newest.lastAt } : null });
+}
 
 function boardsRoute(req, host) {
   const b = isObj(req.body) ? req.body : {};
