@@ -12,8 +12,8 @@ import { Settings } from "@/screens/settings";
 
 const MAIN: Tab[] = ["messenger", "forum", "profiles"];
 
-function TabIcon({ tab }: { tab: Tab }) {
-  const p = { width: 22, height: 22, viewBox: "0 0 24 24", "aria-hidden": true } as const;
+function TabIcon({ tab, size = 22 }: { tab: Tab; size?: number }) {
+  const p = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true } as const;
   if (tab === "messenger") return <svg {...p}><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /></svg>;
   if (tab === "forum") return <svg {...p}><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
   if (tab === "profiles") return <svg {...p}><circle cx="12" cy="9" r="3.5" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
@@ -49,7 +49,8 @@ function Chrome() {
           <div className="brand"><Logo />Social</div>
           <nav className="tabs" aria-label="Social">
             {MAIN.map((x) => (
-              <button key={x} className={`tab${tab === x ? " on" : ""}`} aria-current={tab === x ? "page" : undefined} onClick={() => go(x)}>
+              <button key={x} data-tab={x} className={`tab${tab === x ? " on" : ""}`} aria-current={tab === x ? "page" : undefined} onClick={() => go(x)}>
+                <TabIcon tab={x} size={18} />
                 {t(`shell.${x}`)}
                 {badgeOf(x) > 0 && <span className="badge">{badgeOf(x)}</span>}
               </button>

@@ -23,7 +23,7 @@ MolfarWav/Molfar.Vertep#309; follow-up work: MolfarWav/Molfar.Vertep#310. Read `
 - Phone bottom bar: icons, four tabs (Messenger, Forum, Profiles, More). The boards disagree among themselves
   (icons + 3 tabs in Messenger/Forum, text-only in Profiles/Settings); the owner was shown the comparison.
 - The phone tab icons are tinted like Roleplay's rail (labels stay neutral): Messenger rose, Forum cyan, Profiles violet,
-  More zinc (`--hue-*` tokens, Tailwind 400 on dark and Vertep, 600 on light). The desktop top bar has no icons (as in the boards).
+  More zinc (`--hue-*` tokens, Tailwind 400 on dark and Vertep, 600 on light). The desktop top bar tabs carry the same tinted icons (18 px; the owner chose this over the boards, which draw text only).
 - The hint under "Autonomous posts" follows the switch (On / Off text).
 - No memory bridge with Roleplay in v1. One shared forum. Separate models for messenger, forum and import.
 - Roleplay is read only after the user grants it (engine work, issue #310).
