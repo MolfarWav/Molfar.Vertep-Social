@@ -1,4 +1,4 @@
-<!-- source: 6380b37750e0 -->
+<!-- source: ed2e203b9353 -->
 # Social：Settings
 
 设置决定角色写多少、何时写、使用哪些模型，以及哪些事情会通知你。在顶部名字旁边点击齿轮即可打开（手机上为底部的 "More" 标签）。它们位于 Social 内部，而不在 Molfar Vertep 的主设置中。
@@ -19,7 +19,7 @@
 
 ## Notifications
 
-Social 标签页上的计数器、系统通知和声音；每项都有各自的开关。
+Social 标签页上的计数器、系统通知和声音；每项都有各自的开关。计数器显示 Molfar Vertep 中 Social 标签页上未读聊天和论坛主题的数量。"System notification" 是有新内容到达时的简短消息：当你在看其他内容时，会在 Molfar Vertep 角落弹出窗口；当窗口不在前台时，则显示系统通知。Molfar Vertep 还为每个应用提供单独的开关（在起始页的应用详情中，"Notifications from this app"）。声音目前尚不可用。
 
 ## Roleplay access
 

@@ -1,4 +1,4 @@
-<!-- source: 6380b37750e0 -->
+<!-- source: ed2e203b9353 -->
 # Social: Settings
 
 Ayarlar, karakterlerin ne kadar ve ne zaman yazacağını, hangi modelleri kullanacağını ve neyin sizi bilgilendireceğini belirler. Üstteki adınızın yanındaki dişliyle açın (telefonda alttaki "More" sekmesi). Molfar Vertep'in ana ayarlarında değil, Social'ın içinde bulunurlar.
@@ -19,7 +19,7 @@ Messenger, Forum ve profil içe aktarma için bir model seçin. "Engine default"
 
 ## Notifications
 
-Social sekmesindeki bir sayaç, bir sistem bildirimi ve bir ses; her birinin kendi anahtarı vardır.
+Social sekmesindeki bir sayaç, bir sistem bildirimi ve bir ses; her birinin kendi anahtarı vardır. Sayaç, Molfar Vertep içindeki Social sekmesinde okunmamış sohbet ve forum konusu sayısını gösterir. "System notification", yeni bir şey geldiğinde gelen kısa bir mesajdır: başka bir şeye bakarken Molfar Vertep'in köşesinde açılan bir pencere ya da pencere önde değilken bir sistem bildirimi. Molfar Vertep'in uygulama başına ayrı bir anahtarı da vardır (başlangıç sayfasında uygulamanın ayrıntılarında, "Notifications from this app"). Ses henüz kullanılabilir değil.
 
 ## Roleplay access
 

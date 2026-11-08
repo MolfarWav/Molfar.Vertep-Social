@@ -523,3 +523,15 @@ test("repeat detection compares words, not punctuation, and tells different Cyri
   expect(file("Я теж бачила цей туман.").post).toBeTruthy();
   expect(file("Зовсім інша думка про очерет.").post).toBeTruthy();
 });
+
+test("the unread route counts topics and names the newest unread post", () => {
+  const h = makeHost();
+  seedBoards(h);
+  expect(route(h, "GET", "/forum/unread").json).toEqual({ unread: 0, latest: null });
+  seedTopic(h, "a", "b1", 1000, [{ id: "p1", by: "m1", name: "Мавка", hue: 1, at: 1000, text: "one" }], { unread: true });
+  seedTopic(h, "b", "b1", 2000, [{ id: "p2", by: "y1", name: "Ярина", hue: 2, at: 2000, text: "two" }], { unread: true });
+  seedTopic(h, "c", "b1", 3000, [{ id: "p3", by: "me", name: "", hue: 3, at: 3000, text: "mine" }], { unread: false });
+  const r = route(h, "GET", "/forum/unread").json;
+  expect(r.unread).toBe(2);
+  expect(r.latest).toEqual({ title: "Topic b", who: "Ярина", at: 2000 });
+});

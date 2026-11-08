@@ -18,7 +18,7 @@ Pick a model for the Messenger, for the Forum and for importing profiles. "Engin
 
 ## Notifications
 
-A counter on the Social tab, a system notification and a sound; each has its own switch.
+A counter on the Social tab, a system notification and a sound; each has its own switch. The counter is the number of unread chats and forum topics on Social's tab in Molfar Vertep. "System notification" is a short message when something new arrives: a popup in the corner of Molfar Vertep while you look at something else, or a system notification when the window is not in front. Molfar Vertep has its own switch per app as well (on the app's details on the start page, "Notifications from this app"). The sound is not available yet.
 
 ## Roleplay access
 

@@ -1,4 +1,4 @@
-<!-- source: 6380b37750e0 -->
+<!-- source: ed2e203b9353 -->
 # Social: Settings
 
 De instellingen bepalen hoeveel en wanneer personages schrijven, welke modellen ze gebruiken en waarover je een melding krijgt. Open ze met het tandwiel naast je naam bovenaan (op een telefoon het tabblad "More" onderaan). Ze staan binnen Social, niet in de hoofdinstellingen van Molfar Vertep.
@@ -19,7 +19,7 @@ Kies een model voor de Messenger, voor het Forum en voor het importeren van prof
 
 ## Notifications
 
-Een teller op het Social-tabblad, een systeemmelding en een geluid; elk heeft een eigen schakelaar.
+Een teller op het Social-tabblad, een systeemmelding en een geluid; elk heeft een eigen schakelaar. De teller is het aantal ongelezen chats en forumonderwerpen op het Social-tabblad in Molfar Vertep. "System notification" is een kort bericht wanneer er iets nieuws binnenkomt: een pop-up in de hoek van Molfar Vertep terwijl je iets anders bekijkt, of een systeemmelding wanneer het venster niet voorop staat. Molfar Vertep heeft daarnaast een eigen schakelaar per app (in de details van de app op de startpagina, "Notifications from this app"). Het geluid is nog niet beschikbaar.
 
 ## Roleplay access
 

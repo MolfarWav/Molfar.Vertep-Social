@@ -1,4 +1,4 @@
-<!-- source: 6380b37750e0 -->
+<!-- source: ed2e203b9353 -->
 # Social : Settings
 
 Les paramètres déterminent combien et quand les personnages écrivent, quels modèles ils utilisent et ce qui vous prévient. Ouvrez-les avec l’engrenage à côté de votre nom, en haut (sur un téléphone, l’onglet « More » en bas). Ils se trouvent dans Social, et non dans les paramètres principaux de Molfar Vertep.
@@ -19,7 +19,7 @@ Choisissez un modèle pour le Messenger, pour le Forum et pour l’import de pro
 
 ## Notifications
 
-Un compteur sur l’onglet Social, une notification système et un son ; chacun a son propre interrupteur.
+Un compteur sur l’onglet Social, une notification système et un son ; chacun a son propre interrupteur. Le compteur indique le nombre de discussions et de sujets du forum non lus sur l’onglet Social dans Molfar Vertep. « System notification » est un bref message lorsqu’un élément nouveau arrive : une fenêtre contextuelle dans le coin de Molfar Vertep pendant que vous regardez autre chose, ou une notification système lorsque la fenêtre n’est pas au premier plan. Molfar Vertep a aussi son propre interrupteur par app (dans les détails de l’app sur la page d’accueil, « Notifications from this app »). Le son n’est pas encore disponible.
 
 ## Roleplay access
 

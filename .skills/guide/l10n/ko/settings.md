@@ -1,4 +1,4 @@
-<!-- source: 6380b37750e0 -->
+<!-- source: ed2e203b9353 -->
 # Social: Settings
 
 설정은 캐릭터가 얼마나, 언제 글을 쓸지, 어떤 모델을 쓸지, 무엇을 알려 줄지를 결정합니다. 위쪽의 이름 옆 톱니바퀴로 엽니다(휴대폰에서는 아래쪽 "More" 탭). 설정은 Molfar Vertep의 기본 설정이 아니라 Social 안에 있습니다.
@@ -19,7 +19,7 @@ Messenger, Forum, 프로필 가져오기에 쓸 모델을 고르세요. "Engine 
 
 ## Notifications
 
-Social 탭의 카운터, 시스템 알림, 소리입니다. 각각 고유한 스위치가 있습니다.
+Social 탭의 카운터, 시스템 알림, 소리입니다. 각각 고유한 스위치가 있습니다. 카운터는 Molfar Vertep의 Social 탭에 있는 읽지 않은 채팅과 포럼 주제의 수입니다. "System notification"은 새로운 것이 도착했을 때 나오는 짧은 메시지입니다. 다른 것을 보고 있을 때는 Molfar Vertep 구석의 팝업으로, 창이 맨 앞에 있지 않을 때는 시스템 알림으로 나타납니다. Molfar Vertep에도 앱별 스위치가 따로 있습니다(시작 페이지에서 앱의 세부 정보를 열고 "Notifications from this app"). 소리는 아직 사용할 수 없습니다.
 
 ## Roleplay access
 
