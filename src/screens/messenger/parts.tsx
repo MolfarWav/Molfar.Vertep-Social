@@ -78,22 +78,36 @@ export function EmptyBlock({ title, text, children }: { title: string; text?: st
   );
 }
 
-/** The chat log: day line, messages, then the system lines (failure, no model, typing, offline). */
+/**
+ * The chat log: day line, messages, then the system lines (failure, no model, typing, queued or offline).
+ * `real` is the engine's chat: `contacts` are the real contacts, `queued` shows the neutral line for a reply
+ * that waits, and the gendered offline line is not used.
+ */
 export function ChatLog({
   c,
+  contacts,
   items,
+  dayLine,
   typing,
   failed,
+  failError,
   noModel,
+  queued,
+  real,
   phone,
   onRetry,
   onSettings,
 }: {
   c: Contact;
+  contacts: Contact[];
   items: LogItem[];
+  dayLine: string;
   typing: boolean;
   failed: boolean;
+  failError?: string;
   noModel: boolean;
+  queued: boolean;
+  real: boolean;
   phone: boolean;
   onRetry: () => void;
   onSettings: () => void;
@@ -105,16 +119,16 @@ export function ChatLog({
   useEffect(() => {
     const el = ref.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [c.id, n, failed, noModel, typing]);
+  }, [c.id, n, failed, noModel, typing, queued]);
 
   const name = c.name;
   return (
     <div className={`log${phone ? " p" : ""}`} ref={ref} role="log">
-      {n > 0 ? <div className="sys">{t("messenger.today")}</div> : <div className="sys">{t("messenger.emptyLog")}</div>}
+      {n > 0 ? <div className="sys">{dayLine}</div> : <div className="sys">{t("messenger.emptyLog")}</div>}
       {items.map((m, i) => {
         if (m.kind === "sys") return <div key={i} className="sys">{t(m.key, { name })}</div>;
         const mine = m.who === "me";
-        const from = CONTACTS.find((x) => x.id === m.who);
+        const from = contacts.find((x) => x.id === m.who);
         const who = mine ? t("shell.me") : from?.name ?? m.who;
         const color = mine ? "var(--acct)" : themColor(from?.hue ?? 0);
         return (
@@ -130,6 +144,7 @@ export function ChatLog({
       {failed && (
         <div className="note">
           <span>{t("messenger.failed")}</span>
+          {failError && <span className="err">{failError}</span>}
           <button type="button" className="btn" onClick={onRetry}>{t("messenger.retry")}</button>
         </div>
       )}
@@ -140,16 +155,21 @@ export function ChatLog({
         </div>
       )}
       {typing && !failed && !noModel && <div className="sys">{t("messenger.typing", { name })}</div>}
-      {c.status === "off" && <div className="sys">{t("messenger.offline", { name })}</div>}
+      {real ? queued && <div className="sys">{t("messenger.queued", { name })}</div> : c.status === "off" && <div className="sys">{t("messenger.offline", { name })}</div>}
     </div>
   );
 }
 
-/** The message box. Enter sends, Shift+Enter adds a line; the send button does nothing on an empty draft. */
+/**
+ * The message box. Enter sends, Shift+Enter adds a line; the send button does nothing on an empty draft.
+ * `busy`: a send is in flight, so the button is off (Enter is ignored by the screen).
+ */
 export function Composer({
   c,
   value,
   phone,
+  real,
+  busy,
   onChange,
   onSend,
   onClear,
@@ -157,13 +177,16 @@ export function Composer({
   c: Contact;
   value: string;
   phone: boolean;
+  real: boolean;
+  busy: boolean;
   onChange: (v: string) => void;
   onSend: () => void;
   onClear: () => void;
 }) {
   const t = useT();
-  const label = t("messenger.composer.label", { of: c.of, name: c.name });
-  const placeholder = t("messenger.composer.placeholder", { to: c.to, name: c.name });
+  // The real-mode strings use the plain name: the Ukrainian ones of the preview decline it.
+  const label = real ? t("messenger.composer.labelPlain", { name: c.name }) : t("messenger.composer.label", { of: c.of, name: c.name });
+  const placeholder = real ? t("messenger.composer.placeholderPlain", { name: c.name }) : t("messenger.composer.placeholder", { to: c.to, name: c.name });
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -174,7 +197,7 @@ export function Composer({
     return (
       <div className="comp p">
         <textarea className="inp p" rows={1} aria-label={label} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKey} />
-        <button type="button" className="btn cta" onClick={onSend}>{t("messenger.composer.send")}</button>
+        <button type="button" className="btn cta" disabled={busy} onClick={onSend}>{t("messenger.composer.send")}</button>
       </div>
     );
   }
@@ -184,7 +207,7 @@ export function Composer({
       <div className="comp-row">
         <span className="hint">{t("messenger.composer.hint")}</span>
         <button type="button" className="btn" onClick={onClear}>{t("messenger.composer.clear")}</button>
-        <button type="button" className="btn cta" onClick={onSend}>{t("messenger.composer.send")}</button>
+        <button type="button" className="btn cta" disabled={busy} onClick={onSend}>{t("messenger.composer.send")}</button>
       </div>
     </div>
   );

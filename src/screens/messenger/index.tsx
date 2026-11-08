@@ -2,14 +2,19 @@ import { useState, type ChangeEvent } from "react";
 import "./messenger.css";
 import { Avatar } from "@/components/Avatar";
 import { Flower } from "@/components/Flower";
-import { useT } from "@/i18n/index";
+import { currentLang, useT } from "@/i18n/index";
+import { PREVIEW } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
-import { CONTACTS, LOGS, type LogItem } from "@/mock/messenger";
+import { CONTACTS, LOGS, type Contact, type LogItem } from "@/mock/messenger";
 import type { Status } from "@/mock/status";
 import { useNav } from "@/shell/nav";
+import { useLiveMessenger } from "./live";
 import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
 import { PhoneChat, PhoneList } from "./phone";
+import { dayLabel } from "./real";
 
+// Real mode (no `?screen=`): the contacts and chats come from the engine (live.ts, real.ts), and the
+// "real" flag below picks the real-mode strings and the layout that is not built yet (Profiles, no free schedule).
 // Messenger screen. Preview parameters (shot.cjs, reviewers, the Help guide):
 //   screen=messenger                  the default: desktop with Мавка open; phone with the contact list
 //   view=chat                         phone only: opens the chat with Перелесник (the phone chat board)
@@ -45,11 +50,10 @@ export function Messenger() {
   const phone = useIsPhone();
   const { go } = useNav();
   const [pv] = useState(readPreview);
-  const empty = pv.state === "empty";
-  const noModel = pv.state === "nomodel";
+  const real = !PREVIEW;
 
   const [query, setQuery] = useState(pv.state === "nohits" ? NOHITS_QUERY : "");
-  const [sel, setSel] = useState(() => (pv.state === "offline" ? "horpyna" : pv.view === "chat" ? "pereles" : "mavka"));
+  const [sel, setSel] = useState(() => (PREVIEW ? (pv.state === "offline" ? "horpyna" : pv.view === "chat" ? "pereles" : "mavka") : ""));
   const [open, setOpen] = useState(() => pv.view === "chat"); // phone: is the chat screen showing
   const [searchOpen, setSearchOpen] = useState(() => pv.state === "nohits"); // phone: the search row
   const [folded, setFolded] = useState<Record<string, boolean>>({});
@@ -57,49 +61,86 @@ export function Messenger() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState(pv.state === "failed");
 
-  const cur = CONTACTS.find((c) => c.id === sel) ?? CONTACTS[0];
+  // Real mode: the engine's contacts and the open chat (inert in preview, where the mock is used).
+  const live = useLiveMessenger(sel, phone ? open : true);
+  const contacts: Contact[] = real ? live.contacts : CONTACTS;
+  const loading = real && !live.loaded;
+  const empty = real ? live.loaded && contacts.length === 0 : pv.state === "empty";
+  const noModel = pv.state === "nomodel";
+
+  const cur: Contact | undefined = contacts.find((c) => c.id === sel) ?? contacts[0];
+  const curId = cur?.id ?? "";
+  const view = live.chat(curId);
   const needle = query.trim().toLowerCase();
-  const list = empty ? [] : CONTACTS.filter((c) => c.name.toLowerCase().includes(needle));
-  const items = logs[cur.id] ?? [];
-  const draft = drafts[cur.id] ?? "";
+  const list = empty || loading ? [] : contacts.filter((c) => c.name.toLowerCase().includes(needle));
+  const items = real ? view.items : logs[curId] ?? [];
+  const draft = drafts[curId] ?? "";
+  const busy = real && view.busy;
+  const realFailed = view.failed && view.failed.code !== "no-model" ? view.failed : null;
+  const failedNote = real ? realFailed !== null && !view.busy : failed;
+  const failError = realFailed?.error || undefined;
+  const noModelNote = real ? view.failed?.code === "no-model" && !view.busy : noModel;
+  // a reply that waits for the contact to come back online (not while a send is in flight)
+  const queued = real && view.pending && view.failed === null && !view.busy;
+  const dayLine = real ? dayLabel(view.firstAt, Date.now(), currentLang(), t) : t("messenger.today");
 
   const pick = (id: string) => {
     setSel(id);
     setOpen(true);
   };
   const toggleGroup = (s: Status) => setFolded((f) => ({ ...f, [s]: !f[s] }));
-  const setDraft = (v: string) => setDrafts((d) => ({ ...d, [cur.id]: v }));
+  const setDraft = (v: string) => setDrafts((d) => ({ ...d, [curId]: v }));
   const send = () => {
     const text = draft.trim();
-    if (!text) return;
-    setLogs((l) => ({ ...l, [cur.id]: [...(l[cur.id] ?? []), { kind: "msg", who: "me", time: hhmm(), text }] }));
+    if (!text || !cur) return;
+    if (real) {
+      if (busy) return; // one message at a time: the composer waits for the answer
+      live.send(cur.id, text);
+    } else {
+      setLogs((l) => ({ ...l, [cur.id]: [...(l[cur.id] ?? []), { kind: "msg", who: "me", time: hhmm(), text }] }));
+    }
     setDraft("");
   };
   const clear = () => setDraft("");
+  const retry = () => {
+    if (real) live.retry(curId);
+    else setFailed(false);
+  };
   const toSettings = () => go("settings");
   const toProfiles = () => go("profiles");
+  // Real mode: what is not built yet goes to Profiles (the "+", the profile buttons).
+  const toProfilesReal = real ? toProfiles : undefined;
 
   if (phone) {
-    const chat = open && !empty;
+    const chat = open && !empty ? cur : undefined;
     return (
       <div className="s-messenger">
         {chat ? (
           <PhoneChat
-            c={cur}
+            c={chat}
+            contacts={contacts}
             items={items}
+            dayLine={dayLine}
             draft={draft}
-            failed={failed}
-            noModel={noModel}
+            failed={failedNote}
+            failError={failError}
+            noModel={noModelNote}
+            queued={queued}
+            real={real}
+            busy={busy}
             onDraft={setDraft}
             onSend={send}
             onClear={clear}
             onBack={() => setOpen(false)}
-            onRetry={() => setFailed(false)}
+            onRetry={retry}
             onSettings={toSettings}
+            onProfile={toProfilesReal}
           />
         ) : (
           <PhoneList
             empty={empty}
+            real={real}
+            loading={loading}
             list={list}
             query={query}
             searchOpen={searchOpen}
@@ -133,22 +174,25 @@ export function Messenger() {
           )}
           <div className="plist">
             {empty ? (
-              <EmptyBlock title={t("messenger.empty.title")} text={t("messenger.empty.text")}>
+              <EmptyBlock
+                title={t(real ? "messenger.empty.noProfiles" : "messenger.empty.title")}
+                text={t(real ? "messenger.empty.noProfilesText" : "messenger.empty.text")}
+              >
                 <button type="button" className="btn cta" onClick={toProfiles}>{t("messenger.empty.cta")}</button>
               </EmptyBlock>
-            ) : list.length === 0 ? (
+            ) : loading ? null : list.length === 0 ? (
               <EmptyBlock title={t("messenger.nohits", { q: query.trim() })}>
                 <button type="button" className="btn" onClick={() => setQuery("")}>{t("messenger.nohits.clear")}</button>
               </EmptyBlock>
             ) : (
-              <ContactGroups list={list} phone={false} sel={cur.id} folded={folded} onToggle={toggleGroup} onPick={pick} />
+              <ContactGroups list={list} phone={false} sel={curId} folded={folded} onToggle={toggleGroup} onPick={pick} />
             )}
           </div>
           {!empty && (
             <div className="mine">
               <Flower status="online" size={22} />
               <span className="mystat">{t(STATUS_KEY.online)} ▾</span>
-              <button type="button" className="ib" aria-label={t("messenger.addContact")}>
+              <button type="button" className="ib" aria-label={t("messenger.addContact")} onClick={toProfilesReal}>
                 <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
@@ -157,7 +201,7 @@ export function Messenger() {
           )}
         </aside>
 
-        {empty ? (
+        {empty || !cur ? (
           <>
             <section className="col chat" />
             <aside className="col info" />
@@ -170,21 +214,27 @@ export function Messenger() {
                 <div className="hcol">
                   <span className="hname">{cur.name}</span>
                   <span className="hsub">
-                    {t(STATUS_KEY[cur.status])} · {cur.note}
+                    {t(STATUS_KEY[cur.status])}
+                    {cur.note && <> · {cur.note}</>}
                   </span>
                 </div>
               </div>
               <ChatLog
                 c={cur}
+                contacts={contacts}
                 items={items}
-                typing={cur.typing}
-                failed={failed}
-                noModel={noModel}
+                dayLine={dayLine}
+                typing={cur.typing || busy}
+                failed={failedNote}
+                failError={failError}
+                noModel={noModelNote}
+                queued={queued}
+                real={real}
                 phone={false}
-                onRetry={() => setFailed(false)}
+                onRetry={retry}
                 onSettings={toSettings}
               />
-              <Composer c={cur} value={draft} phone={false} onChange={setDraft} onSend={send} onClear={clear} />
+              <Composer c={cur} value={draft} phone={false} real={real} busy={busy} onChange={setDraft} onSend={send} onClear={clear} />
             </section>
 
             <aside className="col info">
@@ -202,11 +252,13 @@ export function Messenger() {
                 <div className="k">{t("messenger.info.reply")}</div>
                 <p>{cur.reply}</p>
               </div>
-              <div>
-                <div className="k">{t("messenger.info.first")}</div>
-                <p>{cur.first}</p>
-              </div>
-              <button type="button" className="btn wide">{t("messenger.info.open")}</button>
+              {!real && (
+                <div>
+                  <div className="k">{t("messenger.info.first")}</div>
+                  <p>{cur.first}</p>
+                </div>
+              )}
+              <button type="button" className="btn wide" onClick={toProfilesReal}>{t("messenger.info.open")}</button>
             </aside>
           </>
         )}
