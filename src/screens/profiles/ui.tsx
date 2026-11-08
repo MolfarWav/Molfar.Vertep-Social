@@ -1,6 +1,7 @@
 // Small controls the editor tabs share: fields, a segmented choice, a slider,
 // a switch and a chip. Plain buttons and inputs, styled in profiles.css.
-import { useId, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
+import { PREVIEW } from "@/lib/api";
 
 export function Field({ label, children, wide }: { label: string; children: (id: string) => ReactNode; wide?: boolean }) {
   const id = useId();
@@ -56,11 +57,61 @@ export function Switch({ on, onChange, children }: { on: boolean; onChange: (v: 
   );
 }
 
-export function Chip({ on, onClick, children }: { on?: boolean; onClick?: () => void; children: ReactNode }) {
-  if (!onClick) return <span className={`chip${on ? " on" : ""}`}>{children}</span>;
-  return (
+export function Chip({ on, onClick, onRemove, removeLabel, children }: { on?: boolean; onClick?: () => void; onRemove?: () => void; removeLabel?: string; children: ReactNode }) {
+  const chip = onClick ? (
     <button type="button" aria-pressed={!!on} className={`chip${on ? " on" : ""}`} onClick={onClick}>
       {children}
     </button>
+  ) : (
+    <span className={`chip${on ? " on" : ""}`}>{children}</span>
   );
+  // the approved boards draw plain chips: the remove button is the app's only
+  if (!onRemove || PREVIEW) return chip;
+  return (
+    <span className="chip-rm">
+      {chip}
+      <button type="button" className="chip-x" aria-label={removeLabel} onClick={onRemove}>×</button>
+    </span>
+  );
+}
+
+/** "+ add": a chip that turns into a one-line input; Enter or leaving the field adds the text, Escape drops it. */
+export function AddChip({ label, inputLabel, onAdd }: { label: string; inputLabel: string; onAdd: (text: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const close = (keep: boolean) => {
+    const text = value.trim();
+    setValue("");
+    setOpen(false);
+    if (keep && text) onAdd(text);
+  };
+  if (!open) return <button type="button" className="chip" onClick={() => setOpen(true)}>{label}</button>;
+  return (
+    <input
+      className="inp chip-in"
+      aria-label={inputLabel}
+      value={value}
+      maxLength={40}
+      // biome-ignore lint/a11y/noAutofocus: the chip was just opened by the user to type into
+      autoFocus
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={() => close(true)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+          e.preventDefault();
+          close(true);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          setValue("");
+          close(false);
+        }
+      }}
+    />
+  );
+}
+
+/** A list of short texts with one more added, no duplicates, at most `max` entries. */
+export function withItem(list: string[], text: string, max = 12): string[] {
+  const t = text.trim();
+  return !t || list.includes(t) || list.length >= max ? list : [...list, t];
 }

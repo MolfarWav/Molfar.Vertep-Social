@@ -336,3 +336,12 @@
   .s-profiles .pf-banner { font-size: 14px; }
   .s-profiles .pf-banner .btn { height: 44px; }
 }
+
+.s-profiles .chip-rm { display: inline-flex; align-items: center; gap: 2px; }
+.s-profiles .chip-x { width: 24px; height: 24px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: 600 15px/1 Inter, "Inter Variable", system-ui, sans-serif; cursor: pointer; }
+.s-profiles .chip-x:hover { color: var(--ink); background: var(--raised); }
+.s-profiles .chip-in { height: 28px; width: 140px; padding: 0 10px; border-radius: 999px; font-size: 12px; }
+@media (max-width: 767px) {
+  .s-profiles .chip-x { width: 32px; height: 32px; }
+  .s-profiles .chip-in { height: 36px; font-size: 14px; }
+}

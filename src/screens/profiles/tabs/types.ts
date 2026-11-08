@@ -1,4 +1,4 @@
-import type { ProfileForm } from "@/mock/profiles";
+import type { ProfileForm, ProfileSource } from "@/mock/profiles";
 import type { FillProps } from "../fill-ui";
 
 /** Props every editor tab gets. `set` merges a patch into the draft form. */
@@ -9,6 +9,8 @@ export interface TabProps {
   name: string;
   /** Hue of the profile's avatar, for the names in the previews. */
   hue: number;
+  /** Where the profile came from (the About note differs for a Roleplay profile). */
+  source?: ProfileSource;
   /** Opens the "update from Roleplay" dialog (About's note links to it). */
   onRefresh?: () => void;
   /** "Fill empty" under the About note (absent in tabs that do not show it). */

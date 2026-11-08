@@ -81,7 +81,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
     : t(profile.source === "own" ? "profiles.editor.subtitleOwn" : "profiles.editor.subtitlePersona");
 
   const fillProps: FillProps = { ...fill, layout: phone ? "phone" : "desk" };
-  const props = { form, set: onSet, name: profile.name, hue: profile.hue, onRefresh, fill: fillProps };
+  const props = { form, set: onSet, name: profile.name, hue: profile.hue, source: profile.source, onRefresh, fill: fillProps };
   // The "⋯" menu: Fill empty (opens About first) and, for Roleplay profiles, the update.
   const menu: MenuItem[] = [
     {
