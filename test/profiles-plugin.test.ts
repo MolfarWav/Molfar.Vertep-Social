@@ -55,6 +55,19 @@ test("a profile is saved, listed in creation order, replaced and removed", () =>
   expect(route(host, "GET", "/profiles").json.profiles.map((p: any) => p.id)).toEqual(["own-2"]);
 });
 
+test("deleting a profile also removes its chat, and works when there is no chat", () => {
+  const { host, files } = makeHost();
+  route(host, "PUT", "/profiles/a", { name: "A" });
+  route(host, "PUT", "/profiles/b", { name: "B" });
+  files.set("chats/a.json", "{}");
+  files.set("chats/b.json", "{}");
+  expect(route(host, "DELETE", "/profiles/a").json.ok).toBe(true);
+  expect(files.has("chats/a.json")).toBe(false);
+  expect(files.has("chats/b.json")).toBe(true);
+  expect(route(host, "DELETE", "/profiles/b").json.ok).toBe(true);
+  expect(route(host, "DELETE", "/profiles/never").json.ok).toBe(true);
+});
+
 test("a profile with no name or a bad id is refused; ids cannot climb out of the folder", () => {
   const { host, files } = makeHost();
   expect(route(host, "PUT", "/profiles/x", { about: "no name" }).status).toBe(400);

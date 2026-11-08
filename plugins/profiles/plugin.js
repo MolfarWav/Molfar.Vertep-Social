@@ -9,7 +9,7 @@
  * Routes (relative to /v1/apps/social):
  *   GET    /profiles                  {profiles: [...]}  every profile, newest edit last
  *   PUT    /profiles/<id>             save one profile (create or replace); the reply is {ok, profile}
- *   DELETE /profiles/<id>             remove it
+ *   DELETE /profiles/<id>             remove it and its chat (chats/<id>.json)
  *   POST   /profiles/suggest {idea?, image?, wish?}  three drafts of a new profile and up to two quick
  *          questions: {ok, drafts, questions} or {ok: false, error, code?}; nothing is filed
  *   POST   /profiles/fill {profileId, fields}        proposals for the profile's EMPTY fields only:
@@ -496,6 +496,13 @@ export function handleRoute(req, host) {
   if (m && method === "PUT") return saveRoute(req, host, m[1]);
   if (m && method === "DELETE") {
     host.fs.remove(profilePath(m[1]));
+    // The chat belongs to the profile: without it the history would sit orphaned on disk
+    // (and come back if a new profile reused the id). A profile that never had a chat is fine.
+    try {
+      host.fs.remove("chats/" + m[1] + ".json");
+    } catch {
+      /* no chat file */
+    }
     return ok({ ok: true });
   }
   return ok({ error: "not found" }, 404);
