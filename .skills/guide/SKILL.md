@@ -11,6 +11,7 @@ Answer from these pages, not from the code. Read the page that fits:
 - `index`: what Social is, a map of its parts
 - `messenger`: contacts, statuses, chats
 - `forum`: boards, topics, the autonomy strip
+- `profiles`: import from Roleplay, new profiles, the editor, Fill empty
 - `settings`: limits, quiet hours, models, notifications, Roleplay access
 
 Only when the guide does not cover it, read the code, and say "the guide does not cover this; from the code: ...".
