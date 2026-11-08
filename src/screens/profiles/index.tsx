@@ -2,7 +2,8 @@
 // (About, Voice, Statuses, Forum, Habits). Desktop: list column + editor.
 // Phone: the list; a tap opens the editor full screen with a back button.
 // With no profiles: the first-run state. Dialogs: the Roleplay import (pick,
-// run), the update diff, and the unsaved-changes question on leaving.
+// run), the update diff, the unsaved-changes question on leaving, "Fill empty"
+// (review of the model's proposals) and "New profile" (choice, short interview).
 //
 // Preview parameters (`?screen=profiles&...`, read once on load):
 //   view=editor   phone only: open the editor of the first profile
@@ -17,11 +18,24 @@
 //   state=diff          "Оновити з Roleplay: що зміниться" open on Мавка
 //   state=habits-empty  Мавка has no habits; the Habits tab shows the empty state
 //   state=unsaved       Мавка has an unsaved draft; the leave question is open
+//   view=new            "New profile": the choice dialog (bottom sheet on phone)
+//   view=interview      "New profile", the interview step 1 (describe the character)
+//   view=interview2     "New profile", step 2 with three canned drafts
+//   state=newfail       the interview step 1 with "the model did not answer" shown
+//   state=newnomodel    the interview step 1 with "No model is chosen" shown
+//   state=fill         Ярина (her empty fields) with the "Fill empty" review open
+//   state=fillbusy     Ярина, "Fill empty" running (frozen: Stop, no result)
+//   state=fillfail     Ярина, "Fill empty" failed (Try again)
+//   state=fillnone     Ярина, "Fill empty" returned nothing
+//   state=fillnomodel  Ярина, "Fill empty" with no model chosen
 //
 // For later work. Exports:
 //   Profiles              the screen (the shell imports this)
 //   ProfileListDesktop, ProfileListPhone, ListProps   the list; `onImport` opens the import dialog
 //   ProfileEditor, PhoneEditor, EditorProps, formOf   the editor
+//   ActionMenu, MenuItem                              the "⋯" popup (menu.tsx)
+//   FillActions, FillReview, FillProps, FillPhase     "Fill empty" (fill-ui.tsx); fill.ts has the rules
+//   NewProfileFlow, profileFromDraft, blankProfile    "New profile" (newprofile.tsx)
 //   TabId, TAB_IDS, TabProps   the editor tabs (tabs/*.tsx)
 //   ImportDialog, ImportRun, FirstRun, createLabel    the import flow (import.tsx)
 //   Dialog                                            the modal (dialog.tsx): role=dialog, focus, Escape
@@ -29,14 +43,19 @@
 //   filterProfiles, splitMatch, countBySource, SourceFilter   search helpers
 //   Seg, Slider, Switch, Chip, Field                  the shared controls (ui.tsx)
 import "./profiles.css";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useT } from "@/i18n/index";
 import { useIsPhone } from "@/lib/use-phone";
 import { PROFILES, type MockProfile, type ProfileForm } from "@/mock/profiles";
 import { IMPORT_ENTRIES, UPDATE_DIFF, profileFromEntry, type ImportEntry } from "@/mock/profiles-import";
+import { fillEmpty, mockScript, previewInterview, previewProposal } from "./model-api";
 import { ProfileEditor, PhoneEditor, formOf } from "./editor";
 import { ProfileListDesktop, ProfileListPhone } from "./list";
 import { ImportDialog, ImportRun, FirstRun, type RunPreview } from "./import";
 import { DiffDialog, UnsavedDialog } from "./states";
+import { FillReview, type FillPhase } from "./fill-ui";
+import { applyProposals, emptyKeys, itemsOf, recordOf, type FillItem } from "./fill";
+import { NewProfileFlow, type NewStart } from "./newprofile";
 import { isFilter, type SourceFilter } from "./search";
 import { isTab, type TabId } from "./tabs/types";
 
@@ -46,6 +65,9 @@ export { TAB_IDS, isTab, type TabId, type TabProps } from "./tabs/types";
 export { ImportDialog, ImportRun, FirstRun, createLabel } from "./import";
 export { Dialog } from "./dialog";
 export { DiffDialog, UnsavedDialog } from "./states";
+export { ActionMenu, type MenuItem } from "./menu";
+export { FillActions, FillReview, type FillProps, type FillPhase } from "./fill-ui";
+export { NewProfileFlow, profileFromDraft, blankProfile, type NewStart } from "./newprofile";
 export { filterProfiles, splitMatch, countBySource, FILTERS, type SourceFilter } from "./search";
 export { Seg, Slider, Switch, Chip, Field } from "./ui";
 
@@ -57,6 +79,15 @@ interface Preview {
   dirty: boolean;
   state: string | null;
 }
+
+/** "Fill empty" run: the profile it belongs to, its phase, and the proposals to review. */
+interface FillRun {
+  id: string;
+  phase: FillPhase | "review";
+  items: FillItem[];
+}
+
+const YARYNA = "yaryna";
 
 function readPreview(): Preview {
   try {
@@ -73,6 +104,7 @@ function readPreview(): Preview {
     return { view: null, tab: null, q: "", source: null, dirty: false, state: null };
   }
 }
+
 
 /** The profiles, the saved form of each, and the drafts not saved yet. */
 interface Store {
@@ -133,15 +165,52 @@ type Unsaved = { id: string; pending: (() => void) | null } | null;
 
 export function Profiles() {
   const phone = useIsPhone();
-  const [pv] = useState(readPreview);
+  const t = useT();
+  const unnamed = t("profiles.new.unnamed");
+  const [pv] = useState(() => {
+    const v = readPreview();
+    mockScript(v.state);
+    return v;
+  });
   const [store, setStore] = useState(() => makeStore(pv));
+  const fillPreview = pv.state?.startsWith("fill") === true;
   const [query, setQuery] = useState(pv.q);
   const [source, setSource] = useState<SourceFilter>(isFilter(pv.source) ? pv.source : "all");
-  const [selectedId, setSelectedId] = useState(() => store.all[0]?.id ?? "");
-  const [openId, setOpenId] = useState<string | null>(() => (pv.view === "editor" ? store.all[0]?.id ?? null : null));
+  const [selectedId, setSelectedId] = useState(() => (fillPreview ? YARYNA : store.all[0]?.id ?? ""));
+  const [openId, setOpenId] = useState<string | null>(() => (pv.view === "editor" ? store.all[0]?.id ?? null : fillPreview ? YARYNA : null));
   const [tab, setTab] = useState<TabId>(() => (isTab(pv.tab) ? pv.tab : pv.state === "habits-empty" ? "habits" : "about"));
   const [diffOpen, setDiffOpen] = useState(pv.state === "diff");
   const [unsaved, setUnsaved] = useState<Unsaved>(() => (pv.state === "unsaved" && store.all[0] ? { id: store.all[0].id, pending: null } : null));
+  const [fill, setFill] = useState<FillRun | null>(() => {
+    const p = store.all.find((x) => x.id === YARYNA);
+    if (!fillPreview || !p) return null;
+    const id = p.id;
+    switch (pv.state) {
+      case "fillbusy":
+        return { id, phase: "busy", items: [] };
+      case "fillfail":
+        return { id, phase: "fail", items: [] };
+      case "fillnone":
+        return { id, phase: "none", items: [] };
+      case "fillnomodel":
+        return { id, phase: "nomodel", items: [] };
+      default:
+        return { id, phase: "review", items: itemsOf(previewProposal(emptyKeys(formOf(p)))) };
+    }
+  });
+  // Each fill call takes a number; Stop and unmount move the count on, so a late answer is ignored.
+  const fillCount = useRef(0);
+  useEffect(() => () => {
+    fillCount.current += 1;
+  }, []);
+  const [newMode, setNewMode] = useState<{ start: NewStart } | null>(() => {
+    if (pv.view === "new") return { start: { stage: "choose" } };
+    if (pv.view === "interview") return { start: { stage: "ask" } };
+    if (pv.view === "interview2") return { start: { stage: "drafts", ...previewInterview() } };
+    if (pv.state === "newfail") return { start: { stage: "ask", phase: "fail" } };
+    if (pv.state === "newnomodel") return { start: { stage: "ask", phase: "nomodel" } };
+    return null;
+  });
   const [importMode, setImportMode] = useState<ImportMode>(() => {
     if (pv.view === "import") return { kind: "pick" };
     if (pv.state === "importing") return { kind: "run", entries: RUN_ENTRIES, preview: "importing" };
@@ -199,8 +268,59 @@ export function Profiles() {
     setDiffOpen(false);
   };
 
+  /** Fill empty: asks the model for the empty fields, then opens the review. */
+  const runFill = (id: string) => {
+    const keys = emptyKeys(formFor(id));
+    if (keys.length === 0) return;
+    const mine = fillCount.current + 1;
+    fillCount.current = mine;
+    setFill({ id, phase: "busy", items: [] });
+    const failed = (phase: FillPhase) => {
+      if (fillCount.current === mine) setFill({ id, phase, items: [] });
+    };
+    fillEmpty({ profileId: id, fields: keys }).then(
+      (res) => {
+        if (fillCount.current !== mine) return;
+        if (!res.ok) {
+          failed(res.code === "no-model" ? "nomodel" : "fail");
+          return;
+        }
+        const items = itemsOf(res.proposal);
+        setFill(items.length > 0 ? { id, phase: "review", items } : { id, phase: "none", items: [] });
+      },
+      () => failed("fail"),
+    );
+  };
+
+  /** Stop: the answer of the running call is ignored when it comes. */
+  const stopFill = () => {
+    fillCount.current += 1;
+    setFill(null);
+  };
+
+  const applyFill = (id: string, chosen: FillItem[]) => {
+    setStore((s) => withDraft(s, id, applyProposals(s.drafts[id] ?? s.saved[id], recordOf(chosen))));
+    setFill(null);
+  };
+
+  /** A new profile from "New profile": added, selected, and opened on About. */
+  const finishCreate = (p: MockProfile) => {
+    setStore((s) => ({ ...s, all: [...s.all, p], saved: { ...s.saved, [p.id]: formOf(p) } }));
+    setSelectedId(p.id);
+    setOpenId(p.id);
+    setTab("about");
+    setNewMode(null);
+  };
+
+  const fillPropsFor = (id: string) => ({
+    empty: emptyKeys(formFor(id)).length,
+    phase: fill && fill.id === id && fill.phase !== "review" ? fill.phase : null,
+    onStart: () => runFill(id),
+    onStop: stopFill,
+  });
+
   const openImport = () => setImportMode({ kind: "pick" });
-  const list = { profiles: store.all, query, onQuery: setQuery, source, onSource: setSource, onImport: openImport };
+  const list = { profiles: store.all, query, onQuery: setQuery, source, onSource: setSource, onImport: openImport, onNew: () => setNewMode({ start: { stage: "choose" } }) };
 
   const editorFor = (p: MockProfile) => ({
     profile: p,
@@ -209,9 +329,18 @@ export function Profiles() {
     tab,
     onTab: setTab,
     onSet: (patch: Partial<ProfileForm>) => setStore((s) => withDraft(s, p.id, patch)),
-    onSave: () => setStore((s) => saveDraft(s, p.id)),
+    onSave: () =>
+      setStore((s) => {
+        const next = saveDraft(s, p.id);
+        const cur = s.all.find((x) => x.id === p.id);
+        // An own profile made without a name takes its nick as its name on the first save.
+        if (cur?.source !== "own" || cur.name !== unnamed) return next;
+        const nick = next.saved[p.id].nick.trim();
+        return { ...next, all: next.all.map((x) => (x.id === p.id ? { ...x, name: nick || unnamed } : x)) };
+      }),
     onDiscard: () => setStore((s) => dropDraft(s, p.id)),
     onRefresh: () => setDiffOpen(true),
+    fill: fillPropsFor(p.id),
   });
 
   const unsavedProfile = unsaved ? byId(unsaved.id) : undefined;
@@ -242,6 +371,25 @@ export function Profiles() {
         <ImportDialog onClose={() => setImportMode(null)} onCreate={(entries) => setImportMode({ kind: "run", entries })} />
       )}
       {run && <ImportRun entries={run.entries} preview={run.preview} onFinish={(ids) => finishImport(ids, run.entries)} />}
+      {fill && fill.phase === "review" && editing && fill.id === editing.id && (
+        <FillReview items={fill.items} onDiscard={() => setFill(null)} onApply={(chosen) => applyFill(editing.id, chosen)} />
+      )}
+      {newMode && (
+        <NewProfileFlow
+          phone={phone}
+          start={newMode.start}
+          unnamed={unnamed}
+          onClose={() => setNewMode(null)}
+          onRoleplay={() => {
+            setNewMode(null);
+            openImport();
+          }}
+          onCreate={(p) => {
+            setNewMode(null);
+            leave(() => finishCreate(p));
+          }}
+        />
+      )}
       {diffOpen && editing && (
         <DiffDialog name={editing.name} profileId={editing.id} onClose={() => setDiffOpen(false)} onAccept={() => acceptDiff(editing.id)} />
       )}

@@ -1,4 +1,5 @@
 import type { ProfileForm } from "@/mock/profiles";
+import type { FillProps } from "../fill-ui";
 
 /** Props every editor tab gets. `set` merges a patch into the draft form. */
 export interface TabProps {
@@ -10,6 +11,8 @@ export interface TabProps {
   hue: number;
   /** Opens the "update from Roleplay" dialog (About's note links to it). */
   onRefresh?: () => void;
+  /** "Fill empty" under the About note (absent in tabs that do not show it). */
+  fill?: FillProps;
 }
 
 export type TabId = "about" | "voice" | "statuses" | "forum" | "habits";

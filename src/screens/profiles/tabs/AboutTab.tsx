@@ -3,20 +3,25 @@
 import { useT } from "@/i18n/index";
 import type { Habit } from "@/mock/profiles";
 import { Chip, Field } from "../ui";
+import { FillActions } from "../fill-ui";
 import type { TabProps } from "./types";
 
-export function AboutTab({ form, set, onRefresh }: TabProps) {
+export function AboutTab({ form, set, onRefresh, fill }: TabProps) {
   const t = useT();
   const selfHabits = form.habits.filter((h) => h.by === "self");
   const removeHabit = (h: Habit) => set({ habits: form.habits.filter((x) => x.id !== h.id) });
 
   return (
     <div className="tab-stack tab-about">
-      <p className="note">
-        {t("profiles.about.note")}{" "}
-        <button type="button" className="linkbtn" onClick={onRefresh}>{t("profiles.editor.refresh")}</button>{" "}
-        {t("profiles.about.refreshHint")}
-      </p>
+      <div className="note-row">
+        <p className="note">
+          {t("profiles.about.note")}{" "}
+          <button type="button" className="linkbtn" onClick={onRefresh}>{t("profiles.editor.refresh")}</button>{" "}
+          {t("profiles.about.refreshHint")}
+        </p>
+        {fill?.layout === "desk" && <FillActions fill={fill} />}
+      </div>
+      {fill?.layout === "phone" && <FillActions fill={fill} />}
 
       <Field label={t("profiles.about.nick")}>
         {(id) => <input id={id} className="inp" value={form.nick} onChange={(e) => set({ nick: e.target.value })} />}

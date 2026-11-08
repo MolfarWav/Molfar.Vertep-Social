@@ -18,8 +18,10 @@ export interface ListProps {
   selectedId: string;
   /** Desktop: select the profile for the editor beside it. Phone: open its editor. */
   onPick: (id: string) => void;
-  /** The Import button. Not built yet: optional, does nothing when missing. */
+  /** The Import button (desktop header, phone header icon). */
   onImport?: () => void;
+  /** "New profile": the desktop button and the phone button. */
+  onNew?: () => void;
 }
 
 const FILTER_KEY: Record<SourceFilter, string> = {
@@ -128,7 +130,7 @@ export function ProfileListDesktop(props: ListProps) {
     <aside className="pl-desk">
       <div className="tbar">{t("profiles.listTitle", { n: props.profiles.length })}</div>
       <div className="desk-btns">
-        <button type="button" className="btn cta">{t("profiles.new")}</button>
+        <button type="button" className="btn cta" onClick={props.onNew}>{t("profiles.new")}</button>
         <button type="button" className="btn" onClick={props.onImport}>{t("profiles.import")}</button>
       </div>
       <SearchBox value={props.query} onChange={props.onQuery} phone={false} />
@@ -188,7 +190,7 @@ export function ProfileListPhone(props: ListProps) {
       </div>
       {found}
       <Rows items={shown} query={props.query} selectedId={props.selectedId} onPick={props.onPick} phone onClear={clear} />
-      <button type="button" className="fab">{t("profiles.fab")}</button>
+      <button type="button" className="fab" onClick={props.onNew}>{t("profiles.fab")}</button>
     </div>
   );
 }

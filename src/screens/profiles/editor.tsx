@@ -12,6 +12,8 @@ import { StatusesTab } from "./tabs/StatusesTab";
 import { ForumTab } from "./tabs/ForumTab";
 import { HabitsTab } from "./tabs/HabitsTab";
 import { TAB_IDS, type TabId } from "./tabs/types";
+import { ActionMenu, type MenuItem } from "./menu";
+import type { FillProps } from "./fill-ui";
 
 export interface EditorProps {
   profile: MockProfile;
@@ -28,6 +30,8 @@ export interface EditorProps {
   onRefresh: () => void;
   /** Phone: back to the list (index asks first when there are unsaved changes). */
   onBack?: () => void;
+  /** "Fill empty": the run's state and actions; the layout comes from `phone`. */
+  fill: Omit<FillProps, "layout">;
 }
 
 const TAB_LABEL: Record<TabId, { desk: string; phone: string }> = {
@@ -64,7 +68,7 @@ const DotsIcon = () => (
   </svg>
 );
 
-export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, onSave, onDiscard, onRefresh, onBack }: EditorProps) {
+export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, onSave, onDiscard, onRefresh, onBack, fill }: EditorProps) {
   const t = useT();
   const roleplay = profile.source === "roleplay";
   const sourceLabel = t(SOURCE_KEY[profile.source]);
@@ -74,7 +78,21 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
       : t("profiles.editor.subtitleCard", { card: profile.card ?? "", date: profile.cardDate ?? "" })
     : t(profile.source === "own" ? "profiles.editor.subtitleOwn" : "profiles.editor.subtitlePersona");
 
-  const props = { form, set: onSet, name: profile.name, hue: profile.hue, onRefresh };
+  const fillProps: FillProps = { ...fill, layout: phone ? "phone" : "desk" };
+  const props = { form, set: onSet, name: profile.name, hue: profile.hue, onRefresh, fill: fillProps };
+  // The "⋯" menu: Fill empty (opens About first) and, for Roleplay profiles, the update.
+  const menu: MenuItem[] = [
+    {
+      key: "fill",
+      label: t("profiles.fill.button"),
+      disabled: fill.empty === 0 || fill.phase === "busy",
+      onSelect: () => {
+        onTab("about");
+        fill.onStart();
+      },
+    },
+    ...(roleplay ? [{ key: "refresh", label: t("profiles.editor.refresh"), onSelect: onRefresh }] : []),
+  ];
   const body =
     tab === "about" ? <AboutTab {...props} />
     : tab === "voice" ? <VoiceTab {...props} />
@@ -111,9 +129,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
             <span className="hd-name">{profile.name}</span>
             <span className="k">{subtitle}</span>
           </div>
-          <button type="button" className="hbtn" aria-label={t("profiles.editor.more")}>
-            <DotsIcon />
-          </button>
+          <ActionMenu className="hbtn" label={t("profiles.editor.more")} items={menu} trigger={<DotsIcon />} />
         </header>
         {tabs}
         <div className="pg">{body}</div>
@@ -138,7 +154,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
           <div className="k">{subtitle}</div>
         </div>
         {roleplay && <button type="button" className="btn" onClick={onRefresh}>{t("profiles.editor.refresh")}</button>}
-        <button type="button" className="btn btn-icon" aria-label={t("profiles.editor.more")}>⋯</button>
+        <ActionMenu className="btn btn-icon" label={t("profiles.editor.more")} items={menu} trigger="⋯" />
       </div>
       {tabs}
       <div className="ed-body">{body}</div>

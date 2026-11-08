@@ -12,9 +12,9 @@ export function Field({ label, children, wide }: { label: string; children: (id:
   );
 }
 
-export function Seg<T extends number | string>({ label, options, value, onChange }: { label: string; options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
+export function Seg<T extends number | string>({ label, options, value, onChange, full }: { label: string; options: { value: T; label: string }[]; value: T; onChange: (v: T) => void; full?: boolean }) {
   return (
-    <div role="radiogroup" aria-label={label} className="seg">
+    <div role="radiogroup" aria-label={label} className={`seg${full ? " full" : ""}`}>
       {options.map((o) => (
         <button key={String(o.value)} type="button" role="radio" aria-checked={o.value === value} className={o.value === value ? "on" : ""} onClick={() => onChange(o.value)}>
           {o.label}

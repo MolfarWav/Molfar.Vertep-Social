@@ -1,5 +1,6 @@
 // The modal dialog the Profiles screen uses: import, import progress, the
-// update diff, and the unsaved-changes question. Rendered into <body> (in a
+// update diff, the unsaved-changes question, and the new-profile flow. `sheet`
+// makes it a bottom sheet (phone). Rendered into <body> (in a
 // layer scoped to .s-profiles) so it covers the whole app, shell bar included.
 // Focus moves in on open and goes back to the opener on close; Escape closes;
 // Tab stays inside the dialog.
@@ -9,7 +10,7 @@ import { createPortal } from "react-dom";
 const FOCUSABLE =
   'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
-export function Dialog({ title, width = 620, onClose, children }: { title: ReactNode; width?: number; onClose: () => void; children: ReactNode }) {
+export function Dialog({ title, width = 620, sheet = false, onClose, children }: { title: ReactNode; width?: number; sheet?: boolean; onClose: () => void; children: ReactNode }) {
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
@@ -46,8 +47,17 @@ export function Dialog({ title, width = 620, onClose, children }: { title: React
   };
 
   return createPortal(
-    <div className="s-profiles pf-layer">
-      <div role="dialog" aria-modal="true" aria-labelledby={id} className="pf-dlg" style={{ width: `min(${width}px, 100%)` }} ref={box} onKeyDown={onKey} tabIndex={-1}>
+    <div className={`s-profiles pf-layer${sheet ? " sheet" : ""}`}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={id}
+        className={`pf-dlg${sheet ? " sheet" : ""}`}
+        style={{ width: sheet ? "100%" : `min(${width}px, 100%)` }}
+        ref={box}
+        onKeyDown={onKey}
+        tabIndex={-1}
+      >
         <div className="pf-head" id={id}>{title}</div>
         {children}
       </div>
