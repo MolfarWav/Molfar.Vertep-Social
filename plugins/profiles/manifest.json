@@ -1,0 +1,8 @@
+{
+  "name": "Social profiles",
+  "version": "0.1.0",
+  "description": "Profiles: one-time digests of Roleplay cards and personas into Social profiles, own characters, habits. Stub: no routes yet.",
+  "origin": "local",
+  "permissions": ["routes"],
+  "priority": 30
+}

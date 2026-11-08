@@ -1,0 +1,8 @@
+{
+  "name": "Social forum",
+  "version": "0.1.0",
+  "description": "Forum: boards, topics, posts, autonomous posting on the engine tick. Stub: no routes yet.",
+  "origin": "local",
+  "permissions": ["routes"],
+  "priority": 30
+}

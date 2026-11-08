@@ -1,0 +1,8 @@
+{
+  "name": "Social messenger",
+  "version": "0.1.0",
+  "description": "Messenger: chats, statuses by schedule, first messages. Stub: no routes yet.",
+  "origin": "local",
+  "permissions": ["routes"],
+  "priority": 30
+}

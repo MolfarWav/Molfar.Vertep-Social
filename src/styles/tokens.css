@@ -1,0 +1,67 @@
+/* Social colour tokens, one block per theme. The names and values are the ones
+ * the approved boards use (see AGENTS.md): Vertep (default), Dark and Light
+ * follow the shell's built-in schemes. `data-theme` is set on <html> by
+ * src/lib/theme.ts. */
+:root,
+[data-theme="vertep"] {
+  color-scheme: dark;
+  --base: #0b0c11;
+  --panel: #0e1016;
+  --raised: #12141c;
+  --ink: #f0e9dc;
+  --muted: #a9b1c4;
+  --faint: #6f7689;
+  --line: #2a2f3d;
+  --accent: #e2213a;
+  --acct: #ff7a8a;
+  --onacc: #ffffff;
+  --cta: #39d5ff;
+  --ctaink: #07080b;
+  --ok: #7fd18b;
+  --warn: #e3b341;
+  --bad: #f2777a;
+  --hover: rgba(240, 233, 220, 0.07);
+  --them-l: 68%;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --base: #121214;
+  --panel: #17171a;
+  --raised: #1e1e22;
+  --ink: #e6e6e9;
+  --muted: #a0a0a8;
+  --faint: #6e6e78;
+  --line: #26262c;
+  --accent: #7aa2f7;
+  --acct: #7aa2f7;
+  --onacc: #0b0b0d;
+  --cta: #7aa2f7;
+  --ctaink: #0b0b0d;
+  --ok: #7fd18b;
+  --warn: #e3b341;
+  --bad: #f2777a;
+  --hover: rgba(255, 255, 255, 0.07);
+  --them-l: 68%;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --base: #ffffff;
+  --panel: #fafafb;
+  --raised: #ffffff;
+  --ink: #17171a;
+  --muted: #5a5a63;
+  --faint: #8a8a94;
+  --line: #e2e2e7;
+  --accent: #2f5fbf;
+  --acct: #2f5fbf;
+  --onacc: #ffffff;
+  --cta: #2f5fbf;
+  --ctaink: #ffffff;
+  --ok: #2f7d3f;
+  --warn: #9a6f0a;
+  --bad: #c4373a;
+  --hover: rgba(0, 0, 0, 0.06);
+  --them-l: 34%;
+}
