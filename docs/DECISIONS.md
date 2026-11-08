@@ -31,6 +31,8 @@ MolfarWav/Molfar.Vertep#309; follow-up work: MolfarWav/Molfar.Vertep#310. Read `
   threads. A second improvement after the first runnable Social, issue MolfarWav/Molfar.Vertep#311 (owner, 2026-11-08).
   The messenger and forum plugins keep a place for it: first messages and new topics take their subject from one source
   that can later be the life diary.
+- The characters' names are only labels in screenshots, not a folklore setting; topic sources are broad (news, politics, games,
+  film, anime, weather, Reddit RSS, other forums), see issue #311. Default board names are neutral.
 - Quality and correctness over speed: the owner accepts that work moves to another account when tokens run out.
 
 ## State (2026-11-08, evening)
@@ -57,6 +59,6 @@ MolfarWav/Molfar.Vertep#309; follow-up work: MolfarWav/Molfar.Vertep#310. Read `
 1. Build check: `bun install`, `bun run typecheck`, `bun test test/`, `bun run preview:build`, then
    `NODE_PATH=$(npm root -g) node scripts/shot.cjs <outDir> "screen=forum&lang=uk" vertep,dark,light 1280x800,390x844`.
 2. Preview parameters per screen are documented in each `src/screens/<name>/index.tsx` header.
-3. Next steps in order: issue #310 (profiles plugin, engine read grant, messenger, forum autonomy, notifications, Store entry).
+3. Next steps in order: `docs/FORUM-PLAN.md` (forum plugin and screens, then the engine work, notifications, first messages). Profiles and messenger are done.
 4. Rules that bit during the build: no model names in commits or files; a new string goes into `en` and `uk`
    (`test/skeleton.test.ts`); never start a Ukrainian label with a lone "З" (Inter draws it like "3").
