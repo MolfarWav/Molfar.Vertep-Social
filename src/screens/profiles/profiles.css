@@ -274,3 +274,51 @@
   .s-profiles .dl { grid-template-columns: 1fr; gap: 2px; }
   .s-profiles .dl dt { margin-top: 6px; }
 }
+
+/* "New profile" as laid out after Roleplay's New persona (newprofile.tsx, newprofile-drafts.tsx) */
+.s-profiles .pf-sub { margin: 0 0 4px; color: var(--muted); font-size: 13px; }
+.s-profiles .nw-scroll { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: auto; }
+.s-profiles .nw-foot .nw-note { margin-right: auto; }
+.s-profiles .choice { flex-direction: row; align-items: center; gap: 10px; }
+.s-profiles .choice-main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.s-profiles .choice-chev { flex: none; color: var(--muted); }
+.s-profiles .caps { text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; color: var(--muted); }
+.s-profiles .drop { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 10px; background: none; color: var(--muted); font: inherit; text-align: center; cursor: pointer; }
+.s-profiles .drop:hover, .s-profiles .drop:focus-visible { color: var(--ink); border-color: var(--accent); }
+.s-profiles .drop-tall { min-height: 120px; }
+.s-profiles .pic-row { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
+.s-profiles .pic-thumb { width: 48px; height: 48px; flex: none; border-radius: 8px; object-fit: cover; }
+.s-profiles .file-sum { display: flex; flex-direction: column; gap: 6px; }
+.s-profiles .cut-note { color: var(--accent); font-size: 12px; }
+.s-profiles .chip-tap { height: auto; min-height: 32px; padding: 6px 12px; font-size: 12px; cursor: pointer; white-space: normal; text-align: left; }
+.s-profiles .chip-tap.on { background: var(--raised); border-color: var(--accent); color: var(--ink); }
+.s-profiles .chip-icon { width: 36px; padding: 0; justify-content: center; font-size: 16px; }
+.s-profiles .link-left { display: block; margin: 0; padding: 4px 0; text-align: left; }
+.s-profiles .dtab { display: flex; flex: 1 1 0; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); color: var(--muted); font: inherit; text-align: left; cursor: pointer; }
+.s-profiles .dtab.on { border-color: var(--accent); color: var(--ink); }
+.s-profiles .dtab-arch { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-profiles .dtab-name { font-weight: 700; color: var(--ink); }
+.s-profiles .dcard { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--raised); }
+.s-profiles .dcard-name { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.15; }
+.s-profiles .dcard-sum { margin: 0; font-size: 14px; line-height: 1.5; }
+.s-profiles .all-fields { margin-top: 4px; }
+.s-profiles .all-fields summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 6px 0; }
+.s-profiles .nw-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.s-profiles .nw-left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.s-profiles .nw-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; max-height: 52vh; overflow: auto; padding-right: 4px; }
+.s-profiles .nw-block { display: flex; flex-direction: column; gap: 8px; }
+.s-profiles .nw-h { margin: 0; font-size: 14px; font-weight: 600; }
+.s-profiles .nw-q { display: flex; flex-direction: column; gap: 6px; }
+.s-profiles .q-chips { gap: 6px; }
+@media (max-width: 767px) {
+  .s-profiles .nw-foot .nw-note { flex-basis: 100%; }
+  .s-profiles .nw-cols { grid-template-columns: 1fr; }
+  .s-profiles .nw-right { max-height: none; overflow: visible; padding-right: 0; }
+  .s-profiles .choice { min-height: 56px; }
+  .s-profiles .chip-tap, .s-profiles .chip-icon { min-height: 44px; }
+  .s-profiles .dtab { min-height: 44px; }
+  .s-profiles .all-fields summary { min-height: 44px; display: flex; align-items: center; }
+  .s-profiles .link-left { min-height: 44px; display: flex; align-items: center; }
+  .s-profiles .drop { min-height: 56px; }
+}
+.s-profiles .hidden { display: none; }

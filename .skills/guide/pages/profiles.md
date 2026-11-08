@@ -4,11 +4,17 @@ A profile is a character as Social knows it: who they are, how they write, when 
 
 ## Making profiles
 
-The list on the left has three ways in. All start from "New profile" or "Import from Roleplay".
+"New profile" opens a choice. Pick how you want to start; you can change everything later.
 
+- **Write it yourself** opens a blank profile called "Unnamed" in the editor. Its name follows the nick the first time you save.
+- **Short interview** works in two steps. Step 1, "Tell the idea": describe the character in a few words. You can add a picture of the look (PNG, JPEG, WebP or GIF, up to 10 MB); it is shown as a thumbnail and does not change the profile yet. "Stuck?" offers four example ideas; press the round arrow button for four others. "Show me drafts" asks the model for three drafts. Step 2, "Pick your favourite": choose a draft tab and read its card; "All fields" shows the rest. Answer up to two quick questions (tap a chip again to clear it), add a wish if you like, choose Brief, Normal or Detailed, and press "Create profile". The answers and the wish are added to About.
+- **Five plain questions** (the link under the idea box) asks for a name, one line about who the character is, how they talk, what they like and what they do on the forum. No model is used. "Create" writes the answers into About; the first answer is the name.
+- **From a file** takes a text, Markdown or JSON file (up to 200 KB) as the About text. The file is read in your browser only. Texts longer than 12000 characters are cut, and the screen says so. Give the profile a name, then press "Create".
 - **Import from Roleplay** reads your Roleplay characters and personas once and makes a short profile of each (card, Soul, profile, scenario). Tick what to import. The name comes from the character's Soul, not from the card title; a card without a Soul keeps the card title and is marked "No Soul: name from card". A narrator card with several characters is split by the names in their Souls. The card itself is never read again, so its text does not leak into forum or chat requests. This needs Roleplay access, which you allow once (see [[settings]]). If one card fails, the rest still import and the failed one has "Try again".
-- **New profile > Write it yourself** opens a blank profile.
-- **New profile > Short interview** asks you to describe a character in a few words. The model proposes three drafts; pick one, answer up to two quick questions, add a wish if you like, choose how detailed it should be and press "Create".
+
+Each new profile opens in the editor, where **Fill empty** can fill what is still blank.
+
+If the model fails, the interview offers the five questions or a blank profile. If no model is chosen, it links to settings.
 
 ## The editor
 

@@ -21,6 +21,9 @@
 //   view=new            "New profile": the choice dialog (bottom sheet on phone)
 //   view=interview      "New profile", the interview step 1 (describe the character)
 //   view=interview2     "New profile", step 2 with three canned drafts
+//   view=questionnaire  "New profile", the five plain questions (no model)
+//   state=newfile       "New profile", "From a file" with a sample text cut at 12000 characters
+//   seed=<n>            the example ideas of the interview are fixed (default: random)
 //   state=newfail       the interview step 1 with "the model did not answer" shown
 //   state=newnomodel    the interview step 1 with "No model is chosen" shown
 //   state=fill         Ярина (her empty fields) with the "Fill empty" review open
@@ -48,7 +51,7 @@ import { useT } from "@/i18n/index";
 import { useIsPhone } from "@/lib/use-phone";
 import { PROFILES, type MockProfile, type ProfileForm } from "@/mock/profiles";
 import { IMPORT_ENTRIES, UPDATE_DIFF, profileFromEntry, type ImportEntry } from "@/mock/profiles-import";
-import { fillEmpty, mockScript, previewInterview, previewProposal } from "./model-api";
+import { fillEmpty, mockScript, previewFile, previewInterview, previewProposal } from "./model-api";
 import { ProfileEditor, PhoneEditor, formOf } from "./editor";
 import { ProfileListDesktop, ProfileListPhone } from "./list";
 import { ImportDialog, ImportRun, FirstRun, type RunPreview } from "./import";
@@ -78,6 +81,8 @@ interface Preview {
   source: string | null;
   dirty: boolean;
   state: string | null;
+  /** Seeds the example ideas of the interview (preview only). */
+  seed: number | undefined;
 }
 
 /** "Fill empty" run: the profile it belongs to, its phase, and the proposals to review. */
@@ -99,9 +104,10 @@ function readPreview(): Preview {
       source: p.get("source"),
       dirty: p.get("dirty") === "1",
       state: p.get("state"),
+      seed: p.get("seed") === null || p.get("seed") === "" ? undefined : Number(p.get("seed")),
     };
   } catch {
-    return { view: null, tab: null, q: "", source: null, dirty: false, state: null };
+    return { view: null, tab: null, q: "", source: null, dirty: false, state: null, seed: undefined };
   }
 }
 
@@ -207,6 +213,8 @@ export function Profiles() {
     if (pv.view === "new") return { start: { stage: "choose" } };
     if (pv.view === "interview") return { start: { stage: "ask" } };
     if (pv.view === "interview2") return { start: { stage: "drafts", ...previewInterview() } };
+    if (pv.view === "questionnaire") return { start: { stage: "questions" } };
+    if (pv.state === "newfile") return { start: { stage: "file", file: previewFile() } };
     if (pv.state === "newfail") return { start: { stage: "ask", phase: "fail" } };
     if (pv.state === "newnomodel") return { start: { stage: "ask", phase: "nomodel" } };
     return null;
@@ -379,6 +387,7 @@ export function Profiles() {
           phone={phone}
           start={newMode.start}
           unnamed={unnamed}
+          seed={pv.seed}
           onClose={() => setNewMode(null)}
           onRoleplay={() => {
             setNewMode(null);
