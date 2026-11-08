@@ -1,8 +1,10 @@
 import { useId, type ReactNode } from "react";
 import { useT, currentLang } from "@/i18n/index";
-import { MODEL_IDS, type ModelId, type SettingsMock } from "@/mock/settings";
+import { PREVIEW, type ModelChoice } from "@/lib/api";
+import { MODEL_IDS, type SettingsMock } from "@/mock/settings";
 import { Pick, Row, Switch } from "./controls";
-import { reqForm, requestsPerDay } from "./state";
+import { modelOptions } from "./real";
+import { reqForm, requestsPerDay, type SettingsError } from "./state";
 
 export type Patch = (p: Partial<SettingsMock>) => void;
 
@@ -33,10 +35,24 @@ export function Summary({ s, phone }: { s: SettingsMock; phone: boolean }) {
   );
 }
 
-/** The three model pickers. Each row is a title and a select; the phone stacks them. */
-export function ModelRows({ s, set }: { s: SettingsMock; set: Patch }) {
+/** The save or load failure, one line under the title. It is quiet: no dialog, no colour block. */
+export function Notice({ error }: { error: SettingsError | null }) {
   const t = useT();
-  const options = MODEL_IDS.map((id) => ({ value: id, label: t(`settings.model.${id}`) }));
+  if (!error) return null;
+  return (
+    <div className="sn" role="status">
+      {t(error.kind === "load" ? "settings.loadFailed" : "settings.saveFailed", { message: error.message })}
+    </div>
+  );
+}
+
+/**
+ * The three model pickers. Each row is a title and a select; the phone stacks them.
+ * Preview lists the four mock ids; real mode lists the engine default and the models the user switched on.
+ */
+export function ModelRows({ s, set, choices }: { s: SettingsMock; set: Patch; choices: ModelChoice[] }) {
+  const t = useT();
+  const previewOptions = MODEL_IDS.map((id) => ({ value: id, label: t(`settings.model.${id}`) }));
   const rows = [
     { key: "messenger", title: t("settings.models.messenger") },
     { key: "forum", title: t("settings.models.forum") },
@@ -47,10 +63,10 @@ export function ModelRows({ s, set }: { s: SettingsMock; set: Patch }) {
       {rows.map((r) => (
         <Row key={r.key} title={r.title}>
           {(id) => (
-            <Pick<ModelId>
+            <Pick
               labelledBy={id}
               value={s.models[r.key]}
-              options={options}
+              options={PREVIEW ? previewOptions : modelOptions(choices, s.models[r.key], t("settings.model.engineDefault"))}
               onChange={(v) => set({ models: { ...s.models, [r.key]: v } })}
             />
           )}
@@ -79,25 +95,36 @@ export function NotifyRows({ s, set }: { s: SettingsMock; set: Patch }) {
   );
 }
 
-/** Roleplay read access: a status chip and a Revoke / Grant access button. */
+/**
+ * Roleplay read access: a status chip and a Revoke / Grant access button. In real mode the engine
+ * cannot grant it yet: no button, the chip reads off, and the hint says so.
+ */
 export function AccessControl({ granted, onToggle }: { granted: boolean; onToggle: () => void }) {
   const t = useT();
+  const on = PREVIEW && granted;
   return (
-    <div className="ln acc">
-      <span className="chip">
-        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-          {granted ? (
-            <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="var(--ok)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-          ) : (
-            <path d="M6 12h12" fill="none" stroke="var(--muted)" strokeWidth="2.4" strokeLinecap="round" />
-          )}
-        </svg>
-        {t(granted ? "settings.access.on" : "settings.access.off")}
-      </span>
-      <span className="grow" />
-      <button type="button" className="btn rev" onClick={onToggle}>
-        {t(granted ? "settings.access.revoke" : "settings.access.grant")}
-      </button>
-    </div>
+    <>
+      <div className="ln acc">
+        <span className="chip">
+          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+            {on ? (
+              <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="var(--ok)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+            ) : (
+              <path d="M6 12h12" fill="none" stroke="var(--muted)" strokeWidth="2.4" strokeLinecap="round" />
+            )}
+          </svg>
+          {t(on ? "settings.access.on" : "settings.access.off")}
+        </span>
+        {PREVIEW && (
+          <>
+            <span className="grow" />
+            <button type="button" className="btn rev" onClick={onToggle}>
+              {t(on ? "settings.access.revoke" : "settings.access.grant")}
+            </button>
+          </>
+        )}
+      </div>
+      <div className="k hint">{t(PREVIEW ? "settings.access.note" : "settings.access.soon")}</div>
+    </>
   );
 }

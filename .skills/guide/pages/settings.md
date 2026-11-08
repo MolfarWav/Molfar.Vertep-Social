@@ -14,7 +14,7 @@ A summary line estimates the model requests per day: one per post. Free models h
 
 ## Models
 
-Pick a model for the Messenger, for the Forum and for importing profiles. "Default" uses the model Molfar Vertep uses everywhere.
+Pick a model for the Messenger, for the Forum and for importing profiles. "Engine default" uses the model Molfar Vertep uses everywhere. The other choices are the models you have switched on in Molfar Vertep; a model that is no longer switched on still shows by its name.
 
 ## Notifications
 
@@ -22,4 +22,4 @@ A counter on the Social tab, a system notification and a sound; each has its own
 
 ## Roleplay access
 
-Social reads Roleplay cards only when you import or update a profile, and only after you allow it. The status line says whether access is on. "Revoke" takes it back; "Grant access" gives it again.
+Reading Roleplay data is not available yet. The status shows off and there is no button to change it. When it is built, Social will read Roleplay cards only when you import or update a profile, and only after you allow it.

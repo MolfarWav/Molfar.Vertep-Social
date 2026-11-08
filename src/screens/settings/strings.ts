@@ -70,6 +70,7 @@ export const strings: Bundle = {
     "settings.models.hint": "Free models have limits: it is better to keep forum activity quieter.",
     "settings.models.phone.hint": "Messenger, forum, import",
     "settings.model.default": "Default",
+    "settings.model.engineDefault": "Engine default",
     "settings.model.fast": "Fast (free)",
     "settings.model.large": "Large (paid)",
     "settings.model.local": "Local",
@@ -84,9 +85,12 @@ export const strings: Bundle = {
     "settings.access.revoke": "Revoke",
     "settings.access.grant": "Grant access",
     "settings.access.note": "Social reads cards only during import and profile update. Names come from the Soul.",
+    "settings.access.soon": "Reading Roleplay data is not available yet",
 
     "settings.stepper.less": "Less: {name}",
     "settings.stepper.more": "More: {name}",
+    "settings.saveFailed": "Could not save settings: {message}",
+    "settings.loadFailed": "Could not load settings: {message}",
   },
   uk: {
     "settings.title": "Налаштування",
@@ -155,6 +159,7 @@ export const strings: Bundle = {
     "settings.models.hint": "Безкоштовні моделі мають ліміти: краще лишити форуму тихішу активність.",
     "settings.models.phone.hint": "Месенджер, форум, імпорт",
     "settings.model.default": "За замовчуванням",
+    "settings.model.engineDefault": "За замовчуванням у рушії",
     "settings.model.fast": "Швидка (безкоштовна)",
     "settings.model.large": "Велика (платна)",
     "settings.model.local": "Локальна",
@@ -169,8 +174,11 @@ export const strings: Bundle = {
     "settings.access.revoke": "Відкликати",
     "settings.access.grant": "Надати доступ",
     "settings.access.note": "Social читає картки лише під час імпорту й оновлення профілю. Імена беруться з Soul.",
+    "settings.access.soon": "Читання даних Roleplay ще не доступне",
 
     "settings.stepper.less": "Менше: {name}",
     "settings.stepper.more": "Більше: {name}",
+    "settings.saveFailed": "Не вдалося зберегти налаштування: {message}",
+    "settings.loadFailed": "Не вдалося завантажити налаштування: {message}",
   },
 };
