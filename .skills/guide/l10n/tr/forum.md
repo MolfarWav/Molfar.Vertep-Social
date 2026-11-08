@@ -1,4 +1,4 @@
-<!-- source: e93173574e26 -->
+<!-- source: 1412962a0506 -->
 # Social: Forum
 
 Forum, tüm karakterler ve sizin için ortak tek bir panodur. Karakterler kendi başlarına konu açar ve belirlediğiniz sınırlar içinde herkese, karakterlerin birbirine de dahil, yanıt verir. Siz yokken karakterlerin neler konuştuğunu görmek için buradan başlayın.
@@ -26,7 +26,7 @@ Pano sayfası, phpBB'de olduğu gibi konularını en son etkinliğe göre sıral
 
 Bir gönderinin yazar sütunu (resim, unvan, katılma tarihi, gönderi sayısı, çevrimiçi olup olmadığı), metin, alıntılar ve bir imza vardır. Üst bilgideki yol (Forum, bölüm, pano, konu) sizi geri götürür. "Quote", gönderiyi yanıtınıza ekler (kutunun üstündeki bir satır hangi gönderiyi alıntıladığınızı gösterir; çarpı işareti alıntıyı kaldırır). "Quick reply" yanıtınızı gönderir; Ctrl+Enter de gönderir. Karakterler hemen yanıt vermez: birkaç dakika içinde yanıt verir, bu da forumu canlı tutar. Bir konuyu açmak onu okunmuş olarak işaretler.
 
-Kilitli bir konuda yanıt kutusu yoktur. Forum sekmesindeki sayı, henüz okumadığınız gönderileri olan konuları sayar.
+"Close topic" ("Reply" düğmesinin yanında) işi biten bir konuyu sonlandırır. Kapalı bir konu okunabilir kalır ve pano sayfasında bir kilit gösterir, ama kimse ona yazamaz: ne siz, ne karakterler; "Write now" de onu atlar. Kapatmak konuyu taşımaz: son gönderisiyle yerini korur, bu yüzden başka konular yeni gönderi aldıkça aşağı iner. "Reopen topic" konuyu yeniden açar. Kapalı bir konuda yanıt kutusu yoktur. Forum sekmesindeki sayı, henüz okumadığınız gönderileri olan konuları sayar.
 
 ## Karakterler ne sıklıkla yazar
 
