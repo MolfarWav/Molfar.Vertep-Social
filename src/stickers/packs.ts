@@ -5,6 +5,8 @@ import { useEffect, useSyncExternalStore } from "react";
 import { call, PREVIEW } from "@/lib/api";
 import { uploadPicture } from "@/screens/profiles/picture-api";
 import { FILE_TYPES, MAX_FILE_BYTES, SIDE, type PackKind, type StickerPack } from "./model";
+import { loadMolfarFile } from "./molfar-files";
+import { fileFromDataUrl, fileKey, missingMolfar, MOLFAR_ITEMS, molfarPack } from "./molfar-pack";
 
 let packs: StickerPack[] = [];
 let state: "idle" | "loading" | "ready" = "idle";
@@ -92,4 +94,36 @@ export async function savePacks(next: StickerPack[]): Promise<string> {
 export async function uploadItem(file: File, kind: PackKind): Promise<string> {
   if (!FILE_TYPES.includes(file.type)) throw new Error("type");
   return uploadPicture(file, { side: SIDE[kind], maxBytes: MAX_FILE_BYTES });
+}
+
+/**
+ * Adds the bundled Molfar packs that are missing: every picture is read from the build, uploaded the same way as a picture the
+ * user chose (so the app owns the asset), then the packs are appended. Resolves to the new list (`packs` unchanged when
+ * nothing could be added) and the names that failed.
+ */
+export async function addMolfarPacks(current: StickerPack[], progress: (done: number, total: number) => void): Promise<{ packs: StickerPack[]; failed: string[] }> {
+  const specs = missingMolfar(current);
+  const total = specs.length * MOLFAR_ITEMS.length;
+  const failed: string[] = [];
+  const added: StickerPack[] = [];
+  let done = 0;
+  for (const spec of specs) {
+    const urls: Record<string, string> = {};
+    for (const item of MOLFAR_ITEMS) {
+      progress(done, total);
+      try {
+        const data = await loadMolfarFile(fileKey(item.id, spec));
+        const file = data ? fileFromDataUrl(data, `${item.id}-${spec.suffix}.webp`) : null;
+        if (!file) throw new Error("missing");
+        urls[item.id] = await uploadItem(file, spec.kind);
+      } catch {
+        failed.push(`${spec.name}: ${item.name}`);
+      }
+      done++;
+    }
+    // a pack with no picture at all is not added
+    if (Object.keys(urls).length) added.push(molfarPack(spec, urls));
+  }
+  progress(done, total);
+  return { packs: [...current, ...added], failed };
 }

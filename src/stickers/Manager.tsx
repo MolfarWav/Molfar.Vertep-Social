@@ -1,10 +1,12 @@
 // "Sticker packs": add a pack by choosing several picture files, rename it, switch its kind, add or remove pictures, delete it.
 // One dialog (a bottom sheet on a phone). Everything is saved as it happens: there is no Save button to forget.
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useT } from "@/i18n/index";
 import { Dialog } from "@/screens/profiles/dialog";
 import { addItems, FILE_TYPES, itemNameOf, MAX_ITEMS, MAX_PACKS, newPack, withoutItem, withoutPack, withPack, type PackKind, type StickerPack } from "./model";
-import { savePacks, uploadItem, usePacks } from "./packs";
+import { hasMolfarFiles, loadMolfarFile } from "./molfar-files";
+import { fileKey, missingMolfar, MOLFAR_ITEMS, MOLFAR_PACKS } from "./molfar-pack";
+import { addMolfarPacks, savePacks, uploadItem, usePacks } from "./packs";
 import "./stickers.css";
 
 const ACCEPT = FILE_TYPES.join(",");
@@ -105,6 +107,37 @@ function PackCard({ pack, onChange, busy, run }: { pack: StickerPack; onChange: 
   );
 }
 
+/** The offer of the pack that ships with the app: a strip of its faces, one line, one button. Gone once both packs are added. */
+function MolfarCard({ busy, full, onAdd }: { busy: boolean; full: boolean; onAdd: () => void }) {
+  const t = useT();
+  const [faces, setFaces] = useState<string[]>([]);
+  useEffect(() => {
+    let live = true;
+    const emoji = MOLFAR_PACKS[1]!;
+    void Promise.all(MOLFAR_ITEMS.map((i) => loadMolfarFile(fileKey(i.id, emoji)))).then((all) => live && setFaces(all.filter((x): x is string => !!x)));
+    return () => {
+      live = false;
+    };
+  }, []);
+  return (
+    <div className="stm-pack stm-molfar">
+      <div className="lb">{t("stk.molfar.title")}</div>
+      {faces.length > 0 && (
+        <div className="stm-faces" aria-hidden="true">
+          {faces.map((src, i) => (
+            <img key={i} src={src} alt="" />
+          ))}
+        </div>
+      )}
+      <p className="stm-intro">{t("stk.molfar.about")}</p>
+      <div className="stm-row">
+        <button type="button" className="btn cta" disabled={busy || full} onClick={onAdd}>{t("stk.molfar.add")}</button>
+      </div>
+      {full && <p className="stm-err">{t("stk.tooMany")}</p>}
+    </div>
+  );
+}
+
 export function Manager({ phone, onClose }: { phone: boolean; onClose: () => void }) {
   const t = useT();
   const packs = usePacks();
@@ -139,12 +172,22 @@ export function Manager({ phone, onClose }: { phone: boolean; onClose: () => voi
       setName("");
     })().finally(() => setBusy(""));
   };
+  const addMolfar = () => {
+    setBusy(t("stk.working"));
+    setNotes([]);
+    void (async () => {
+      const r = await addMolfarPacks(packs, (done, total) => setBusy(t("stk.uploading", { done, total })));
+      if (r.packs.length > packs.length) await save(r.packs);
+      setNotes(r.failed.length ? [t("stk.molfar.failed", { n: r.failed.length })] : []);
+    })().finally(() => setBusy(""));
+  };
   const change = (p: StickerPack, next: StickerPack | null) => void save(next ? withPack(packs, next) : withoutPack(packs, p.id));
   const full = packs.length >= MAX_PACKS;
 
   return (
     <Dialog title={t("stk.packs")} width={560} sheet={phone} onClose={onClose}>
       <div className="pf-body">
+        {hasMolfarFiles() && missingMolfar(packs).length > 0 && <MolfarCard busy={!!busy} full={packs.length + missingMolfar(packs).length > MAX_PACKS} onAdd={addMolfar} />}
         <p className="stm-intro">{t("stk.intro")}</p>
         {packs.map((p) => (
           <PackCard key={p.id} pack={p} busy={!!busy} onChange={(next) => change(p, next)} run={run} />
