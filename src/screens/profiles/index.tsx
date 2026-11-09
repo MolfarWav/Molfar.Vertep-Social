@@ -56,6 +56,7 @@
 //   Seg, Slider, Switch, Chip, Field                  the shared controls (ui.tsx)
 import "./profiles.css";
 import { useEffect, useRef, useState } from "react";
+import { useNav } from "@/shell/nav";
 import { useT } from "@/i18n/index";
 import { PREVIEW, call, listModels, type ModelChoice } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
@@ -226,6 +227,7 @@ type Unsaved = { id: string; pending: (() => void) | null } | null;
 
 export function Profiles() {
   const phone = useIsPhone();
+  const { profileFocus, clearProfileFocus } = useNav();
   const t = useT();
   const unnamed = t("profiles.new.unnamed");
   const [pv] = useState(() => {
@@ -364,6 +366,17 @@ export function Profiles() {
   };
 
   const byId = (id: string | null) => (id ? store.all.find((p) => p.id === id) : undefined);
+
+  // The messenger's "Open profile": once the profiles are loaded, show that character's own profile (phone: its editor).
+  // A profile that is gone by now just leaves the list as it is.
+  useEffect(() => {
+    if (!loaded || !profileFocus) return;
+    if (byId(profileFocus)) {
+      setSelectedId(profileFocus);
+      setOpenId(profileFocus);
+    }
+    clearProfileFocus();
+  }, [loaded, profileFocus]);
   const deskProfile = byId(selectedId) ?? store.all[0];
   const phoneProfile = phone ? byId(openId) : undefined;
   const editing = phone ? phoneProfile : deskProfile;

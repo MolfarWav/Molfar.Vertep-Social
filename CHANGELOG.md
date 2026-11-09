@@ -3,6 +3,10 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+- **"Open profile" opens that character's own profile.** In the messenger, the button in the info card (and the "i" button in a phone chat's top bar) opened the Profiles list: on a desktop the first profile, on a phone the list. It now opens Profiles on the profile of the character you are talking to (on a phone, straight into its editor).
+
 ## 0.5.0 (2026-11-09)
 
 A memory for long messenger chats, a new-conversation button, a choice of how well a character knows you, and an entry in the shell's Settings. Released on its own: the messenger, profiles plugins are 0.5.0 (the forum stays 0.4.1, Life 0.1.0). The "App settings" entry needs an engine that has `molfarShell.onView` (after 1.13.2); an older engine just does not list Social there.
