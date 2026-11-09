@@ -90,3 +90,19 @@ test("a chat from the engine: first message time, a pending reply, a failure", (
   expect(EMPTY_CHAT.items).toEqual([]);
   expect(chatView({ ...chat, messages: [], pending: null, failed: null }, "mavka")).toMatchObject({ firstAt: null, pending: false, failed: null });
 });
+
+test("dividers sit before the first message that came after them, and the note and count reach the view", () => {
+  const msgs = [
+    { id: "a", who: "me" as const, at: 1000, text: "one" },
+    { id: "b", who: "them" as const, at: 2000, text: "two" },
+    { id: "c", who: "me" as const, at: 5000, text: "three" },
+  ];
+  const items = logItems(msgs, "mavka", [3000, 9000]);
+  expect(items.map((i) => (i.kind === "break" ? `break@${i.at}` : i.kind === "msg" ? i.text : "sys"))).toEqual(["one", "two", "break@3000", "three", "break@9000"]);
+  expect(logItems(msgs, "mavka")).toHaveLength(3);
+  const view = chatView({ id: "mavka", status: "online", nextOnline: null, messages: msgs, pending: null, failed: null, summary: { text: "They talked.", at: 1, edited: true }, breaks: [3000] }, "mavka");
+  expect(view).toMatchObject({ note: "They talked.", noteEdited: true, count: 3 });
+  expect(view.items).toHaveLength(4);
+  // an answer of an older plugin has neither
+  expect(chatView({ id: "mavka", status: "online", nextOnline: null, messages: [], pending: null, failed: null }, "mavka")).toMatchObject({ note: "", noteEdited: false, count: 0 });
+});

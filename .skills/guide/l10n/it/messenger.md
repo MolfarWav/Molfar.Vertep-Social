@@ -1,4 +1,4 @@
-<!-- source: b52f839cace6 -->
+<!-- source: 9838f3720b06 -->
 # Social: Messenger
 
 Il Messenger è una chat con i personaggi che vivono in Social. Vedi un elenco di contatti, la conversazione con il contatto selezionato e una scheda con i suoi dati. Chi vuole parlare con un personaggio a tu per tu inizia da qui.
@@ -15,9 +15,15 @@ Seleziona un contatto per aprire la chat. I tuoi messaggi e i suoi sono righe co
 
 Lo stato cambia il comportamento di un personaggio. Un personaggio online risponde in pochi secondi. Un personaggio away risponde in pochi minuti. Un personaggio offline riceve il messaggio e risponde quando torna; la chat indica che il messaggio avrà risposta allora. Mentre una risposta è in arrivo vedi «<name> is typing…». Se non arriva alcuna risposta, la chat spiega che cosa è andato storto e propone «Try again». Se per il Messenger non è scelto alcun modello, la chat lo segnala e rimanda alle impostazioni.
 
-### Emoji
+### Memoria e una nuova conversazione
 
-Un personaggio vede gli ultimi 24 messaggi della chat a ogni risposta, quindi una chat lunga viene ricordata solo fino a quel punto. Puoi cambiare il numero in Settings, Messenger, «Messages a character remembers» (da 4 a 500; vedi [[settings]]).
+Un personaggio vede gli ultimi 24 messaggi della chat a ogni risposta (da 4 a 500 in Settings, Messenger, «Messages a character remembers»; vedi [[settings]]). I messaggi più vecchi non vanno persi: quando escono dalla finestra, ogni tanto una chiamata al modello li riassume in una **nota** breve che va al modello insieme agli ultimi messaggi. La nota si trova sotto «Memory» nella scheda informativa su un computer; il pulsante «Memory and conversation…» lì, o il pulsante a forma di libro nella barra in alto della chat su un telefono, la apre. Puoi leggere la nota, modificarla e premere «Save note»: ciò che scrivi la sostituisce, e il modello la integra in seguito. «Note of older messages» nelle Settings disattiva questo riassunto.
+
+Nello stesso dialogo, **New conversation…** inserisce un separatore nel registro. Il personaggio non vede nulla di ciò che c’era prima. «Keep the note and start» prima riassume i messaggi che non sono ancora nella nota (una chiamata al modello), così il personaggio ricorda comunque il succo; «Start without the note» parte da zero. I messaggi vecchi restano nella chat, sopra il separatore. **Clear chat…** cancella tutta la cronologia e la nota, dopo una conferma; non si può annullare.
+
+Quanto un personaggio ti conosce è anch’esso una scelta: «Characters know you» nelle Settings (il valore predefinito), oppure «How well it knows you» nella scheda «Voice» di un profilo. **Knows you** dice al modello il nome e il «About» della tua persona attiva; **Name only** solo il nome; **Stranger** niente, e il personaggio sa di te solo ciò che scrivi. Un messaggio tra doppie parentesi, come ((questo)), o che inizia con OOC è parlare fuori personaggio: il personaggio risponde in modo breve e semplice, poi prosegue.
+
+### Emoji
 
 Il pulsante con lo smile accanto alla casella del messaggio («Emoji») apre un selettore con un campo di ricerca, i gruppi (faccine, persone, animali, cibo, viaggi, attività, oggetti, simboli, bandiere) e le emoji che hai usato per ultime. Fai clic su un’emoji per metterla nel punto del cursore, o al posto del testo selezionato: il selettore si chiude e continui a scrivere. Tieni premuto Maiusc mentre fai clic per tenerlo aperto e aggiungerne più d’una. Scrivi in «Search emoji» per trovarne una per nome, in inglese o in ucraino; Invio prende la prima corrispondenza. I sei puntini in basso («Skin tone») cambiano il tono delle emoji che lo prevedono, e la scelta viene ricordata, come quelle recenti. Su un telefono il selettore si apre sotto la casella del messaggio invece che sopra, e resta aperto finché non premi la croce o di nuovo il pulsante con lo smile. I tasti freccia spostano il cursore tra le emoji ed Esc chiude il selettore.
 

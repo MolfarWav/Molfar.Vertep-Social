@@ -296,6 +296,8 @@ export function cleanProfile(raw, id, now, prev) {
     habitsAuto: raw.habitsAuto !== false,
     model,
     imageModel,
+    // how well the character knows the user in the messenger: only a choice that is not the default is stored
+    ...(raw.knows === "name" || raw.knows === "stranger" || raw.knows === "knows" ? { knows: raw.knows } : {}),
     picture: typeof raw.picture === "string" && PICTURE.test(raw.picture.trim()) ? raw.picture.trim() : "",
     voice: {
       text: multi(v.text, 1500),
@@ -404,6 +406,10 @@ export const DEFAULT_SETTINGS = {
   messengerQuiet: "same",
   /** How many of the latest messages of a chat go to the model with each reply (the chat keeps 500). */
   messengerContext: 24,
+  /** Older messages of a chat are folded into a short note for the model (issue #333). */
+  messengerSummary: true,
+  /** How well a character knows the user when its profile does not say: "knows", "name" or "stranger". */
+  messengerKnows: "knows",
   models: { messenger: "", forum: "", import: "", image: "" },
   /** Pictures in messages (issue #331): characters may send generated pictures (off by default: each is an image call), at most `perDay` each, in the messenger and on the forum separately. */
   images: { on: false, perDay: 2 },
@@ -461,6 +467,8 @@ export function mergeSettings(base, patch) {
     messengerPerDay: clampInt(p.messengerPerDay, 0, 50, b.messengerPerDay),
     messengerQuiet: oneOf(p.messengerQuiet, ["same", "own"], b.messengerQuiet),
     messengerContext: clampInt(p.messengerContext, 4, 500, Number.isInteger(b.messengerContext) ? b.messengerContext : 24),
+    messengerSummary: bool(p.messengerSummary, typeof b.messengerSummary === "boolean" ? b.messengerSummary : true),
+    messengerKnows: oneOf(p.messengerKnows, ["knows", "name", "stranger"], oneOf(b.messengerKnows, ["knows", "name", "stranger"], "knows")),
     models: {
       messenger: "messenger" in m ? modelRef(m.messenger) : b.models.messenger,
       forum: "forum" in m ? modelRef(m.forum) : b.models.forum,

@@ -52,6 +52,11 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
     { value: "lively", label: t("settings.activity.lively") },
     { value: "chaotic", label: t("settings.activity.chaotic.short") },
   ];
+  const knows: Opt<SettingsMock["messengerKnows"]>[] = [
+    { value: "knows", label: t("settings.messenger.knows.knows") },
+    { value: "name", label: t("settings.messenger.knows.name") },
+    { value: "stranger", label: t("settings.messenger.knows.stranger") },
+  ];
   const quietRange = t("settings.quiet.range", { from: s.quietFrom, to: s.quietTo });
 
   return (
@@ -116,6 +121,12 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
             {() => (
               <Stepper name={t("settings.messenger.context")} step={4} value={s.messengerContext} min={LIMITS.messengerContext.min} max={LIMITS.messengerContext.max} onChange={(v) => set({ messengerContext: v })} />
             )}
+          </Row>
+          <Row title={t("settings.messenger.summary")} hint={t("settings.messenger.summary.phone.hint")}>
+            {(id) => <Switch labelledBy={id} checked={s.messengerSummary} onChange={(v) => set({ messengerSummary: v })} />}
+          </Row>
+          <Row title={t("settings.messenger.knows")} hint={t("settings.messenger.knows.phone.hint")}>
+            {(id) => <Segmented labelledBy={id} options={knows} value={s.messengerKnows} onChange={(v) => set({ messengerKnows: v })} />}
           </Row>
         </section>
 

@@ -1,4 +1,4 @@
-<!-- source: b52f839cace6 -->
+<!-- source: 9838f3720b06 -->
 # Social：Messenger
 
 Messenger 是与住在 Social 里的角色进行的聊天。你可以看到联系人列表、与所选联系人的对话，以及显示其详细信息的卡片。想与某个角色一对一聊天的人，从这里开始。
@@ -15,9 +15,15 @@ Messenger 是与住在 Social 里的角色进行的聊天。你可以看到联�
 
 状态会改变角色的行为。在线的角色会在几秒内回复。离开的角色会在几分钟内回复。离线的角色会收到消息，并在回来后回复；聊天会说明届时会回复。回复在途中时，你会看到 "<name> is typing…"。如果没有回复，聊天会说明出了什么问题，并提供 "Try again"。如果尚未为 Messenger 选择模型，聊天会告知你，并链接到设置。
 
-### 表情符号
+### 记忆与新对话
 
-角色每次回复时会看到聊天中最近的 24 条消息，因此对于很长的聊天，只能记住这么远。你可以在 Settings、Messenger、"Messages a character remembers" 中更改这个数字（4 到 500；参见 [[settings]]）。
+角色在每次回复时都会看到聊天中最近的 24 条消息（可在 Settings、Messenger 中的 "Messages a character remembers" 里设为 4 到 500 条；参见 [[settings]]）。较早的消息不会丢失：当它们滚出视野时，模型会不时被调用一次，把它们压缩成一份简短的**笔记**，与最新消息一起发送给模型。在电脑上，笔记位于信息卡中的 "Memory" 下；那里的 "Memory and conversation…" 按钮，或手机上聊天顶部栏的书本按钮，都能打开它。你可以阅读和编辑笔记，然后按 "Save note"：你写的内容会取代原笔记，之后模型会在此基础上继续补充。Settings 中的 "Note of older messages" 可以关闭这种压缩。
+
+在同一对话框中，**New conversation…** 会在日志里插入一条分隔线。角色看不到分隔线之前的任何内容。"Keep the note and start" 会先把笔记中尚未包含的消息压缩进去（调用一次模型），让角色仍记得要点；"Start without the note" 则从零开始。旧消息仍保留在分隔线上方的聊天中。**Clear chat…** 会在确认后删除全部历史和笔记，且无法撤销。
+
+角色对你的了解程度也可以选择：Settings 中的 "Characters know you"（默认），或资料的 Voice 标签页中的 "How well it knows you"。**Knows you** 会把你当前人设的名字和 "About" 告诉模型；**Name only** 只告诉名字；**Stranger** 什么都不说，角色只能从你自己写的内容中了解你。用双括号括起的消息，如 ((这样))，或以 OOC 开头的消息，表示你在角色之外说话：角色会简短而直接地回答，然后继续。
+
+### 表情符号
 
 聊天框旁的笑脸按钮（"Emoji"）会打开一个表情选择器，里面有搜索框、各个分组（smileys、people、animals、food、travel、activities、objects、symbols、flags）以及你最近用过的表情。点击某个表情即可把它放在光标处，若选中了文字，则放在所选文字上；选择器随即关闭，你可以继续输入。按住 Shift 再点击可使其保持打开，以便添加多个表情。在 "Search emoji" 中输入文字，可按英文或乌克兰文名称查找；按 Enter 选择第一个匹配项。底部的六个点（"Skin tone"）可更改带肤色的表情的色调，该选择与最近使用的表情一样会被记住。在手机上，选择器会在消息框下方打开，而不是覆盖其上，并一直保持打开，直到你按下叉号或笑脸按钮。方向键可在表情之间移动，Escape 关闭选择器。
 

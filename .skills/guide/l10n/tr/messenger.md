@@ -1,4 +1,4 @@
-<!-- source: b52f839cace6 -->
+<!-- source: 9838f3720b06 -->
 # Social: Messenger
 
 Messenger, Social'da yaşayan karakterlerle yapılan bir sohbettir. Bir kişi listesi, seçili kişiyle konuşma ve onun bilgilerinin olduğu bir kart görürsünüz. Bir karakterle birebir konuşmak isteyen buradan başlar.
@@ -15,9 +15,15 @@ Sohbeti açmak için bir kişi seçin. Sizin mesajlarınız ve onların mesajlar
 
 Durum, bir karakterin davranışını değiştirir. Online bir karakter birkaç saniye içinde yanıt verir. Away bir karakter birkaç dakika içinde yanıt verir. Offline bir karakter mesajı alır ve geri döndüğünde yanıtlar; sohbet, mesajın o zaman yanıtlanacağını söyler. Bir yanıt yoldayken "<name> is typing…" görürsünüz. Yanıt gelmezse sohbet neyin ters gittiğini bildirir ve "Try again" önerir. Messenger için bir model seçilmemişse sohbet bunu söyler ve ayarlara bağlantı verir.
 
-### Emoji
+### Bellek ve yeni bir konuşma
 
-Bir karakter her yanıtta sohbetin son 24 mesajını görür; bu yüzden uzun bir sohbet yalnızca o kadar geriye kadar hatırlanır. Sayıyı Settings, Messenger, "Messages a character remembers" altından değiştirebilirsiniz (4 ile 500 arası; bkz. [[settings]]).
+Bir karakter her yanıtta sohbetin son 24 mesajını görür (Settings, Messenger altındaki "Messages a character remembers" ile 4 ile 500 arası; bkz. [[settings]]). Eski mesajlar kaybolmaz: ekrandan çıktıklarında, ara sıra bir model çağrısı bunları son mesajlarla birlikte modele giden kısa bir **not** haline getirir. Not, bilgisayarda bilgi kartındaki "Memory" altındadır; oradaki "Memory and conversation…" düğmesi ya da telefonda sohbetin üst çubuğundaki kitap düğmesi onu açar. Notu okuyabilir, düzenleyebilir ve "Save note"a basabilirsiniz: yazdığınız not eskisinin yerini alır, model de sonradan ona ekleme yapar. Settings içindeki "Note of older messages" bu katlamayı kapatır.
+
+Aynı pencerede **New conversation…** kayıt defterine bir ayırıcı koyar. Karakter bundan önceki hiçbir şeyi görmez. "Keep the note and start" önce notta henüz olmayan mesajları katlar (bir model çağrısı); böylece karakter özü yine hatırlar. "Start without the note" sıfırdan başlar. Eski mesajlar ayırıcının üstünde sohbette kalır. **Clear chat…** onaydan sonra tüm geçmişi ve notu siler; geri alınamaz.
+
+Karakterin sizi ne kadar tanıdığı da bir seçimdir: Settings içindeki "Characters know you" (varsayılan) ya da bir profilin Voice sekmesindeki "How well it knows you". **Knows you**, aktif personanızın adını ve "About" bölümünü modele iletir; **Name only** yalnızca adı; **Stranger** hiçbir şey, karakter sizin hakkınızda yalnızca yazdıklarınızdan öğrenir. Çift parantez içindeki, ((böyle)) gibi bir mesaj ya da OOC ile başlayan mesaj, rol dışında konuşmanızdır: karakter kısa ve açık yanıt verir, sonra kaldığı yerden devam eder.
+
+### Emoji
 
 Mesaj kutusunun yanındaki gülen yüz düğmesi ("Emoji"), bir arama alanı, grupları (smileys, people, animals, food, travel, activities, objects, symbols, flags) ve en son kullandığınız emojileri içeren bir seçici açar. Bir emojiye tıklayarak onu imlecin olduğu yere ya da seçtiğiniz metnin üstüne koyun; seçici kapanır ve yazmaya devam edersiniz. Birden çok eklemek için tıklarken Shift tuşunu basılı tutun; seçici açık kalır. "Search emoji" alanına adını İngilizce ya da Ukraynaca yazarak bulun; Enter ilk eşleşmeyi seçer. Alttaki altı nokta ("Skin tone") tonu olan emojilerin tonunu değiştirir; seçim, en son kullanılanlar gibi hatırlanır. Telefonda seçici, mesaj kutusunun üstünde değil altında açılır ve çarpıya ya da gülen yüz düğmesine tekrar basana kadar açık kalır. Ok tuşları emojiler arasında gezinir; Escape seçiciyi kapatır.
 

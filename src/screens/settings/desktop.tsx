@@ -20,6 +20,11 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
     { value: "profile", label: t("settings.writers.profile") },
     { value: "equal", label: t("settings.writers.equal") },
   ];
+  const knows: Opt<SettingsMock["messengerKnows"]>[] = [
+    { value: "knows", label: t("settings.messenger.knows.knows") },
+    { value: "name", label: t("settings.messenger.knows.name") },
+    { value: "stranger", label: t("settings.messenger.knows.stranger") },
+  ];
   const chat: Opt<SettingsMock["messengerQuiet"]>[] = [
     { value: "same", label: t("settings.messenger.quiet.same") },
     { value: "own", label: t("settings.messenger.quiet.own") },
@@ -97,6 +102,12 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
           {() => (
             <Stepper name={t("settings.messenger.context")} step={4} value={s.messengerContext} min={LIMITS.messengerContext.min} max={LIMITS.messengerContext.max} onChange={(v) => set({ messengerContext: v })} />
           )}
+        </Row>
+        <Row title={t("settings.messenger.summary")} hint={t("settings.messenger.summary.hint")}>
+          {(id) => <Switch labelledBy={id} checked={s.messengerSummary} onChange={(v) => set({ messengerSummary: v })} />}
+        </Row>
+        <Row title={t("settings.messenger.knows")} hint={t("settings.messenger.knows.hint")}>
+          {(id) => <Segmented labelledBy={id} options={knows} value={s.messengerKnows} onChange={(v) => set({ messengerKnows: v })} />}
         </Row>
         <Row title={t("settings.quiet")} hint={t("settings.messenger.quiet.hint")}>
           {(id) => <Segmented labelledBy={id} options={chat} value={s.messengerQuiet} onChange={(v) => set({ messengerQuiet: v })} />}

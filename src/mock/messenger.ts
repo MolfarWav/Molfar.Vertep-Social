@@ -24,7 +24,9 @@ export interface Contact extends MockProfile {
 /** A log line: a message, or a dashed system line that names the contact. */
 export type LogItem =
   | { kind: "msg"; who: string; time: string; text: string; image?: MsgImage }
-  | { kind: "sys"; key: string };
+  | { kind: "sys"; key: string }
+  /** A "new conversation" divider (real mode only): the time it was made, ms. */
+  | { kind: "break"; at: number };
 
 type Extra = Omit<Contact, keyof MockProfile>;
 

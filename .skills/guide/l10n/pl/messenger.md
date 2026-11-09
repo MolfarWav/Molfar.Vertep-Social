@@ -1,4 +1,4 @@
-<!-- source: b52f839cace6 -->
+<!-- source: 9838f3720b06 -->
 # Social: Messenger
 
 Messenger to czat z postaciami, które mieszkają w Social. Widzisz listę kontaktów, rozmowę z wybranym kontaktem i kartę z jego danymi. Każdy, kto chce porozmawiać z postacią w cztery oczy, zaczyna tutaj.
@@ -15,9 +15,15 @@ Wybierz kontakt, aby otworzyć czat. Twoje wiadomości i ich wiadomości to wier
 
 Status zmienia zachowanie postaci. Postać online odpowiada w ciągu sekund. Postać away odpowiada w ciągu kilku minut. Postać offline dostaje wiadomość i odpowiada, gdy wróci; czat mówi, że wtedy otrzyma odpowiedź. Gdy odpowiedź jest w drodze, widzisz "<name> is typing…". Jeśli odpowiedź nie nadejdzie, czat wyjaśnia, co się stało, i proponuje "Try again". Jeśli dla Messengera nie wybrano modelu, czat o tym informuje i prowadzi do ustawień.
 
-### Emoji
+### Pamięć i nowa rozmowa
 
-Postać z każdą odpowiedzią widzi ostatnie 24 wiadomości czatu, więc długi czat jest pamiętany tylko tak daleko wstecz. Liczbę możesz zmienić w Settings, Messenger, "Messages a character remembers" (od 4 do 500; zobacz [[settings]]).
+Postać z każdą odpowiedzią widzi ostatnie 24 wiadomości czatu (od 4 do 500 w Settings, Messenger, "Messages a character remembers"; zobacz [[settings]]). Starsze wiadomości nie giną: gdy wypadają z widoku, od czasu do czasu jedno wywołanie modelu składa je w krótką **notatkę**, która trafia do modelu razem z najnowszymi wiadomościami. Notatka jest pod "Memory" w karcie informacyjnej na komputerze; przycisk "Memory and conversation…" tam albo przycisk z książką na górnym pasku czatu w telefonie ją otwiera. Możesz przeczytać notatkę, edytować ją i nacisnąć "Save note": to, co napiszesz, ją zastępuje, a model dopisuje do niej później. "Note of older messages" w Settings wyłącza składanie.
+
+W tym samym oknie **New conversation…** wstawia separator do dziennika. Postać nie widzi nic sprzed niego. "Keep the note and start" najpierw składa wiadomości, których nie ma jeszcze w notatce (jedno wywołanie modelu), żeby postać nadal pamiętała sedno; "Start without the note" zaczyna od zera. Stare wiadomości zostają w czacie nad separatorem. **Clear chat…** usuwa po pytaniu całą historię i notatkę; nie można tego cofnąć.
+
+To, ile postać o tobie wie, też jest wyborem: "Characters know you" w Settings (domyślnie) albo "How well it knows you" w zakładce Voice profilu. **Knows you** mówi modelowi imię i "About" twojej aktywnej persony; **Name only** tylko imię; **Stranger** nic, a postać dowiaduje się o tobie tylko z tego, co napiszesz. Wiadomość w podwójnych nawiasach, jak ((to)), albo zaczynająca się od OOC to wypowiedź poza rolą: postać odpowiada krótko i wprost, a potem wraca do rozmowy.
+
+### Emoji
 
 Przycisk z uśmiechem obok pola wiadomości ("Emoji") otwiera wybierak z polem wyszukiwania, grupami (buźki, ludzie, zwierzęta, jedzenie, podróże, aktywności, przedmioty, symbole, flagi) i emoji, których użyłeś ostatnio. Kliknij emoji, aby wstawić je w miejscu kursora albo zamiast zaznaczonego tekstu; wybierak się zamknie, a ty piszesz dalej. Przytrzymaj Shift podczas klikania, aby zostawał otwarty i dodać kilka. Wpisz w "Search emoji", aby znaleźć emoji po nazwie po angielsku lub po ukraińsku; Enter wybiera pierwsze trafienie. Sześć kropek na dole ("Skin tone") zmienia odcień tych emoji, które go mają; wybór jest zapamiętywany, podobnie jak ostatnio użyte. Na telefonie wybierak otwiera się pod polem wiadomości, a nie nad nim, i zostaje otwarty, aż naciśniesz krzyżyk albo przycisk z uśmiechem ponownie. Strzałki przesuwają między emoji, a Escape zamyka wybierak.
 

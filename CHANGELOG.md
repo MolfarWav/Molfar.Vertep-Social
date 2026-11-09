@@ -3,6 +3,16 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## 0.5.0 (2026-11-09)
+
+A memory for long messenger chats, a new-conversation button, a choice of how well a character knows you, and an entry in the shell's Settings. Released on its own: the messenger, profiles plugins are 0.5.0 (the forum stays 0.4.1, Life 0.1.0). The "App settings" entry needs an engine that has `molfarShell.onView` (after 1.13.2); an older engine just does not list Social there.
+
+- **A memory note for long chats (#333).** Only the latest messages of a chat (24 by default) reach the model, so older things were forgotten. Now, when messages scroll out of that window, one model call now and then folds them into a short note that goes to the model with the latest messages. The window floats between its size and a third more, so nothing falls into a gap between the note and the window. The note is in the info card (Memory) and in the "Memory and conversation…" dialog, where you can read and edit it; what you write replaces it and the model adds to it later. A failed fold waits ten minutes. Settings > Messenger > "Note of older messages" switches it off, which gives exactly the old behaviour (the last window and nothing else).
+- **New conversation and Clear chat (#333).** In the same dialog (the book button in the top bar on a phone): "New conversation…" puts a divider in the log, and the character sees nothing from before it; "Keep the note and start" first folds the messages that are not in the note yet, "Start without the note" starts from nothing; the old messages stay in the chat above the divider. "Clear chat…" deletes the whole history and the note, after a question.
+- **How well a character knows you (#333).** Settings > Messenger > "Characters know you" (the default) and "How well it knows you (messenger)" in a profile's Voice tab: Knows you (the name and About of your active persona, as before), Name only, or Stranger (nothing; the character learns about you only from what you write). Without a choice nothing changes.
+- **Out of character (#333).** Every messenger prompt now says that a message in double parentheses, like ((this)), or starting with OOC is you speaking out of character: the character answers it briefly and plainly, then goes on.
+- **Social is listed in the shell's Settings (Molfar.Vertep#334).** The manifest names the settings page (`settingsView`); the shell's Settings lists Social under "App settings" and opens it on Settings.
+
 ## 0.4.1 (2026-11-09)
 
 Fixes and two requests from testing. Released on its own: no change in Molfar Vertep is needed. The forum, messenger and profiles plugins are 0.4.1 too (Life stays 0.1.0).

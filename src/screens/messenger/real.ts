@@ -31,6 +31,13 @@ export interface EngineMessage {
   image?: MsgImage;
 }
 
+/** The memory note of a chat as the engine shows it (plugins/messenger: `chat.summary`). */
+export interface EngineNote {
+  text: string;
+  at: number;
+  edited: boolean;
+}
+
 export interface EngineFailure {
   error: string;
   code?: "no-model";
@@ -44,14 +51,19 @@ export interface EngineChat {
   messages: EngineMessage[];
   pending: { at: number; dueAt: number | null } | null;
   failed: EngineFailure | null;
+  /** The memory note and the "new conversation" dividers (absent in an answer of an older plugin). */
+  summary?: EngineNote | null;
+  breaks?: number[];
 }
 
-/** The answer of POST /messenger/send and POST /messenger/retry. */
+/** The answer of POST /messenger/send and POST /messenger/retry (and, with `warn`, of /messenger/new). */
 export interface EngineAnswer {
   ok: boolean;
   queued?: boolean;
   error?: string;
   code?: string;
+  /** "note": the note could not be updated for a new conversation (the divider was made anyway). */
+  warn?: string;
   chat?: EngineChat;
 }
 
@@ -66,9 +78,14 @@ export interface ChatView {
   /** A send or a retry is in flight. */
   busy: boolean;
   loaded: boolean;
+  /** The memory note of the chat ("" when there is none), and whether the user wrote it. */
+  note: string;
+  noteEdited: boolean;
+  /** How many messages the chat holds (the Clear chat question names it). */
+  count: number;
 }
 
-export const EMPTY_CHAT: ChatView = { items: [], firstAt: null, pending: false, failed: null, busy: false, loaded: false };
+export const EMPTY_CHAT: ChatView = { items: [], firstAt: null, pending: false, failed: null, busy: false, loaded: false, note: "", noteEdited: false, count: 0 };
 
 /** Local time as HH:MM. */
 export function clock(ms: number): string {
@@ -123,19 +140,35 @@ export function contactFromEngine(e: EngineContact, lang: string, t: Translate):
   };
 }
 
-/** The messages of a chat as log lines: the user's as "me", the character's as the contact id. */
-export function logItems(messages: EngineMessage[], contactId: string): LogItem[] {
-  return messages.map((m) => ({ kind: "msg", who: m.who === "me" ? "me" : contactId, time: clock(m.at), text: m.text, ...(m.image ? { image: m.image } : {}) }));
+/** The messages of a chat as log lines: the user's as "me", the character's as the contact id. A "new conversation" divider sits before the first message that came after it. */
+export function logItems(messages: EngineMessage[], contactId: string, breaks: number[] = []): LogItem[] {
+  const out: LogItem[] = [];
+  const dividers = [...breaks].sort((a, b) => a - b);
+  let next = 0;
+  for (const m of messages) {
+    while (next < dividers.length && dividers[next] <= m.at) out.push({ kind: "break", at: dividers[next++] });
+    out.push({ kind: "msg", who: m.who === "me" ? "me" : contactId, time: clock(m.at), text: m.text, ...(m.image ? { image: m.image } : {}) });
+  }
+  while (next < dividers.length) out.push({ kind: "break", at: dividers[next++] });
+  return out;
+}
+
+/** The date and time of a divider in the user's language: "12 Nov, 14:20". */
+export function breakLabel(at: number, lang: string): string {
+  return new Date(at).toLocaleString(lang, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 /** An engine chat as the screen's chat view. */
 export function chatView(chat: EngineChat, contactId: string): ChatView {
   return {
-    items: logItems(chat.messages, contactId),
+    items: logItems(chat.messages, contactId, chat.breaks ?? []),
     firstAt: chat.messages.length ? chat.messages[0].at : null,
     pending: chat.pending !== null,
     failed: chat.failed ?? null,
     busy: false,
     loaded: true,
+    note: chat.summary?.text ?? "",
+    noteEdited: chat.summary?.edited === true,
+    count: chat.messages.length,
   };
 }

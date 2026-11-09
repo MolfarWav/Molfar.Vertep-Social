@@ -1,4 +1,4 @@
-<!-- source: b52f839cace6 -->
+<!-- source: 9838f3720b06 -->
 # Social : Messenger
 
 Le Messenger est une conversation avec les personnages qui vivent dans Social. Vous voyez une liste de contacts, la discussion avec le contact sélectionné et une carte avec ses coordonnées. Quiconque veut parler à un personnage en tête-à-tête commence ici.
@@ -15,9 +15,15 @@ Sélectionnez un contact pour ouvrir le chat. Vos messages et les siens sont des
 
 Le statut change le comportement d’un personnage. Un personnage online répond en quelques secondes. Un personnage away répond en quelques minutes. Un personnage offline reçoit le message et répond à son retour ; le chat indique que le message sera alors traité. Pendant qu’une réponse est en route, vous voyez « <name> is typing… ». Si aucune réponse n’arrive, le chat indique ce qui n’a pas marché et propose « Try again ». Si aucun modèle n’est choisi pour le Messenger, le chat le signale et renvoie vers les paramètres.
 
-### Emoji
+### Mémoire et nouvelle discussion
 
-Un personnage voit les 24 derniers messages de la discussion à chaque réponse ; une longue discussion n’est donc retenue que jusque-là. Vous pouvez changer ce nombre dans Settings, Messenger, « Messages a character remembers » (de 4 à 500 ; voir [[settings]]).
+Un personnage voit les 24 derniers messages de la discussion à chaque réponse (de 4 à 500 dans Settings, Messenger, « Messages a character remembers » ; voir [[settings]]). Les messages plus anciens ne sont pas perdus : quand ils sortent du champ, un appel au modèle, de temps en temps, les résume en une **note** courte qui part vers le modèle avec les derniers messages. La note se trouve sous « Memory » dans la carte d’informations sur un ordinateur ; le bouton « Memory and conversation… » qui s’y trouve, ou le bouton livre dans la barre du haut de la discussion sur un téléphone, l’ouvre. Vous pouvez lire la note, la modifier et appuyer sur « Save note » : ce que vous écrivez la remplace, et le modèle la complète ensuite. « Note of older messages » dans Settings désactive ce résumé.
+
+Dans le même dialogue, **New conversation…** place un séparateur dans le journal. Le personnage ne voit rien de ce qui précède. « Keep the note and start » résume d’abord les messages qui ne sont pas encore dans la note (un appel au modèle), pour que le personnage garde l’essentiel ; « Start without the note » repart de zéro. Les anciens messages restent dans la discussion, au-dessus du séparateur. **Clear chat…** supprime tout l’historique et la note, après une confirmation ; ce n’est pas réversible.
+
+La mesure dans laquelle un personnage vous connaît est aussi un choix : « Characters know you » dans Settings (la valeur par défaut), ou « How well it knows you » dans l’onglet « Voice » d’un profil. **Knows you** transmet au modèle le nom et le « About » de votre persona active ; **Name only** seulement le nom ; **Stranger** rien, et le personnage ne sait de vous que ce que vous écrivez. Un message entre doubles parenthèses, comme ((ceci)), ou qui commence par OOC, est une parole hors personnage : le personnage répond brièvement et simplement, puis reprend.
+
+### Emoji
 
 Le bouton au sourire (« Emoji ») à côté de la zone de saisie ouvre un sélecteur avec un champ de recherche, les groupes (smileys, people, animals, food, travel, activities, objects, symbols, flags) et les emoji que vous avez utilisés en dernier. Cliquez sur un emoji pour le placer au curseur, ou sur le texte que vous avez sélectionné ; le sélecteur se ferme et vous continuez à écrire. Maintenez Maj en cliquant pour le garder ouvert et en ajouter plusieurs. Saisissez dans « Search emoji » pour en trouver un par son nom, en anglais ou en ukrainien ; Entrée prend le premier résultat. Les six points en bas (« Skin tone ») changent la teinte des emoji qui en ont une, et le choix est retenu, comme les emoji récents. Sur un téléphone, le sélecteur s’ouvre sous la zone de saisie au lieu de par-dessus, et reste ouvert jusqu’à ce que vous appuyiez à nouveau sur la croix ou sur le bouton au sourire. Les touches fléchées déplacent entre les emoji, et Échap ferme le sélecteur.
 

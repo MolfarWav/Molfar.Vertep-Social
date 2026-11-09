@@ -59,6 +59,22 @@ export function VoiceTab({ form, set, name }: TabProps) {
           </div>
         </div>
 
+        <Field label={t("profiles.voice.knows")} wide>
+          {() => (
+            <Seg
+              label={t("profiles.voice.knows")}
+              value={form.knows ?? ""}
+              onChange={(knows) => set({ knows })}
+              options={[
+                { value: "", label: t("profiles.voice.knows.default") },
+                { value: "knows", label: t("profiles.voice.knows.knows") },
+                { value: "name", label: t("profiles.voice.knows.name") },
+                { value: "stranger", label: t("profiles.voice.knows.stranger") },
+              ]}
+            />
+          )}
+        </Field>
+
         <div className="f">
           <span className="lb">{t("profiles.voice.neverWrites")}</span>
           <div className="chips">

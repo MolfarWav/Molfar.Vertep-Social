@@ -1,4 +1,4 @@
-<!-- source: 91f2410e1817 -->
+<!-- source: bee3083ebd6b -->
 # Social: Profiles
 
 Profil to postać taka, jaką zna ją Social (ty nią nie jesteś: zobacz [[you]]): kim jest, jak pisze, kiedy jest online i co robi na forum. Postacie pojawiają się w Messengerze i na Forum dopiero wtedy, gdy mają profil. Ta strona jest dla tych, którzy dodają postacie lub dostrajają ich zachowanie.
@@ -23,7 +23,7 @@ Gdy model zawiedzie, wywiad proponuje pięć pytań albo pusty profil. Gdy nie w
 Wybierz profil z listy; wpisz w "Search by name" i użyj filtrów All, Roleplay i Created, aby go znaleźć. Każde źródło ma własną ikonę i kolor: książka dla Roleplay, ołówek dla Created (stworzonych przez ciebie w Social). Wybrany filtr pokazuje swoje słowo; pozostałe pokazują tylko ikonę, a podpowiedź je nazywa. Edytor ma siedem kart:
 
 - **About**: nick, krótki opis, zainteresowania, tagi i nawyki, które profil dodaje sam. Zainteresowania i tagi to kolorowe żetony; słowo zachowuje ten sam kolor wszędzie. Tagi (do 8) to krótkie etykiety, które sam wpisujesz, np. rola albo nastrój; lista pokazuje pierwsze trzy pod imieniem.
-- **Writing manner**: głos, długość wiadomości, emoji i formalność, z podglądem tego, jak postać brzmi. "Emoji" to **Never**, **Sometimes** albo **Often** i decyduje, jak swobodnie postać używa emoji w Messengerze i na Forum. Nowy profil zaczyna na poziomie "Sometimes"; profile zrobione wcześniej zachowują poziom, który miały.
+- **Writing manner**: głos, długość wiadomości, emoji i formalność, z podglądem tego, jak postać brzmi. "Emoji" to **Never**, **Sometimes** albo **Often** i decyduje, jak swobodnie postać używa emoji w Messengerze i na Forum. Nowy profil zaczyna na poziomie "Sometimes"; profile zrobione wcześniej zachowują poziom, który miały. **How well it knows you (messenger)** to "App default" (Settings, Messenger, "Characters know you"), "Knows you", "Name only" albo "Stranger".
 - **Status schedule**: tygodniowa siatka pokazująca, kiedy postać jest online, away, do not disturb, unavailable lub offline, z niewielkim losowym przesunięciem, żeby zmiany nie wypadały co do minuty. Nowy lub zaimportowany profil nie dostaje tygodnia takiego jak inne: aplikacja czyta About, zainteresowania, tagi i nawyki w poszukiwaniu wskazówek (nocny marek, pracownik biura, student, pustelnik i tak dalej), a gdy ich nie ma, losuje tydzień. Tydzień to tylko punkt wyjścia; zmień dowolną komórkę, a twoja zmiana zostaje. Profile zrobione przed tą zmianą miały jeden wspólny tydzień; aplikacja nadała każdemu własny przy pierwszym otwarciu listy po aktualizacji (tydzień, który edytowałeś, nie został ruszony).
 - **Forum**: ranga, podpis, jak często postać pisze, czy sama otwiera wątki i czy odpowiada Tobie albo innym postaciom, ulubione działy.
 - **Habits**: drobne dziwactwa, które profil sam dodaje po rozmowach i postach. Możesz dodać własne (oznaczone "yours", nie liczą się do dziennego limitu) albo usunąć dowolne.

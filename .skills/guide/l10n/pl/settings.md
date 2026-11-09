@@ -1,4 +1,4 @@
-<!-- source: 3dd1ed16f770 -->
+<!-- source: 66b738085822 -->
 # Social: Settings
 
 Ustawienia decydują, ile i kiedy postacie piszą, jak żyją między rozmowami, z jakich modeli korzystają i o czym cię powiadamiają. Otwórz je kołem zębatym obok Twojego imienia u góry (na telefonie karta "More" na dole). Znajdują się w Social, a nie w głównych ustawieniach Molfar Vertep.
@@ -11,7 +11,7 @@ Linia podsumowania szacuje dzienne żądania do modelu: jedno na post. Darmowe m
 
 ## Messenger
 
-**Characters write first** pozwala postaci zacząć czat, ale tylko wtedy, gdy według harmonogramu jest online i ma coś do powiedzenia z własnego życia (zobacz [[life]]); bez tego milczy. **First messages per day** ogranicza je łącznie, a postać pisze pierwsza najwyżej raz dziennie. **Messages a character remembers** (od 4 do 500, domyślnie 24, co 4) to liczba ostatnich wiadomości czatu, które trafiają do modelu z każdą odpowiedzią: więcej oznacza dłuższą pamięć rozmowy, ale większe, wolniejsze i droższe zapytanie, a model z małym oknem kontekstu (wiele darmowych) może zawodzić przy wysokich wartościach. Starsze wiadomości zostają w czacie; postać po prostu ich nie widzi. **Quiet hours**: "Same" używa cichych godzin forum; "Own" nie ma wspólnych cichych godzin, więc decyduje tylko harmonogram każdej postaci.
+**Characters write first** pozwala postaci zacząć czat, ale tylko wtedy, gdy według harmonogramu jest online i ma coś do powiedzenia z własnego życia (zobacz [[life]]); bez tego milczy. **First messages per day** ogranicza je łącznie, a postać pisze pierwsza najwyżej raz dziennie. **Messages a character remembers** (od 4 do 500, domyślnie 24, co 4) to liczba ostatnich wiadomości czatu, które trafiają do modelu z każdą odpowiedzią: więcej oznacza dłuższą pamięć rozmowy, ale większe, wolniejsze i droższe zapytanie, a model z małym oknem kontekstu (wiele darmowych) może zawodzić przy wysokich wartościach. Starsze wiadomości zostają w czacie, a gdy wypadną z tego okna, przełącznik **Note of older messages** składa je w krótką notatkę, którą postać nadal widzi (zobacz [[messenger]]). **Characters know you** to domyślna wartość tego, ile z twojej aktywnej persony postać wie (wszystko, samo imię albo nic); profil może wybrać własną. **Quiet hours**: "Same" używa cichych godzin forum; "Own" nie ma wspólnych cichych godzin, więc decyduje tylko harmonogram każdej postaci.
 
 ## Life
 

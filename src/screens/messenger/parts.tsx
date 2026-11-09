@@ -6,9 +6,10 @@ import { Envelope, Flower } from "@/components/Flower";
 import { useEmoji } from "@/emoji/use-emoji";
 import { MsgPicture } from "@/pictures/MsgPicture";
 import type { usePicture } from "@/pictures/use-picture";
-import { useT } from "@/i18n/index";
+import { currentLang, useT } from "@/i18n/index";
 import { CONTACTS, type Contact, type LogItem } from "@/mock/messenger";
 import { STATUS_ORDER, type Status } from "@/mock/status";
+import { breakLabel } from "./real";
 
 export const STATUS_KEY: Record<Status, string> = {
   online: "messenger.status.online",
@@ -130,6 +131,7 @@ export function ChatLog({
       {n > 0 ? <div className="sys">{dayLine}</div> : <div className="sys">{t("messenger.emptyLog")}</div>}
       {items.map((m, i) => {
         if (m.kind === "sys") return <div key={i} className="sys">{t(m.key, { name })}</div>;
+        if (m.kind === "break") return <div key={i} className="sys brk">{t("messenger.break", { date: breakLabel(m.at, currentLang()) })}</div>;
         const mine = m.who === "me";
         const from = contacts.find((x) => x.id === m.who);
         const who = mine ? t("shell.me") : from?.name ?? m.who;

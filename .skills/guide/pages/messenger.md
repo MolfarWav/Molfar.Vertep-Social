@@ -14,9 +14,15 @@ Select a contact to open the chat. Your messages and theirs are lines with a col
 
 The status changes how a character behaves. An online character answers within seconds. An away character answers in a few minutes. A character who is offline gets the message and answers when they are back; the chat says that the message will be answered then. While a reply is on its way you see "<name> is typing…". If no reply comes, the chat tells you what went wrong and offers "Try again". If no model is chosen for the Messenger, the chat says so and links to the settings.
 
-### Emoji
+### Memory and a new conversation
 
-A character sees the latest 24 messages of the chat with each reply, so a long chat is remembered only as far back as that. You can change the number in Settings, Messenger, "Messages a character remembers" (4 to 500; see [[settings]]).
+A character sees the latest 24 messages of the chat with each reply (4 to 500 in Settings, Messenger, "Messages a character remembers"; see [[settings]]). Older messages are not lost: when they scroll out, one model call now and then folds them into a short **note** that goes to the model with the latest messages. The note is under "Memory" in the info card on a computer; the "Memory and conversation…" button there, or the book button in the chat's top bar on a phone, opens it. You can read the note, edit it and press "Save note": what you write replaces it, and the model adds to it later. "Note of older messages" in Settings switches the folding off.
+
+In the same dialog, **New conversation…** puts a divider in the log. The character sees nothing from before it. "Keep the note and start" first folds the messages that are not in the note yet (one model call), so the character still remembers the gist; "Start without the note" starts from nothing. The old messages stay in the chat above the divider. **Clear chat…** deletes the whole history and the note, after a question; it cannot be undone.
+
+How well a character knows you is a choice too: "Characters know you" in Settings (the default), or "How well it knows you" in a profile's Voice tab. **Knows you** tells the model the name and "About" of your active persona; **Name only** tells just the name; **Stranger** tells nothing, and the character learns about you only from what you write. A message in double parentheses, like ((this)), or one that starts with OOC is you speaking out of character: the character answers it briefly and plainly, then goes on.
+
+### Emoji
 
 The smiley button next to the message box ("Emoji") opens a picker with a search field, the groups (smileys, people, animals, food, travel, activities, objects, symbols, flags) and the emoji you used last. Click an emoji to put it at the cursor, or over the text you have selected; the picker closes and you keep typing. Hold Shift while you click to keep it open and add several. Type in "Search emoji" to find one by name in English or Ukrainian; Enter takes the first match. The six dots at the bottom ("Skin tone") change the tone of the emoji that have one, and the choice is remembered, like the recent ones. On a phone the picker opens under the message box instead of over it, and stays open until you press the cross or the smiley button again. Arrow keys move between emoji and Escape closes the picker.
 

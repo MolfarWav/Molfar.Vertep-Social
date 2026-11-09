@@ -3,6 +3,8 @@
 export type Activity = "quiet" | "moderate" | "lively" | "chaotic";
 export type Writers = "profile" | "equal";
 export type ChatHours = "same" | "own";
+/** How well a character knows the person writing (issue #333). */
+export type Knows = "knows" | "name" | "stranger";
 export type ModelId = "default" | "fast" | "large" | "local";
 
 /** Categories of the world feed (plugins/life); the labels are in the Settings strings. */
@@ -39,6 +41,10 @@ export interface SettingsMock {
   messengerQuiet: ChatHours;
   /** How many of the latest messages of a chat go to the model with each reply. */
   messengerContext: number;
+  /** Older messages are folded into a short note that goes with the latest ones (one model call each time). */
+  messengerSummary: boolean;
+  /** The default for characters that have no choice of their own. */
+  messengerKnows: Knows;
   /** Model choices: preview uses the four ids below; real mode uses "provider/model" or "" (engine default). */
   models: { messenger: string; forum: string; import: string; image: string };
   notify: { tab: boolean; system: boolean; sound: boolean };
@@ -63,6 +69,8 @@ export const SETTINGS_MOCK: SettingsMock = {
   messengerPerDay: 5,
   messengerQuiet: "same",
   messengerContext: 24,
+  messengerSummary: true,
+  messengerKnows: "knows",
   models: { messenger: "default", forum: "default", import: "default", image: "" },
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: true,

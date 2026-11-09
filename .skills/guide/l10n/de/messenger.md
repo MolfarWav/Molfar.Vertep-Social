@@ -1,4 +1,4 @@
-<!-- source: b52f839cace6 -->
+<!-- source: 9838f3720b06 -->
 # Social: Messenger
 
 Der Messenger ist ein Chat mit den Charakteren, die in Social leben. Sie sehen eine Kontaktliste, die Unterhaltung mit dem ausgewählten Kontakt und eine Karte mit seinen Details. Wer einen Charakter unter vier Augen ansprechen möchte, beginnt hier.
@@ -15,9 +15,15 @@ Wählen Sie einen Kontakt, um den Chat zu öffnen. Ihre Nachrichten und die der 
 
 Der Status verändert das Verhalten eines Charakters. Ein Charakter, der online ist, antwortet innerhalb von Sekunden. Ein Charakter, der away ist, antwortet in ein paar Minuten. Ein offline Charakter erhält die Nachricht und antwortet, sobald er zurück ist; der Chat sagt, dass die Nachricht dann beantwortet wird. Während eine Antwort unterwegs ist, sehen Sie „<name> is typing…“. Kommt keine Antwort, sagt der Chat, was schiefgelaufen ist, und bietet „Try again“ an. Ist für den Messenger kein Modell gewählt, sagt der Chat das und verweist auf die Einstellungen.
 
-### Emoji
+### Gedächtnis und ein neues Gespräch
 
-Ein Charakter sieht mit jeder Antwort die letzten 24 Nachrichten des Chats, ein langer Chat bleibt also nur so weit zurück im Gedächtnis. Die Zahl können Sie in Settings, Messenger, „Messages a character remembers“ ändern (4 bis 500; siehe [[settings]]).
+Ein Charakter sieht mit jeder Antwort die letzten 24 Nachrichten des Chats (4 bis 500 in Settings, Messenger, „Messages a character remembers“; siehe [[settings]]). Ältere Nachrichten gehen nicht verloren: Rutschen sie aus dem Blick, fasst ein Modellaufruf sie ab und zu in eine kurze **Notiz** zusammen, die mit den letzten Nachrichten an das Modell geht. Die Notiz steht unter „Memory“ in der Infokarte auf dem Computer; die Schaltfläche „Memory and conversation…“ dort oder das Buch-Symbol in der oberen Leiste des Chats auf dem Telefon öffnet sie. Sie können die Notiz lesen, bearbeiten und „Save note“ drücken: Was Sie schreiben, ersetzt sie, und das Modell ergänzt sie später. „Note of older messages“ in Settings schaltet das Zusammenfassen aus.
+
+Im selben Dialog legt **New conversation…** einen Trennstrich ins Protokoll. Der Charakter sieht nichts von davor. „Keep the note and start“ fasst zuerst die Nachrichten, die noch nicht in der Notiz stehen, zusammen (ein Modellaufruf), damit der Charakter den Kern noch kennt; „Start without the note“ beginnt bei null. Die alten Nachrichten bleiben über dem Trennstrich im Chat. **Clear chat…** löscht nach einer Rückfrage den ganzen Verlauf und die Notiz; das lässt sich nicht rückgängig machen.
+
+Wie gut ein Charakter Sie kennt, ist ebenfalls eine Wahl: „Characters know you“ in Settings (der Standard) oder „How well it knows you“ im Reiter „Voice“ eines Profils. **Knows you** sagt dem Modell den Namen und das „About“ Ihrer aktiven Persona; **Name only** nur den Namen; **Stranger** gar nichts, und der Charakter erfährt über Sie nur, was Sie selbst schreiben. Eine Nachricht in doppelten Klammern, etwa ((so)), oder eine, die mit OOC beginnt, ist Sie außerhalb der Rolle: Der Charakter antwortet kurz und sachlich und macht dann weiter.
+
+### Emoji
 
 Die Smiley-Schaltfläche neben dem Nachrichtenfeld („Emoji“) öffnet eine Auswahl mit einem Suchfeld, den Gruppen (Smileys, Menschen, Tiere, Essen, Reisen, Aktivitäten, Objekte, Symbole, Flaggen) und den Emoji, die Sie zuletzt benutzt haben. Klicken Sie auf ein Emoji, um es an die Schreibmarke oder über den markierten Text zu setzen; die Auswahl schließt sich, und Sie schreiben weiter. Halten Sie beim Klicken Shift gedrückt, um die Auswahl offen zu lassen und mehrere hinzuzufügen. Tippen Sie in „Search emoji“, um ein Emoji nach seinem Namen auf Englisch oder Ukrainisch zu finden; Enter wählt den ersten Treffer. Die sechs Punkte unten („Skin tone“) ändern den Hautton der Emoji, die einen haben; die Wahl wird wie die zuletzt benutzten gespeichert. Auf dem Telefon öffnet sich die Auswahl unter dem Nachrichtenfeld statt darüber und bleibt offen, bis Sie das Kreuz oder die Smiley-Schaltfläche erneut drücken. Mit den Pfeiltasten bewegen Sie sich zwischen den Emoji, Escape schließt die Auswahl.
 

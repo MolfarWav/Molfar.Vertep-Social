@@ -110,6 +110,8 @@ export interface PhoneChatProps {
   onSettings: () => void;
   /** Real mode: the profile button goes to Profiles. */
   onProfile?: () => void;
+  /** Real mode: opens the memory and conversation dialog. */
+  onMemory?: () => void;
 }
 
 /** The chat on phone. Mounting it hides the top bar and the tabs; unmounting (back) shows them again. */
@@ -135,6 +137,13 @@ export function PhoneChat(p: PhoneChatProps) {
             {c.note && <> · {c.note}</>}
           </span>
         </div>
+        {p.onMemory && (
+          <button type="button" className="ib flat" aria-label={t("messenger.memory.open")} title={t("messenger.memory.open")} onClick={p.onMemory}>
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 4h10a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2zM6 18a2 2 0 0 1 2-2h10M10 8h5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
         <button
           type="button"
           className="ib flat"
