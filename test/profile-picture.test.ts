@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import path from "node:path";
 import { portraitPrompt } from "../src/screens/profiles/picture";
-import { imageModelsFrom, imageOptions } from "../src/screens/profiles/picture-api";
+import { fitSize, imageModelsFrom, imageOptions } from "../src/screens/profiles/picture-api";
 
 const profiles = await import(path.resolve(import.meta.dir, "../plugins/profiles/plugin.js"));
 const messenger = await import(path.resolve(import.meta.dir, "../plugins/messenger/plugin.js"));
@@ -85,4 +85,11 @@ test("the messenger contact list and the forum authors carry the picture", () =>
   });
   const t = forum.handleRoute({ method: "GET", path: "/forum/topic", query: { id: "t1" } }, h).json;
   expect(t.authors.mavka.picture).toBe(url);
+});
+
+test("a picture from disk is scaled to 768 px on the long side, never enlarged", () => {
+  expect(fitSize(3000, 1500)).toEqual({ w: 768, h: 384 });
+  expect(fitSize(1000, 4000)).toEqual({ w: 192, h: 768 });
+  expect(fitSize(200, 100)).toEqual({ w: 200, h: 100 });
+  expect(fitSize(0, 0)).toEqual({ w: 1, h: 1 });
 });

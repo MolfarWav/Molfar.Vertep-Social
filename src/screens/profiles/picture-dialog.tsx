@@ -1,13 +1,13 @@
 // "Profile picture": draws a portrait for the profile with one of the engine's image models. The prompt is built
 // from the profile and can be edited; "Use this picture" puts the result in the draft (Save keeps it).
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/i18n/index";
 import { PREVIEW } from "@/lib/api";
 import { ModelPick } from "@/screens/settings/model-pick";
 import { Pick } from "@/screens/settings/controls";
 import { Dialog } from "./dialog";
-import { generatePicture, imageOptions, listImageModels, type ImageModel } from "./picture-api";
+import { generatePicture, imageOptions, listImageModels, PICTURE_MAX_BYTES, PICTURE_TYPES, uploadPicture, type ImageModel } from "./picture-api";
 import { portraitPrompt } from "./picture";
 
 const MODEL_KEY = "social:image-model";
@@ -49,6 +49,9 @@ export function PictureDialog(p: PictureDialogProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [fresh, setFresh] = useState("");
+  const [uploaded, setUploaded] = useState(false);
+  const [busyText, setBusyText] = useState("");
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let live = true;
@@ -63,11 +66,28 @@ export function PictureDialog(p: PictureDialogProps) {
   const draw = async () => {
     if (busy || !prompt.trim()) return;
     setBusy(true);
+    setBusyText(t("profiles.picture.drawing"));
     setError("");
     try {
       setFresh(await generatePicture(prompt.trim(), model, p.hue));
+      setUploaded(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(t("profiles.picture.failed", { error: e instanceof Error ? e.message : String(e) }));
+    }
+    setBusy(false);
+  };
+  const pickFile = async (f: File | undefined) => {
+    if (!f || busy) return;
+    setError("");
+    if (!PICTURE_TYPES.includes(f.type)) return setError(t("profiles.new.pictureType"));
+    if (f.size > PICTURE_MAX_BYTES) return setError(t("profiles.new.pictureSize"));
+    setBusy(true);
+    setBusyText(t("profiles.picture.uploading"));
+    try {
+      setFresh(await uploadPicture(f));
+      setUploaded(true);
+    } catch (e) {
+      setError(t("profiles.picture.uploadFailed", { error: e instanceof Error ? e.message : String(e) }));
     }
     setBusy(false);
   };
@@ -79,7 +99,12 @@ export function PictureDialog(p: PictureDialogProps) {
       <div className="pf-body pic-body">
         <div className="pic-view" aria-live="polite">
           <Avatar name={p.name} hue={p.hue} size={p.phone ? 128 : 160} radius={12} picture={shown || undefined} />
-          {busy && <div className="pic-busy"><span className="spin" /> {t("profiles.picture.drawing")}</div>}
+          {busy && <div className="pic-busy"><span className="spin" /> {busyText}</div>}
+          <button type="button" className="btn" onClick={() => fileInput.current?.click()} disabled={busy}>{t("profiles.picture.upload")}</button>
+          <input ref={fileInput} type="file" accept={PICTURE_TYPES.join(",")} className="hidden" tabIndex={-1} onChange={(e) => {
+            void pickFile(e.target.files?.[0]);
+            e.target.value = "";
+          }} />
         </div>
         <div className="f f-wide">
           <label htmlFor={promptId} className="lb">{t("profiles.picture.prompt")}</label>
@@ -109,7 +134,7 @@ export function PictureDialog(p: PictureDialogProps) {
             />
           )}
         </div>
-        {error && <div className="form-err" role="alert">{t("profiles.picture.failed", { error })}</div>}
+        {error && <div className="form-err" role="alert">{error}</div>}
         {fresh && <div className="k">{t("profiles.picture.keepHint")}</div>}
       </div>
       <div className="pf-foot">
@@ -122,7 +147,7 @@ export function PictureDialog(p: PictureDialogProps) {
         <span className="grow" />
         <button type="button" className="btn" onClick={p.onClose}>{t(fresh ? "profiles.picture.discard" : "profiles.picture.close")}</button>
         <button type="button" className={`btn${fresh ? "" : " cta"}`} onClick={() => void draw()} disabled={busy || !prompt.trim()}>
-          {t(fresh ? "profiles.picture.again" : "profiles.picture.generate")}
+          {t(fresh && !uploaded ? "profiles.picture.again" : "profiles.picture.generate")}
         </button>
         {fresh && (
           <button type="button" className="btn cta" onClick={() => {

@@ -7,6 +7,8 @@ Updates dialog install it from this repository.
 
 - **Model lists are readable.** The opened list of a dropdown (the import model in the Roleplay import, and any other select) showed light text on a light sheet in the dark themes, so the models could not be read. Options now take the panel and ink colours of the theme.
 
+- **Picture from disk.** The profile picture dialog has an "Upload from disk…" button (PNG, JPEG, WebP or GIF, up to 10 MB; large pictures are scaled to 768 px). Before, a picture could only be drawn by a model.
+
 ## 0.3.0 (2026-11-09)
 
 Everything since 0.2.0: a forum, Life, emoji, a page for your own personas and a lot of detail work.

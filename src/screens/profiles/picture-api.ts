@@ -2,6 +2,9 @@
 // GET /v1/images/models and POST /v1/images (the picture lands in the engine's asset store and comes back as a
 // same-origin URL, "/v1/assets/<id>", which the profile keeps). In preview mode (`?screen=`) both are fakes.
 //
+// A picture from the user's disk goes through `uploadPicture`: big images are scaled down in the browser, then PUT to
+// /v1/assets like a generated one.
+//
 // Preview states: `?picture=fail` makes the generation fail, `?picture=nomodel` says no image model is set up.
 import { PREVIEW, ApiError } from "@/lib/api";
 import type { Opt } from "@/screens/settings/controls";
@@ -84,4 +87,53 @@ export async function generatePicture(prompt: string, model: string, hue: number
   const json = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
   if (!res.ok || !json?.url) throw new ApiError(json?.error ?? `the engine answered ${res.status}`, res.status);
   return json.url;
+}
+
+export const PICTURE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+export const PICTURE_MAX_BYTES = 10 * 1024 * 1024;
+/** Longest side of a stored picture: a profile picture is shown small, so more pixels only cost space. */
+export const PICTURE_MAX_SIDE = 768;
+
+/** The size to scale to: the same shape, longest side at most `max`; never bigger than the original. */
+export function fitSize(w: number, h: number, max = PICTURE_MAX_SIDE): { w: number; h: number } {
+  const k = Math.min(1, max / Math.max(w, h, 1));
+  return { w: Math.max(1, Math.round(w * k)), h: Math.max(1, Math.round(h * k)) };
+}
+
+/** Scales a still image down to PICTURE_MAX_SIDE (WebP where the browser can, else it stays). GIFs and small images stay as they are. */
+async function shrink(file: File): Promise<{ blob: Blob; mime: string }> {
+  const same = { blob: file as Blob, mime: file.type };
+  if (file.type === "image/gif") return same;
+  try {
+    const bmp = await createImageBitmap(file);
+    const { w, h } = fitSize(bmp.width, bmp.height);
+    if (w === bmp.width && h === bmp.height && file.size <= 1024 * 1024) return same;
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d")?.drawImage(bmp, 0, 0, w, h);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/webp", 0.9));
+    return blob && PICTURE_TYPES.includes(blob.type) ? { blob, mime: blob.type } : same;
+  } catch {
+    return same;
+  }
+}
+
+/** Stores a picture the user picked from disk. Resolves to its URL; throws an ApiError whose text says what went wrong. */
+export async function uploadPicture(file: File): Promise<string> {
+  if (PREVIEW) {
+    await delay(300);
+    return await new Promise<string>((ok, bad) => {
+      const r = new FileReader();
+      r.onload = () => ok(String(r.result ?? ""));
+      r.onerror = () => bad(new ApiError("the picture could not be read", 0));
+      r.readAsDataURL(file);
+    });
+  }
+  const { blob, mime } = await shrink(file);
+  const name = file.name.replace(/\.[^.]+$/, "").slice(0, 80) || "picture";
+  const res = await fetch(`/v1/assets?name=${encodeURIComponent(name)}`, { method: "PUT", headers: { "content-type": mime }, body: blob });
+  const json = (await res.json().catch(() => null)) as { id?: unknown; error?: string } | null;
+  if (!res.ok || typeof json?.id !== "string" || !/^[A-Za-z0-9_-]{1,80}$/.test(json.id)) throw new ApiError(json?.error ?? `the engine answered ${res.status}`, res.status);
+  return `/v1/assets/${json.id}`;
 }
