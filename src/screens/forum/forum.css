@@ -228,3 +228,10 @@
 
 /* A phone page is a column that scrolls: its children keep their height (a post is overflow:hidden, so without this a long topic squeezed every post to a line) */
 .s-forum.is-phone .pg > * { flex-shrink: 0; }
+
+/* The user's moderation: remove a post, delete a topic */
+.s-forum .btn.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
+.s-forum .post-ask { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; font-size: 13px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--bad) 45%, var(--line)); border-radius: 8px; background: color-mix(in srgb, var(--bad) 8%, var(--base)); }
+.s-forum .post-ask > span:first-child { flex: 1 1 200px; min-width: 0; }
+.s-forum .post-ask-btns { display: flex; gap: 8px; }
+.s-forum.is-phone .post-ask-btns .btn, .s-forum.is-phone .post-act .btn { height: 44px; }

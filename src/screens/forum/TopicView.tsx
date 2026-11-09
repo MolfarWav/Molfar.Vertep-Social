@@ -37,6 +37,9 @@ export interface TopicViewProps {
   focusPost?: number;
   /** Opens the forum search (real forum only). */
   onSearch?: () => void;
+  /** The user's moderation (real forum only); each resolves to an error text, or null when it worked. */
+  onRemovePost?: (post: ShownPost) => Promise<string | null>;
+  onDeleteTopic?: () => Promise<string | null>;
 }
 
 export function TopicView(p: TopicViewProps) {
@@ -90,6 +93,14 @@ export function TopicView(p: TopicViewProps) {
   );
   const lockErrLine = lockError && <div className="form-err" role="alert">{t("forum.topic.lockFailed", { error: lockError })}</div>;
   const lockedText = t(p.onSetLocked ? "forum.topic.lockedYours" : "forum.topic.locked");
+
+  // the opening post offers "Delete topic"; every other post "Remove"
+  const removal = (post: ShownPost) =>
+    post.removed || !p.onRemovePost || !p.onDeleteTopic
+      ? undefined
+      : post.n === 1
+        ? { topic: true, run: p.onDeleteTopic }
+        : { topic: false, run: () => p.onRemovePost!(post) };
 
   const focusReply = () => ref.current?.focus();
   const pick = (post: ShownPost) => {
@@ -182,7 +193,7 @@ export function TopicView(p: TopicViewProps) {
           {pager}
           {state}
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} phone locked={p.locked} onQuote={pick} onReply={focusReply} />
+            <PostCard key={post.id} post={post} phone locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} />
           ))}
           {posts.length > 0 && pager}
         </div>
@@ -234,7 +245,7 @@ export function TopicView(p: TopicViewProps) {
           {pager}
           {state}
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} phone={false} locked={p.locked} onQuote={pick} onReply={focusReply} />
+            <PostCard key={post.id} post={post} phone={false} locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} />
           ))}
           {posts.length > 0 && pager}
           {p.locked ? (

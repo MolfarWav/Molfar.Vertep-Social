@@ -47,7 +47,7 @@ prompt from the profile (`picture.ts`) and calls the engine's `POST /v1/images` 
 `picture-api.ts`). The Model tab (`src/screens/profiles/tabs/ModelTab.tsx`) edits it with the settings' `ModelPick`.
 
 ## The forum
-`plugins/forum/plugin.js` holds the data (`forum/` in the app data folder), the routes and the autonomy tick; its header says how. The screens are `src/screens/forum/`: `live.tsx` (real) and `preview.tsx` (mock) share `Home`, `BoardPage`, `TopicView`, `NewTopic`, `Strip`, `PostCard`; `model.ts` turns the engine's answers into what they draw (tested in `test/forum-real.test.ts`). Pages of a long topic (`PAGE_SIZE`) and search are plugin routes (`/forum/topic?page=`, `/forum/search`), drawn by `Pager.tsx` and `SearchPage.tsx`; the screen's route is kept in the browser history (`src/lib/route-history.ts`) so Back works. Tests: `test/forum-plugin.test.ts` (a simulated day with a restart, bump order, flags, the two-pass flow, pages, search).
+`plugins/forum/plugin.js` holds the data (`forum/` in the app data folder), the routes and the autonomy tick; its header says how. The screens are `src/screens/forum/`: `live.tsx` (real) and `preview.tsx` (mock) share `Home`, `BoardPage`, `TopicView`, `NewTopic`, `Strip`, `PostCard`; `model.ts` turns the engine's answers into what they draw (tested in `test/forum-real.test.ts`). Pages of a long topic (`PAGE_SIZE`) and search are plugin routes (`/forum/topic?page=`, `/forum/search`), drawn by `Pager.tsx` and `SearchPage.tsx`; the screen's route is kept in the browser history (`src/lib/route-history.ts`) so Back works. Moderation (the user removes a post or a topic) keeps a placeholder: everything that reads posts goes through `livePosts` (see `docs/DECISIONS.md`, "Moderation"). Tests: `test/forum-plugin.test.ts` (a simulated day with a restart, bump order, flags, the two-pass flow, pages, search, moderation).
 
 ## Decisions
 See `docs/DECISIONS.md` for what the owner decided and where to continue.
@@ -60,4 +60,4 @@ and `import.tsx`. In preview (`?screen=`) the same screens run on `src/mock/prof
 ## Open items
 - The app cannot read the shell's scheme yet: the theme comes from `?theme=`, then the last choice, then Vertep.
 - The "Open Home" button needs engine 1.13.1 (`molfarShell.openHome`); on an older engine only the text hint shows.
-- Forum: no moderation, no preview of a post; the reply and new-topic prompts are not yet checked on a real model (issue #320).
+- Forum: no preview of a post (dropped); the reply and new-topic prompts are not yet checked on a real model (issue #320).

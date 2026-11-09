@@ -13,7 +13,8 @@
  *   GET  /forum/home                  boards with counts, the autonomy strip, who is online, statistics
  *   GET  /forum/board?id=             the board's topics, ordered by the last post (a new post bumps a topic to the top)
  *   GET  /forum/topic?id=&page=       one page of the topic (PAGE_SIZE posts) with the authors' facts of that page;
- *          page is a number or "last"; the answer says which page it is, how many there are and the number of the first post
+ *          page is a number or "last"; the answer says which page it is, how many there are, the index of the first post and how
+ *          many posts still exist (`live`: removed ones keep their place but are not counted)
  *   GET  /forum/search?q=             topics whose title or posts hold every word of q (at most SEARCH_MAX, titles first):
  *          the first matching post, a snippet around the match and the page that post is on
  *   GET  /forum/unread                {unread}: the number of topics with posts the user has not seen (the tab badge)
@@ -23,6 +24,9 @@
  *   POST /forum/read {topic}          clears the topic's unread mark
  *   POST /forum/lock {topic, locked}  the user closes (locked: true) or reopens a topic; a closed topic takes no
  *          new posts (the user's or the characters'), keeps its place by its last post and shows a lock
+ *   POST /forum/remove-post {topic, post}  the user removes one post for good: its text is erased and a placeholder keeps
+ *          its place (numbers and pages stay put); quotes of it in other posts are dropped; not the first post (delete the topic)
+ *   POST /forum/delete-topic {topic}  the user deletes a topic with all its posts for good
  *   POST /forum/force {board?, topic?, count?}  "Write now": characters write at once (1 to 3 posts), ignoring the
  *          daily limit, the quiet hours, the schedule and the gaps; the posts still count toward the day
  *
@@ -283,6 +287,7 @@ function cleanPost(p) {
   const by = String(p.by);
   if (by !== SELF && !ID.test(by)) return null;
   const q = isObj(p.quote) && str(p.quote.text) ? { by: String(p.quote.by), name: oneLine(p.quote.name, 80), text: cut(String(p.quote.text), 300) } : null;
+  if (p.removed === true) return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: "", removed: true };
   return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(q ? { quote: q } : {}) };
 }
 
@@ -361,9 +366,13 @@ export function mergeBoards(current, incoming) {
   return { categories: cats };
 }
 
+/** The posts that still exist: a removed post is only a placeholder that keeps the numbers in place. Everything that
+ *  counts, reads or answers posts goes through this. */
+export const livePosts = (t) => t.posts.filter((p) => !p.removed);
+
 const countByAuthor = (topics) => {
   const m = {};
-  for (const t of topics) for (const p of t.posts) m[p.by] = (m[p.by] || 0) + 1;
+  for (const t of topics) for (const p of livePosts(t)) m[p.by] = (m[p.by] || 0) + 1;
   return m;
 };
 
@@ -409,7 +418,7 @@ export function replyContext(board, topic, target) {
   if (board) lines.push("Board: " + board.name + (board.desc ? " (" + board.desc + ")" : ""));
   lines.push('Topic: "' + topic.title + '"');
   lines.push("Recent posts, oldest first:");
-  for (const p of topic.posts.slice(-CONTEXT_POSTS)) lines.push(postLine(p));
+  for (const p of livePosts(topic).slice(-CONTEXT_POSTS)) lines.push(postLine(p));
   lines.push("");
   lines.push(
     target
@@ -487,21 +496,23 @@ export function targetsFor(author, topics, now, scope) {
   const out = { owed: [], mention: [], live: [] };
   for (const t of topics) {
     if (t.locked || (scope && scope.topic && t.id !== scope.topic) || (scope && scope.board && t.board !== scope.board)) continue;
-    const last = t.posts[t.posts.length - 1];
+    const ps = livePosts(t);
+    if (!ps.length) continue;
+    const last = ps[ps.length - 1];
     if (last.by === author.id) continue;
     let userIdx = -1;
-    for (let i = t.posts.length - 1; i >= 0; i--) {
-      if (t.posts[i].by === SELF) {
+    for (let i = ps.length - 1; i >= 0; i--) {
+      if (ps[i].by === SELF) {
         userIdx = i;
         break;
       }
     }
-    const wroteSince = userIdx >= 0 && t.posts.slice(userIdx + 1).some((p) => p.by === author.id);
+    const wroteSince = userIdx >= 0 && ps.slice(userIdx + 1).some((p) => p.by === author.id);
     if (t.owe > 0 && userIdx >= 0 && !wroteSince && author.forum.repliesYou) {
-      out.owed.push({ topic: t, target: t.posts[userIdx] });
+      out.owed.push({ topic: t, target: ps[userIdx] });
       continue;
     }
-    const tail = t.posts.slice(-6);
+    const tail = ps.slice(-6);
     const mi = tail.findIndex((p, i) => p.by !== author.id && mentions(p.text, author.name) && !tail.slice(i + 1).some((q) => q.by === author.id));
     if (mi >= 0 && canAnswer(author, tail[mi]) && now - tail[mi].at < LIVE_MS) {
       out.mention.push({ topic: t, target: tail[mi] });
@@ -632,8 +643,8 @@ export function fileResult(fsx, f, result, now, boards) {
     if (!topic || topic.locked) return { error: "the topic is not open any more" };
     const text = cleanReply(r.text, author.name);
     if (!text) return failure("the model returned nothing");
-    if (topic.posts.slice(-CONTEXT_POSTS).some((p) => normal(p.text) === normal(text))) return { error: "the post repeats an earlier one" };
-    const target = f.quote ? topic.posts.find((p) => p.id === f.quote) : null;
+    if (livePosts(topic).slice(-CONTEXT_POSTS).some((p) => normal(p.text) === normal(text))) return { error: "the post repeats an earlier one" };
+    const target = f.quote ? topic.posts.find((p) => p.id === f.quote && !p.removed) : null;
     const post = { id: "p-" + now + "-" + rid(), ...mine, at: now, text, ...(target ? { quote: quoteOf(target) } : {}) };
     topic.posts.push(post);
     topic.lastAt = now;
@@ -673,9 +684,10 @@ function homeRoute(host) {
   for (const t of topics) {
     const c = counts.get(t.board) || { topics: 0, posts: 0, unread: false, last: null };
     c.topics += 1;
-    c.posts += t.posts.length;
+    const ps = livePosts(t);
+    c.posts += ps.length;
     c.unread = c.unread || t.unread;
-    const lp = t.posts[t.posts.length - 1];
+    const lp = ps[ps.length - 1] || t.posts[t.posts.length - 1];
     if (!c.last || lp.at > c.last.at) c.last = { topicId: t.id, title: t.title, by: lp.by, name: lp.name, hue: lp.hue, at: lp.at };
     counts.set(t.board, c);
   }
@@ -705,7 +717,7 @@ function homeRoute(host) {
     },
     online: profiles.filter((p) => ["online", "away"].includes(statusAt(p.schedule, new Date(now), tz))).map((p) => ({ id: p.id, name: p.name })),
     unread: topics.filter((t) => t.unread).length,
-    stats: { posts: topics.reduce((n, t) => n + t.posts.length, 0), topics: topics.length, members: profiles.length + 1, newest: newest ? newest.name : "" },
+    stats: { posts: topics.reduce((n, t) => n + livePosts(t).length, 0), topics: topics.length, members: profiles.length + 1, newest: newest ? newest.name : "" },
     now,
   });
 }
@@ -719,8 +731,9 @@ function boardRoute(req, host) {
     .sort((a, b) => b.lastAt - a.lastAt)
     .slice(0, 200)
     .map((t) => {
-      const lp = t.posts[t.posts.length - 1];
-      return { id: t.id, title: t.title, by: t.by, name: t.name, hue: t.hue, createdAt: t.createdAt, replies: t.posts.length - 1, lastAt: t.lastAt, lastBy: lp.by, lastName: lp.name, lastHue: lp.hue, locked: t.locked, unread: t.unread };
+      const ps = livePosts(t);
+      const lp = ps[ps.length - 1] || t.posts[t.posts.length - 1];
+      return { id: t.id, title: t.title, by: t.by, name: t.name, hue: t.hue, createdAt: t.createdAt, replies: Math.max(0, ps.length - 1), lastAt: t.lastAt, lastBy: lp.by, lastName: lp.name, lastHue: lp.hue, locked: t.locked, unread: t.unread };
     });
   return ok({ board: { id, name: hit.board.name, desc: hit.board.desc, category: hit.category.name }, topics });
 }
@@ -766,7 +779,7 @@ function topicRoute(req, host) {
       unread: topic.unread,
       posts: shown,
     },
-    paging: { page, pages, size: PAGE_SIZE, total, from },
+    paging: { page, pages, size: PAGE_SIZE, total, from, live: livePosts(topic).length },
     authors,
   });
 }
@@ -888,7 +901,7 @@ function replyRoute(req, host) {
   const text = bodyText(b);
   if (!text) return ok({ error: "a reply needs text" }, 400);
   const now = Date.now();
-  const target = typeof b.quoteOf === "string" ? topic.posts.find((p) => p.id === b.quoteOf) : null;
+  const target = typeof b.quoteOf === "string" ? topic.posts.find((p) => p.id === b.quoteOf && !p.removed) : null;
   const post = { id: "p-" + now + "-" + rid(), by: SELF, name: "", hue: 200, at: now, text, ...(target ? { quote: quoteOf(target) } : {}) };
   topic.posts.push(post);
   topic.lastAt = now;
@@ -915,6 +928,45 @@ function readRoute(req, host) {
  * refuse it. Closing changes nothing else: `lastAt` stays, so the topic is not bumped and sinks as others rise.
  * The replies a character still owed the user are dropped, so nobody answers after a reopen out of date.
  */
+/**
+ * The user removes one post for good. Its text is erased (there is no log) and a placeholder keeps its place, so the numbers
+ * of the other posts and the pages do not shift. Quotes of it in other posts are dropped. Characters never see it again: the
+ * prompts, the counts and the choice of whom to answer read only the posts that still exist. The first post cannot go this way,
+ * a topic without its opening post makes no sense: the user deletes the topic.
+ */
+function removePostRoute(req, host) {
+  const b = isObj(req.body) ? req.body : {};
+  const topic = readTopic(host.fs, String(b.topic || ""));
+  if (!topic) return ok({ error: "no such topic" }, 404);
+  const i = topic.posts.findIndex((p) => p.id === String(b.post || ""));
+  if (i < 0) return ok({ error: "no such post" }, 404);
+  if (i === 0) return ok({ error: "the first post cannot be removed: delete the topic" }, 409);
+  const gone = topic.posts[i];
+  if (gone.removed) return ok({ ok: true, removed: true });
+  const copy = quoteOf(gone);
+  topic.posts = topic.posts.map((p, j) => {
+    if (j === i) return { id: gone.id, by: gone.by, name: gone.name, hue: gone.hue, at: gone.at, text: "", removed: true };
+    if (p.quote && p.quote.by === copy.by && p.quote.text === copy.text) {
+      const { quote: _dropped, ...rest } = p;
+      return rest;
+    }
+    return p;
+  });
+  // replies still owed to a user whose posts are all gone have no one to answer
+  if (!livePosts(topic).some((p) => p.by === SELF)) topic.owe = 0;
+  writeTopic(host.fs, topic);
+  return ok({ ok: true, removed: true });
+}
+
+/** The user deletes a topic with all its posts, for good. */
+function deleteTopicRoute(req, host) {
+  const b = isObj(req.body) ? req.body : {};
+  const topic = readTopic(host.fs, String(b.topic || ""));
+  if (!topic) return ok({ error: "no such topic" }, 404);
+  host.fs.remove(topicPath(topic.id));
+  return ok({ ok: true, deleted: topic.id, board: topic.board });
+}
+
 function lockRoute(req, host) {
   const b = isObj(req.body) ? req.body : {};
   const topic = readTopic(host.fs, String(b.topic || ""));
@@ -1024,6 +1076,8 @@ export function handleRoute(req, host) {
   if (path === "/forum/reply" && method === "POST") return replyRoute(req, host);
   if (path === "/forum/read" && method === "POST") return readRoute(req, host);
   if (path === "/forum/lock" && method === "POST") return lockRoute(req, host);
+  if (path === "/forum/remove-post" && method === "POST") return removePostRoute(req, host);
+  if (path === "/forum/delete-topic" && method === "POST") return deleteTopicRoute(req, host);
   if (path === "/forum/force" && method === "POST") return forceRoute(req, host);
   return ok({ error: "not found" }, 404);
 }

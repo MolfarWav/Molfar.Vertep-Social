@@ -202,7 +202,27 @@ export function ForumLive() {
         onWriteNow={write.run}
         onHome={home_}
         onBoard={() => go(info ? { view: "board", id: info.board.id } : { view: "home" })}
-        paging={page?.paging ? { page: page.paging.page, pages: page.paging.pages, total: page.paging.total } : undefined}
+        onRemovePost={async (post) => {
+          try {
+            await call("POST", "/forum/remove-post", { topic: route.id, post: post.id });
+            await topic.reload();
+            void home.reload();
+            return null;
+          } catch (e) {
+            return messageOf(e);
+          }
+        }}
+        onDeleteTopic={async () => {
+          try {
+            await call("POST", "/forum/delete-topic", { topic: route.id });
+            void home.reload();
+            go(info ? { view: "board", id: info.board.id } : HOME, { replace: true });
+            return null;
+          } catch (e) {
+            return messageOf(e);
+          }
+        }}
+        paging={page?.paging ? { page: page.paging.page, pages: page.paging.pages, total: page.paging.live ?? page.paging.total } : undefined}
         onPage={(pg) => go({ view: "topic", id: route.id, page: pg })}
         focusPost={route.post}
         onSearch={() => openSearch("")}

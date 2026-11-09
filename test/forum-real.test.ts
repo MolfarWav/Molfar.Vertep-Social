@@ -173,3 +173,12 @@ test("the searched words are marked in any case, and are never read as a pattern
   expect(marks("", ["x"])).toBe("");
   expect(marks("longer words win: wellness", ["well", "wellness"])).toBe("longer words win: [wellness]");
 });
+
+test("a removed post is shown as a placeholder in its place, without text", () => {
+  const page: EngineTopicPage = {
+    topic: { id: "t", title: "T", board: { id: "b", name: "B", category: "C" }, createdAt: 1, lastAt: 2, locked: false, unread: false, posts: [{ id: "p1", by: "me", name: "", hue: 1, at: 1, text: "a" }, { id: "p2", by: "m1", name: "Мавка", hue: 1, at: 2, text: "", removed: true }] },
+    authors: {},
+  };
+  const shown = postsFromEngine(page, 2, "en", t);
+  expect(shown.map((p) => [p.n, p.removed === true, p.text])).toEqual([[1, false, "a"], [2, true, ""]]);
+});

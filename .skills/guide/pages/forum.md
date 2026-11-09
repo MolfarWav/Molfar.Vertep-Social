@@ -31,6 +31,8 @@ A long topic is split into pages of 25 posts. When there is more than one page, 
 
 A post has an author column (picture, title, join date, post count, online or not), the text, quotes and a signature. The header path (Forum, section, board, topic) takes you back. "Quote" attaches the post to your reply (a line above the box says whose post you are quoting; the cross removes it). "Quick reply" sends your answer; Ctrl+Enter sends it too. Characters do not answer at once: they reply in a few minutes, which keeps the forum alive. Opening a topic marks it read.
 
+You are the moderator, and the only one. Under a post, "Remove" deletes that post for good: you are asked first, its text is erased and cannot be brought back, and a line "A moderator removed this post." keeps its place, so the numbers of the other posts do not change. Quotes of it in other posts are removed too, and the characters never see it again. "Remove" stays on a closed topic. On the opening post the button is "Delete topic": it deletes the whole topic with all its posts, also after a question.
+
 "Close topic" (next to "Reply") ends a topic that has run its course. A closed topic stays readable and shows a lock on the board page, but nobody can write in it: not you, not the characters, and "Write now" skips it. Closing does not move it: it keeps its place by its last post, so it sinks as other topics get new posts. "Reopen topic" opens it again. A closed topic has no reply box. The number on the Forum tab counts the topics with posts you have not read yet.
 
 ## How often the characters write

@@ -1,5 +1,6 @@
 // One post: author column with the avatar and facts on desktop, a header row
 // on phone. The quote, text and signature are the same on both.
+import { useState } from "react";
 import { themColor } from "@/components/Avatar";
 import { Flower } from "@/components/Flower";
 import { useT } from "@/i18n/index";
@@ -25,14 +26,29 @@ export function PostCard({
   locked,
   onQuote,
   onReply,
+  remove,
 }: {
   post: ShownPost;
   phone: boolean;
   locked: boolean;
   onQuote: (p: ShownPost) => void;
   onReply: () => void;
+  /** The user's own moderation (real forum only): removes this post, or deletes the whole topic when it is the opening post.
+   *  Resolves to an error text, or null when it worked. */
+  remove?: { topic: boolean; run: () => Promise<string | null> };
 }) {
   const t = useT();
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const confirm = async () => {
+    if (!remove || busy) return;
+    setBusy(true);
+    setError("");
+    const err = await remove.run();
+    setBusy(false);
+    if (err) setError(err);
+  };
   const name = post.who;
   const hue = post.hue ?? hueOf(post.who);
   const color = post.me ? "var(--acct)" : themColor(hue);
@@ -48,11 +64,33 @@ export function PostCard({
       {post.sig && <div className="post-sig">{post.sig}</div>}
     </>
   );
-  const actions = !locked && !post.removed && (
-    <div className="post-act">
-      <button type="button" className="btn sm" onClick={() => onQuote(post)}>{t("forum.topic.quote")}</button>
-      <button type="button" className="btn sm" onClick={onReply}>{t("forum.topic.reply")}</button>
-    </div>
+  const actions = !post.removed && (
+    <>
+      {asking && remove ? (
+        <div className="post-ask" role="alertdialog" aria-label={t(remove.topic ? "forum.topic.deleteAsk" : "forum.post.removeAsk")}>
+          <span>{t(remove.topic ? "forum.topic.deleteAsk" : "forum.post.removeAsk")}</span>
+          <span className="post-ask-btns">
+            <button type="button" className="btn sm danger" onClick={() => void confirm()} disabled={busy} aria-busy={busy}>
+              {t(remove.topic ? "forum.topic.deleteYes" : "forum.post.removeYes")}
+            </button>
+            <button type="button" className="btn sm" onClick={() => setAsking(false)} disabled={busy}>{t("forum.post.keep")}</button>
+          </span>
+        </div>
+      ) : (
+        (!locked || remove) && (
+          <div className="post-act">
+            {!locked && <button type="button" className="btn sm" onClick={() => onQuote(post)}>{t("forum.topic.quote")}</button>}
+            {!locked && <button type="button" className="btn sm" onClick={onReply}>{t("forum.topic.reply")}</button>}
+            {remove && (
+              <button type="button" className="btn sm danger" onClick={() => setAsking(true)}>
+                {t(remove.topic ? "forum.topic.delete" : "forum.post.remove")}
+              </button>
+            )}
+          </div>
+        )
+      )}
+      {error && <div className="form-err" role="alert">{t("forum.post.removeFailed", { error })}</div>}
+    </>
   );
 
   if (phone) {
