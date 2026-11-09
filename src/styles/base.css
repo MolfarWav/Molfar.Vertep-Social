@@ -16,5 +16,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn.cta { background: var(--cta); color: var(--ctaink); border-color: transparent; }
 .ib { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); display: flex; align-items: center; justify-content: center; padding: 0; }
 
+/* A native select list is drawn by the browser: our selects are transparent and inherit the ink colour, so without
+ * a background of its own the opened list shows light text on a light sheet (dark themes). Not scoped to `.soc`:
+ * dialogs may be portaled outside it. */
+select { color-scheme: inherit; }
+select option, select optgroup { background: var(--panel); color: var(--ink); }
+select option:disabled, select optgroup { color: var(--muted); }
+
 .soc :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

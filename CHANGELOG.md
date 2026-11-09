@@ -3,6 +3,10 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+- **Model lists are readable.** The opened list of a dropdown (the import model in the Roleplay import, and any other select) showed light text on a light sheet in the dark themes, so the models could not be read. Options now take the panel and ink colours of the theme.
+
 ## 0.3.0 (2026-11-09)
 
 Everything since 0.2.0: a forum, Life, emoji, a page for your own personas and a lot of detail work.
