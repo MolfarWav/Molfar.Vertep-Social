@@ -6,6 +6,7 @@
 // /v1/assets like a generated one.
 //
 // Preview states: `?picture=fail` makes the generation fail, `?picture=nomodel` says no image model is set up.
+import { ANIMATION_PROBE_BYTES, isAnimatedImage } from "@/lib/animated-image";
 import { PREVIEW, ApiError } from "@/lib/api";
 import type { Opt } from "@/screens/settings/controls";
 
@@ -100,10 +101,18 @@ export function fitSize(w: number, h: number, max = PICTURE_MAX_SIDE): { w: numb
   return { w: Math.max(1, Math.round(w * k)), h: Math.max(1, Math.round(h * k)) };
 }
 
-/** Scales a still image down to PICTURE_MAX_SIDE (WebP where the browser can, else it stays). GIFs and small images stay as they are. */
+/** Scales a still image down to PICTURE_MAX_SIDE (WebP where the browser can, else it stays). GIFs, animated WebP and APNG, and small images stay as they are. */
 async function shrink(file: File, side = PICTURE_MAX_SIDE, keepUnder = 1024 * 1024): Promise<{ blob: Blob; mime: string }> {
   const same = { blob: file as Blob, mime: file.type };
   if (file.type === "image/gif") return same;
+  // an animated WebP or APNG goes as it is: a canvas would keep one frame only (the caller still checks its byte limit)
+  if (file.type === "image/webp" || file.type === "image/png") {
+    try {
+      if (isAnimatedImage(new Uint8Array(await file.slice(0, ANIMATION_PROBE_BYTES).arrayBuffer()))) return same;
+    } catch {
+      // unreadable: treated as a still image below
+    }
+  }
   try {
     const bmp = await createImageBitmap(file);
     const { w, h } = fitSize(bmp.width, bmp.height, side);

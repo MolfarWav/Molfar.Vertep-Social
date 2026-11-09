@@ -5,7 +5,7 @@
 
 /* a sticker is a whole message: large, no frame, no link */
 .mp.mp-stk { border: 0; background: none; border-radius: 0; overflow: visible; }
-.mp-stk img { display: block; width: auto; height: auto; min-width: 96px; max-width: min(176px, 60vw); max-height: 176px; object-fit: contain; }
+.mp-stk img { display: block; width: auto; height: auto; min-width: 96px; max-width: min(200px, 64vw); max-height: 200px; object-fit: contain; }
 
 /* the picker: pack tabs show the first picture of the pack, cells are pictures */
 .emo-packs { overflow-x: auto; scrollbar-width: none; background: var(--raised); }
