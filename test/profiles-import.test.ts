@@ -399,6 +399,7 @@ test("avatar: a persona brings its avatar, else the portrait of its name; an own
     "litopys/portraits.json": { нема: { name: "Нема", url: WEBP } },
   };
   const { host } = makeHost(rp);
+  host.llm.results = { persona: { text: JSON.stringify({ about: "Коротко про персону." }) } };
   for (const id of ["w", "n"]) route(host, "POST", "/you/import", { id });
   expect(route(host, "POST", "/profiles/avatar", { personaId: "pe-w" }).json.avatar).toEqual({ url: PNG, from: "persona" });
   expect(route(host, "POST", "/profiles/avatar", { personaId: "pe-n" }).json.avatar).toEqual({ url: WEBP, from: "soul" });

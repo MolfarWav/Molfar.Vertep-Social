@@ -15,6 +15,8 @@ Updates dialog install it from this repository.
 
 - **Update all from Roleplay.** One button in the profile list (a round-arrow icon on a phone) checks every Roleplay profile against its card without a model, lists the ones whose card changed, reads those you tick (one model call each), shows what would change and applies the ticked ones, saved at once. A profile stores a fingerprint of the card text it was made from to tell changed from unchanged; profiles made earlier are read once to start it. Profiles with unsaved edits are skipped.
 
+- **Persona import writes a short About.** Importing a persona from Roleplay used to copy its description as it was (often a long prompt text with {{user}} macros). The import model now writes a short third-person About from it, the way it does for characters. No model set up or a failed call: nothing is added, with the reason shown.
+
 ## 0.3.0 (2026-11-09)
 
 Everything since 0.2.0: a forum, Life, emoji, a page for your own personas and a lot of detail work.
