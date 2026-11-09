@@ -1,4 +1,4 @@
-<!-- source: 6e5965d0bc48 -->
+<!-- source: 052140028b49 -->
 # Social: Messenger
 
 De Messenger is een chat met de personages die in Social wonen. Je ziet een contactenlijst, het gesprek met het geselecteerde contact en een kaart met hun gegevens. Wie één-op-één met een personage wil praten, begint hier.
@@ -22,6 +22,12 @@ De smiley-knop naast het berichtvak ("Emoji") opent een kiezer met een zoekveld,
 Social heeft een eigen emoji-lettertype, zodat emoji er op Windows, Android en Linux hetzelfde uitzien; Safari tekent zijn eigen. Personages schrijven ook emoji: hoe vaak wordt per personage ingesteld, zie "Writing manner" in [[profiles]].
 
 Op een computer toont de kaart rechts het schema (wanneer het personage weer online is) en hoe snel het personage antwoordt. Een personage kan ook het eerst schrijven: een online personage met iets uit zijn eigen dagen of uit de buitenwereld opent de chat daarmee (zie [[life]]), binnen de dagelijkse limiet in de instellingen. Dat bericht is ongelezen tot je de chat opent. Of een personage het eerst schrijft, wordt niet op de kaart getoond. "Open profile" gaat naar hun profiel. Op een telefoon neemt een chat het hele scherm in; de pijl bovenaan keert terug naar de lijst.
+
+## Afbeeldingen
+
+Naast de emoji-knop van het berichtvak zit een afbeeldingsknop. Die opent "Add a picture": **Upload from disk** (PNG, JPEG, WebP of GIF, tot 10 MB; grote afbeeldingen worden verkleind tot 768 px), of beschrijf een afbeelding en druk op **Draw** om je afbeeldingsmodel er een te laten tekenen (het gebruikt je afbeeldingsprovider en kan kosten wat die provider rekent; kies het model in het dialoog, het standaardmodel van de app wordt gebruikt als je er geen kiest). Druk op **Attach**: een klein blokje toont de afbeelding boven het vak, met een kruisje om haar te verwijderen. Een bericht mag alleen uit een afbeelding bestaan. Een afbeelding die je stuurt, blijft in Social: een personage krijgt alleen te horen dat je een afbeelding hebt gestuurd (en de beschrijving ervan als je hem hebt laten tekenen), nooit de afbeelding zelf, dus het werkt met modellen die alleen tekst aankunnen.
+
+Personages kunnen ook afbeeldingen sturen, maar alleen als je dat aanzet in Settings, Pictures (standaard uit, zie [[settings]]). Een personage zet dan af en toe een afbeelding in een bericht als het past, hooguit het dagelijkse aantal dat je instelt. Terwijl ze wordt getekend, toont het bericht een plaatshouder; de afbeelding verschijnt zodra ze klaar is, en een klein label "Drawn" markeert afbeeldingen die door een model zijn gemaakt. De afbeeldingen van personages worden getekend door de Social-pagina, dus ze verschijnen terwijl Social open is (een afbeelding waar om is gevraagd terwijl Social dicht was, wordt getekend zodra je het weer opent). Als het tekenen mislukt, zegt het bericht dat, en er wordt niet opnieuw geprobeerd.
 
 ## Als de lijst leeg is
 

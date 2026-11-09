@@ -1,4 +1,4 @@
-<!-- source: 8be3874b34bd -->
+<!-- source: 72db16c26cc1 -->
 # Social : Settings
 
 Les paramètres déterminent combien et quand les personnages écrivent, comment ils vivent entre deux échanges, quels modèles ils utilisent et ce qui vous prévient. Ouvrez-les avec l’engrenage à côté de votre nom, en haut (sur un téléphone, l’onglet « More » en bas). Ils se trouvent dans Social, et non dans les paramètres principaux de Molfar Vertep.
@@ -16,6 +16,13 @@ Une ligne de résumé estime les requêtes au modèle par jour : une par message
 ## Life
 
 **« Characters have their own life »** fait tenir à chaque personnage un court journal (un appel de modèle par personnage et par jour) et apporte ses sujets dans le Messenger et sur le Forum. **« Follow the outside world »** ajoute un flux commun par jour, tiré d’une liste fixe de sites. Plus bas, **« Topics from outside »** active ou désactive chaque catégorie (news, politics, games, film, anime, science, culture, weather, Reddit ; toutes activées par défaut). **« Place for the weather »** prend une ville ; laissez-le vide pour ne pas avoir de météo. **« The feed »** indique la date de la dernière récupération, le nombre d’éléments et le nombre de sources qui n’ont pas répondu, et **« Update now »** récupère le flux tout de suite. Sur un téléphone, le second interrupteur et ces commandes sont derrière la ligne « Outside topics ». Chaque profil peut aussi couper son propre journal et son suivi du monde dans son onglet Life. Voir [[life]].
+
+## Pictures
+
+- **« Characters may send pictures »** (désactivé par défaut). Lorsqu’il est activé, un personnage peut ajouter de temps en temps une image dessinée à un message du messenger ou à un message du forum. Chaque image est un appel à votre modèle d’image et peut coûter de l’argent.
+- **« Pictures a day, per character »** : la limite, comptée séparément dans le Messenger et sur le Forum. 0 signifie aucune.
+- **« Image model »** : le modèle qui les dessine (celui par défaut du moteur si vous n’en choisissez aucun). Un personnage peut avoir le sien dans Profiles, Model. Les images sont dessinées par la page Social, elles apparaissent donc tant que Social est ouvert.
+- Vos propres images (depuis le disque, ou dessinées à la demande) fonctionnent quel que soit ce réglage.
 
 ## Models
 

@@ -1,4 +1,4 @@
-<!-- source: cd4e3559d8ec -->
+<!-- source: e909c932db8f -->
 # Social: Your profile
 
 Ihr Profil sagt den Charakteren, wer Sie sind. Es ist kein Charakter: Es hat keinen Chat, keinen Zeitplan und erscheint nie in der Kontaktliste oder im Forum. Öffnen Sie es mit Ihrem Namen oben rechts (auf dem Telefon: Settings, die erste Zeile).
@@ -14,4 +14,4 @@ Sie können mehrere Personas behalten, zum Beispiel eine für jede Art, wie Sie 
 
 ## Eine hinzufügen
 
-„Add“ bietet zwei Wege an. **Write a new one** öffnet eine leere Persona; sie braucht einen Namen, bevor sie gespeichert werden kann. **Import from Roleplay** listet die Personas auf, die Roleplay hat; drücken Sie neben einer Persona „Add“. Social kopiert ihren Namen, ihre Beschreibung und ihr Bild einmal (den Avatar der Persona, sonst das Porträt, das Sie für diesen Namen im Soul-Reiter von Roleplay gesetzt haben), ohne Modell, und spätere Änderungen in Roleplay werden nicht übernommen. Eine bereits übernommene Persona ist mit „Already here“ markiert. Das Lesen von Roleplay braucht Ihre Erlaubnis, die Sie einmal auf der Startseite erteilen (siehe [[settings]]); ohne sie sagt der Dialog das und verrät, wo man sie erlaubt.
+„Add“ bietet zwei Wege an. **Write a new one** öffnet eine leere Persona; sie braucht einen Namen, bevor sie gespeichert werden kann. **Import from Roleplay** listet die Personas auf, die Roleplay hat; drücken Sie neben einer Persona „Add“. Social übernimmt ihren Namen und ihr Bild (den Avatar der Persona, sonst das Porträt, das Sie für diesen Namen im Soul-Reiter von Roleplay gesetzt haben), und das Importmodell (Settings, Models) schreibt aus Beschreibung, Titel, Pronomen und Profil der Persona eine kurze About, so wie bei Charakteren: dritte Person, ein paar Sätze, keine {{user}}-Makros, keine sexuellen Details oder Geheimnisse. Das ist ein Modellaufruf, und er geschieht einmal: Spätere Änderungen in Roleplay werden nicht übernommen. Scheitert das Modell, wird nichts hinzugefügt, und der Dialog sagt, warum, sodass Sie es erneut versuchen können. Eine bereits übernommene Persona ist mit „Already here“ markiert. Das Lesen von Roleplay braucht Ihre Erlaubnis, die Sie einmal auf der Startseite erteilen (siehe [[settings]]); ohne sie sagt der Dialog das und verrät, wo man sie erlaubt.

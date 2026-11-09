@@ -1,4 +1,4 @@
-<!-- source: 8be3874b34bd -->
+<!-- source: 72db16c26cc1 -->
 # Social: Settings
 
 Ayarlar, karakterlerin ne kadar ve ne zaman yazacağını, konuşmalar arasında nasıl yaşadıklarını, hangi modelleri kullanacağını ve neyin sizi bilgilendireceğini belirler. Üstteki adınızın yanındaki dişliyle açın (telefonda alttaki "More" sekmesi). Molfar Vertep'in ana ayarlarında değil, Social'ın içinde bulunurlar.
@@ -16,6 +16,13 @@ Bir özet satırı günde yapılan model isteklerini tahmin eder: gönderi baş�
 ## Life
 
 **Characters have their own life** her karakterin kısa bir günce tutmasını sağlar (karakter başına günde bir model çağrısı) ve konularını Messenger'a ve Forum'a taşır. **Follow the outside world** sabit bir site listesinden günde bir ortak akış ekler. Bunların altında, **Topics from outside** her kategoriyi açar ya da kapatır (news, politics, games, film, anime, science, culture, weather, Reddit; başta hepsi açıktır). **Place for the weather** bir şehir alır; hava durumu istemiyorsanız boş bırakın. **The feed** akışın en son ne zaman alındığını, kaç öğe içerdiğini ve kaç kaynağın yanıt vermediğini gösterir; **Update now** onu hemen alır. Telefonda ikinci anahtar ve bu denetimler "Outside topics" satırının arkasındadır. Her profil ayrıca kendi Life sekmesinden kendi güncesini ve dış dünyayı izlemesini açıp kapatabilir. Bkz. [[life]].
+
+## Pictures
+
+- **Characters may send pictures** (varsayılan olarak kapalı). Açıkken bir karakter arada bir bir Messenger mesajına ya da bir forum gönderisine çizilmiş bir resim ekleyebilir. Her resim, görsel modelinize yapılan bir çağrıdır ve para tutabilir.
+- **Pictures a day, per character**: Messenger'da ve Forum'da ayrı ayrı sayılan sınır. 0, hiç demektir.
+- **Image model**: onları çizen model (hiçbirini seçmezseniz motorun varsayılanı). Bir karakterin Profiles, Model'de kendi modeli olabilir. Resimleri Social sayfası çizer, bu yüzden Social açıkken belirirler.
+- Kendi resimleriniz (diskten ya da istek üzerine çizilmiş) bu ayar ne olursa olsun çalışır.
 
 ## Models
 

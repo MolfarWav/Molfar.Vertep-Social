@@ -1,4 +1,4 @@
-<!-- source: 6e5965d0bc48 -->
+<!-- source: 052140028b49 -->
 # Social: Messenger
 
 Messenger, Social'da yaşayan karakterlerle yapılan bir sohbettir. Bir kişi listesi, seçili kişiyle konuşma ve onun bilgilerinin olduğu bir kart görürsünüz. Bir karakterle birebir konuşmak isteyen buradan başlar.
@@ -22,6 +22,12 @@ Mesaj kutusunun yanındaki gülen yüz düğmesi ("Emoji"), bir arama alanı, gr
 Social kendi emoji yazı tipini taşır, bu yüzden emojiler Windows, Android ve Linux'ta aynı görünür; Safari kendi çizimini kullanır. Karakterler de emoji yazar: ne sıklıkla yazacakları karakter başına ayarlanır, bkz. [[profiles]] içindeki "Writing manner".
 
 Bilgisayarda sağdaki kart programı (karakterin bir sonraki çevrimiçi olduğu zaman) ve karakterin ne kadar hızlı yanıt verdiğini gösterir. Bir karakter de önce yazabilir: kendi günlerinden bir şey ya da dış dünyadan bir konusu olan çevrimiçi bir karakter, sohbeti onunla açar (bkz. [[life]]); bu, Ayarlar'daki günlük sınır dahilinde olur. Bu mesaj, siz sohbeti açana kadar okunmamış kalır. Bir karakterin önce yazıp yazmadığı kartta henüz gösterilmez. "Open profile" onun profiline götürür. Telefonda bir sohbet tüm ekranı kaplar; üstteki ok listeye geri döner.
+
+## Resimler
+
+Mesaj kutusunun emoji düğmesinin yanında bir resim düğmesi bulunur. "Add a picture" penceresini açar: **Upload from disk** (PNG, JPEG, WebP veya GIF, 10 MB'a kadar; büyük resimler 768 px'e küçültülür) ya da bir resmi tarif edin ve görsel modelinizin çizmesi için **Draw**'a basın (görsel sağlayıcınızı kullanır ve o sağlayıcının ücretine mal olabilir; modeli pencerede seçin, hiçbirini seçmezseniz uygulamanın varsayılanı kullanılır). **Attach**'e basın: küçük bir çip resmi kutunun üstünde gösterir, kaldırmak için bir çarpı vardır. Bir mesaj yalnızca bir resimden oluşabilir. Gönderdiğiniz resim Social'da kalır: karakter yalnızca bir resim gönderdiğinizi (ve çizdiyseniz açıklamasını) öğrenir, resmin kendisini asla görmez, bu yüzden yalnızca metin destekleyen modellerle de çalışır.
+
+Karakterler de resim gönderebilir, ama yalnızca Settings, Pictures'ta açarsanız (varsayılan olarak kapalı, bkz. [[settings]]). Karakter o zaman uygun düştüğünde arada bir mesaja resim koyar, en fazla sizin belirlediğiniz günlük sayıda. Resim çizilirken mesajda bir yer tutucu görünür; resim hazır olunca belirir ve bir model tarafından yapılan resimleri küçük bir "Drawn" etiketi işaretler. Karakterlerin resimlerini Social sayfası çizer, bu yüzden Social açıkken belirirler (Social kapalıyken istenen bir resim, onu bir sonraki açışınızda çizilir). Çizim başarısız olursa mesaj bunu söyler ve yeni deneme yapılmaz.
 
 ## Liste boş olduğunda
 

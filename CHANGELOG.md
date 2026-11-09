@@ -3,7 +3,9 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.4.0 (2026-11-09)
+
+Pictures in messages and posts, an "Update all" for Roleplay profiles, a richer Roleplay import, and a few fixes. Released on its own: nothing in Molfar Vertep itself changed (it needs the same engine as 0.3.0). The Social plugins are 0.4.0, Life stays 0.1.0.
 
 - **Model lists are readable.** The opened list of a dropdown (the import model in the Roleplay import, and any other select) showed light text on a light sheet in the dark themes, so the models could not be read. Options now take the panel and ink colours of the theme.
 

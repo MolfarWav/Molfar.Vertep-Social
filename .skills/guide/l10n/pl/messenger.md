@@ -1,4 +1,4 @@
-<!-- source: 6e5965d0bc48 -->
+<!-- source: 052140028b49 -->
 # Social: Messenger
 
 Messenger to czat z postaciami, które mieszkają w Social. Widzisz listę kontaktów, rozmowę z wybranym kontaktem i kartę z jego danymi. Każdy, kto chce porozmawiać z postacią w cztery oczy, zaczyna tutaj.
@@ -22,6 +22,12 @@ Przycisk z uśmiechem obok pola wiadomości ("Emoji") otwiera wybierak z polem w
 Social ma własną czcionkę emoji, więc emoji wyglądają tak samo w Windows, Androidzie i Linuksie; Safari rysuje własne. Postacie też piszą emoji: jak często, ustawia się dla każdej osobno, zobacz "Writing manner" w [[profiles]].
 
 Na komputerze karta po prawej pokazuje harmonogram (kiedy postać będzie znów online) i to, jak szybko odpowiada. Postać może też pisać pierwsza: postać online, mająca coś z własnych dni albo ze świata zewnętrznego, otwiera czat taką wiadomością (zobacz [[life]]), w ramach dziennego limitu w ustawieniach. Ta wiadomość jest nieprzeczytana, dopóki nie otworzysz czatu. Tego, czy postać pisze pierwsza, karta nie pokazuje. "Open profile" prowadzi do jej profilu. Na telefonie czat zajmuje cały ekran; strzałka u góry wraca do listy.
+
+## Obrazki
+
+Obok przycisku emoji w polu wiadomości jest przycisk obrazka. Otwiera "Add a picture": **Upload from disk** (PNG, JPEG, WebP lub GIF, do 10 MB; duże obrazki są zmniejszane do 768 px) albo opisz obrazek i naciśnij **Draw**, aby twój model obrazów go narysował (korzysta z twojego dostawcy obrazów i może kosztować tyle, ile on pobiera; model wybierasz w oknie, a jeśli żadnego nie wybierzesz, używany jest domyślny z aplikacji). Naciśnij **Attach**: mała etykieta pokazuje obrazek nad polem, z krzyżykiem do jego usunięcia. Wiadomość może składać się wyłącznie z obrazka. Obrazek, który wysyłasz, zostaje w Social: postać dowiaduje się tylko, że wysłałeś obrazek (oraz jego opisu, jeśli go narysowałeś), nigdy samego obrazka, więc działa to z modelami tylko tekstowymi.
+
+Postacie też mogą wysyłać obrazki, ale tylko jeśli włączysz to w Settings, Pictures (domyślnie wyłączone, zobacz [[settings]]). Postać wkłada wtedy od czasu do czasu obrazek do wiadomości, gdy pasuje, najwyżej tyle razy dziennie, ile ustawisz. Gdy obrazek jest rysowany, wiadomość pokazuje symbol zastępczy; obrazek pojawia się, gdy jest gotowy, a mała etykieta "Drawn" oznacza obrazki stworzone przez model. Obrazki postaci rysuje strona Social, więc pojawiają się, gdy Social jest otwarty (obrazek, o który poproszono, gdy był zamknięty, zostanie narysowany przy następnym otwarciu). Jeśli rysowanie się nie uda, wiadomość o tym mówi i nie ma kolejnej próby.
 
 ## Gdy lista jest pusta
 

@@ -1,4 +1,4 @@
-<!-- source: 6e5965d0bc48 -->
+<!-- source: 052140028b49 -->
 # Social : Messenger
 
 Le Messenger est une conversation avec les personnages qui vivent dans Social. Vous voyez une liste de contacts, la discussion avec le contact sélectionné et une carte avec ses coordonnées. Quiconque veut parler à un personnage en tête-à-tête commence ici.
@@ -22,6 +22,12 @@ Le bouton au sourire (« Emoji ») à côté de la zone de saisie ouvre un séle
 Social a sa propre police d’emoji, si bien que les emoji se ressemblent sous Windows, Android et Linux ; Safari dessine les siens. Les personnages écrivent aussi des emoji : leur fréquence se règle par personnage, voir « Writing manner » dans [[profiles]].
 
 Sur un ordinateur, la carte à droite affiche le planning (quand le personnage sera de nouveau online) et la rapidité de ses réponses. Un personnage peut aussi écrire en premier : un personnage online qui a quelque chose de ses propres journées ou du monde extérieur ouvre la discussion avec ce sujet (voir [[life]]), dans la limite quotidienne des paramètres. Ce message reste non lu tant que vous n’ouvrez pas la discussion. Le fait qu’un personnage écrive en premier n’est pas affiché sur la carte. « Open profile » mène à son profil. Sur un téléphone, un chat occupe tout l’écran ; la flèche en haut revient à la liste.
+
+## Images
+
+À côté du bouton emoji de la zone de message se trouve un bouton d’image. Il ouvre « Add a picture » : **Upload from disk** (PNG, JPEG, WebP ou GIF, jusqu’à 10 Mo ; les grandes images sont réduites à 768 px), ou décrivez une image et appuyez sur **Draw** pour que votre modèle d’image la dessine (il utilise votre fournisseur d’images et peut coûter ce que ce fournisseur facture ; choisissez le modèle dans la fenêtre, celui par défaut de l’app est utilisé si vous n’en choisissez aucun). Appuyez sur **Attach** : une petite pastille affiche l’image au-dessus de la zone, avec une croix pour la retirer. Un message peut être une image seule. Une image que vous envoyez reste dans Social : on dit seulement au personnage que vous avez envoyé une image (et sa description si vous l’avez dessinée), jamais l’image elle-même, ce qui fonctionne donc avec des modèles texte seul.
+
+Les personnages peuvent aussi envoyer des images, mais seulement si vous l’activez dans Settings, Pictures (désactivé par défaut, voir [[settings]]). Un personnage glisse alors de temps en temps une image dans un message quand cela convient, au plus le nombre quotidien que vous fixez. Pendant qu’elle est dessinée, le message affiche un espace réservé ; l’image apparaît quand elle est prête, et une petite étiquette « Drawn » marque les images faites par un modèle. Les images des personnages sont dessinées par la page Social, elles apparaissent donc tant que Social est ouvert (une image demandée pendant qu’il était fermé est dessinée à sa prochaine ouverture). Si le dessin échoue, le message l’indique et aucun nouvel essai n’est fait.
 
 ## Quand la liste est vide
 
