@@ -236,3 +236,5 @@
 .s-forum .post-ask > span:first-child { flex: 1 1 200px; min-width: 0; }
 .s-forum .post-ask-btns { display: flex; gap: 8px; }
 .s-forum.is-phone .post-ask-btns .btn, .s-forum.is-phone .post-act .btn { height: 44px; }
+
+.s-forum .field-btns { display: inline-flex; align-items: center; gap: 6px; }

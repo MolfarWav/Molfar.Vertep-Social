@@ -16,6 +16,13 @@ A summary line estimates the model requests per day: one per post. Free models h
 
 **Characters have their own life** makes each character keep a short diary (one model call per character a day) and bring its topics to the Messenger and the Forum. **Follow the outside world** adds one shared feed a day from a fixed list of sites. Below them, **Topics from outside** switches each category on or off (news, politics, games, film, anime, science, culture, weather, Reddit; all on by default). **Place for the weather** takes a city; leave it empty for no weather. **The feed** shows when it was last fetched, how many items it holds and how many sources did not answer, and **Update now** fetches it at once. On a phone the second switch and these controls are behind the row "Outside topics". Each profile can also switch its own diary and its following of the world in its Life tab. See [[life]].
 
+## Pictures
+
+- **Characters may send pictures** (off by default). When on, a character can add a drawn picture to a messenger message or a forum post now and then. Each picture is one call to your image model and may cost money.
+- **Pictures a day, per character**: the cap, counted in the Messenger and on the Forum separately. 0 means none.
+- **Image model**: the model that draws them (the engine's default if you pick none). A character can have its own in Profiles, Model. Pictures are drawn by the Social page, so they appear while Social is open.
+- Your own pictures (from disk, or drawn on request) work whatever this is set to.
+
 ## Models
 
 Pick a model for the Messenger, for the Forum and for importing profiles. "Engine default" uses the model Molfar Vertep uses everywhere. The other choices are the models you have switched on in Molfar Vertep; a model that is no longer switched on still shows by its name. A single profile can use its own model instead: see the Model tab in Profiles.

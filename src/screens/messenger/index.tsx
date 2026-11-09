@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import "./messenger.css";
 import { Avatar } from "@/components/Avatar";
 import { Flower } from "@/components/Flower";
@@ -7,6 +7,7 @@ import { PREVIEW } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
 import { CONTACTS, LOGS, type Contact, type LogItem } from "@/mock/messenger";
 import type { Status } from "@/mock/status";
+import { usePicture } from "@/pictures/use-picture";
 import { useNav } from "@/shell/nav";
 import { useLiveMessenger } from "./live";
 import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
@@ -75,6 +76,10 @@ export function Messenger() {
   const list = empty || loading ? [] : contacts.filter((c) => c.name.toLowerCase().includes(needle));
   const items = real ? view.items : logs[curId] ?? [];
   const draft = drafts[curId] ?? "";
+  // the attach control of the message box; a picture waits for its own chat only
+  const pic = usePicture({ phone });
+  const clearPic = pic.clear;
+  useEffect(() => clearPic(), [curId]);
   const busy = real && view.busy;
   const realFailed = view.failed && view.failed.code !== "no-model" ? view.failed : null;
   const failedNote = real ? realFailed !== null && !view.busy : failed;
@@ -92,14 +97,16 @@ export function Messenger() {
   const setDraft = (v: string) => setDrafts((d) => ({ ...d, [curId]: v }));
   const send = () => {
     const text = draft.trim();
-    if (!text || !cur) return;
+    const image = pic.attached;
+    if ((!text && !image) || !cur) return;
     if (real) {
       if (busy) return; // one message at a time: the composer waits for the answer
-      live.send(cur.id, text);
+      live.send(cur.id, text, image ?? undefined);
     } else {
-      setLogs((l) => ({ ...l, [cur.id]: [...(l[cur.id] ?? []), { kind: "msg", who: "me", time: hhmm(), text }] }));
+      setLogs((l) => ({ ...l, [cur.id]: [...(l[cur.id] ?? []), { kind: "msg", who: "me", time: hhmm(), text, ...(image ? { image: { state: "ready" as const, url: image.url, alt: image.alt, gen: image.gen } } : {}) }] }));
     }
     setDraft("");
+    pic.clear();
   };
   const clear = () => setDraft("");
   const retry = () => {
@@ -131,6 +138,7 @@ export function Messenger() {
             onDraft={setDraft}
             onSend={send}
             onClear={clear}
+            pic={pic}
             onBack={() => setOpen(false)}
             onRetry={retry}
             onSettings={toSettings}
@@ -234,7 +242,7 @@ export function Messenger() {
                 onRetry={retry}
                 onSettings={toSettings}
               />
-              <Composer c={cur} value={draft} phone={false} real={real} busy={busy} onChange={setDraft} onSend={send} onClear={clear} />
+              <Composer c={cur} value={draft} phone={false} real={real} busy={busy} onChange={setDraft} onSend={send} onClear={clear} pic={pic} />
             </section>
 
             <aside className="col info">

@@ -3,6 +3,7 @@
 // Character texts (status lines, schedules, messages) stay Ukrainian in both
 // languages: they are the character's voice, not interface copy.
 import { PROFILES, type MockProfile } from "@/mock/characters";
+import type { MsgImage } from "@/pictures/MsgPicture";
 
 export interface Contact extends MockProfile {
   /** One line under the name in the contact list. */
@@ -22,7 +23,7 @@ export interface Contact extends MockProfile {
 
 /** A log line: a message, or a dashed system line that names the contact. */
 export type LogItem =
-  | { kind: "msg"; who: string; time: string; text: string }
+  | { kind: "msg"; who: string; time: string; text: string; image?: MsgImage }
   | { kind: "sys"; key: string };
 
 type Extra = Omit<Contact, keyof MockProfile>;

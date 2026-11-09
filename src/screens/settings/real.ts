@@ -21,10 +21,11 @@ export const REAL_DEFAULTS: SettingsMock = {
   messengerFirst: true,
   messengerPerDay: 5,
   messengerQuiet: "same",
-  models: { messenger: "", forum: "", import: "" },
+  models: { messenger: "", forum: "", import: "", image: "" },
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: false,
   life: LIFE_DEFAULTS,
+  images: { on: false, perDay: 2 },
   usedToday: 0,
 };
 
@@ -43,6 +44,7 @@ export function mergePatch(base: Patch | null, next: Patch | null): Patch {
   const out: Patch = { ...a, ...b };
   if (a.models || b.models) out.models = { ...a.models, ...b.models } as SettingsMock["models"];
   if (a.notify || b.notify) out.notify = { ...a.notify, ...b.notify } as SettingsMock["notify"];
+  if (a.images || b.images) out.images = { ...a.images, ...b.images } as SettingsMock["images"];
   if (a.life || b.life) out.life = { ...a.life, ...b.life, cats: { ...a.life?.cats, ...b.life?.cats } } as SettingsMock["life"];
   return out;
 }

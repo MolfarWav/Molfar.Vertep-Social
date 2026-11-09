@@ -38,10 +38,12 @@ export interface SettingsMock {
   messengerPerDay: number;
   messengerQuiet: ChatHours;
   /** Model choices: preview uses the four ids below; real mode uses "provider/model" or "" (engine default). */
-  models: { messenger: string; forum: string; import: string };
+  models: { messenger: string; forum: string; import: string; image: string };
   notify: { tab: boolean; system: boolean; sound: boolean };
   roleplayAccess: boolean;
   life: LifeSettings;
+  /** Pictures in messages: characters may send generated pictures, at most `perDay` each (messenger and forum separately). */
+  images: { on: boolean; perDay: number };
   /** Forum model requests already made today (a count from the server in the real app). */
   usedToday: number;
 }
@@ -58,10 +60,11 @@ export const SETTINGS_MOCK: SettingsMock = {
   messengerFirst: true,
   messengerPerDay: 5,
   messengerQuiet: "same",
-  models: { messenger: "default", forum: "default", import: "default" },
+  models: { messenger: "default", forum: "default", import: "default", image: "" },
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: true,
   life: { ...LIFE_DEFAULTS, place: "Kyiv, Ukraine" },
+  images: { on: true, perDay: 2 },
   usedToday: 12,
 };
 
@@ -72,6 +75,7 @@ export const LIMITS = {
   postsPerDay: { min: 0, max: 200 },
   postsPerAuthor: { min: 1, max: 50 },
   messengerPerDay: { min: 0, max: 50 },
+  imagesPerDay: { min: 0, max: 20 },
 } as const;
 
 /** Quiet-hour choices, every half hour. */

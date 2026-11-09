@@ -17,6 +17,8 @@ Updates dialog install it from this repository.
 
 - **Persona import writes a short About.** Importing a persona from Roleplay used to copy its description as it was (often a long prompt text with {{user}} macros). The import model now writes a short third-person About from it, the way it does for characters. No model set up or a failed call: nothing is added, with the reason shown.
 
+- **Pictures in messages and posts (#331).** You can attach a picture to a messenger message, a forum reply or a new topic: upload from disk (scaled to 768 px) or draw one with an image model, with or without text. Characters can send drawn pictures too, in the messenger and on the forum: **off by default**, switched on in the new Settings > Pictures with a per-day cap per character and an image model; a character can have its own image model in Profiles > Model. Characters' pictures are drawn by the Social page, so they appear while Social is open. Pictures drawn by a model carry a "Drawn" tag; the model is never shown a picture, only that one was sent.
+
 ## 0.3.0 (2026-11-09)
 
 Everything since 0.2.0: a forum, Life, emoji, a page for your own personas and a lot of detail work.

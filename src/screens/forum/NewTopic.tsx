@@ -2,6 +2,7 @@
 // a bottom bar on phone (the thumb reaches them, they stay above the keyboard).
 import { useRef, useState } from "react";
 import { useEmoji } from "@/emoji/use-emoji";
+import { usePicture, type Attached } from "@/pictures/use-picture";
 import { useT } from "@/i18n/index";
 import { BackIcon } from "./Icons";
 
@@ -17,7 +18,9 @@ export interface NewTopicProps {
   boardId: string;
   onCancel: () => void;
   /** Resolves to an error text, or null when the topic was posted (the screen then opens it). */
-  onSubmit: (board: string, title: string, text: string) => Promise<string | null>;
+  onSubmit: (board: string, title: string, text: string, image?: Attached) => Promise<string | null>;
+  /** The real forum: the topic may carry a picture (attach button). */
+  pictures?: boolean;
 }
 
 export function NewTopic(p: NewTopicProps) {
@@ -29,13 +32,15 @@ export function NewTopic(p: NewTopicProps) {
   const [error, setError] = useState("");
   const box = useRef<HTMLTextAreaElement>(null);
   const emoji = useEmoji({ target: box, value: text, onChange: setText, phone: p.phone });
-  const ready = title.trim().length >= 3 && text.trim().length > 0 && !!board;
+  const pic = usePicture({ phone: p.phone });
+  const image = p.pictures ? pic.attached : null;
+  const ready = title.trim().length >= 3 && (text.trim().length > 0 || !!image) && !!board;
 
   const submit = async () => {
     if (!ready || busy) return;
     setBusy(true);
     setError("");
-    const err = await p.onSubmit(board, title.trim(), text.trim());
+    const err = await p.onSubmit(board, title.trim(), text.trim(), image ?? undefined);
     setBusy(false);
     if (err) setError(err);
   };
@@ -58,8 +63,12 @@ export function NewTopic(p: NewTopicProps) {
       <div className="field">
         <div className="field-top">
           <label htmlFor="nt-text">{t("forum.new.textLabel")}</label>
-          {emoji.button}
+          <span className="field-btns">
+            {p.pictures && pic.button}
+            {emoji.button}
+          </span>
         </div>
+        {p.pictures && pic.chip}
         <textarea
           id="nt-text"
           ref={box}
@@ -74,6 +83,7 @@ export function NewTopic(p: NewTopicProps) {
       </div>
       <div className="mut small">{t("forum.new.note")}</div>
       {error && <div className="form-err" role="alert">{error}</div>}
+      {p.pictures && pic.dialog}
     </>
   );
 

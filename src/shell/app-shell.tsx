@@ -7,6 +7,7 @@ import { NavProvider, useNav, type Tab } from "@/shell/nav";
 import { Messenger } from "@/screens/messenger";
 import { Forum } from "@/screens/forum";
 import { useBadgePoll } from "@/lib/badges";
+import { useImageWorker } from "@/pictures/worker";
 import { Profiles } from "@/screens/profiles";
 import { Settings } from "@/screens/settings";
 import { You } from "@/screens/you";
@@ -50,6 +51,7 @@ function Chrome() {
   const nav = useNav();
   const { tab, go, badges, chrome } = nav;
   useBadgePoll();
+  useImageWorker();
   useEffect(ensureYou, []);
   const you = useYou();
   const me = you?.personas.find((p) => p.id === you.active);

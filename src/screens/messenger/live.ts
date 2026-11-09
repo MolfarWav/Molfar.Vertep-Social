@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PREVIEW, call } from "@/lib/api";
 import { currentLang, useT } from "@/i18n/index";
 import type { Contact, LogItem } from "@/mock/messenger";
+import type { Attached } from "@/pictures/use-picture";
+import { refreshImages } from "@/pictures/worker";
 import { useNav } from "@/shell/nav";
 import {
   EMPTY_CHAT,
@@ -25,7 +27,7 @@ export interface LiveMessenger {
   contacts: Contact[];
   /** The chat of a contact (an empty view until it is loaded). */
   chat: (id: string) => ChatView;
-  send: (id: string, text: string) => void;
+  send: (id: string, text: string, image?: Attached) => void;
   retry: (id: string) => void;
 }
 
@@ -74,6 +76,8 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
     try {
       const r = await call<{ chat: EngineChat }>("GET", `/messenger/chat?id=${encodeURIComponent(id)}`);
       if (alive.current && !busy.current[id]) setChats((c) => ({ ...c, [id]: chatView(r.chat, id) }));
+      // a picture a character asked for waits for the page to draw it: wake the worker
+      if (r.chat.messages.some((m) => m.image?.state === "pending")) refreshImages();
     } catch {
       // keep what the chat shows
     }
@@ -130,16 +134,16 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
   );
 
   const send = useCallback(
-    (id: string, text: string) => {
+    (id: string, text: string, image?: Attached) => {
       if (busy.current[id]) return;
       busy.current[id] = true;
       const at = Date.now();
       setChats((c) => {
         const prev = c[id] ?? EMPTY_CHAT;
-        const mine: LogItem = { kind: "msg", who: "me", time: clock(at), text };
+        const mine: LogItem = { kind: "msg", who: "me", time: clock(at), text, ...(image ? { image: { state: "ready", url: image.url, alt: image.alt, ...(image.gen ? { gen: true } : {}) } } : {}) };
         return { ...c, [id]: { ...prev, items: [...prev.items, mine], firstAt: prev.firstAt ?? at, failed: null, busy: true } };
       });
-      settle(id, call<EngineAnswer>("POST", "/messenger/send", { id, text }));
+      settle(id, call<EngineAnswer>("POST", "/messenger/send", { id, text, ...(image ? { image: { url: image.url, alt: image.alt, gen: image.gen } } : {}) }));
     },
     [settle],
   );

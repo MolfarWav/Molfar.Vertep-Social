@@ -7,6 +7,7 @@ import { LIMITS, type SettingsMock } from "@/mock/settings";
 import { PREVIEW, type ModelChoice } from "@/lib/api";
 import { Row, Segmented, Stepper, Switch, TimeRange, type Opt } from "./controls";
 import { LifeMain, LifeWorld } from "./life";
+import { PicturesRows } from "./pictures";
 import { AccessControl, LanguageRows, languageHint, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
 import type { SettingsError } from "./state";
 
@@ -119,6 +120,11 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
           <Disclosure id="life" open={open} onToggle={toggle} title={t("settings.life.world.phone")} hint={t("settings.life.world.phone.hint")}>
             <LifeWorld s={s} set={set} />
           </Disclosure>
+        </section>
+
+        <h2 className="gl">{t("settings.group.pictures")}</h2>
+        <section className="sec" aria-label={t("settings.group.pictures")}>
+          <PicturesRows s={s} set={set} phone />
         </section>
 
         <h2 className="gl">{t("settings.group.other")}</h2>

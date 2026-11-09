@@ -5,6 +5,8 @@ import { PREVIEW, type ModelChoice } from "@/lib/api";
 import { useModelChoices } from "@/lib/use-models";
 import { MODEL_IDS } from "@/mock/settings";
 import { Pick } from "@/screens/settings/controls";
+import { imageOptions, listImageModels, type ImageModel } from "../picture-api";
+import { useEffect, useState } from "react";
 import { ModelPick } from "@/screens/settings/model-pick";
 import { modelOptions } from "@/screens/settings/real";
 import { Field } from "../ui";
@@ -31,6 +33,16 @@ export function ModelTab({ form, set, name }: TabProps) {
   const searchable = !PREVIEW || previewPicker();
   const choices = PREVIEW ? MOCK_CHOICES : live;
   const own = form.model;
+  const [imageModels, setImageModels] = useState<ImageModel[]>([]);
+  useEffect(() => {
+    let on = true;
+    void listImageModels().then((m) => on && setImageModels(m));
+    return () => {
+      on = false;
+    };
+  }, []);
+  const imageOwn = form.imageModel;
+  const imageOpts = imageOptions(imageModels, imageOwn, t("profiles.model.imageApp"));
   const appLabel = t("profiles.model.app");
   const previewOptions = [{ value: "", label: appLabel }, ...MODEL_IDS.filter((id) => id !== "default").map((id) => ({ value: id, label: t(`settings.model.${id}`) }))];
 
@@ -47,6 +59,16 @@ export function ModelTab({ form, set, name }: TabProps) {
       </Field>
       <div className="k hint">{own ? t("profiles.model.hintOwn", { name }) : t("profiles.model.hintApp", { name })}</div>
       <div className="k hint">{t("profiles.model.scope")}</div>
+      <Field label={t("profiles.model.imageLabel")} wide>
+        {(id) =>
+          !searchable ? (
+            <Pick labelledBy={id} value={imageOwn} options={imageOpts} onChange={(imageModel) => set({ imageModel })} />
+          ) : (
+            <ModelPick labelledBy={id} value={imageOwn} options={imageOpts} onChange={(imageModel) => set({ imageModel })} />
+          )
+        }
+      </Field>
+      <div className="k hint">{t("profiles.model.imageHint", { name })}</div>
     </div>
   );
 }

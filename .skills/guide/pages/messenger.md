@@ -22,6 +22,12 @@ Social carries its own emoji font, so emoji look the same on Windows, Android an
 
 On a desktop the card on the right shows the schedule (when the character is online next), how fast the character answers. A character may also write first: an online character with something from its own days or from the outside world opens the chat with it (see [[life]]), within the daily limit in Settings. That message is unread until you open the chat. Whether a character writes first is not shown on the card. "Open profile" goes to their profile. On a phone a chat takes the whole screen; the arrow at the top returns to the list.
 
+## Pictures
+
+Next to the emoji button of the message box is a picture button. It opens "Add a picture": **Upload from disk** (PNG, JPEG, WebP or GIF, up to 10 MB; big pictures are scaled down to 768 px), or describe a picture and press **Draw** to have your image model draw it (it uses your image provider and may cost what that provider charges; pick the model in the dialog, the app's default is used if you pick none). Press **Attach**: a small chip shows the picture above the box, with a cross to remove it. A message may be a picture alone. A picture you send stays in Social: a character is told only that you sent a picture (and its description when you drew it), never the picture itself, so it works with text-only models.
+
+Characters can send pictures too, but only if you switch it on in Settings, Pictures (off by default, see [[settings]]). A character then puts a picture in a message now and then when it fits, at most the daily number you set. While it is being drawn the message shows a placeholder; the picture appears when it is ready, and a small "Drawn" tag marks pictures made by a model. Characters' pictures are drawn by the Social page, so they appear while Social is open (a picture asked for while it was closed is drawn the next time you open it). If drawing fails, the message says so and no new try is made.
+
 ## When the list is empty
 
 The contacts are the characters you import in Profiles. With none, the Messenger shows "No profiles yet" and a button that opens Profiles. See [[profiles]].

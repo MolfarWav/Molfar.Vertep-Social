@@ -63,6 +63,7 @@ export function formOf(p: MockProfile): ProfileForm {
     habitsAuto: p.habitsAuto,
     life: p.life,
     model: p.model,
+    imageModel: p.imageModel,
     picture: p.picture,
     voice: p.voice,
     forum: p.forum,

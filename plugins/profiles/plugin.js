@@ -277,6 +277,7 @@ export function cleanProfile(raw, id, now, prev) {
   const cardHash = CARD_HASH.test(String(raw.cardHash || "")) ? String(raw.cardHash) : prev && CARD_HASH.test(String(prev.cardHash || "")) ? String(prev.cardHash) : "";
   // "provider/model" for this profile alone; "" = the app's model for the task (Settings > Models)
   const model = typeof raw.model === "string" && raw.model !== "default" && MODEL_REF.test(raw.model.trim()) ? raw.model.trim() : "";
+  const imageModel = typeof raw.imageModel === "string" && raw.imageModel !== "default" && MODEL_REF.test(raw.imageModel.trim()) ? raw.imageModel.trim() : "";
   const from = cleanFrom(raw.from);
   const out = {
     id: String(id),
@@ -294,6 +295,7 @@ export function cleanProfile(raw, id, now, prev) {
     habits,
     habitsAuto: raw.habitsAuto !== false,
     model,
+    imageModel,
     picture: typeof raw.picture === "string" && PICTURE.test(raw.picture.trim()) ? raw.picture.trim() : "",
     voice: {
       text: multi(v.text, 1500),
@@ -400,7 +402,9 @@ export const DEFAULT_SETTINGS = {
   messengerFirst: true,
   messengerPerDay: 5,
   messengerQuiet: "same",
-  models: { messenger: "", forum: "", import: "" },
+  models: { messenger: "", forum: "", import: "", image: "" },
+  /** Pictures in messages (issue #331): characters may send generated pictures (off by default: each is an image call), at most `perDay` each, in the messenger and on the forum separately. */
+  images: { on: false, perDay: 2 },
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: false,
   /**
@@ -428,6 +432,8 @@ export function mergeSettings(base, patch) {
   const p = isObj(patch) ? patch : {};
   const m = isObj(p.models) ? p.models : {};
   const n = isObj(p.notify) ? p.notify : {};
+  const im = isObj(p.images) ? p.images : {};
+  const bim = isObj(b.images) ? b.images : DEFAULT_SETTINGS.images;
   const l = isObj(p.life) ? p.life : {};
   const lc = isObj(l.cats) ? l.cats : {};
   const bl = isObj(b.life) ? b.life : DEFAULT_SETTINGS.life;
@@ -456,7 +462,9 @@ export function mergeSettings(base, patch) {
       messenger: "messenger" in m ? modelRef(m.messenger) : b.models.messenger,
       forum: "forum" in m ? modelRef(m.forum) : b.models.forum,
       import: "import" in m ? modelRef(m.import) : b.models.import,
+      image: "image" in m ? modelRef(m.image) : typeof b.models.image === "string" ? b.models.image : "",
     },
+    images: { on: bool(im.on, bool(bim.on, false)), perDay: clampInt(im.perDay, 0, 20, Number.isInteger(bim.perDay) ? bim.perDay : 2) },
     notify: { tab: bool(n.tab, b.notify.tab), system: bool(n.system, b.notify.system), sound: bool(n.sound, b.notify.sound) },
     roleplayAccess: bool(p.roleplayAccess, b.roleplayAccess),
     tzOffset: typeof p.tzOffset === "number" && Number.isFinite(p.tzOffset) && Math.abs(p.tzOffset) <= 840 ? Math.round(p.tzOffset) : b.tzOffset === undefined ? null : b.tzOffset,

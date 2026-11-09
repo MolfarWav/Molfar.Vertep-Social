@@ -51,6 +51,8 @@ export interface ProfileForm {
   life: { on: boolean; world: boolean };
   /** "provider/model" used for this profile alone; "" = the app's model (Settings > Models). */
   model: string;
+  /** The image model for pictures this character sends; "" = the app's (Settings > Pictures). */
+  imageModel: string;
   /** An engine asset URL ("/v1/assets/<id>") of a generated picture; "" = the letter avatar. */
   picture: string;
   /** Short labels shown under the name in the list (at most 8, 24 characters each). */
@@ -114,6 +116,7 @@ export function plain(id: string, name: string, hue: number, source: ProfileSour
     habitsAuto: true,
     life: { on: true, world: true },
     model: "",
+    imageModel: "",
     picture: "",
     tags: [],
     voice: { ...DEFAULT_VOICE, never: [] },
@@ -143,6 +146,7 @@ export const PROFILES: MockProfile[] = [
     habitsAuto: true,
     life: { on: true, world: true },
     model: "",
+    imageModel: "",
     picture: "",
     voice: {
       text: "Повільна, тиха, ставить крапки замість окликів. Рідко питає про себе.",

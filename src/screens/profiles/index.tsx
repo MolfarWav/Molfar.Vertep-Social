@@ -184,7 +184,7 @@ function changedKeys(a: ProfileForm, b: ProfileForm): string[] {
   if (!same(a.voice, b.voice)) out.push("profiles.tab.voice");
   if (!same(a.schedule, b.schedule)) out.push("profiles.tab.statuses");
   if (!same(a.forum, b.forum)) out.push("profiles.tab.forum");
-  if (a.model !== b.model) out.push("profiles.tab.model");
+  if (a.model !== b.model || a.imageModel !== b.imageModel) out.push("profiles.tab.model");
   return out;
 }
 

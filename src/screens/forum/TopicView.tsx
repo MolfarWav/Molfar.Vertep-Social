@@ -2,6 +2,7 @@
 // "Quote" picks a post and a chip above the box says whose post it is; the server writes the quote.
 import { useEffect, useRef, useState } from "react";
 import { useEmoji } from "@/emoji/use-emoji";
+import { usePicture, type Attached } from "@/pictures/use-picture";
 import { useT } from "@/i18n/index";
 import { BackIcon, DotsIcon, LockIcon, SearchIcon } from "./Icons";
 import { countLabel } from "./labels";
@@ -27,7 +28,7 @@ export interface TopicViewProps {
   onHome: () => void;
   onBoard: () => void;
   /** Sends a reply; resolves to an error text, or null when it worked. */
-  onSend: (text: string, quoteOf: string | null) => Promise<string | null>;
+  onSend: (text: string, quoteOf: string | null, image?: Attached) => Promise<string | null>;
   onRetry: () => void;
   /** Closes (true) or reopens (false) the topic; resolves to an error text, or null when it worked. Real forum only. */
   onSetLocked?: (locked: boolean) => Promise<string | null>;
@@ -51,6 +52,7 @@ export function TopicView(p: TopicViewProps) {
   const [error, setError] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
   const emoji = useEmoji({ target: ref, value: draft, onChange: setDraft, phone: p.phone });
+  const pic = usePicture({ phone: p.phone });
   const posts = p.posts ?? [];
   const postsLabel = countLabel(t, "posts", p.paging?.total ?? posts.length);
   const pager = p.paging && p.onPage ? <Pager page={p.paging.page} pages={p.paging.pages} onPage={p.onPage} /> : null;
@@ -111,10 +113,11 @@ export function TopicView(p: TopicViewProps) {
   };
   const send = async () => {
     const text = draft.trim();
-    if (!text || busy) return;
+    const image = p.live ? pic.attached : null;
+    if ((!text && !image) || busy) return;
     setBusy(true);
     setError("");
-    const err = await p.onSend(text, quote?.id ?? null);
+    const err = await p.onSend(text, quote?.id ?? null, image ?? undefined);
     setBusy(false);
     if (err) {
       setError(err);
@@ -122,6 +125,7 @@ export function TopicView(p: TopicViewProps) {
     }
     setDraft("");
     setQuote(null);
+    pic.clear();
   };
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) void send();
@@ -207,8 +211,10 @@ export function TopicView(p: TopicViewProps) {
         ) : (
           <div className="rep col">
             {chip}
+            {p.live && pic.chip}
             {errLine}
             <div className="rep-row">
+              {p.live && pic.button}
               {emoji.button}
               <textarea
                 ref={ref}
@@ -220,11 +226,12 @@ export function TopicView(p: TopicViewProps) {
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={onKey}
               />
-              <button type="button" className="btn cta" onClick={() => void send()} disabled={busy || !draft.trim()}>{t("forum.topic.send")}</button>
+              <button type="button" className="btn cta" onClick={() => void send()} disabled={busy || (!draft.trim() && !pic.attached)}>{t("forum.topic.send")}</button>
             </div>
           </div>
         )}
         {emoji.tray}
+        {p.live && pic.dialog}
       </div>
     );
   }
@@ -262,6 +269,7 @@ export function TopicView(p: TopicViewProps) {
               <div className="qr-h">{t("forum.topic.quickLabel")}</div>
               <div className="qr-body">
                 {chip}
+                {p.live && pic.chip}
                 <textarea
                   ref={ref}
                   className="inp"
@@ -273,11 +281,13 @@ export function TopicView(p: TopicViewProps) {
                 />
                 {errLine}
                 <div className="qr-row">
+                  {p.live && pic.button}
                   {emoji.button}
                   <span className="qr-note">{t("forum.topic.note")}</span>
                   {!p.live && <button type="button" className="btn">{t("forum.topic.preview")}</button>}
-                  <button type="button" className="btn cta" onClick={() => void send()} disabled={busy || !draft.trim()}>{t("forum.topic.send")}</button>
+                  <button type="button" className="btn cta" onClick={() => void send()} disabled={busy || (!draft.trim() && !pic.attached)}>{t("forum.topic.send")}</button>
                 </div>
+                {p.live && pic.dialog}
               </div>
             </div>
           )}
