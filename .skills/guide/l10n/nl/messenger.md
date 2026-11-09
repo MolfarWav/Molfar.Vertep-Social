@@ -1,4 +1,4 @@
-<!-- source: 9838f3720b06 -->
+<!-- source: c591f4758d0e -->
 # Social: Messenger
 
 De Messenger is een chat met de personages die in Social wonen. Je ziet een contactenlijst, het gesprek met het geselecteerde contact en een kaart met hun gegevens. Wie één-op-één met een personage wil praten, begint hier.
@@ -21,7 +21,7 @@ Een personage ziet bij elk antwoord de laatste 24 berichten van de chat (4 tot 5
 
 In hetzelfde venster zet **New conversation…** een scheidslijn in het logboek. Het personage ziet niets van voor die lijn. "Keep the note and start" vouwt eerst de berichten die nog niet in de notitie staan samen (één modelaanroep), zodat het personage de kern nog onthoudt; "Start without the note" begint met niets. De oude berichten blijven boven de scheidslijn in de chat. **Clear chat…** verwijdert na een vraag de hele geschiedenis en de notitie; dat kan niet ongedaan worden gemaakt.
 
-Hoeveel een personage je kent is ook een keuze: "Characters know you" in Settings (de standaard), of "How well it knows you" op het tabblad Voice van een profiel. **Knows you** vertelt het model de naam en "About" van je actieve persona; **Name only** alleen de naam; **Stranger** niets, en het personage leert over jou alleen wat je zelf schrijft. Een bericht tussen dubbele haakjes, zoals ((dit)), of een bericht dat met OOC begint, is jij die buiten de rol spreekt: het personage antwoordt kort en duidelijk en gaat dan verder.
+Hoeveel een personage je kent is ook een keuze: "Characters know you" in Settings (de standaard), of "How well it knows you" op het tabblad Voice van een profiel. **Knows you** vertelt het model de naam en "About" van je actieve persona; **Name only** alleen de naam; **Stranger** niets, en het personage leert over jou alleen wat je zelf schrijft. Het Forum volgt dezelfde keuze (zie [[forum]]). Een bericht tussen dubbele haakjes, zoals ((dit)), of een bericht dat met OOC begint, is jij die buiten de rol spreekt: het personage antwoordt kort en duidelijk en gaat dan verder.
 
 ### Emoji
 
@@ -30,6 +30,14 @@ De smiley-knop naast het berichtvak ("Emoji") opent een kiezer met een zoekveld,
 Social heeft een eigen emoji-lettertype, zodat emoji er op Windows, Android en Linux hetzelfde uitzien; Safari tekent zijn eigen. Personages schrijven ook emoji: hoe vaak wordt per personage ingesteld, zie "Writing manner" in [[profiles]].
 
 Op een computer toont de kaart rechts het schema (wanneer het personage weer online is) en hoe snel het personage antwoordt. Een personage kan ook het eerst schrijven: een online personage met iets uit zijn eigen dagen of uit de buitenwereld opent de chat daarmee (zie [[life]]), binnen de dagelijkse limiet in de instellingen. Dat bericht is ongelezen tot je de chat opent. Of een personage het eerst schrijft, wordt niet op de kaart getoond. "Open profile" gaat naar hun profiel. Op een telefoon neemt een chat het hele scherm in; de pijl bovenaan keert terug naar de lijst.
+
+### Stickers en eigen emoji
+
+Onder de groepen van de kiezer staat een tweede rij voor je eigen pakketten. Een pakket is een verzameling afbeeldingen die je zelf hebt toegevoegd: **Stickers** worden als een heel bericht verstuurd, groot en zonder iets eromheen; **Custom emoji** zijn kleine afbeeldingen die midden in een regel tekst staan, zoals op Telegram of Discord. Druk op de plus in die rij ("Manage packs") om "Sticker packs" te openen: typ een naam, kies Stickers of Custom emoji, druk op "Choose pictures…" en selecteer meerdere bestanden tegelijk (PNG, WebP, GIF of JPEG, elk maximaal 512 KB na het verkleinen, 200 per pakket; stickers worden verkleind tot 512 px, eigen emoji tot 64 px; SVG wordt niet geaccepteerd). Bewegende afbeeldingen blijven bewegen: GIF en geanimeerde WebP (of APNG) worden bewaard zoals ze zijn, nooit verkleind, dus teken ze op de grootte die je wilt en binnen 512 KB; een geanimeerde WebP is veel kleiner dan een GIF van dezelfde afbeelding. Elk pakket kun je hernoemen, omzetten tussen de twee soorten, van meer afbeeldingen voorzien, losse afbeeldingen laten verliezen met het kruisje, of verwijderen (na een vraag). Alles wordt opgeslagen terwijl je bezig bent.
+
+**Het Molfar-pakket zit bij de app.** Bovenaan "Sticker packs" staat een kaart "Molfar pack" met acht gezichten van Molfar (de oude man met het cyberoog) in acht stemmingen: blij, lachend, verdrietig, verliefd, zelfvoldaan, slaperig, wantrouwend, uitdrukkingsloos. Druk op "Add the Molfar pack" en je krijgt twee pakketten, "Molfar" (geanimeerde stickers) en "Molfar emoji" (dezelfde gezichten als kleine eigen emoji); de kaart verdwijnt. Het zijn gewone pakketten: hernoem, verwijder of vul ze aan. Als je er een verwijdert, komt de kaart terug, zodat je ze opnieuw kunt toevoegen. Op regelhoogte zijn de emoji klein, dus de stemmingen herken je vooral aan de stickers.
+
+In de rij verschijnt een tabblad met de eerste afbeelding van het pakket. Tik op een sticker om hem meteen te versturen (de tekst die je aan het typen was, blijft staan); tik op een eigen emoji om hem in de tekst te zetten, op de plek van de cursor. Het zoekveld vindt afbeeldingen ook op naam, en de recente worden gedeeld met de emoji. Een eigen emoji wordt in de tekst opgeslagen als `:pack/name:`; als zijn pakket later wordt verwijderd, verschijnt dat als gewone tekst. Een sticker blijft op het scherm staan als zijn pakket al weg is. Een personage krijgt alleen te horen "a sticker: name" en ziet de afbeelding nooit. Personages gebruiken alleen de pakketten die jij voor hen aanzet in Profiles, Writing manner (zie [[profiles]]). In een nieuw forumonderwerp worden alleen eigen emoji aangeboden, omdat een sticker een heel antwoord is.
 
 ## Afbeeldingen
 

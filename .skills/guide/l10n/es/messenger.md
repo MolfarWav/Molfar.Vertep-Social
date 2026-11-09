@@ -1,4 +1,4 @@
-<!-- source: 9838f3720b06 -->
+<!-- source: c591f4758d0e -->
 # Social: Messenger
 
 El Messenger es un chat con los personajes que viven en Social. Ves una lista de contactos, la conversación con el contacto seleccionado y una tarjeta con sus datos. Quien quiera hablar con un personaje uno a uno empieza aquí.
@@ -21,7 +21,7 @@ Un personaje ve los últimos 24 mensajes del chat con cada respuesta (de 4 a 500
 
 En el mismo diálogo, **New conversation…** pone un separador en el registro. El personaje no ve nada de antes. «Keep the note and start» primero resume los mensajes que aún no están en la nota (una llamada al modelo), para que el personaje siga recordando lo esencial; «Start without the note» empieza desde cero. Los mensajes antiguos se quedan en el chat, encima del separador. **Clear chat…** borra todo el historial y la nota, tras una confirmación; no se puede deshacer.
 
-Cuánto te conoce un personaje también es una elección: «Characters know you» en Settings (el valor por defecto), o «How well it knows you» en la pestaña «Voice» de un perfil. **Knows you** dice al modelo el nombre y el «About» de tu persona activa; **Name only** solo el nombre; **Stranger** nada, y el personaje solo sabe de ti lo que escribas. Un mensaje entre dobles paréntesis, como ((esto)), o que empiece por OOC, es hablar fuera de personaje: el personaje responde breve y claramente, y luego sigue.
+Cuánto te conoce un personaje también es una elección: «Characters know you» en Settings (el valor por defecto), o «How well it knows you» en la pestaña «Voice» de un perfil. **Knows you** dice al modelo el nombre y el «About» de tu persona activa; **Name only** solo el nombre; **Stranger** nada, y el personaje solo sabe de ti lo que escribas. El Forum sigue la misma elección (ver [[forum]]). Un mensaje entre dobles paréntesis, como ((esto)), o que empiece por OOC, es hablar fuera de personaje: el personaje responde breve y claramente, y luego sigue.
 
 ### Emoji
 
@@ -30,6 +30,14 @@ El botón de sonrisa junto al cuadro de mensaje («Emoji») abre un selector con
 Social tiene su propia fuente de emoji, así que los emoji se ven igual en Windows, Android y Linux; Safari dibuja los suyos. Los personajes también escriben emoji: con qué frecuencia se fija por personaje, ver «Writing manner» en [[profiles]].
 
 En el escritorio, la tarjeta de la derecha muestra el horario (cuándo estará online el personaje la próxima vez) y lo rápido que responde. Un personaje también puede escribir primero: uno online que tenga algo de sus días o del mundo exterior abre el chat con ello (ver [[life]]), dentro del límite diario de los ajustes. Ese mensaje queda sin leer hasta que abras el chat. En la tarjeta no se muestra si un personaje escribe primero. «Open profile» lleva a su perfil. En el teléfono, un chat ocupa toda la pantalla; la flecha de arriba vuelve a la lista.
+
+### Stickers y emoji personalizados
+
+Debajo de los grupos del selector hay una segunda fila para tus propios paquetes. Un paquete es un conjunto de imágenes que añadiste tú: los **Stickers** se envían como un mensaje entero, grandes y sin nada más; los **Custom emoji** son imágenes pequeñas que van dentro de una línea de texto, como en Telegram o Discord. Pulsa el signo más de esa fila («Manage packs») para abrir «Sticker packs»: escribe un nombre, elige Stickers o Custom emoji, pulsa «Choose pictures…» y selecciona varios archivos a la vez (PNG, WebP, GIF o JPEG, hasta 512 KB cada uno tras el escalado, 200 por paquete; los stickers se escalan a 512 px, los emoji personalizados a 64 px; no se acepta SVG). Las imágenes animadas siguen moviéndose: los GIF y los WebP animados (o APNG) se guardan tal cual, sin reescalar, así que dibújalos del tamaño que quieras y dentro de 512 KB; un WebP animado pesa mucho menos que un GIF con la misma imagen. Cada paquete se puede renombrar, cambiar entre los dos tipos, ampliar con más imágenes, quitarle imágenes sueltas con la cruz o borrarlo (tras una pregunta). Todo se guarda sobre la marcha.
+
+**El paquete Molfar viene con la aplicación.** En la parte superior de «Sticker packs» aparece una tarjeta «Molfar pack» con ocho caras de Molfar (el viejo del ojo cibernético) en ocho estados de ánimo: feliz, riendo, triste, enamorado, satisfecho de sí mismo, dormido, receloso, inexpresivo. Pulsa «Add the Molfar pack» y obtienes dos paquetes, «Molfar» (stickers animados) y «Molfar emoji» (las mismas caras como emoji personalizados pequeños); la tarjeta desaparece. Son paquetes normales: puedes renombrarlos, borrarlos o ampliarlos. Al borrar uno, la tarjeta vuelve, así que puedes añadirlos otra vez. A la altura de una línea los emoji son pequeños, por eso los estados de ánimo se distinguen sobre todo en los stickers.
+
+En la fila aparece una pestaña con la primera imagen del paquete. Toca un sticker para enviarlo al instante (el texto que estabas escribiendo se queda); toca un emoji personalizado para ponerlo en el texto, en el cursor. El campo de búsqueda encuentra las imágenes también por su nombre, y los recientes se comparten con los emoji. Un emoji personalizado se guarda en el texto como `:pack/name:`; si su paquete se borra después, se ve como texto simple. Un sticker sigue en pantalla cuando su paquete ya no existe. Al personaje solo se le dice «a sticker: name» y nunca ve la imagen. Los personajes usan solo los paquetes que actives para ellos en Profiles, Writing manner (ver [[profiles]]). En un tema nuevo del foro solo se ofrecen emoji personalizados, porque un sticker es una respuesta entera.
 
 ## Imágenes
 

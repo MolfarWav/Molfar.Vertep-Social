@@ -3,7 +3,11 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.6.0 (2026-11-09)
+
+Sticker and custom emoji packs, with the animated Molfar pack, and characters that use them. The messenger and Profiles plugins are 0.6.0, the forum 0.5.0, the new stickers plugin 0.1.0 (Life stays 0.1.0).
+
+- **The animated Molfar pack comes with the app (#329, #347).** "Sticker packs" opens with a card "Molfar pack": eight animated faces of Molfar (happy, laughing, sad, love, smug, sleepy, suspicious, deadpan) as stickers (`molfar`) and as custom emoji (`molfar-emoji`), 16 animated WebP files of 26 to 275 KB. One button adds both packs; they are ordinary packs afterwards, and deleting one brings the card back. The files are bundled lazily (nothing is loaded until the card opens) and uploaded by the page itself, the way a picture you choose is, because the app frame cannot fetch files and an asset needs the app as its owner. Checked on a throwaway engine: all 16 files stored byte for byte, the picker shows both packs, a sticker sends, the emoji draw inline (desktop dark, phone light). Not checked on a real phone.
 
 - **Animated pictures keep moving (#329).** Uploading an animated WebP or an APNG used to flatten it to one frame (the browser scales big pictures through a canvas), so only GIF kept its animation. Both are now recognised (`src/lib/animated-image.ts`: the WebP animation flag, the PNG `acTL` chunk) and stored as they are; the pack manager still refuses a file over 512 KB. Stickers are drawn up to 200 px.
 

@@ -1,4 +1,4 @@
-<!-- source: 9838f3720b06 -->
+<!-- source: c591f4758d0e -->
 # Social: Messenger
 
 Der Messenger ist ein Chat mit den Charakteren, die in Social leben. Sie sehen eine Kontaktliste, die Unterhaltung mit dem ausgewählten Kontakt und eine Karte mit seinen Details. Wer einen Charakter unter vier Augen ansprechen möchte, beginnt hier.
@@ -21,7 +21,7 @@ Ein Charakter sieht mit jeder Antwort die letzten 24 Nachrichten des Chats (4 bi
 
 Im selben Dialog legt **New conversation…** einen Trennstrich ins Protokoll. Der Charakter sieht nichts von davor. „Keep the note and start“ fasst zuerst die Nachrichten, die noch nicht in der Notiz stehen, zusammen (ein Modellaufruf), damit der Charakter den Kern noch kennt; „Start without the note“ beginnt bei null. Die alten Nachrichten bleiben über dem Trennstrich im Chat. **Clear chat…** löscht nach einer Rückfrage den ganzen Verlauf und die Notiz; das lässt sich nicht rückgängig machen.
 
-Wie gut ein Charakter Sie kennt, ist ebenfalls eine Wahl: „Characters know you“ in Settings (der Standard) oder „How well it knows you“ im Reiter „Voice“ eines Profils. **Knows you** sagt dem Modell den Namen und das „About“ Ihrer aktiven Persona; **Name only** nur den Namen; **Stranger** gar nichts, und der Charakter erfährt über Sie nur, was Sie selbst schreiben. Eine Nachricht in doppelten Klammern, etwa ((so)), oder eine, die mit OOC beginnt, ist Sie außerhalb der Rolle: Der Charakter antwortet kurz und sachlich und macht dann weiter.
+Wie gut ein Charakter Sie kennt, ist ebenfalls eine Wahl: „Characters know you“ in Settings (der Standard) oder „How well it knows you“ im Reiter „Voice“ eines Profils. **Knows you** sagt dem Modell den Namen und das „About“ Ihrer aktiven Persona; **Name only** nur den Namen; **Stranger** gar nichts, und der Charakter erfährt über Sie nur, was Sie selbst schreiben. Das Forum folgt derselben Wahl (siehe [[forum]]). Eine Nachricht in doppelten Klammern, etwa ((so)), oder eine, die mit OOC beginnt, ist Sie außerhalb der Rolle: Der Charakter antwortet kurz und sachlich und macht dann weiter.
 
 ### Emoji
 
@@ -30,6 +30,14 @@ Die Smiley-Schaltfläche neben dem Nachrichtenfeld („Emoji“) öffnet eine Au
 Social hat eine eigene Emoji-Schrift, daher sehen Emoji unter Windows, Android und Linux gleich aus; Safari zeichnet sie selbst. Auch Charaktere schreiben Emoji: wie oft, legt jedes Profil fest, siehe „Writing manner“ in [[profiles]].
 
 Auf dem Desktop zeigt die Karte rechts den Zeitplan (wann der Charakter als Nächstes online ist) und wie schnell der Charakter antwortet. Ein Charakter kann auch von sich aus zuerst schreiben: Ein Charakter, der online ist und etwas aus seinen eigenen Tagen oder aus der äußeren Welt hat, eröffnet damit den Chat (siehe [[life]]), innerhalb des Tageslimits in den Einstellungen. Diese Nachricht bleibt ungelesen, bis Sie den Chat öffnen. Ob ein Charakter zuerst schreibt, wird auf der Karte nicht angezeigt. „Open profile“ führt zu seinem Profil. Auf dem Telefon nimmt ein Chat den ganzen Bildschirm ein; der Pfeil oben führt zurück zur Liste.
+
+### Sticker und eigene Emoji
+
+Unter den Gruppen der Auswahl steht eine zweite Zeile für Ihre eigenen Pakete. Ein Paket ist eine Sammlung von Bildern, die Sie selbst hinzugefügt haben: **Stickers** werden als ganze Nachricht gesendet, groß und ohne Text; **Custom emoji** sind kleine Bilder, die mitten in einer Textzeile stehen, wie bei Telegram oder Discord. Drücken Sie das Plus in dieser Zeile („Manage packs“), um „Sticker packs“ zu öffnen: Geben Sie einen Namen ein, wählen Sie Stickers oder Custom emoji, drücken Sie „Choose pictures…“ und wählen Sie mehrere Dateien auf einmal (PNG, WebP, GIF oder JPEG, nach der Skalierung bis zu 512 KB je Datei, 200 pro Paket; Sticker werden auf 512 px skaliert, eigene Emoji auf 64 px; SVG wird nicht akzeptiert). Animierte Bilder bleiben in Bewegung: GIF und animiertes WebP (oder APNG) werden unverändert gespeichert und nie skaliert, zeichnen Sie sie also in der gewünschten Größe und innerhalb von 512 KB; animiertes WebP ist für dasselbe Bild viel kleiner als GIF. Jedes Paket lässt sich umbenennen, zwischen den beiden Arten umschalten, um weitere Bilder ergänzen, einzelne Bilder per Kreuz entfernen oder (nach einer Rückfrage) löschen. Alles wird laufend gespeichert.
+
+**Das Molfar-Paket gehört zur App.** Oben in „Sticker packs“ zeigt eine Karte „Molfar pack“ acht Gesichter von Molfar (dem alten Mann mit dem Cyber-Auge) in acht Stimmungen: fröhlich, lachend, traurig, verliebt, selbstgefällig, schläfrig, misstrauisch, ausdruckslos. Drücken Sie „Add the Molfar pack“, und Sie bekommen zwei Pakete, „Molfar“ (animierte Sticker) und „Molfar emoji“ (dieselben Gesichter als kleine eigene Emoji); die Karte verschwindet. Es sind gewöhnliche Pakete: Sie können sie umbenennen, löschen oder erweitern. Nach dem Löschen eines Pakets kommt die Karte zurück, Sie können es also wieder hinzufügen. In Zeilenhöhe sind die Emoji klein, die Stimmungen unterscheidet man daher vor allem an den Stickern.
+
+Ein Reiter mit dem ersten Bild des Pakets erscheint in der Zeile. Tippen Sie einen Sticker an, um ihn sofort zu senden (der Text, den Sie gerade tippten, bleibt); tippen Sie ein eigenes Emoji an, um es an der Schreibmarke in den Text zu setzen. Das Suchfeld findet Bilder auch nach ihrem Namen, und die zuletzt benutzten werden mit den Emoji geteilt. Ein eigenes Emoji wird im Text als `:pack/name:` gespeichert; wird sein Paket später gelöscht, erscheint es als einfacher Text. Ein Sticker bleibt auf dem Bildschirm, auch wenn sein Paket nicht mehr da ist. Einem Charakter wird nur „a sticker: name“ gesagt, das Bild sieht er nie. Charaktere nutzen nur die Pakete, die Sie für sie unter Profiles, Writing manner einschalten (siehe [[profiles]]). In einem neuen Forumthema werden nur eigene Emoji angeboten, weil ein Sticker eine ganze Antwort ist.
 
 ## Bilder
 

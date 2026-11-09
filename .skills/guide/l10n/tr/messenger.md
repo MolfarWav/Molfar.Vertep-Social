@@ -1,4 +1,4 @@
-<!-- source: 9838f3720b06 -->
+<!-- source: c591f4758d0e -->
 # Social: Messenger
 
 Messenger, Social'da yaşayan karakterlerle yapılan bir sohbettir. Bir kişi listesi, seçili kişiyle konuşma ve onun bilgilerinin olduğu bir kart görürsünüz. Bir karakterle birebir konuşmak isteyen buradan başlar.
@@ -21,7 +21,7 @@ Bir karakter her yanıtta sohbetin son 24 mesajını görür (Settings, Messenge
 
 Aynı pencerede **New conversation…** kayıt defterine bir ayırıcı koyar. Karakter bundan önceki hiçbir şeyi görmez. "Keep the note and start" önce notta henüz olmayan mesajları katlar (bir model çağrısı); böylece karakter özü yine hatırlar. "Start without the note" sıfırdan başlar. Eski mesajlar ayırıcının üstünde sohbette kalır. **Clear chat…** onaydan sonra tüm geçmişi ve notu siler; geri alınamaz.
 
-Karakterin sizi ne kadar tanıdığı da bir seçimdir: Settings içindeki "Characters know you" (varsayılan) ya da bir profilin Voice sekmesindeki "How well it knows you". **Knows you**, aktif personanızın adını ve "About" bölümünü modele iletir; **Name only** yalnızca adı; **Stranger** hiçbir şey, karakter sizin hakkınızda yalnızca yazdıklarınızdan öğrenir. Çift parantez içindeki, ((böyle)) gibi bir mesaj ya da OOC ile başlayan mesaj, rol dışında konuşmanızdır: karakter kısa ve açık yanıt verir, sonra kaldığı yerden devam eder.
+Karakterin sizi ne kadar tanıdığı da bir seçimdir: Settings içindeki "Characters know you" (varsayılan) ya da bir profilin Voice sekmesindeki "How well it knows you". **Knows you**, aktif personanızın adını ve "About" bölümünü modele iletir; **Name only** yalnızca adı; **Stranger** hiçbir şey, karakter sizin hakkınızda yalnızca yazdıklarınızdan öğrenir. Forum da aynı seçimi izler ([[forum]] sayfasına bakın). Çift parantez içindeki, ((böyle)) gibi bir mesaj ya da OOC ile başlayan mesaj, rol dışında konuşmanızdır: karakter kısa ve açık yanıt verir, sonra kaldığı yerden devam eder.
 
 ### Emoji
 
@@ -30,6 +30,14 @@ Mesaj kutusunun yanındaki gülen yüz düğmesi ("Emoji"), bir arama alanı, gr
 Social kendi emoji yazı tipini taşır, bu yüzden emojiler Windows, Android ve Linux'ta aynı görünür; Safari kendi çizimini kullanır. Karakterler de emoji yazar: ne sıklıkla yazacakları karakter başına ayarlanır, bkz. [[profiles]] içindeki "Writing manner".
 
 Bilgisayarda sağdaki kart programı (karakterin bir sonraki çevrimiçi olduğu zaman) ve karakterin ne kadar hızlı yanıt verdiğini gösterir. Bir karakter de önce yazabilir: kendi günlerinden bir şey ya da dış dünyadan bir konusu olan çevrimiçi bir karakter, sohbeti onunla açar (bkz. [[life]]); bu, Ayarlar'daki günlük sınır dahilinde olur. Bu mesaj, siz sohbeti açana kadar okunmamış kalır. Bir karakterin önce yazıp yazmadığı kartta henüz gösterilmez. "Open profile" onun profiline götürür. Telefonda bir sohbet tüm ekranı kaplar; üstteki ok listeye geri döner.
+
+### Çıkartmalar ve özel emoji
+
+Seçicinin gruplarının altında kendi paketleriniz için ikinci bir sıra bulunur. Paket, kendinizin eklediği resimlerden oluşan bir settir: **Stickers** tek başına bir mesaj olarak, büyük ve yalın biçimde gönderilir; **Custom emoji** ise Telegram ya da Discord'daki gibi bir metin satırının içinde duran küçük resimlerdir. Sıradaki artıya ("Manage packs") basarak "Sticker packs" penceresini açın: bir ad yazın, Stickers ya da Custom emoji seçin, "Choose pictures…"a basın ve aynı anda birkaç dosya seçin (PNG, WebP, GIF veya JPEG, ölçeklendirmeden sonra her biri en fazla 512 KB, pakette en çok 200; çıkartmalar 512 px'e, özel emojiler 64 px'e ölçeklenir; SVG kabul edilmez). Hareketli resimler hareket etmeye devam eder: GIF ve hareketli WebP (ya da APNG) olduğu gibi saklanır, asla yeniden ölçeklenmez; bu yüzden onları istediğiniz boyutta ve 512 KB sınırı içinde çizin; aynı resim için hareketli WebP, GIF'ten çok daha küçüktür. Her paketin adı değiştirilebilir, iki tür arasında geçiş yapılabilir, ona yeni resimler eklenebilir, tek tek resimleri çarpıyla silinebilir ya da paket tümüyle silinebilir (bir soruyla). Her şey siz ilerledikçe kaydedilir.
+
+**Molfar paketi uygulamayla birlikte gelir.** "Sticker packs" penceresinin en üstünde, Molfar'ın (siber gözlü yaşlı adam) sekiz ruh hâlindeki sekiz yüzünü gösteren bir "Molfar pack" kartı vardır: mutlu, gülen, üzgün, âşık, kendini beğenmiş, uykulu, kuşkulu, ifadesiz. "Add the Molfar pack"e basın, iki paket alırsınız: "Molfar" (hareketli çıkartmalar) ve "Molfar emoji" (aynı yüzler küçük özel emojiler olarak); kart kaybolur. Bunlar sıradan paketlerdir: adı değiştirilebilir, silinebilir ya da genişletilebilir. Birini sildikten sonra kart geri gelir, böylece onları yeniden ekleyebilirsiniz. Satır yüksekliğinde emojiler küçüktür, bu yüzden ruh hâlleri esas olarak çıkartmalardan ayırt edilir.
+
+Sırada, paketin ilk resmini taşıyan bir sekme belirir. Bir çıkartmaya dokunursanız hemen gönderilir (yazmakta olduğunuz metin yerinde kalır); bir özel emojiye dokunursanız metne imlecin olduğu yere eklenir. Arama alanı resimleri adlarıyla da bulur, en son kullanılanlar ise emojilerle ortaktır. Özel bir emoji metinde `:pack/name:` olarak saklanır; paketi sonradan silinirse düz metin olarak görünür. Bir çıkartma, paketi gittikten sonra da ekranda kalır. Karaktere yalnızca "a sticker: name" söylenir ve resmi hiçbir zaman görmez. Karakterler yalnızca sizin onlar için Profiles, Writing manner'da açtığınız paketleri kullanır (bkz. [[profiles]]). Yeni bir forum konusunda yalnızca özel emojiler sunulur, çünkü bir çıkartma başlı başına bir yanıttır.
 
 ## Resimler
 

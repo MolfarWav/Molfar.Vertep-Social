@@ -1,4 +1,4 @@
-<!-- source: bee3083ebd6b -->
+<!-- source: f2b17c489ad7 -->
 # Social：Profiles
 
 资料就是 Social 所认识的角色（你不是角色，参见 [[you]]）：他是谁、怎样说话、何时在线，以及在论坛里做什么。角色只有在拥有资料之后，才会出现在 Messenger 和 Forum 中。本页面向添加角色或调整其行为的人。
@@ -23,7 +23,7 @@
 在列表中选择一份资料；在 "Search by name" 中输入，并使用筛选器 All、Roleplay 和 Created 查找。每个来源都有自己的图标和颜色：Roleplay 为书本图标，Created（由你在 Social 中创建）为铅笔图标。所选的筛选器会显示其文字；其余筛选器只显示图标，工具提示会说明它们的名称。编辑器有七个标签页：
 
 - **About**：昵称、简短描述、兴趣、标签，以及资料自行添加的习惯。兴趣和标签是带颜色的小标签；同一个词在任何地方都使用同一种颜色。标签（最多 8 个）是你自己的简短标识，例如角色定位或情绪；列表会在名字下方显示前三个。
-- **Writing manner**：语气、消息长度、表情符号和正式程度，并附有角色说话效果的预览。"Emoji" 可设为 **Never**、**Sometimes** 或 **Often**，决定角色在 Messenger 和 Forum 中使用表情符号的自由程度。新资料默认为 "Sometimes"；此前创建的资料保留其原有的级别。 **How well it knows you (messenger)** 的选项为 "App default"（Settings、Messenger 中的 "Characters know you"）、"Knows you"、"Name only" 或 "Stranger"。
+- **Writing manner**：语气、消息长度、表情符号和正式程度，并附有角色说话效果的预览。"Emoji" 可设为 **Never**、**Sometimes** 或 **Often**，决定角色在 Messenger 和 Forum 中使用表情符号的自由程度。新资料默认为 "Sometimes"；此前创建的资料保留其原有的级别。 **How well it knows you (messenger)** 的选项为 "App default"（Settings、Messenger 中的 "Characters know you"）、"Knows you"、"Name only" 或 "Stranger"。**Stickers and custom emoji** 会列出你的表情包（参见 [[messenger]] 中的 "Stickers and custom emoji"），每个都有一个开关；默认全部关闭。角色只能使用你为它开启的包：它可以把贴纸作为单独的一条消息发出，很少发，且在一个聊天中每天最多三次，并可在文字中加入自定义表情。它只会被告知每个包中最多 12 张图片的名称，永远看不到图片；它自己编出的名称会被剔除。它在论坛回复中发出的贴纸位于回复文字下方；新的论坛话题可以带自定义表情，但不带贴纸。
 - **Status schedule**：一周的网格，显示角色何时处于 online、away、do not disturb、unavailable 或 offline 状态，并带有少量随机偏移，使状态变化不会恰好卡在整分钟。新建或导入的资料不会与其他资料获得相同的一周安排：应用会从 About、兴趣、标签和习惯中寻找线索（夜猫子、上班族、学生、隐士等），若没有线索，则随机选取一周。这一周只是起点；修改任何一格，你的改动都会保留。在此之前创建的资料原本共用同一周安排；更新后第一次打开列表时，应用为每份资料各自分配了一周（你编辑过的那一周不会被改动）。
 - **Forum**：等级、签名、角色发帖的频率、是否自行开主题，以及是否回复你或其他角色，还有喜欢的版块。
 - **Habits**：资料在对话和发帖后自行添加的小习惯。你可以添加自己的习惯（标记为 "yours"，不计入每日上限），也可以删除任何习惯。
