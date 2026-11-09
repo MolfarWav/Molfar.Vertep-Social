@@ -50,7 +50,7 @@ function hhmm(): string {
 export function Messenger() {
   const t = useT();
   const phone = useIsPhone();
-  const { go } = useNav();
+  const { go, openProfile } = useNav();
   const [pv] = useState(readPreview);
   const real = !PREVIEW;
 
@@ -135,6 +135,8 @@ export function Messenger() {
   const toProfiles = () => go("profiles");
   // Real mode: what is not built yet goes to Profiles (the "+", the profile buttons).
   const toProfilesReal = real ? toProfiles : undefined;
+  // "Open profile" goes to this character's own profile, not to the list.
+  const toProfileOfCur = real && cur ? () => openProfile(cur.id) : undefined;
 
   if (phone) {
     const chat = open && !empty ? cur : undefined;
@@ -160,7 +162,7 @@ export function Messenger() {
             onBack={() => setOpen(false)}
             onRetry={retry}
             onSettings={toSettings}
-            onProfile={toProfilesReal}
+            onProfile={toProfileOfCur}
             onMemory={real ? () => setMemOpen(true) : undefined}
           />
         ) : (
@@ -294,7 +296,7 @@ export function Messenger() {
                   <button type="button" className="btn wide mem-open" onClick={() => setMemOpen(true)}>{t("messenger.memory.open")}</button>
                 </div>
               )}
-              <button type="button" className="btn wide" onClick={toProfilesReal}>{t("messenger.info.open")}</button>
+              <button type="button" className="btn wide" onClick={toProfileOfCur}>{t("messenger.info.open")}</button>
             </aside>
           </>
         )}
