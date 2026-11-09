@@ -1,8 +1,9 @@
 {
   "name": "Social stickers",
-  "version": "0.1.0",
-  "description": "Sticker and custom emoji packs: the list of packs the user added (stickers/packs.json in the app's data folder). The picture files themselves are engine assets; this file only names them, which also keeps them safe from the Storage cleanup and carries them through sync and backup.",
+  "version": "0.2.0",
+  "description": "Sticker and custom emoji packs: the list of packs the user added (stickers/packs.json in the app's data folder). The free packs of the catalog are fetched from raw.githubusercontent.com (the catalog/ folder of the Social repo) when the user opens it. The picture files themselves are engine assets; this file only names them, which also keeps them safe from the Storage cleanup and carries them through sync and backup.",
   "origin": "local",
-  "permissions": ["routes", "fs"],
+  "permissions": ["routes", "fs", "network"],
+  "networkHosts": ["raw.githubusercontent.com"],
   "priority": 30
 }

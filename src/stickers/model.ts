@@ -17,6 +17,8 @@ export interface StickerPack {
   name: string;
   kind: PackKind;
   items: StickerItem[];
+  /** Who made the pack and under what licence; set by a pack from the catalog (a CC BY pack must show it). */
+  credit?: { author: string; license: string; source?: string };
 }
 
 /** The limits of the design: a pack holds at most this many pictures, and a file at most this many bytes (after scaling). */

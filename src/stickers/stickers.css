@@ -41,6 +41,11 @@
 .s-profiles .stm-molfar { border-color: var(--accent, var(--line)); }
 .s-profiles .stm-faces { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: thin; }
 .s-profiles .stm-faces img { height: 48px; width: auto; flex: none; }
+.s-profiles .stm-card { gap: 6px; }
+.s-profiles .stm-prev { display: flex; align-items: center; justify-content: center; min-height: 72px; padding: 8px; border-radius: 8px; background: var(--panel); }
+.s-profiles .stm-prev img { max-width: 100%; max-height: 112px; width: auto; height: auto; object-fit: contain; }
+.s-profiles .stm-prev-wait { width: 100%; height: 56px; border-radius: 6px; background: var(--hover); opacity: .6; }
+.s-profiles .stm-count a { color: var(--accent); }
 .s-profiles .stm-err { color: var(--bad, #ff8a8a); font-size: 12px; margin: 0; }
 .s-profiles .stm-count { color: var(--muted); font-size: 12px; }
 @media (max-width: 640px) {
