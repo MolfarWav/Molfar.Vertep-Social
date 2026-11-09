@@ -29,7 +29,7 @@ export function ContactRow({ c, phone, on, onPick }: { c: Contact; phone: boolea
       <Avatar name={c.name} hue={c.hue} size={phone ? 40 : 32} dim={c.status === "off"} picture={c.picture} />
       <span className="t">
         <span className="n">{c.name}</span>
-        <span className="s">{c.line}</span>
+        <span className="s"><RichText text={c.line} /></span>
       </span>
       {c.unread ? <Envelope size={phone ? 22 : 20} label={t("messenger.newMessage")} /> : <Flower status={c.status} size={phone ? 22 : 20} />}
     </button>

@@ -5,6 +5,8 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+- **Custom emoji in the contact list and in forum search (#349).** The last-message line of a contact draws a custom emoji as a small picture (it showed `:pack/item:`), and a cut line never ends in half a token. A forum search snippet reads a token as `:name:`.
+- **A character is told up to 24 sticker or emoji names per pack, 48 in all (#349).** It was the first 12 of each pack. Measured: about 6 tokens a name, so a full prompt list costs about 150 tokens a pack, about 300 at the most.
 - **New messages come first in the contact list.** Inside each status group the contacts with an unread message are now on top, then the one you talked to last, then the rest by name (they were all by name, so a new message hid among thirty contacts). The order is decided by the messenger plugin, so the phone list follows it too.
 
 ## 0.6.0 (2026-11-09)

@@ -60,11 +60,11 @@ test("stickerPacksFor returns only the packs switched on for the profile", () =>
   expect(messenger.stickerPacksFor({ read: () => "{not json" }, { stickerPacks: ["cats"] })).toEqual([]);
 });
 
-test("stickerHint lists at most 12 items a pack, and leaves stickers out over the cap", () => {
+test("stickerHint lists at most 24 items a pack, and leaves stickers out over the cap", () => {
   const many = { id: "big", name: "Big", kind: "sticker", items: Array.from({ length: 30 }, (_, n) => ({ id: "i" + n, name: "n" + n, url: "/v1/assets/x" })) };
   const hint = messenger.stickerHint([many], true);
-  expect(hint).toContain("big/i11");
-  expect(hint).not.toContain("big/i12");
+  expect(hint).toContain("big/i23");
+  expect(hint).not.toContain("big/i24");
   expect(hint).toContain("[[sticker:");
   const emoji = { id: "blobs", name: "Blobs", kind: "emoji", items: [{ id: "red", name: "Red", url: "/v1/assets/e1" }] };
   const capped = messenger.stickerHint([many, emoji], false);
@@ -133,4 +133,24 @@ test("the profile keeps the packs switched on for it, and drops bad ids", () => 
   expect(r.json.profile.stickerPacks).toEqual(["cats", "blobs"]);
   const none = profiles.handleRoute({ method: "PUT", path: "/profiles/a", body: { name: "Ada", about: "x", stickerPacks: [] } }, w.host);
   expect(none.json.profile.stickerPacks).toBeUndefined();
+});
+
+test("the prompt lists at most 24 items per pack and 48 in all", async () => {
+  const mk = (id: string, kind: string, n: number) => ({ id, name: id, kind, items: Array.from({ length: n }, (_, i) => ({ id: "i" + i, name: "Item " + i, url: "/v1/assets/a" })) });
+  for (const plugin of [messenger, forum]) {
+    const text = plugin.stickerHint([mk("big", "sticker", 40), mk("more", "sticker", 40), mk("emo", "emoji", 10)], true);
+    expect((text.match(/big\/i\d+ /g) || []).length).toBe(24);
+    expect((text.match(/more\/i\d+ /g) || []).length).toBe(24);
+    expect(text).not.toContain("emo/i0");
+  }
+});
+
+test("a contact line never ends in half a custom emoji token, and a forum snippet reads a token as :name:", () => {
+  const chat = (text: string) => ({ messages: [{ text, at: 1 }] });
+  const long = "x".repeat(70) + " :molfar-emoji/happy:";
+  expect(messenger.lineOf(chat(long))).toBe("x".repeat(70) + " ");
+  expect(messenger.lineOf(chat("hi :molfar-emoji/happy:"))).toBe("hi :molfar-emoji/happy:");
+  expect(messenger.lineOf(chat("see: this"))).toBe("see: this");
+  expect(forum.snippetOf("good :molfar-emoji/happy: day", ["good"])).toBe("good :happy: day");
+  expect(forum.snippetOf("time 12:30/45:10 ok", ["time"])).toContain("12:30/45:10");
 });
