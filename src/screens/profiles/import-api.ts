@@ -106,14 +106,71 @@ export interface Digest {
   voiceText: string;
 }
 
-export async function refreshOne(profileId: string, model = ""): Promise<{ digest: Digest; cardDate: string }> {
-  const res = await call<PluginReply<{ proposal: Partial<Digest>; cardDate?: string }>>("POST", "/profiles/refresh", { profileId, ...(model ? { model } : {}) });
+export async function refreshOne(profileId: string, model = ""): Promise<Refreshed> {
+  const res = await call<PluginReply<{ proposal: Partial<Digest>; cardDate?: string; cardHash?: string }>>("POST", "/profiles/refresh", { profileId, ...(model ? { model } : {}) });
   if (!res.ok) throw new ImportError(res.error, res.code);
   const p = res.proposal;
   return {
     digest: { about: typeof p.about === "string" ? p.about : "", interests: Array.isArray(p.interests) ? p.interests.filter((x): x is string => typeof x === "string") : [], voiceText: typeof p.voiceText === "string" ? p.voiceText : "" },
     cardDate: typeof res.cardDate === "string" ? res.cardDate : "",
+    cardHash: typeof res.cardHash === "string" ? res.cardHash : "",
   };
+}
+
+/** One new reading of a card: what the model proposes, and the date and fingerprint the profile takes once it is applied. */
+export interface Refreshed {
+  digest: Digest;
+  cardDate: string;
+  cardHash: string;
+}
+
+// ---------- "Update all from Roleplay" ----------
+
+export type CheckState = "same" | "changed" | "gone" | "unreadable" | "empty";
+export interface CheckItem {
+  id: string;
+  name: string;
+  state: CheckState;
+  /** The profile has no fingerprint yet (made before they existed): it counts as changed this once. */
+  first?: boolean;
+}
+
+const CHECK_STATES: CheckState[] = ["same", "changed", "gone", "unreadable", "empty"];
+
+/** Which Roleplay profiles have a changed card. The plugin reads the cards and compares fingerprints: no model is asked. */
+export async function checkCards(): Promise<{ state: "closed" } | { state: "ready"; items: CheckItem[]; truncated: boolean }> {
+  const res = await call<PluginReply<{ items?: unknown; truncated?: boolean }>>("POST", "/profiles/check", {});
+  if (!res.ok) {
+    if (res.code === "no-access") return { state: "closed" };
+    throw new ImportError(res.error, res.code);
+  }
+  const items: CheckItem[] = [];
+  for (const x of Array.isArray(res.items) ? res.items : []) {
+    const r = x as Partial<CheckItem> | null;
+    if (!r || typeof r.id !== "string" || typeof r.name !== "string" || !CHECK_STATES.includes(r.state as CheckState)) continue;
+    items.push({ id: r.id, name: r.name, state: r.state as CheckState, ...(r.first ? { first: true } : {}) });
+  }
+  return { state: "ready", items, truncated: res.truncated === true };
+}
+
+export type RefreshResult = ({ id: string; ok: true } & Refreshed) | { id: string; ok: false; error: string };
+
+/**
+ * Reads the cards again one after another (one model call each). `onResult` gets every card as it finishes; a failing
+ * card stops only itself. `stopped()` is asked before each card: when it says yes nothing more starts.
+ */
+export async function refreshMany(ids: string[], exec: (id: string) => Promise<Refreshed>, onResult: (r: RefreshResult) => void, stopped: () => boolean): Promise<void> {
+  for (const id of ids) {
+    if (stopped()) return;
+    try {
+      const got = await exec(id);
+      if (stopped()) return;
+      onResult({ id, ok: true, ...got });
+    } catch (e) {
+      if (stopped()) return;
+      onResult({ id, ok: false, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
 }
 
 // ---------- the run ----------

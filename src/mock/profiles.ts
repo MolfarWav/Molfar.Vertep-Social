@@ -68,6 +68,8 @@ export interface MockProfile extends ProfileForm {
   card?: string;
   /** The day the profile was made or last updated from the card: "2026-11-09" (real) or a ready text (mock). */
   cardDate?: string;
+  /** The fingerprint of the card text the profile was made from (the plugin sets it; "Update all" compares it). */
+  cardHash?: string;
   /** Imported profiles: the card it was made from (the "Update from Roleplay" button reads it again). */
   from?: ImportRef;
 }

@@ -441,3 +441,39 @@ test("the Soul line carries spectra, what the character prizes and what hurts th
   const many = Array.from({ length: 12 }, (_, i) => ({ cue: "v" + i }));
   expect(plugin.soulLine({ values: many }).split(", ").length).toBe(5);
 });
+
+test("check: a card that changed since the profile was made is told without a model; no hash counts as changed once", () => {
+  const h = makeHost(ROLEPLAY);
+  // an import carries the fingerprint of the text the model read (the first pass puts it in the stash)
+  route(h.host, "POST", "/profiles/import", { kind: "card", id: "mavka" });
+  const hash = plugin.hashText(plugin.buildMaterial({ kind: "card", id: "mavka" }, ROLEPLAY["characters/mavka/card.json"]).text);
+  expect(hash).toMatch(/^[0-9a-f]{8}-\d+$/);
+  h.host.llm.results = { digest: { text: GOOD } };
+  const made = route(h.host, "POST", "/profiles/import", { kind: "card", id: "mavka" }, { stash: { name: "Мавка", title: "Мавка з озера v3", hash } });
+  expect(made.json.profile.cardHash).toBe(hash);
+  const checked = (host: any) => route(host, "POST", "/profiles/check").json;
+  expect(checked(h.host).items).toEqual([{ id: made.json.profile.id, name: "Мавка", state: "same" }]);
+  expect(h.requests.length).toBe(1); // only the first pass of the import asked a model; the check asked none
+  // the card text changes in Roleplay: changed, still no model
+  (ROLEPLAY["characters/mavka/card.json"] as any).description += " Тепер ще й співає.";
+  const changed = checked(h.host).items[0];
+  expect(changed.state).toBe("changed");
+  expect(changed.first).toBeUndefined();
+  (ROLEPLAY["characters/mavka/card.json"] as any).description = (ROLEPLAY["characters/mavka/card.json"] as any).description.replace(" Тепер ще й співає.", "");
+  expect(checked(h.host).items[0].state).toBe("same");
+  // a profile made before the fingerprint existed counts as changed once
+  const old = makeHost(ROLEPLAY);
+  route(old.host, "PUT", "/profiles/rp-mavka", { name: "Мавка", source: "roleplay", card: "x", from: { kind: "card", id: "mavka" } });
+  expect(checked(old.host).items[0]).toMatchObject({ id: "rp-mavka", state: "changed", first: true });
+  // a refresh hands the fingerprint back with the proposal; an own profile is not checked; a save keeps the stored hash
+  old.host.llm.results = { digest: { text: GOOD } };
+  const r = route(old.host, "POST", "/profiles/refresh", { profileId: "rp-mavka" }, { stash: { name: "Мавка", title: "x", hash } });
+  expect(r.json.cardHash).toBe(hash);
+  route(old.host, "PUT", "/profiles/rp-mavka", { name: "Мавка", source: "roleplay", from: { kind: "card", id: "mavka" }, cardHash: hash });
+  route(old.host, "PUT", "/profiles/rp-mavka", { name: "Мавка 2", source: "roleplay", from: { kind: "card", id: "mavka" } });
+  expect(JSON.parse(old.files.get("profiles/rp-mavka.json")!).cardHash).toBe(hash);
+  route(old.host, "PUT", "/profiles/own-1", { name: "Own", source: "own" });
+  expect(checked(old.host).items.map((i: any) => i.id)).toEqual(["rp-mavka"]);
+  // no access: closed
+  expect(checked(makeHost(null).host).code).toBe("no-access");
+});

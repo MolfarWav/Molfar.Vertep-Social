@@ -19,6 +19,7 @@
  *   GET    /profiles/roleplay/status  {state: "ready" | "closed"}: may Social read Roleplay right now
  *   GET    /profiles/roleplay         what can be imported: {state, characters, hidden, truncated}
  *   POST   /profiles/import {kind: "card", id, key?, model?}   one card -> one profile (the one-time digest)
+ *   POST   /profiles/check                             which Roleplay profiles have a changed card (no model: the card text is hashed)
  *   POST   /profiles/refresh {profileId, model?}       a new digest of the source, as a proposal: nothing is saved
  *   POST   /profiles/avatar {profileId} or {personaId}  the picture to bring along: {ok, avatar: {url, from} | null}
  *          (the card's avatar, else the Soul-tab portrait of the name; the screen uploads it, nothing is stored here)
@@ -217,6 +218,21 @@ function cleanSchedule(v, seed, text) {
 }
 
 /** Where an imported profile came from: {kind: "card", id, key?} (key: a Soul name on a narrator card). */
+/**
+ * A short fingerprint of the text the model reads for a card (FNV-1a, 32 bit, and the length). It only tells "the card
+ * changed" from "the card is the same" for the global update, so it needs no strength; it holds no card text.
+ */
+export function hashText(s) {
+  const t = String(s);
+  let h = 0x811c9dc5;
+  for (let i = 0; i < t.length; i++) {
+    h ^= t.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0") + "-" + t.length;
+}
+const CARD_HASH = /^[0-9a-f]{8}-\d{1,7}$/;
+
 function cleanFrom(v) {
   if (!isObj(v) || v.kind !== "card" || !validSourceId(v.id)) return null;
   const key = plain(v.key, 80);
@@ -257,6 +273,8 @@ export function cleanProfile(raw, id, now, prev) {
   const source = SOURCES.includes(raw.source) ? raw.source : "own";
   const card = plain(raw.card, 120);
   const cardDate = plain(raw.cardDate, 40);
+  // the fingerprint of the card text the profile was made from; the stored copy's survives a save that does not carry it
+  const cardHash = CARD_HASH.test(String(raw.cardHash || "")) ? String(raw.cardHash) : prev && CARD_HASH.test(String(prev.cardHash || "")) ? String(prev.cardHash) : "";
   // "provider/model" for this profile alone; "" = the app's model for the task (Settings > Models)
   const model = typeof raw.model === "string" && raw.model !== "default" && MODEL_REF.test(raw.model.trim()) ? raw.model.trim() : "";
   const from = cleanFrom(raw.from);
@@ -267,6 +285,7 @@ export function cleanProfile(raw, id, now, prev) {
     source,
     ...(source === "roleplay" && card ? { card } : {}),
     ...(source === "roleplay" && cardDate ? { cardDate } : {}),
+    ...(source === "roleplay" && cardHash ? { cardHash } : {}),
     ...(source === "roleplay" && from ? { from } : {}),
     nick: plain(raw.nick, 80) || name,
     about: multi(raw.about, 4000),
@@ -1058,6 +1077,7 @@ export function profileFromDigest(ref, material, digest, now) {
       source: "roleplay",
       card: material.title,
       cardDate: today(),
+      cardHash: material.hash || "",
       from: { kind: "card", id: ref.id, ...(ref.key ? { key: ref.key } : {}) },
       nick: material.name,
       about: digest.about,
@@ -1096,7 +1116,7 @@ function digestPass(host, ref, model) {
     messages: [{ role: "user", content: material.text }],
     presetParams: { temperature: 0.6, max_tokens: 2000 },
   });
-  return { __llmPending: true, stash: { name: material.name, title: material.title } };
+  return { __llmPending: true, stash: { name: material.name, title: material.title, hash: hashText(material.text) } };
 }
 
 function importRoute(req, host) {
@@ -1119,7 +1139,7 @@ function importRoute(req, host) {
   const out = cleanDigest(r);
   if (out.error) return ok(failure(out.error));
   const now = Date.now();
-  const p = profileFromDigest(ref, { name: plain(stash.name, 80), title: plain(stash.title, 120) }, out.digest, now);
+  const p = profileFromDigest(ref, { name: plain(stash.name, 80), title: plain(stash.title, 120), hash: plain(stash.hash, 40) }, out.digest, now);
   if (!p) return ok({ error: "the profile has no name" }, 400);
   fsx.write(profilePath(id), JSON.stringify(p, null, 2));
   return ok({ ok: true, profile: p });
@@ -1137,7 +1157,42 @@ function refreshRoute(req, host) {
   if (!r) return digestPass(host, ref, b.model);
   const out = cleanDigest(r);
   if (out.error) return ok(failure(out.error));
-  return ok({ ok: true, proposal: out.digest, cardDate: today() });
+  const stash = isObj(req.stash) ? req.stash : {};
+  const hash = plain(stash.hash, 40);
+  return ok({ ok: true, proposal: out.digest, cardDate: today(), ...(CARD_HASH.test(hash) ? { cardHash: hash } : {}) });
+}
+
+/**
+ * POST /profiles/check: which Roleplay profiles have a card that changed since the profile was made or last updated.
+ * No model: the text the digest model would read is hashed and compared with the profile's `cardHash`. A profile
+ * without a hash (made before this existed) counts as changed once (`first`). Returns {items: [{id, name, state, first?}]},
+ * state: "same" | "changed" | "gone" | "unreadable" | "empty".
+ */
+function checkRoute(req, host) {
+  const peer = roleplayPeer(host);
+  if (!peer) return ok({ ok: false, code: "no-access", error: CLOSED_TEXT });
+  const t0 = Date.now();
+  const items = [];
+  const docs = new Map();
+  let truncated = false;
+  for (const p of listProfiles(host.fs)) {
+    const ref = p.source === "roleplay" ? cleanFrom(p.from) : null;
+    if (!ref) continue;
+    if (Date.now() - t0 > SCAN_MS) {
+      truncated = true;
+      break;
+    }
+    if (!docs.has(ref.id)) docs.set(ref.id, readRoleplayJson(peer, refPath(ref)));
+    const got = docs.get(ref.id);
+    let state = "same";
+    if (!got.doc) state = got.gone ? "gone" : "unreadable";
+    else {
+      const m = buildMaterial(ref, got.doc);
+      state = !m ? "empty" : p.cardHash === hashText(m.text) ? "same" : "changed";
+    }
+    items.push({ id: p.id, name: p.name, state, ...(state === "changed" && !p.cardHash ? { first: true } : {}) });
+  }
+  return ok({ ok: true, items, truncated });
 }
 
 // ---------- avatars from Roleplay ----------
@@ -1376,6 +1431,7 @@ export function handleRoute(req, host) {
   if (path === "/profiles/suggest" && method === "POST") return suggestRoute(req, host);
   if (path === "/profiles/fill" && method === "POST") return fillRoute(req, host);
   if (path === "/profiles/import" && method === "POST") return importRoute(req, host);
+  if (path === "/profiles/check" && method === "POST") return checkRoute(req, host);
   if (path === "/profiles/refresh" && method === "POST") return refreshRoute(req, host);
   if (path === "/profiles/avatar" && method === "POST") return avatarRoute(req, host);
   if (path === "/profiles/roleplay" || path === "/profiles/roleplay/status") return roleplayRoute(req, host, path);

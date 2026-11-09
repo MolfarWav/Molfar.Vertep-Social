@@ -24,6 +24,7 @@
 //   state=importing     the import run, frozen at 4 of 9
 //   state=importfail    the import run, one card failed
 //   state=diff          "Оновити з Roleplay: що зміниться" open on Мавка
+//   state=updateall     "Update all from Roleplay": the check, then the pick list (two profiles changed)
 //   state=habits-empty  Мавка has no habits; the Habits tab shows the empty state
 //   state=unsaved       Мавка has an unsaved draft; the leave question is open
 //   view=new            "New profile": the choice dialog (bottom sheet on phone)
@@ -66,6 +67,7 @@ import { ProfileListDesktop, ProfileListPhone } from "./list";
 import { ImportDialog, ImportRun, FirstRun, type ImportSource } from "./import";
 import { ImportRunner, importOne, makeDiff, refreshOne, scanRoleplay, type Exec, type RunStatus, type UpdateDiff } from "./import-api";
 import { DeleteDialog, DiffDialog, UnsavedDialog, type DiffView } from "./states";
+import { UpdateAllDialog, type ApplyItem } from "./update-all";
 import { FillReview, type FillPhase } from "./fill-ui";
 import { applyProposals, emptyKeys, itemsOf, recordOf, type FillItem } from "./fill";
 import { errorText, fullProfile, stripStamps, sync } from "./persist";
@@ -241,8 +243,10 @@ export function Profiles() {
   // "Update from Roleplay": the profile it belongs to and what the dialog shows (reading, failed, the diff).
   const [refresh, setRefresh] = useState<{ id: string; view: DiffView } | null>(() => (pv.state === "diff" ? { id: "mavka", view: { phase: "diff", diff: previewDiff("mavka") } } : null));
   const refreshCount = useRef(0);
-  // The card date a refresh will set once its draft is saved (the date moves with the text, not before it).
-  const [pendingDate, setPendingDate] = useState<Record<string, string>>({});
+  // "Update all from Roleplay": the dialog is open.
+  const [updateAll, setUpdateAll] = useState(pv.state === "updateall");
+  // The card date and fingerprint a refresh will set once its draft is saved (they move with the text, not before it).
+  const [pendingDate, setPendingDate] = useState<Record<string, { date: string; hash: string }>>({});
   const [unsaved, setUnsaved] = useState<Unsaved>(() => (pv.state === "unsaved" && store.all[0] ? { id: store.all[0].id, pending: null } : null));
   const [fill, setFill] = useState<FillRun | null>(() => {
     const p = store.all.find((x) => x.id === YARYNA);
@@ -389,8 +393,8 @@ export function Profiles() {
   /** A saved draft; if an "Update from Roleplay" was accepted into it, the profile's card date moves with the text. */
   const saveWithDate = (s: Store, id: string): Store => {
     const next = saveDraft(s, id);
-    const date = pendingDate[id];
-    return date ? { ...next, all: next.all.map((x) => (x.id === id ? { ...x, cardDate: date } : x)) } : next;
+    const card = pendingDate[id];
+    return card ? { ...next, all: next.all.map((x) => (x.id === id ? { ...x, cardDate: card.date, ...(card.hash ? { cardHash: card.hash } : {}) } : x)) } : next;
   };
   const clearPending = (id: string) =>
     setPendingDate((d) => {
@@ -474,13 +478,25 @@ export function Profiles() {
     }
     setRefresh({ id, view: { phase: "busy" } });
     refreshOne(id).then(
-      ({ digest, cardDate }) => {
-        if (refreshCount.current === mine) setRefresh({ id, view: { phase: "diff", diff: makeDiff(formFor(id), digest), cardDate } });
+      ({ digest, cardDate, cardHash }) => {
+        if (refreshCount.current === mine) setRefresh({ id, view: { phase: "diff", diff: makeDiff(formFor(id), digest), cardDate, cardHash } });
       },
       (e: unknown) => {
         if (refreshCount.current === mine) setRefresh({ id, view: { phase: "fail", message: errorText(e) } });
       },
     );
+  };
+
+  /** "Update all from Roleplay", applied: the ticked changes are written into the profiles and saved at once. */
+  const applyUpdates = (items: ApplyItem[]) => {
+    setStore((s) => {
+      let next = s;
+      for (const it of items) {
+        if (Object.keys(it.patch).length) next = saveDraft(withDraft(next, it.id, it.patch), it.id);
+        next = { ...next, all: next.all.map((x) => (x.id === it.id ? { ...x, ...(it.cardDate ? { cardDate: it.cardDate } : {}), ...(it.cardHash ? { cardHash: it.cardHash } : {}) } : x)) };
+      }
+      return next;
+    });
   };
 
   const closeRefresh = () => {
@@ -499,7 +515,7 @@ export function Profiles() {
     } else if (view?.phase === "diff" && view.diff) {
       const { patch } = view.diff;
       setStore((s) => withDraft(s, id, patch));
-      if (view.cardDate) setPendingDate((d) => ({ ...d, [id]: view.cardDate as string }));
+      if (view.cardDate) setPendingDate((d) => ({ ...d, [id]: { date: view.cardDate as string, hash: view.cardHash ?? "" } }));
     }
     setRefresh(null);
   };
@@ -555,7 +571,7 @@ export function Profiles() {
     onStop: stopFill,
   });
 
-  const list = { profiles: store.all, query, onQuery: setQuery, source: sourceFilter, onSource: setSourceFilter, onImport: openImport, onNew: () => setNewMode({ start: { stage: "choose" } }) };
+  const list = { profiles: store.all, query, onQuery: setQuery, source: sourceFilter, onSource: setSourceFilter, onImport: openImport, onNew: () => setNewMode({ start: { stage: "choose" } }), onUpdateAll: store.all.some((p) => p.source === "roleplay") ? () => setUpdateAll(true) : undefined };
 
   const editorFor = (p: MockProfile) => ({
     profile: p,
@@ -658,6 +674,16 @@ export function Profiles() {
       )}
       {refresh && editing && refresh.id === editing.id && (
         <DiffDialog name={editing.name} view={refresh.view} labels={!PREVIEW} onClose={closeRefresh} onAccept={() => acceptDiff(editing.id)} onRetry={() => startRefresh(editing.id)} />
+      )}
+      {updateAll && (
+        <UpdateAllDialog
+          profiles={store.all}
+          formFor={formFor}
+          dirty={new Set(store.all.filter((p) => dirtyOf(p.id)).map((p) => p.id))}
+          preview={PREVIEW}
+          onApply={applyUpdates}
+          onClose={() => setUpdateAll(false)}
+        />
       )}
       {unsaved && unsavedProfile && (
         <UnsavedDialog

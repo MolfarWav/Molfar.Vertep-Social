@@ -13,6 +13,8 @@ Updates dialog install it from this repository.
 
 - **Roleplay import reads more of the Soul.** The profile model now also gets the Soul's spectra (introvert/extrovert, cautious/reckless, reserved/emotional, law-abiding/rebellious, suspicious/trusting, pessimist/optimist), what the character prizes (values) and what hurts them more (triggers). Before, only pronouns, class, extreme traits and coping were read. Profiles already imported change only when you press "Update from Roleplay".
 
+- **Update all from Roleplay.** One button in the profile list (a round-arrow icon on a phone) checks every Roleplay profile against its card without a model, lists the ones whose card changed, reads those you tick (one model call each), shows what would change and applies the ticked ones, saved at once. A profile stores a fingerprint of the card text it was made from to tell changed from unchanged; profiles made earlier are read once to start it. Profiles with unsaved edits are skipped.
+
 ## 0.3.0 (2026-11-09)
 
 Everything since 0.2.0: a forum, Life, emoji, a page for your own personas and a lot of detail work.
