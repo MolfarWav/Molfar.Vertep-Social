@@ -9,6 +9,8 @@ Updates dialog install it from this repository.
 
 - **Picture from disk.** The profile picture dialog has an "Upload from disk…" button (PNG, JPEG, WebP or GIF, up to 10 MB; large pictures are scaled to 768 px). Before, a picture could only be drawn by a model.
 
+- **Forum topics stay on the board's subject.** A character's new topic could start from an outside-world item that had nothing to do with the board (a Wikipedia piece about old newspapers in "Games and films"). An item is now offered only to a board it suits: a general board, a shared word, or the item's own subject (games, film, anime, science, culture...). Otherwise the character writes about its own diary or an interest.
+
 ## 0.3.0 (2026-11-09)
 
 Everything since 0.2.0: a forum, Life, emoji, a page for your own personas and a lot of detail work.

@@ -190,9 +190,9 @@ export function recentDays(fsx, p, _now) {
 const lifeWords = (s) => String(s).toLowerCase().split(/[\s.,!?;:'"«»“”()[\]{}<>…—–\-_/\\|]+/).filter((w) => w.length >= 4);
 
 /** A world item for a profile: interest matches first, otherwise a random one half of the time. `skip` holds ids already told. */
-function lifeWorldItem(fsx, p, a, skip, rand) {
+function lifeWorldItem(fsx, p, a, skip, rand, fits) {
   const w = readJson(fsx, WORLD_FILE, null);
-  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id));
+  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id) && (typeof fits !== "function" || fits(i)));
   if (!items.length) return null;
   const mine = new Set((Array.isArray(p.interests) ? p.interests : []).filter((x) => typeof x === "string").flatMap(lifeWords));
   const hits = mine.size ? items.filter((i) => lifeWords(str(i.title) + " " + str(i.text)).some((x) => mine.has(x))) : [];
@@ -204,8 +204,9 @@ function lifeWorldItem(fsx, p, a, skip, rand) {
  * Something a profile can bring up: an unshared diary entry of the last 3 days, or a world item. Returns {text, ref} (ref is the
  * entry or item id, to be remembered once the post or message is filed) or null when there is nothing. Text from outside is
  * quoted inside <outside> tags, with its source, capped; the line tells the model it is data and never instructions.
+ * `fits(item)` (optional) says which world items the caller can use at all (the forum: those that suit the board).
  */
-export function lifeSubject(fsx, p, now, shared, rand) {
+export function lifeSubject(fsx, p, now, shared, rand, fits) {
   const r = rand || Math.random;
   const a = lifeAllowed(fsx, p);
   const skip = shared instanceof Set ? shared : new Set(shared || []);
@@ -215,7 +216,7 @@ export function lifeSubject(fsx, p, now, shared, rand) {
     if (e) cand.push({ ref: String(e.id), text: 'Something from your own recent days, it really happened to you: "' + cut(str(e.text), 400) + '"' });
   }
   if (a.world) {
-    const i = lifeWorldItem(fsx, p, a, skip, r);
+    const i = lifeWorldItem(fsx, p, a, skip, r, fits);
     if (i) {
       const quoted = '<outside source="' + cut(str(i.src).replace(/[<>"]/g, ""), 40) + '" category="' + str(i.cat).replace(/[^a-z]/g, "") + '">' + cut(str(i.title).replace(/[<>]/g, " "), 160) + (str(i.text) ? " — " + cut(str(i.text).replace(/[<>]/g, " "), 300) : "") + "</outside>";
       cand.push({

@@ -428,9 +428,9 @@ export function recentDays(fsx, p, _now) {
 const lifeWords = (s) => String(s).toLowerCase().split(/[\s.,!?;:'"«»“”()[\]{}<>…—–\-_/\\|]+/).filter((w) => w.length >= 4);
 
 /** A world item for a profile: interest matches first, otherwise a random one half of the time. `skip` holds ids already told. */
-function lifeWorldItem(fsx, p, a, skip, rand) {
+function lifeWorldItem(fsx, p, a, skip, rand, fits) {
   const w = readJson(fsx, WORLD_FILE, null);
-  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id));
+  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id) && (typeof fits !== "function" || fits(i)));
   if (!items.length) return null;
   const mine = new Set((Array.isArray(p.interests) ? p.interests : []).filter((x) => typeof x === "string").flatMap(lifeWords));
   const hits = mine.size ? items.filter((i) => lifeWords(str(i.title) + " " + str(i.text)).some((x) => mine.has(x))) : [];
@@ -442,8 +442,9 @@ function lifeWorldItem(fsx, p, a, skip, rand) {
  * Something a profile can bring up: an unshared diary entry of the last 3 days, or a world item. Returns {text, ref} (ref is the
  * entry or item id, to be remembered once the post or message is filed) or null when there is nothing. Text from outside is
  * quoted inside <outside> tags, with its source, capped; the line tells the model it is data and never instructions.
+ * `fits(item)` (optional) says which world items the caller can use at all (the forum: those that suit the board).
  */
-export function lifeSubject(fsx, p, now, shared, rand) {
+export function lifeSubject(fsx, p, now, shared, rand, fits) {
   const r = rand || Math.random;
   const a = lifeAllowed(fsx, p);
   const skip = shared instanceof Set ? shared : new Set(shared || []);
@@ -453,7 +454,7 @@ export function lifeSubject(fsx, p, now, shared, rand) {
     if (e) cand.push({ ref: String(e.id), text: 'Something from your own recent days, it really happened to you: "' + cut(str(e.text), 400) + '"' });
   }
   if (a.world) {
-    const i = lifeWorldItem(fsx, p, a, skip, r);
+    const i = lifeWorldItem(fsx, p, a, skip, r, fits);
     if (i) {
       const quoted = '<outside source="' + cut(str(i.src).replace(/[<>"]/g, ""), 40) + '" category="' + str(i.cat).replace(/[^a-z]/g, "") + '">' + cut(str(i.title).replace(/[<>]/g, " "), 160) + (str(i.text) ? " — " + cut(str(i.text).replace(/[<>]/g, " "), 300) : "") + "</outside>";
       cand.push({
@@ -496,6 +497,33 @@ export function systemPromptFor(p, recent) {
   return lines.join("\n");
 }
 
+// Which world items a board can take. The board is chosen first (an author's favourites), so an item is offered only when
+// the board is a general one, its name or description shares a word with the item, or the item's category is the board's
+// subject. Boards are written by the user in any language, hence the stems.
+const GENERAL_BOARD = /general|common|random|off.?topic|chat|talk|lounge|misc|other|free|вільн|загальн|різне|флуд|балачк|офтоп|курилк|інше/i;
+const CAT_BOARD = {
+  news: /news|world|current|новин|світ|подій/i,
+  politics: /politic|news|world|polic|політ|новин|світ/i,
+  games: /game|gaming|игр|ігр|гейм/i,
+  film: /film|movie|cinema|series|\btv\b|show|кін|фільм|серіал/i,
+  anime: /anime|manga|аніме|манг/i,
+  science: /scien|space|tech|nature|наук|космос|техн|природ/i,
+  culture: /cultur|histor|bart|book|music|literat|культур|істор|мистец|книг|музик|літератур/i,
+  weather: /weather|climate|погод|клімат/i,
+  reddit: /reddit|meme|internet|мем|інтернет/i,
+};
+
+/** Whether a world item (`{cat, title, text}`) suits a board (`{name, desc}`). */
+export function itemFitsBoard(item, board) {
+  const b = isObj(board) ? board : {};
+  const label = str(b.name) + " " + str(b.desc);
+  if (GENERAL_BOARD.test(label)) return true;
+  const re = CAT_BOARD[item && item.cat];
+  if (re && re.test(label)) return true;
+  const mine = new Set(lifeWords(label));
+  return mine.size > 0 && lifeWords(str(item && item.title) + " " + str(item && item.text)).some((x) => mine.has(x));
+}
+
 /**
  * What a new topic is about: the ONE place that decides the subject. An unshared diary entry or a world item of the author
  * (see `lifeSubject`), else one of its interests, else nothing (the model decides). Returns {text, ref}: the sentence for the
@@ -505,8 +533,9 @@ export function pickSubject(profile, world, rand) {
   const r = rand || Math.random;
   const w = isObj(world) ? world : {};
   if (w.fsx) {
-    const life = lifeSubject(w.fsx, profile, Number.isFinite(w.now) ? w.now : Date.now(), new Set(lifeUsed(w.fsx)[profile.id] || []), r);
-    if (life) return { text: life.text + " Base the topic on it, from the angle that suits this board.", ref: life.ref };
+    const fits = w.board ? (i) => itemFitsBoard(i, w.board) : undefined;
+    const life = lifeSubject(w.fsx, profile, Number.isFinite(w.now) ? w.now : Date.now(), new Set(lifeUsed(w.fsx)[profile.id] || []), r, fits);
+    if (life) return { text: life.text + " Use it only if it really fits this board; if it does not, write about something else that suits you and the board.", ref: life.ref };
   }
   if (!profile.interests.length) return { text: "", ref: "" };
   const interest = profile.interests[Math.floor(r() * profile.interests.length)];

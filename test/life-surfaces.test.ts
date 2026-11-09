@@ -283,3 +283,29 @@ test("profiles: the life switches are kept, default on, and merged in the settin
   seedProfile(h, "b");
   expect(profiles.handleRoute({ method: "DELETE", path: "/profiles/b" }, h.host).json.ok).toBe(true);
 });
+
+test("forum: a world item is offered only to a board it suits; a general board takes any", () => {
+  const board = (name: string, desc = "") => ({ name, desc });
+  const wiki = { id: "w1", cat: "culture", title: "Alternative papers from before my time", text: "A weekly paper in New York" };
+  const game = { id: "w2", cat: "games", title: "A new game is out", text: "" };
+  expect(forum.itemFitsBoard(wiki, board("Games and films"))).toBe(false);
+  expect(forum.itemFitsBoard(game, board("Games and films"))).toBe(true);
+  expect(forum.itemFitsBoard(wiki, board("Books and history"))).toBe(true);
+  expect(forum.itemFitsBoard(wiki, board("Off-topic"))).toBe(true);
+  expect(forum.itemFitsBoard(wiki, board("Кіно та ігри"))).toBe(false);
+  expect(forum.itemFitsBoard(game, board("Кіно та ігри"))).toBe(true);
+  // a shared word between the board and the item is enough
+  expect(forum.itemFitsBoard(wiki, board("Newspapers", "old papers and print"))).toBe(true);
+
+  const h = makeHost();
+  settings(h);
+  seedProfile(h, "a", { interests: ["reeds"] });
+  seedWorld(h, [wiki]);
+  const a = forum.loadProfiles(h.host.fs)[0];
+  // on a board it does not suit, the item is not used: the author falls back to an interest
+  const off = forum.pickSubject(a, { fsx: h.host.fs, now: NOW, board: board("Games and films") }, () => 0);
+  expect(off.ref).toBe("");
+  expect(off.text).toContain("reeds");
+  const on = forum.pickSubject(a, { fsx: h.host.fs, now: NOW, board: board("History") }, () => 0);
+  expect(on.ref).toBe("w1");
+});
