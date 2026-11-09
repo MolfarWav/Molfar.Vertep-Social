@@ -10,8 +10,8 @@
   "reads": [
     {
       "app": "roleplay",
-      "paths": ["characters/*/card.json", "personas/*.json"],
-      "why": "Import your characters and personas once, as Social profiles. Social reads a card only when you import or update a profile."
+      "paths": ["characters/*/card.json", "personas/*.json", "litopys/portraits.json"],
+      "why": "Import your characters and personas once, with their pictures (the avatar, or the portrait set for the name in Soul). Read only when you import or update a profile."
     }
   ]
 }
