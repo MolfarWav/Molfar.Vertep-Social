@@ -8,7 +8,7 @@ import { PREVIEW, type ModelChoice } from "@/lib/api";
 import { Row, Segmented, Stepper, Switch, TimeRange, type Opt } from "./controls";
 import { LifeMain, LifeWorld } from "./life";
 import { PicturesRows } from "./pictures";
-import { AccessControl, LanguageRows, languageHint, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
+import { AccessControl, GroupHead, LanguageRows, languageHint, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
 import type { SettingsError } from "./state";
 
 type Open = "quiet" | "life" | "models" | "notify" | "access" | "language" | null;
@@ -82,7 +82,7 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
             <span className="go" aria-hidden="true">›</span>
           </button>
         </section>
-        <h2 className="gl">{t("settings.group.forum")}</h2>
+        <GroupHead title={t("settings.group.forum")} glyph="forum" />
         <section className="sec" aria-label={t("settings.group.forum")}>
           <Row title={t("settings.autonomous.phone")}>
             {(id) => <Switch labelledBy={id} checked={s.autonomous} onChange={(v) => set({ autonomous: v })} />}
@@ -107,7 +107,7 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
         </section>
         <Summary s={s} phone />
 
-        <h2 className="gl">{t("settings.group.messenger")}</h2>
+        <GroupHead title={t("settings.group.messenger")} glyph="messenger" />
         <section className="sec" aria-label={t("settings.group.messenger")}>
           <Row title={t("settings.messenger.first.phone")}>
             {(id) => <Switch labelledBy={id} checked={s.messengerFirst} onChange={(v) => set({ messengerFirst: v })} />}
@@ -130,7 +130,7 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
           </Row>
         </section>
 
-        <h2 className="gl">{t("settings.group.life")}</h2>
+        <GroupHead title={t("settings.group.life")} glyph="life" />
         <section className="sec" aria-label={t("settings.group.life")}>
           <LifeMain s={s} set={set} phone />
           <Disclosure id="life" open={open} onToggle={toggle} title={t("settings.life.world.phone")} hint={t("settings.life.world.phone.hint")}>
@@ -138,12 +138,12 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
           </Disclosure>
         </section>
 
-        <h2 className="gl">{t("settings.group.pictures")}</h2>
+        <GroupHead title={t("settings.group.pictures")} glyph="pictures" />
         <section className="sec" aria-label={t("settings.group.pictures")}>
           <PicturesRows s={s} set={set} phone />
         </section>
 
-        <h2 className="gl">{t("settings.group.other")}</h2>
+        <GroupHead title={t("settings.group.other")} glyph="other" />
         <section className="sec" aria-label={t("settings.group.other")}>
           <Disclosure id="language" open={open} onToggle={toggle} title={t("settings.section.language")} hint={languageHint(t, pref, lang)}>
             <LanguageRows />

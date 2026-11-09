@@ -34,6 +34,9 @@ Status flower: five petals around the Vertep eye; colour, centre mark and a word
 - The approved screens are the reference: `/mnt/project-files/social/screens/` in the Molfar Vertep project
   (not in this repo). Compare at 1280x800 and 390x844 in all three themes.
 
+## Settings blocks
+Each settings block has a tone and an icon (`src/screens/settings/tone.tsx`: `LOOK` maps a block name to a hue, `BlockIcon` draws its icon). The hues and their text colours per theme are in `settings.css` (`[data-tone]`). A desktop `Card` and a phone `GroupHead` take the block name (`glyph`). The desktop page is two `.col` columns, not grid rows: a tall card in a shared grid leaves a hole under its neighbour. A new block gets a name in `tone.tsx` first.
+
 ## Preview and `?` parameters
 `bun run preview:build`, then `NODE_PATH=$(npm root -g) node scripts/shot.cjs <outDir> "<query>"`.
 Query: `screen=messenger|forum|profiles|settings|you`, `theme=vertep|dark|light`, `lang=en|uk`, and per-screen `view=` / `state=`
