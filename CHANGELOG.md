@@ -3,6 +3,10 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## 0.4.1 (2026-11-09)
+
+- **Dialogs scroll.** A dialog whose content was taller than the window ("Update from card" with a long About and many interests) cut off its lower part and its buttons, and could not be scrolled, so there was no way to accept or close it with the mouse. The body of every dialog now scrolls, with the title and the buttons always in view. The Social plugins are unchanged (0.4.0).
+
 ## 0.4.0 (2026-11-09)
 
 Pictures in messages and posts, an "Update all" for Roleplay profiles, a richer Roleplay import, and a few fixes. Released on its own: nothing in Molfar Vertep itself changed (it needs the same engine as 0.3.0). The Social plugins are 0.4.0, Life stays 0.1.0.
