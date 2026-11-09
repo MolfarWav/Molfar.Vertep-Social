@@ -44,6 +44,8 @@
  */
 
 const ID = /^[A-Za-z0-9_-]{1,60}$/;
+/** The shared outside-news feed. Derived (every device fetches its own), so it lives in the app's .cache folder, which sync and backups leave out: two devices never fight over it. Same path in the three plugins. */
+const WORLD_FILE = ".cache/life/world.json";
 const SELF = "me";
 const STATUSES = ["online", "away", "dnd", "na", "off"];
 
@@ -427,7 +429,7 @@ const lifeWords = (s) => String(s).toLowerCase().split(/[\s.,!?;:'"«»“”()[
 
 /** A world item for a profile: interest matches first, otherwise a random one half of the time. `skip` holds ids already told. */
 function lifeWorldItem(fsx, p, a, skip, rand) {
-  const w = readJson(fsx, "life/world.json", null);
+  const w = readJson(fsx, WORLD_FILE, null);
   const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id));
   if (!items.length) return null;
   const mine = new Set((Array.isArray(p.interests) ? p.interests : []).filter((x) => typeof x === "string").flatMap(lifeWords));

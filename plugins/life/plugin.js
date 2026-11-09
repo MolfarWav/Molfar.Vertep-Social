@@ -6,10 +6,10 @@
  *       a rolling diary per profile: what the character did, a mood word, a plan for tomorrow. Written once per local
  *       day by `onTick` (one model call per profile; rules choose the shape of the day, the model words it), shown in
  *       the profile and editable by the user. The messenger and the forum read it; only this plugin writes it.
- *   life/world.json              {day, fetchedAt, cats, place, items: [{id, cat, src, title, text}], errors}
+ *   .cache/life/world.json       {day, fetchedAt, cats, place, items: [{id, cat, src, title, text}], errors}
  *       one shared feed of outside news, fetched once per local day from a fixed list of hosts (the manifest's
  *       `networkHosts`). No model call per fetch. Text from outside is untrusted: it is capped, stripped of angle
- *       brackets and only ever quoted to a model as data.
+ *       brackets and only ever quoted to a model as data. It sits in `.cache` (derived, left out of sync and backups).
  *   life/place.json              {name, lat, lon}  the weather place, looked up once when the user types it.
  *
  * Routes (relative to /v1/apps/social):
@@ -27,6 +27,8 @@
  */
 
 const ID = /^[A-Za-z0-9_-]{1,60}$/;
+/** The shared outside-news feed. Derived (every device fetches its own), so it lives in the app's .cache folder, which sync and backups leave out: two devices never fight over it. Same path in the three plugins. */
+const WORLD_FILE = ".cache/life/world.json";
 const STATUSES = ["online", "away", "dnd", "na", "off"];
 const KEEP_ENTRIES = 21;
 const ENTRY_MAX = 400;
@@ -254,7 +256,7 @@ export function pickWorldItem(profile, items, skip, rand) {
 // ---------- the world feed: reading ----------
 
 export function readWorld(fsx) {
-  const w = readJson(fsx, "life/world.json", null);
+  const w = readJson(fsx, WORLD_FILE, null);
   if (!isObj(w)) return { day: "", fetchedAt: 0, cats: [], place: "", items: [], errors: {}, failedAt: 0 };
   return {
     day: typeof w.day === "string" ? w.day : "",
@@ -640,10 +642,12 @@ function fileWorld(fsx, settings, results, now) {
   // keep the older feed when this fetch brought nothing at all (offline, blocked): old news beats none, and the failure is remembered
   if (!w.items.length) {
     const old = readWorld(fsx);
-    fsx.write("life/world.json", JSON.stringify({ ...old, errors: w.errors, failedAt: now }, null, 2));
+    fsx.write(WORLD_FILE, JSON.stringify({ ...old, errors: w.errors, failedAt: now }, null, 2));
     return old;
   }
-  fsx.write("life/world.json", JSON.stringify(w, null, 2));
+  fsx.write(WORLD_FILE, JSON.stringify(w, null, 2));
+  // an earlier build kept the feed in life/world.json, which sync carried between devices: drop that copy
+  try { fsx.remove("life/world.json"); } catch { /* none */ }
   return w;
 }
 
