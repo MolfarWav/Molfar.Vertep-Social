@@ -6,13 +6,13 @@ body { background: var(--base); color: var(--ink); overflow: hidden; }
 #app { height: 100%; }
 button { font: inherit; color: inherit; cursor: pointer; }
 
-.soc { box-sizing: border-box; background: var(--base); color: var(--ink); font: 14px/1.45 Inter, "Inter Variable", system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; height: 100dvh; }
+.soc { box-sizing: border-box; background: var(--base); color: var(--ink); font: 14px/1.45 Inter, "Inter Variable", "Social Emoji", system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; height: 100dvh; }
 .soc *, .soc *::before, .soc *::after { box-sizing: border-box; }
 
 .av { overflow: hidden; border-radius: 6px; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; border: 1px solid rgb(255 255 255 / 0.18); }
 
 .av-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.btn { height: 40px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--raised); color: var(--ink); font: 600 14px Inter, "Inter Variable", system-ui, sans-serif; }
+.btn { height: 40px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--raised); color: var(--ink); font: 600 14px Inter, "Inter Variable", "Social Emoji", system-ui, sans-serif; }
 .btn.cta { background: var(--cta); color: var(--ctaink); border-color: transparent; }
 .ib { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); display: flex; align-items: center; justify-content: center; padding: 0; }
 

@@ -21,7 +21,7 @@ If the model fails, the interview offers the five questions or a blank profile. 
 Pick a profile in the list; type in "Search by name" and use the filters All, Roleplay and Created to find one. Each source has its own icon and colour: a book for Roleplay, a pencil for Created (made by you in Social). The picked filter shows its word; the others show only the icon, and a tooltip names them. The editor has six tabs:
 
 - **About**: nick, a short description, interests, tags and the habits the profile adds by itself. Interests and tags are coloured chips; a word keeps the same colour everywhere. Tags (up to 8) are short labels of your own, such as a role or a mood; the list shows the first three under the name.
-- **Writing manner**: voice, length of messages, emoji and formality, with a preview of how the character sounds.
+- **Writing manner**: voice, length of messages, emoji and formality, with a preview of how the character sounds. "Emoji" is **Never**, **Sometimes** or **Often** and decides how freely the character uses emoji in the Messenger and on the Forum. A new profile starts at "Sometimes"; profiles made before that keep the level they had.
 - **Status schedule**: a week grid of when the character is online, away, do not disturb, unavailable or offline, with a small random shift so changes are not exact to the minute.
 - **Forum**: rank, signature, how often the character posts, whether they open their own threads and reply to you or to other characters, favourite boards.
 - **Habits**: small quirks the profile adds by itself after talks and posts. You can add your own (marked "yours", not counted in the daily limit) or delete any.

@@ -1,6 +1,7 @@
 // One topic: the posts and the reply box. Shared by the design preview and the real forum.
 // "Quote" picks a post and a chip above the box says whose post it is; the server writes the quote.
 import { useEffect, useRef, useState } from "react";
+import { useEmoji } from "@/emoji/use-emoji";
 import { useT } from "@/i18n/index";
 import { BackIcon, DotsIcon, LockIcon, SearchIcon } from "./Icons";
 import { countLabel } from "./labels";
@@ -49,6 +50,7 @@ export function TopicView(p: TopicViewProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
+  const emoji = useEmoji({ target: ref, value: draft, onChange: setDraft, phone: p.phone });
   const posts = p.posts ?? [];
   const postsLabel = countLabel(t, "posts", p.paging?.total ?? posts.length);
   const pager = p.paging && p.onPage ? <Pager page={p.paging.page} pages={p.paging.pages} onPage={p.onPage} /> : null;
@@ -207,6 +209,7 @@ export function TopicView(p: TopicViewProps) {
             {chip}
             {errLine}
             <div className="rep-row">
+              {emoji.button}
               <textarea
                 ref={ref}
                 className="inp"
@@ -221,6 +224,7 @@ export function TopicView(p: TopicViewProps) {
             </div>
           </div>
         )}
+        {emoji.tray}
       </div>
     );
   }
@@ -269,6 +273,7 @@ export function TopicView(p: TopicViewProps) {
                 />
                 {errLine}
                 <div className="qr-row">
+                  {emoji.button}
                   <span className="qr-note">{t("forum.topic.note")}</span>
                   {!p.live && <button type="button" className="btn">{t("forum.topic.preview")}</button>}
                   <button type="button" className="btn cta" onClick={() => void send()} disabled={busy || !draft.trim()}>{t("forum.topic.send")}</button>

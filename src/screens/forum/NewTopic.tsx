@@ -1,6 +1,7 @@
 // The form for a new topic: board, title, first post. A page on desktop, a full-screen page with the buttons in
 // a bottom bar on phone (the thumb reaches them, they stay above the keyboard).
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useEmoji } from "@/emoji/use-emoji";
 import { useT } from "@/i18n/index";
 import { BackIcon } from "./Icons";
 
@@ -26,6 +27,8 @@ export function NewTopic(p: NewTopicProps) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const box = useRef<HTMLTextAreaElement>(null);
+  const emoji = useEmoji({ target: box, value: text, onChange: setText, phone: p.phone });
   const ready = title.trim().length >= 3 && text.trim().length > 0 && !!board;
 
   const submit = async () => {
@@ -53,9 +56,13 @@ export function NewTopic(p: NewTopicProps) {
         <input id="nt-title" className="line" value={title} maxLength={120} placeholder={t("forum.new.titlePh")} onChange={(e) => setTitle(e.target.value)} autoFocus={!p.phone} />
       </div>
       <div className="field">
-        <label htmlFor="nt-text">{t("forum.new.textLabel")}</label>
+        <div className="field-top">
+          <label htmlFor="nt-text">{t("forum.new.textLabel")}</label>
+          {emoji.button}
+        </div>
         <textarea
           id="nt-text"
+          ref={box}
           className="inp tall"
           value={text}
           placeholder={t("forum.new.textPh")}
@@ -86,6 +93,7 @@ export function NewTopic(p: NewTopicProps) {
           <button type="button" className="btn" onClick={p.onCancel}>{t("forum.new.cancel")}</button>
           <button type="button" className="btn cta grow" onClick={() => void submit()} disabled={!ready || busy}>{t("forum.new.submit")}</button>
         </div>
+        {emoji.tray}
       </div>
     );
   }
