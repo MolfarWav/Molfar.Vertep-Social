@@ -1,0 +1,347 @@
+{
+  "version": 1,
+  "packs": [
+    {
+      "id": "noto-animated",
+      "name": "Noto animated emoji",
+      "kind": "sticker",
+      "description": "Google's animated Noto emoji as stickers: twelve faces and gestures that move. Resized to 160 px and re-encoded.",
+      "author": "Google",
+      "license": "CC-BY-4.0",
+      "source": "https://googlefonts.github.io/noto-emoji-animation/",
+      "items": [
+        {
+          "id": "happy",
+          "name": "Happy",
+          "file": "happy.webp",
+          "tags": [
+            "smile",
+            "grin",
+            "радість"
+          ]
+        },
+        {
+          "id": "joy",
+          "name": "Tears of joy",
+          "file": "joy.webp",
+          "tags": [
+            "laugh",
+            "lol",
+            "сміх"
+          ]
+        },
+        {
+          "id": "love",
+          "name": "Heart eyes",
+          "file": "love.webp",
+          "tags": [
+            "love",
+            "crush",
+            "любов"
+          ]
+        },
+        {
+          "id": "wink",
+          "name": "Wink",
+          "file": "wink.webp",
+          "tags": [
+            "flirt",
+            "cheeky",
+            "підморгує"
+          ]
+        },
+        {
+          "id": "thinking",
+          "name": "Thinking",
+          "file": "thinking.webp",
+          "tags": [
+            "hmm",
+            "doubt",
+            "думає"
+          ]
+        },
+        {
+          "id": "cry",
+          "name": "Crying",
+          "file": "cry.webp",
+          "tags": [
+            "sad",
+            "tear",
+            "плаче"
+          ]
+        },
+        {
+          "id": "angry",
+          "name": "Angry",
+          "file": "angry.webp",
+          "tags": [
+            "mad",
+            "rage",
+            "злий"
+          ]
+        },
+        {
+          "id": "scream",
+          "name": "Scream",
+          "file": "scream.webp",
+          "tags": [
+            "fear",
+            "shock",
+            "крик"
+          ]
+        },
+        {
+          "id": "cool",
+          "name": "Cool",
+          "file": "cool.webp",
+          "tags": [
+            "sunglasses",
+            "chill",
+            "крутий"
+          ]
+        },
+        {
+          "id": "thumbs-up",
+          "name": "Thumbs up",
+          "file": "thumbs-up.webp",
+          "tags": [
+            "ok",
+            "yes",
+            "добре"
+          ]
+        },
+        {
+          "id": "clap",
+          "name": "Clap",
+          "file": "clap.webp",
+          "tags": [
+            "bravo",
+            "applause",
+            "оплески"
+          ]
+        },
+        {
+          "id": "fire",
+          "name": "Fire",
+          "file": "fire.webp",
+          "tags": [
+            "hot",
+            "lit",
+            "вогонь"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fluent-3d",
+      "name": "Fluent 3D emoji",
+      "kind": "sticker",
+      "description": "Microsoft's Fluent 3D emoji as stickers: twenty faces and gestures, still pictures.",
+      "author": "Microsoft",
+      "license": "MIT",
+      "source": "https://github.com/microsoft/fluentui-emoji",
+      "items": [
+        {
+          "id": "happy",
+          "name": "Happy",
+          "file": "happy.png",
+          "tags": [
+            "smile",
+            "grin",
+            "радість"
+          ]
+        },
+        {
+          "id": "joy",
+          "name": "Tears of joy",
+          "file": "joy.png",
+          "tags": [
+            "laugh",
+            "lol",
+            "сміх"
+          ]
+        },
+        {
+          "id": "love",
+          "name": "Heart eyes",
+          "file": "love.png",
+          "tags": [
+            "love",
+            "crush",
+            "любов"
+          ]
+        },
+        {
+          "id": "wink",
+          "name": "Wink",
+          "file": "wink.png",
+          "tags": [
+            "flirt",
+            "cheeky",
+            "підморгує"
+          ]
+        },
+        {
+          "id": "thinking",
+          "name": "Thinking",
+          "file": "thinking.png",
+          "tags": [
+            "hmm",
+            "doubt",
+            "думає"
+          ]
+        },
+        {
+          "id": "cry",
+          "name": "Crying",
+          "file": "cry.png",
+          "tags": [
+            "sad",
+            "tear",
+            "плаче"
+          ]
+        },
+        {
+          "id": "sob",
+          "name": "Sobbing",
+          "file": "sob.png",
+          "tags": [
+            "cry",
+            "sad",
+            "ридає"
+          ]
+        },
+        {
+          "id": "angry",
+          "name": "Angry",
+          "file": "angry.png",
+          "tags": [
+            "mad",
+            "rage",
+            "злий"
+          ]
+        },
+        {
+          "id": "scream",
+          "name": "Scream",
+          "file": "scream.png",
+          "tags": [
+            "fear",
+            "shock",
+            "крик"
+          ]
+        },
+        {
+          "id": "sleep",
+          "name": "Sleeping",
+          "file": "sleep.png",
+          "tags": [
+            "tired",
+            "zzz",
+            "спить"
+          ]
+        },
+        {
+          "id": "party-face",
+          "name": "Party face",
+          "file": "party-face.png",
+          "tags": [
+            "party",
+            "celebrate",
+            "свято"
+          ]
+        },
+        {
+          "id": "cool",
+          "name": "Cool",
+          "file": "cool.png",
+          "tags": [
+            "sunglasses",
+            "chill",
+            "крутий"
+          ]
+        },
+        {
+          "id": "eye-roll",
+          "name": "Eye roll",
+          "file": "eye-roll.png",
+          "tags": [
+            "whatever",
+            "bored",
+            "ну-ну"
+          ]
+        },
+        {
+          "id": "hug",
+          "name": "Hug",
+          "file": "hug.png",
+          "tags": [
+            "warm",
+            "comfort",
+            "обійми"
+          ]
+        },
+        {
+          "id": "thumbs-up",
+          "name": "Thumbs up",
+          "file": "thumbs-up.png",
+          "tags": [
+            "ok",
+            "yes",
+            "добре"
+          ]
+        },
+        {
+          "id": "thanks",
+          "name": "Thanks",
+          "file": "thanks.png",
+          "tags": [
+            "please",
+            "pray",
+            "дякую"
+          ]
+        },
+        {
+          "id": "clap",
+          "name": "Clap",
+          "file": "clap.png",
+          "tags": [
+            "bravo",
+            "applause",
+            "оплески"
+          ]
+        },
+        {
+          "id": "fire",
+          "name": "Fire",
+          "file": "fire.png",
+          "tags": [
+            "hot",
+            "lit",
+            "вогонь"
+          ]
+        },
+        {
+          "id": "party",
+          "name": "Party popper",
+          "file": "party.png",
+          "tags": [
+            "confetti",
+            "congrats",
+            "вітаю"
+          ]
+        },
+        {
+          "id": "wave",
+          "name": "Wave",
+          "file": "wave.png",
+          "tags": [
+            "hello",
+            "bye",
+            "привіт"
+          ]
+        }
+      ]
+    }
+  ]
+}

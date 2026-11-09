@@ -3,7 +3,7 @@
  * (from the weekly schedule) that decides when a reply comes.
  *
  * Routes (relative to /v1/apps/social):
- *   GET  /messenger/contacts            {contacts: [{id, name, hue, picture, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
+ *   GET  /messenger/contacts            (unread first, then the newest chat, then the name) {contacts: [{id, name, hue, picture, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
  *   GET  /messenger/chat?id=<profile>   {chat: {id, status, nextOnline, messages, pending, failed}}
  *   POST /messenger/send {id, text}     adds the user's message; when the profile is online the reply is written now
  *          ({ok, queued, chat} or {ok: false, error, code?, chat}); otherwise the reply is queued (see below)
@@ -247,14 +247,16 @@ export const imageLine = (img) => (img ? (img.sticker ? "[a sticker: " : "[a pic
 // <stickers-shared>
 // ---------- stickers and custom emoji from the user's packs (issue #329, step 2): identical copies in the messenger and the forum plugin ----------
 // The packs live in stickers/packs.json (written by the `stickers` plugin). A profile may use only the packs the user switched on for it
-// (`profile.stickerPacks`, a list of pack ids; none by default). The prompt lists at most 12 items per pack. A character sends a sticker
+// (`profile.stickerPacks`, a list of pack ids; none by default). The prompt lists at most 24 items per pack and 48 in all. A character sends a sticker
 // with [[sticker: pack/item]] (a sticker is a whole message) and uses a custom emoji as :pack/item: inside its text. A marker or token with
 // an id that is not listed is cut out, and a sticker over the day's cap is cut out too: nothing a model invents reaches the screen.
 
 const PACKS_FILE = "stickers/packs.json";
 const PACK_ID = /^[A-Za-z0-9_-]{1,40}$/;
 export const STICKERS_PER_DAY = 3;
-const STICKER_ITEMS_LISTED = 12;
+const STICKER_ITEMS_LISTED = 24;
+// all packs together: a free model with a small context pays for every name in every request (about 6 tokens an item)
+const STICKER_ITEMS_TOTAL = 48;
 const STICKER_MARKER_G = /\[\[\s*sticker\s*:\s*([A-Za-z0-9_-]{1,40})\s*\/\s*([A-Za-z0-9_-]{1,40})\s*\]\]/gi;
 // a pack id that starts with a letter: "9:30/10:30" in a plain text is not a token
 const EMOJI_TOKEN_G = /:([A-Za-z][A-Za-z0-9_-]{0,39})\/([A-Za-z0-9_-]{1,40}):/g;
@@ -282,19 +284,30 @@ export function stickerPacksFor(fsx, profile) {
 
 /** The packs part of a prompt, or "". `sticker`: a sticker may be sent now (the day's cap is not used up). */
 export function stickerHint(packs, sticker) {
-  const list = (p, token) => p.items.slice(0, STICKER_ITEMS_LISTED).map((it) => (token ? ":" + p.id + "/" + it.id + ":" : p.id + "/" + it.id) + " (" + it.name + ")").join(", ");
+  let room = STICKER_ITEMS_TOTAL;
+  const list = (p, token) => {
+    const items = p.items.slice(0, Math.min(STICKER_ITEMS_LISTED, Math.max(room, 0)));
+    room -= items.length;
+    return items.map((it) => (token ? ":" + p.id + "/" + it.id + ":" : p.id + "/" + it.id) + " (" + it.name + ")").join(", ");
+  };
   const lines = [];
   const stk = sticker ? packs.filter((p) => p.kind === "sticker") : [];
   if (stk.length) {
     lines.push(
       "You may send a sticker, rarely, and only when it really fits the mood. A sticker is a message of its own: end your message with [[sticker: pack/name]] using exactly one of the ids below, never one that is not listed. Never explain or mention this. Most messages carry no sticker and no marker.",
     );
-    for (const p of stk) lines.push("Stickers of the pack \"" + p.name + "\": " + list(p) + ".");
+    for (const p of stk) {
+      const l = list(p);
+      if (l) lines.push("Stickers of the pack \"" + p.name + "\": " + l + ".");
+    }
   }
   const emo = packs.filter((p) => p.kind === "emoji");
   if (emo.length) {
     lines.push("You may use custom emoji inside a line of text, written exactly as :pack/name: with one of the ids below, sparingly, never an id that is not listed.");
-    for (const p of emo) lines.push("Custom emoji of the pack \"" + p.name + "\": " + list(p, true) + ".");
+    for (const p of emo) {
+      const l = list(p, true);
+      if (l) lines.push("Custom emoji of the pack \"" + p.name + "\": " + l + ".");
+    }
   }
   return lines.join("\n");
 }
@@ -663,9 +676,18 @@ function fileReply(chat, profile, result, now, fsx) {
 
 // ---------- routes ----------
 
-function lineOf(chat) {
+export function lineOf(chat) {
   const last = chat.messages[chat.messages.length - 1];
-  return last ? cut((last.text || (last.image ? "\ud83d\uddbc" : "")).replace(/\s+/g, " "), 80) : "";
+  if (!last) return "";
+  const flat = (last.text || (last.image ? "\ud83d\uddbc" : "")).replace(/\s+/g, " ");
+  const out = cut(flat, 80);
+  // a cut text must not end in half a custom emoji token: the page draws whole tokens as pictures
+  return out.length < flat.length ? out.replace(/(^|\s):[A-Za-z][A-Za-z0-9_-]{0,39}(?:\/[A-Za-z0-9_-]{0,40})?$/, "$1") : out;
+}
+
+/** The contact list order: an unread chat first, then the newest conversation, then the name (a chat never started sorts by name). */
+export function contactOrder(a, b) {
+  return Number(!!b.unread) - Number(!!a.unread) || (b.lastAt || 0) - (a.lastAt || 0) || a.name.localeCompare(b.name);
 }
 
 function contactsRoute(host) {
@@ -692,7 +714,7 @@ function contactsRoute(host) {
       pending: !!chat.pending,
     });
   }
-  contacts.sort((a, b) => a.name.localeCompare(b.name));
+  contacts.sort(contactOrder);
   return ok({ contacts, now });
 }
 

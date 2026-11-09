@@ -35,6 +35,7 @@
 .s-messenger .crow .t { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .s-messenger .crow .n { font-weight: 500; }
 .s-messenger .crow.unread .n { font-weight: 700; }
+.s-messenger .crow .s .stk-em { height: 1.25em; vertical-align: -0.25em; }
 .s-messenger .crow .s { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .s-messenger .crow.p { min-height: 56px; padding: 6px 16px; gap: 12px; }
 .s-messenger .crow.p .av { font-size: 17px !important; }

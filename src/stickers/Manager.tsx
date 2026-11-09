@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useT } from "@/i18n/index";
 import { Dialog } from "@/screens/profiles/dialog";
 import { addItems, FILE_TYPES, itemNameOf, MAX_ITEMS, MAX_PACKS, newPack, withoutItem, withoutPack, withPack, type PackKind, type StickerPack } from "./model";
+import { CatalogView } from "./CatalogView";
 import { hasMolfarFiles, loadMolfarFile } from "./molfar-files";
 import { fileKey, missingMolfar, MOLFAR_ITEMS, MOLFAR_PACKS } from "./molfar-pack";
 import { addMolfarPacks, savePacks, uploadItem, usePacks } from "./packs";
@@ -86,7 +87,10 @@ function PackCard({ pack, onChange, busy, run }: { pack: StickerPack; onChange: 
         <div className="stm-count">{t("stk.empty")}</div>
       )}
       <div className="stm-row">
-        <span className="stm-count">{pack.items.length === 1 ? t("stk.countOne") : t("stk.count", { n: pack.items.length })}</span>
+        <span className="stm-count">
+          {pack.items.length === 1 ? t("stk.countOne") : t("stk.count", { n: pack.items.length })}
+          {pack.credit && ` · ${t("stk.cat.by", { author: pack.credit.author, license: pack.credit.license })}`}
+        </span>
         <span className="grow" style={{ flex: 1 }} />
         <input ref={file} type="file" accept={ACCEPT} multiple hidden onChange={pickFiles} />
         {!ask && (
@@ -145,6 +149,7 @@ export function Manager({ phone, onClose }: { phone: boolean; onClose: () => voi
   const [notes, setNotes] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [kind, setKind] = useState<PackKind>("sticker");
+  const [view, setView] = useState<"packs" | "catalog">("packs");
   const file = useRef<HTMLInputElement>(null);
 
   const save = async (next: StickerPack[]) => {
@@ -185,25 +190,42 @@ export function Manager({ phone, onClose }: { phone: boolean; onClose: () => voi
   const full = packs.length >= MAX_PACKS;
 
   return (
-    <Dialog title={t("stk.packs")} width={560} sheet={phone} onClose={onClose}>
+    <Dialog title={t(view === "catalog" ? "stk.cat.title" : "stk.packs")} width={560} sheet={phone} onClose={onClose}>
       <div className="pf-body">
-        {hasMolfarFiles() && missingMolfar(packs).length > 0 && <MolfarCard busy={!!busy} full={packs.length + missingMolfar(packs).length > MAX_PACKS} onAdd={addMolfar} />}
-        <p className="stm-intro">{t("stk.intro")}</p>
-        {packs.map((p) => (
-          <PackCard key={p.id} pack={p} busy={!!busy} onChange={(next) => change(p, next)} run={run} />
-        ))}
-        <div className="stm-pack">
-          <div className="lb">{t("stk.new")}</div>
+        {view === "catalog" && (
           <div className="stm-row">
-            <input className="inp" aria-label={t("stk.newName")} placeholder={t("stk.newName")} value={name} maxLength={60} disabled={!!busy || full} onChange={(e) => setName(e.target.value)} />
-            <KindToggle value={kind} label={t("stk.kind")} onChange={setKind} />
+            <button type="button" className="btn" disabled={!!busy} onClick={() => setView("packs")}>{t("stk.cat.back")}</button>
           </div>
-          <div className="stm-row">
-            <input ref={file} type="file" accept={ACCEPT} multiple hidden onChange={create} />
-            <button type="button" className="btn cta" disabled={!!busy || full || !name.trim()} onClick={() => file.current?.click()}>{t("stk.choose")}</button>
-          </div>
-          {full && <p className="stm-err">{t("stk.tooMany")}</p>}
-        </div>
+        )}
+        {view === "catalog" && <CatalogView busy={busy} setBusy={setBusy} setNotes={setNotes} />}
+        {view === "packs" && (
+          <>
+            {hasMolfarFiles() && missingMolfar(packs).length > 0 && <MolfarCard busy={!!busy} full={packs.length + missingMolfar(packs).length > MAX_PACKS} onAdd={addMolfar} />}
+            <div className="stm-pack">
+              <div className="lb">{t("stk.cat.title")}</div>
+              <p className="stm-intro">{t("stk.cat.entry")}</p>
+              <div className="stm-row">
+                <button type="button" className="btn" disabled={!!busy} onClick={() => setView("catalog")}>{t("stk.cat.open")}</button>
+              </div>
+            </div>
+            <p className="stm-intro">{t("stk.intro")}</p>
+            {packs.map((p) => (
+              <PackCard key={p.id} pack={p} busy={!!busy} onChange={(next) => change(p, next)} run={run} />
+            ))}
+            <div className="stm-pack">
+              <div className="lb">{t("stk.new")}</div>
+              <div className="stm-row">
+                <input className="inp" aria-label={t("stk.newName")} placeholder={t("stk.newName")} value={name} maxLength={60} disabled={!!busy || full} onChange={(e) => setName(e.target.value)} />
+                <KindToggle value={kind} label={t("stk.kind")} onChange={setKind} />
+              </div>
+              <div className="stm-row">
+                <input ref={file} type="file" accept={ACCEPT} multiple hidden onChange={create} />
+                <button type="button" className="btn cta" disabled={!!busy || full || !name.trim()} onClick={() => file.current?.click()}>{t("stk.choose")}</button>
+              </div>
+              {full && <p className="stm-err">{t("stk.tooMany")}</p>}
+            </div>
+          </>
+        )}
         {busy && <div className="k" role="status">{busy}</div>}
         {notes.map((n, i) => (
           <p key={i} className="stm-err" role="alert">{n}</p>
