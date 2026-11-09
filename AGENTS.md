@@ -57,6 +57,9 @@ See `docs/DECISIONS.md` for what the owner decided and where to continue.
 refreshes cards through `host.peer`; a persona goes to Your profile (`/you/*`, `you.json`, `src/screens/you/`), not to the profile list (see `docs/DECISIONS.md`, "Roleplay import"); the screen side is `src/screens/profiles/import-api.ts` (list, runner, diff)
 and `import.tsx`. In preview (`?screen=`) the same screens run on `src/mock/profiles-import.ts`.
 
+## Language
+`src/i18n/index.ts`: the UI language is `?lang=` (previews), else the user's choice (Settings > Language: Auto, English, Українська; `social:lang-pref`), else the app's language from `window.molfarShell.locale()` (cached in `social:shell-lang` so the next start has no flash), else English. The browser's language is only used outside the engine, where `locale()` fails. The engine has no "language changed" event; `followShellLanguage` asks again on focus, resize and visibility change, which is what happens when the app's tab comes back.
+
 ## Open items
 - The app cannot read the shell's scheme yet: the theme comes from `?theme=`, then the last choice, then Vertep.
 - The "Open Home" button needs engine 1.13.1 (`molfarShell.openHome`); on an older engine only the text hint shows.

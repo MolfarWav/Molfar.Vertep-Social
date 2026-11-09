@@ -108,6 +108,10 @@
 .s-settings.is-phone .ln.col > b { padding: 0 12px; }
 .s-settings.is-phone .ln.col .seg { margin: 0 12px 12px; width: auto; }
 .s-settings.is-phone .ln.col .seg button { flex: 1; height: 44px; padding: 0 4px; font-size: 13px; }
+/* Language block inside its own row on a phone: the row already says "Language", so no second label; full width, 44 px targets */
+.s-settings.is-phone .sub .lang-lbl { display: none; }
+.s-settings.is-phone .sub .seg { width: 100%; }
+.s-settings.is-phone .sub .seg button { flex: 1; height: 44px; padding: 0 4px; }
 .s-settings.is-phone .sw { width: 48px; height: 28px; border-radius: 14px; }
 .s-settings.is-phone .sw::after { top: 4px; left: 4px; width: 20px; height: 20px; }
 .s-settings.is-phone .sw.on::after { left: 24px; }

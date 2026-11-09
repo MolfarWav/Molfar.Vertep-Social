@@ -20,6 +20,10 @@ Pick a model for the Messenger, for the Forum and for importing profiles. "Engin
 
 A counter on the Social tab, a system notification and a sound; each has its own switch. The counter is the number of unread chats and forum topics on Social's tab in Molfar Vertep. "System notification" is a short message when something new arrives: a popup in the corner of Molfar Vertep while you look at something else, or a system notification when the window is not in front. Molfar Vertep has its own switch per app as well (on the app's details on the start page, "Notifications from this app"). The sound is not available yet.
 
+## Language
+
+Social speaks English or Ukrainian. By default ("Auto") it follows the language of the whole app, the one set in the main Settings of Molfar Vertep, and switches when you change it there (you may need to leave Social's tab and come back). Pick "English" or "Українська" to keep Social in one language whatever the app uses. The choice is kept on this device. A phone has it too: the "Language" row under "Other".
+
 ## Roleplay access
 
 Social reads Roleplay cards only when you import or update a profile, and a Roleplay persona only when you bring it into Your profile (see [[you]]), and only after you allow it. You allow it on Home, not here: open the details of Social and look under "Access to other apps" (Molfar Vertep also asks the first time you open Social). Here the status shows whether reading works now, "Reading cards allowed" or "Reading cards off". The card has no Allow button, because only you can change the permission and Social cannot change it for itself; its "Open Home" button takes you to Home, where you do. If it is off, the import dialog says where to allow it and has the same "Open Home" button. (A Molfar Vertep older than 1.13.1 has no such button: the text says where to go.)
