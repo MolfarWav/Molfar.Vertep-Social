@@ -297,6 +297,10 @@ export function cleanProfile(raw, id, now, prev) {
     model,
     imageModel,
     // how well the character knows the user in the messenger: only a choice that is not the default is stored
+    // the sticker and custom emoji packs this character may use (ids of the packs in stickers/packs.json); none by default
+    ...(Array.isArray(raw.stickerPacks) && raw.stickerPacks.some((x) => typeof x === "string" && ID.test(x))
+      ? { stickerPacks: [...new Set(raw.stickerPacks.filter((x) => typeof x === "string" && ID.test(x)))].slice(0, 40) }
+      : {}),
     ...(raw.knows === "name" || raw.knows === "stranger" || raw.knows === "knows" ? { knows: raw.knows } : {}),
     picture: typeof raw.picture === "string" && PICTURE.test(raw.picture.trim()) ? raw.picture.trim() : "",
     voice: {

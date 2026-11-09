@@ -244,6 +244,80 @@ export const IMAGE_HINT =
 export const imageLine = (img) => (img ? (img.sticker ? "[a sticker: " : "[a picture: ") + (str(img.alt) || str(img.prompt) || "no description") + "]" : "");
 // </images-shared>
 
+// <stickers-shared>
+// ---------- stickers and custom emoji from the user's packs (issue #329, step 2): identical copies in the messenger and the forum plugin ----------
+// The packs live in stickers/packs.json (written by the `stickers` plugin). A profile may use only the packs the user switched on for it
+// (`profile.stickerPacks`, a list of pack ids; none by default). The prompt lists at most 12 items per pack. A character sends a sticker
+// with [[sticker: pack/item]] (a sticker is a whole message) and uses a custom emoji as :pack/item: inside its text. A marker or token with
+// an id that is not listed is cut out, and a sticker over the day's cap is cut out too: nothing a model invents reaches the screen.
+
+const PACKS_FILE = "stickers/packs.json";
+const PACK_ID = /^[A-Za-z0-9_-]{1,40}$/;
+export const STICKERS_PER_DAY = 3;
+const STICKER_ITEMS_LISTED = 12;
+const STICKER_MARKER_G = /\[\[\s*sticker\s*:\s*([A-Za-z0-9_-]{1,40})\s*\/\s*([A-Za-z0-9_-]{1,40})\s*\]\]/gi;
+// a pack id that starts with a letter: "9:30/10:30" in a plain text is not a token
+const EMOJI_TOKEN_G = /:([A-Za-z][A-Za-z0-9_-]{0,39})\/([A-Za-z0-9_-]{1,40}):/g;
+
+/** The packs this profile may use, as {id, name, kind, items: [{id, name, url}]}; [] when none is switched on or the file is unreadable. */
+export function stickerPacksFor(fsx, profile) {
+  const ids = isObj(profile) && Array.isArray(profile.stickerPacks) ? profile.stickerPacks.filter((x) => typeof x === "string" && PACK_ID.test(x)) : [];
+  if (!ids.length) return [];
+  let raw = null;
+  try {
+    raw = JSON.parse(fsx.read(PACKS_FILE));
+  } catch {
+    return [];
+  }
+  const out = [];
+  for (const p of isObj(raw) && Array.isArray(raw.packs) ? raw.packs : []) {
+    if (!isObj(p) || typeof p.id !== "string" || !ids.includes(p.id)) continue;
+    const items = (Array.isArray(p.items) ? p.items : [])
+      .filter((it) => isObj(it) && typeof it.id === "string" && PACK_ID.test(it.id) && typeof it.url === "string" && IMAGE_URL.test(it.url))
+      .map((it) => ({ id: it.id, name: cut(str(it.name) || it.id, 60), url: it.url }));
+    if (items.length) out.push({ id: p.id, name: cut(str(p.name) || p.id, 60), kind: p.kind === "emoji" ? "emoji" : "sticker", items });
+  }
+  return out;
+}
+
+/** The packs part of a prompt, or "". `sticker`: a sticker may be sent now (the day's cap is not used up). */
+export function stickerHint(packs, sticker) {
+  const list = (p, token) => p.items.slice(0, STICKER_ITEMS_LISTED).map((it) => (token ? ":" + p.id + "/" + it.id + ":" : p.id + "/" + it.id) + " (" + it.name + ")").join(", ");
+  const lines = [];
+  const stk = sticker ? packs.filter((p) => p.kind === "sticker") : [];
+  if (stk.length) {
+    lines.push(
+      "You may send a sticker, rarely, and only when it really fits the mood. A sticker is a message of its own: end your message with [[sticker: pack/name]] using exactly one of the ids below, never one that is not listed. Never explain or mention this. Most messages carry no sticker and no marker.",
+    );
+    for (const p of stk) lines.push("Stickers of the pack \"" + p.name + "\": " + list(p) + ".");
+  }
+  const emo = packs.filter((p) => p.kind === "emoji");
+  if (emo.length) {
+    lines.push("You may use custom emoji inside a line of text, written exactly as :pack/name: with one of the ids below, sparingly, never an id that is not listed.");
+    for (const p of emo) lines.push("Custom emoji of the pack \"" + p.name + "\": " + list(p, true) + ".");
+  }
+  return lines.join("\n");
+}
+
+/**
+ * Takes the sticker markers out of a reply and drops custom emoji tokens that are not from an allowed pack. Returns {text, sticker}:
+ * `sticker` is {ref: "pack/item", url, alt} for the first marker that names a sticker of an allowed pack while `may` is true, else null.
+ */
+export function takeSticker(text, packs, may) {
+  let sticker = null;
+  let out = String(text || "").replace(STICKER_MARKER_G, (_m, pk, it) => {
+    if (!sticker && may) {
+      const p = packs.find((x) => x.kind === "sticker" && x.id === pk);
+      const item = p && p.items.find((x) => x.id === it);
+      if (item) sticker = { ref: pk + "/" + it, url: item.url, alt: item.name };
+    }
+    return "";
+  });
+  out = out.replace(EMOJI_TOKEN_G, (m, pk, it) => (packs.some((p) => p.kind === "emoji" && p.id === pk && p.items.some((i) => i.id === it)) ? m : ""));
+  return { text: out.replace(/[ \t]+\n/g, "\n").replace(/[ \t]{2,}/g, " ").trim(), sticker };
+}
+// </stickers-shared>
+
 // ---------- life: read-only access to what the `life` plugin wrote (issue #311) ----------
 // Copied into the messenger and the forum plugin (plugins cannot import each other); test/life-readers.test.ts pins that the two
 // copies are identical. Only the `life` plugin writes life/*; a surface remembers what it has told in its own file.
@@ -359,6 +433,7 @@ export function systemPromptFor(p, you, recent, opts) {
   lines.push(OOC_HINT);
   lines.push("Answer in the language the user writes in. If you do not know something about the real world, say so in your own voice instead of inventing facts.");
   if (isObj(opts) && opts.images) lines.push(IMAGE_HINT);
+  if (isObj(opts) && str(opts.stickers)) lines.push(opts.stickers);
   return lines.join("\n");
 }
 
@@ -534,6 +609,7 @@ function requestReply(host, key, profile, chat) {
     ...(model ? { model } : {}),
     systemPrompt: systemPromptFor(profile, youFor(host.fs, profile), recentDays(host.fs, profile, Date.now()), {
       images: mayImage(host.fs, chat, Date.now()),
+      stickers: stickerHint(stickerPacksFor(host.fs, profile), stickersLeft(host.fs, chat, Date.now()) > 0),
       summary: ctx.summary,
       stranger: knowsOf(host.fs, profile) === "stranger",
     }),
@@ -551,22 +627,35 @@ function mayImage(fsx, chat, now) {
   return chat.messages.filter((m) => m.who === "them" && m.image && m.image.gen && localDay(m.at, tz) === day).length < s.perDay;
 }
 
+/** How many stickers this character may still send in this chat today (counted from the stored messages). */
+function stickersLeft(fsx, chat, now) {
+  const tz = tzOf(fsx);
+  const day = localDay(now, tz);
+  const used = chat.messages.filter((m) => m.who === "them" && m.image && m.image.sticker && localDay(m.at, tz) === day).length;
+  return Math.max(0, STICKERS_PER_DAY - used);
+}
+
 /** Files the model's answer: the reply message, or the failure. Returns an error string or "". */
 function fileReply(chat, profile, result, now, fsx) {
   const r = isObj(result) ? result : {};
   // the marker is cut out whether or not a picture may be sent: it must never show as text
   const taken = r.error ? { text: "", prompt: "" } : takeImageMarker(r.text);
-  const text = r.error ? "" : cleanReply(taken.text, profile.name);
+  // a sticker marker is cut out too; a sticker is kept only from a pack switched on for this profile and within the day's cap
+  const packs = fsx ? stickerPacksFor(fsx, profile) : [];
+  const st = r.error ? { text: "", sticker: null } : takeSticker(taken.text, packs, !!fsx && stickersLeft(fsx, chat, now) > 0);
+  const text = r.error ? "" : cleanReply(st.text, profile.name);
   const draw = fsx && taken.prompt && mayImage(fsx, chat, now) ? { state: "pending", prompt: taken.prompt, gen: true } : null;
   const last = chat.messages[chat.messages.length - 1];
   // the user's message was answered while this call was in flight (another call filed a reply and cleared `pending`): drop this one
   if (!chat.pending && last && last.who === "them") return null;
-  if (!text && !draw) {
+  if (!text && !draw && !st.sticker) {
     if (chat.pending) delete chat.pending.asking;
     chat.failed = failure(r.error || "the model returned nothing");
     return chat.failed;
   }
-  chat.messages.push({ id: newId(now, "them"), who: "them", at: now, text, ...(draw ? { image: draw } : {}) });
+  if (text || draw) chat.messages.push({ id: newId(now, "them"), who: "them", at: now, text, ...(draw ? { image: draw } : {}) });
+  // a sticker is a message of its own, after the text
+  if (st.sticker) chat.messages.push({ id: newId(now, "them"), who: "them", at: now + 1, text: "", image: { state: "ready", url: st.sticker.url, alt: st.sticker.alt, sticker: st.sticker.ref } });
   chat.pending = null;
   chat.failed = null;
   return null;

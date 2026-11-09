@@ -38,6 +38,9 @@ export const strings: Bundle = {
     "stk.pack": "Pack {name}",
     "stk.noneFound": "Nothing found in your packs",
     "stk.sticker": "Sticker",
+    "stk.profile.title": "Stickers and custom emoji",
+    "stk.profile.hint": "The packs this character may use. It sends a sticker rarely and at most three a day in a chat, and puts custom emoji into its text. It sees only the names, never the pictures. None are on by default.",
+    "stk.profile.none": "No packs yet. Add one from the emoji picker in the Messenger, then switch it on here.",
   },
   uk: {
     "stk.packs": "Набори стікерів",
@@ -76,5 +79,8 @@ export const strings: Bundle = {
     "stk.pack": "Набір {name}",
     "stk.noneFound": "У твоїх наборах нічого не знайдено",
     "stk.sticker": "Стікер",
+    "stk.profile.title": "Стікери й кастомні емодзі",
+    "stk.profile.hint": "Набори, якими може користуватися цей персонаж. Стікер він надсилає рідко й не більше трьох на день у чаті, а кастомні емодзі вставляє в текст. Він бачить лише назви, а не картинки. Типово нічого не ввімкнено.",
+    "stk.profile.none": "Наборів ще немає. Додай набір у піккері емодзі в Месенджері, а тоді ввімкни його тут.",
   },
 };

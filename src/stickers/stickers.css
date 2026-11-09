@@ -23,6 +23,9 @@
 .emo-empty .btn { margin-top: 10px; }
 
 /* the manager (drawn by the profiles Dialog, so its layer class applies) */
+.s-profiles .stk-picks { display: flex; flex-direction: column; gap: 8px; }
+.s-profiles .stk-pick { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.s-profiles .stk-pick .stk-thumb { width: 32px; height: 32px; object-fit: contain; flex: none; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); }
 .s-profiles .stm-intro { margin: 0; color: var(--muted); font-size: 13px; }
 .s-profiles .stm-pack { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); }
 .s-profiles .stm-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

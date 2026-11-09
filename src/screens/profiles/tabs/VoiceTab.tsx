@@ -1,6 +1,7 @@
 // "Манера письма": how the profile writes. The preview shows one sample line
 // in the chosen voice; it is a mock, not a model call.
 import { useT } from "@/i18n/index";
+import { ProfilePacks } from "@/stickers/ProfilePacks";
 import { AddChip, Chip, Field, Seg, Slider, withItem } from "../ui";
 import type { TabProps } from "./types";
 
@@ -74,6 +75,8 @@ export function VoiceTab({ form, set, name }: TabProps) {
             />
           )}
         </Field>
+
+        <ProfilePacks value={form.stickerPacks ?? []} onChange={(stickerPacks) => set({ stickerPacks })} />
 
         <div className="f">
           <span className="lb">{t("profiles.voice.neverWrites")}</span>
