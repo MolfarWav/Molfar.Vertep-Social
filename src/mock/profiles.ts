@@ -53,6 +53,8 @@ export interface ProfileForm {
   model: string;
   /** How well the character knows you in the messenger: "" = the app default (Settings > Messenger), else "knows", "name" or "stranger". */
   knows?: "" | "knows" | "name" | "stranger";
+  /** Ids of the sticker and custom emoji packs this character may use (issue #329); none or absent = none. */
+  stickerPacks?: string[];
   /** The image model for pictures this character sends; "" = the app's (Settings > Pictures). */
   imageModel: string;
   /** An engine asset URL ("/v1/assets/<id>") of a generated picture; "" = the letter avatar. */

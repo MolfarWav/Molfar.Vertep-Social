@@ -283,6 +283,7 @@ function readProfile(fsx, id) {
     voice: isObj(p.voice) ? p.voice : {},
     model: modelRef(p.model),
     imageModel: modelRef(p.imageModel),
+    stickerPacks: Array.isArray(p.stickerPacks) ? p.stickerPacks.filter((x) => typeof x === "string") : [],
     picture: typeof p.picture === "string" && /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/.test(p.picture) ? p.picture : "",
     schedule: p.schedule,
     life: isObj(p.life) ? p.life : {},
@@ -441,7 +442,7 @@ const countByAuthor = (topics) => {
 
 // <images-shared>
 // ---------- pictures in messages and posts (issue #331): identical copies in the messenger and the forum plugin ----------
-// A message or post may carry `image`: {state: "ready", url: "/v1/assets/<id>", alt?, gen?} (a picture the user attached, or a
+// A message or post may carry `image`: {state: "ready", url: "/v1/assets/<id>", alt?, gen?, sticker?} (a picture the user attached, or a
 // generated one that has arrived), {state: "pending", prompt, gen: true} (a character asked for one: the page draws it with an
 // engine image model and files it with POST .../image), or {state: "failed", prompt, gen: true}. The plugins cannot draw (they
 // only have text models); the Social page does, through the engine's /v1/images, so a picture arrives while the page is open.
@@ -449,6 +450,8 @@ const countByAuthor = (topics) => {
 // when the model puts [[image: a short English description]] at the end of its text.
 
 const IMAGE_URL = /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/;
+/** A sticker: the picture is a whole message from a pack ("pack/item", ids as in the packs file, issue #329). */
+const STICKER_REF = /^[A-Za-z0-9_-]{1,40}\/[A-Za-z0-9_-]{1,40}$/;
 const IMAGE_MARKER = /\[\[\s*image\s*:\s*([^\]]{0,400}?)\s*\]\]/i;
 
 /** The picture of a message or post as stored; null when there is none or it is not usable. */
@@ -460,7 +463,8 @@ export function cleanImage(raw) {
     return prompt ? { state: raw.state, prompt, gen: true } : null;
   }
   if (typeof raw.url !== "string" || !IMAGE_URL.test(raw.url)) return null;
-  return { state: "ready", url: raw.url, ...(alt ? { alt } : {}), ...(raw.gen === true ? { gen: true } : {}) };
+  const sticker = typeof raw.sticker === "string" && STICKER_REF.test(raw.sticker) ? raw.sticker : "";
+  return { state: "ready", url: raw.url, ...(alt ? { alt } : {}), ...(raw.gen === true ? { gen: true } : {}), ...(sticker ? { sticker } : {}) };
 }
 
 /** Settings > Pictures: whether characters may send pictures, and how many a day each (per surface). */
@@ -495,8 +499,82 @@ export const IMAGE_HINT =
   "You may send a picture, rarely, and only when it really fits the moment (a photo of where you are, something you made). To do it, end your message with [[image: a short visual description in English]] on its own. Never explain or mention this. Most messages carry no picture and no marker.";
 
 /** A picture as one short line for a model's history: the user's pictures are never shown to the model. */
-export const imageLine = (img) => (img ? "[a picture: " + (str(img.alt) || str(img.prompt) || "no description") + "]" : "");
+export const imageLine = (img) => (img ? (img.sticker ? "[a sticker: " : "[a picture: ") + (str(img.alt) || str(img.prompt) || "no description") + "]" : "");
 // </images-shared>
+
+// <stickers-shared>
+// ---------- stickers and custom emoji from the user's packs (issue #329, step 2): identical copies in the messenger and the forum plugin ----------
+// The packs live in stickers/packs.json (written by the `stickers` plugin). A profile may use only the packs the user switched on for it
+// (`profile.stickerPacks`, a list of pack ids; none by default). The prompt lists at most 12 items per pack. A character sends a sticker
+// with [[sticker: pack/item]] (a sticker is a whole message) and uses a custom emoji as :pack/item: inside its text. A marker or token with
+// an id that is not listed is cut out, and a sticker over the day's cap is cut out too: nothing a model invents reaches the screen.
+
+const PACKS_FILE = "stickers/packs.json";
+const PACK_ID = /^[A-Za-z0-9_-]{1,40}$/;
+export const STICKERS_PER_DAY = 3;
+const STICKER_ITEMS_LISTED = 12;
+const STICKER_MARKER_G = /\[\[\s*sticker\s*:\s*([A-Za-z0-9_-]{1,40})\s*\/\s*([A-Za-z0-9_-]{1,40})\s*\]\]/gi;
+// a pack id that starts with a letter: "9:30/10:30" in a plain text is not a token
+const EMOJI_TOKEN_G = /:([A-Za-z][A-Za-z0-9_-]{0,39})\/([A-Za-z0-9_-]{1,40}):/g;
+
+/** The packs this profile may use, as {id, name, kind, items: [{id, name, url}]}; [] when none is switched on or the file is unreadable. */
+export function stickerPacksFor(fsx, profile) {
+  const ids = isObj(profile) && Array.isArray(profile.stickerPacks) ? profile.stickerPacks.filter((x) => typeof x === "string" && PACK_ID.test(x)) : [];
+  if (!ids.length) return [];
+  let raw = null;
+  try {
+    raw = JSON.parse(fsx.read(PACKS_FILE));
+  } catch {
+    return [];
+  }
+  const out = [];
+  for (const p of isObj(raw) && Array.isArray(raw.packs) ? raw.packs : []) {
+    if (!isObj(p) || typeof p.id !== "string" || !ids.includes(p.id)) continue;
+    const items = (Array.isArray(p.items) ? p.items : [])
+      .filter((it) => isObj(it) && typeof it.id === "string" && PACK_ID.test(it.id) && typeof it.url === "string" && IMAGE_URL.test(it.url))
+      .map((it) => ({ id: it.id, name: cut(str(it.name) || it.id, 60), url: it.url }));
+    if (items.length) out.push({ id: p.id, name: cut(str(p.name) || p.id, 60), kind: p.kind === "emoji" ? "emoji" : "sticker", items });
+  }
+  return out;
+}
+
+/** The packs part of a prompt, or "". `sticker`: a sticker may be sent now (the day's cap is not used up). */
+export function stickerHint(packs, sticker) {
+  const list = (p, token) => p.items.slice(0, STICKER_ITEMS_LISTED).map((it) => (token ? ":" + p.id + "/" + it.id + ":" : p.id + "/" + it.id) + " (" + it.name + ")").join(", ");
+  const lines = [];
+  const stk = sticker ? packs.filter((p) => p.kind === "sticker") : [];
+  if (stk.length) {
+    lines.push(
+      "You may send a sticker, rarely, and only when it really fits the mood. A sticker is a message of its own: end your message with [[sticker: pack/name]] using exactly one of the ids below, never one that is not listed. Never explain or mention this. Most messages carry no sticker and no marker.",
+    );
+    for (const p of stk) lines.push("Stickers of the pack \"" + p.name + "\": " + list(p) + ".");
+  }
+  const emo = packs.filter((p) => p.kind === "emoji");
+  if (emo.length) {
+    lines.push("You may use custom emoji inside a line of text, written exactly as :pack/name: with one of the ids below, sparingly, never an id that is not listed.");
+    for (const p of emo) lines.push("Custom emoji of the pack \"" + p.name + "\": " + list(p, true) + ".");
+  }
+  return lines.join("\n");
+}
+
+/**
+ * Takes the sticker markers out of a reply and drops custom emoji tokens that are not from an allowed pack. Returns {text, sticker}:
+ * `sticker` is {ref: "pack/item", url, alt} for the first marker that names a sticker of an allowed pack while `may` is true, else null.
+ */
+export function takeSticker(text, packs, may) {
+  let sticker = null;
+  let out = String(text || "").replace(STICKER_MARKER_G, (_m, pk, it) => {
+    if (!sticker && may) {
+      const p = packs.find((x) => x.kind === "sticker" && x.id === pk);
+      const item = p && p.items.find((x) => x.id === it);
+      if (item) sticker = { ref: pk + "/" + it, url: item.url, alt: item.name };
+    }
+    return "";
+  });
+  out = out.replace(EMOJI_TOKEN_G, (m, pk, it) => (packs.some((p) => p.kind === "emoji" && p.id === pk && p.items.some((i) => i.id === it)) ? m : ""));
+  return { text: out.replace(/[ \t]+\n/g, "\n").replace(/[ \t]{2,}/g, " ").trim(), sticker };
+}
+// </stickers-shared>
 
 // ---------- life: read-only access to what the `life` plugin wrote (issue #311) ----------
 // Copied into the messenger and the forum plugin (plugins cannot import each other); test/life-readers.test.ts pins that the two
@@ -657,6 +735,7 @@ export function systemPromptFor(p, recent, opts) {
   lines.push("Write plain forum text: no quotation marks around the whole post, no stage directions or narration, no name label, no signature.");
   lines.push("Write in the language of the recent posts. When there are none, write in the language of your description above. If you do not know something about the real world, say so in your own voice instead of inventing facts.");
   if (isObj(opts) && opts.images) lines.push(IMAGE_HINT);
+  if (isObj(opts) && str(opts.stickers)) lines.push(opts.stickers);
   return lines.join("\n");
 }
 
@@ -906,12 +985,12 @@ export function planAction(c, rand) {
 
 // ---------- requests and filing ----------
 
-function requestPost(host, key, settings, author, userMessage, maxTokens, images, user) {
+function requestPost(host, key, settings, author, userMessage, maxTokens, images, user, topics) {
   // the author's own model (Profiles > Model) wins over the forum's model in Settings
   const model = author.model || settings.model;
   host.llm.request(key, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(author, recentDays(host.fs, author, Date.now()), { images: images === true, ...(user ? { user } : {}) }),
+    systemPrompt: systemPromptFor(author, recentDays(host.fs, author, Date.now()), { images: images === true, stickers: stickerHint(stickerPacksFor(host.fs, author), Array.isArray(topics) && stickersLeft(host.fs, author, topics, Date.now()) > 0), ...(user ? { user } : {}) }),
     messages: [{ role: "user", content: userMessage }],
     presetParams: { temperature: 0.9, max_tokens: maxTokens },
   });
@@ -924,7 +1003,7 @@ function requestPlan(host, key, settings, plan, boards, topics, rand) {
   if (plan.kind === "reply") {
     const b = boardMap(boards).get(plan.topic.board);
     const user = userKnownTo(host.fs, plan.author, plan.topic, plan.target);
-    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target, user ? user.label : ""), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()), user);
+    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target, user ? user.label : ""), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()), user, topics);
   } else {
     const titles = topics.filter((t) => t.board === plan.board.id).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
     const subject = plan.subject || pickSubject(plan.author, { board: plan.board, titles }, rand);
@@ -961,6 +1040,15 @@ function mayImage(fsx, author, topics, now) {
   return n < s.perDay;
 }
 
+/** How many stickers this author may still post today (counted from the stored posts; a sticker only goes into a reply). */
+function stickersLeft(fsx, author, topics, now) {
+  const tz = readSettings(fsx).tzOffset;
+  const day = localDay(now, tz);
+  let n = 0;
+  for (const t of topics) for (const p of t.posts) if (p.by === author.id && p.image && p.image.sticker && localDay(p.at, tz) === day) n++;
+  return Math.max(0, STICKERS_PER_DAY - n);
+}
+
 /** The model's answer filed as a post or a new topic. Returns {topicId, post} or {error, code?}. */
 export function fileResult(fsx, f, result, now, boards) {
   const author = readProfile(fsx, f.author);
@@ -973,12 +1061,15 @@ export function fileResult(fsx, f, result, now, boards) {
     if (!topic || topic.locked) return { error: "the topic is not open any more" };
     // the marker is cut out whether or not a picture may be sent: it must never show as text
     const taken = takeImageMarker(r.text);
-    const text = cleanReply(taken.text, author.name);
+    const st = takeSticker(taken.text, stickerPacksFor(fsx, author), stickersLeft(fsx, author, loadTopics(fsx), now) > 0);
+    const text = cleanReply(st.text, author.name);
     const draw = taken.prompt && mayImage(fsx, author, loadTopics(fsx), now) ? { state: "pending", prompt: taken.prompt, gen: true } : null;
-    if (!text && !draw) return failure("the model returned nothing");
+    // a drawn picture wins over a sticker: a post holds one picture
+    const stuck = !draw && st.sticker ? { state: "ready", url: st.sticker.url, alt: st.sticker.alt, sticker: st.sticker.ref } : null;
+    if (!text && !draw && !stuck) return failure("the model returned nothing");
     if (text && livePosts(topic).slice(-CONTEXT_POSTS).some((p) => normal(p.text) === normal(text))) return { error: "the post repeats an earlier one" };
     const target = f.quote ? topic.posts.find((p) => p.id === f.quote && !p.removed) : null;
-    const post = { id: "p-" + now + "-" + rid(), ...mine, at: now, text, ...(draw ? { image: draw } : {}), ...(target ? { quote: quoteOf(target) } : {}) };
+    const post = { id: "p-" + now + "-" + rid(), ...mine, at: now, text, ...(draw ? { image: draw } : stuck ? { image: stuck } : {}), ...(target ? { quote: quoteOf(target) } : {}) };
     topic.posts.push(post);
     topic.lastAt = now;
     topic.unread = true;
@@ -991,7 +1082,8 @@ export function fileResult(fsx, f, result, now, boards) {
   const j = parseJsonReply(r.text);
   const title = j ? oneLine(j.title, TITLE_MAX) : "";
   const inline = takeImageMarker(j && typeof j.text === "string" ? j.text : "");
-  const text = j ? cleanReply(inline.text, author.name) : "";
+  // no sticker opens a topic, but a custom emoji may stand in its text
+  const text = j ? cleanReply(takeSticker(inline.text, stickerPacksFor(fsx, author), false).text, author.name) : "";
   const wanted = j ? cut(str(typeof j.image === "string" ? j.image : "").replace(/\s+/g, " "), 400) || inline.prompt : "";
   const draw = wanted && mayImage(fsx, author, loadTopics(fsx), now) ? { state: "pending", prompt: wanted, gen: true } : null;
   if (!title || (!text && !draw)) return { error: "the model's answer was not a topic" };

@@ -23,6 +23,7 @@
 .emo-tab { flex: 1; min-width: 0; height: 36px; padding: 0; border: 0; border-bottom: 2px solid transparent; background: none; font: 18px/1 "Social Emoji", Inter, system-ui, sans-serif; opacity: 0.7; }
 .emo-panel.tray .emo-tab { height: 40px; }
 .emo-tab:hover { opacity: 1; background: var(--hover); }
+.emo-panel.tray .emo-packs .emo-tab { height: 44px; min-width: 44px; }
 .emo-tab[aria-current="true"] { opacity: 1; border-bottom-color: var(--accent); }
 
 .emo-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 8px; overscroll-behavior: contain; }

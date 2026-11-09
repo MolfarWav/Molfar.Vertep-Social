@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PREVIEW, call } from "@/lib/api";
 import { currentLang, useT } from "@/i18n/index";
 import type { Contact, LogItem } from "@/mock/messenger";
-import type { Attached } from "@/pictures/use-picture";
+import { imageBody, imageShown, type Attached } from "@/pictures/use-picture";
 import { refreshImages } from "@/pictures/worker";
 import { useNav } from "@/shell/nav";
 import {
@@ -145,10 +145,10 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
       const at = Date.now();
       setChats((c) => {
         const prev = c[id] ?? EMPTY_CHAT;
-        const mine: LogItem = { kind: "msg", who: "me", time: clock(at), text, ...(image ? { image: { state: "ready", url: image.url, alt: image.alt, ...(image.gen ? { gen: true } : {}) } } : {}) };
+        const mine: LogItem = { kind: "msg", who: "me", time: clock(at), text, ...(image ? { image: imageShown(image) } : {}) };
         return { ...c, [id]: { ...prev, items: [...prev.items, mine], firstAt: prev.firstAt ?? at, failed: null, busy: true } };
       });
-      settle(id, call<EngineAnswer>("POST", "/messenger/send", { id, text, ...(image ? { image: { url: image.url, alt: image.alt, gen: image.gen } } : {}) }));
+      settle(id, call<EngineAnswer>("POST", "/messenger/send", { id, text, ...(image ? { image: imageBody(image) } : {}) }));
     },
     [settle],
   );

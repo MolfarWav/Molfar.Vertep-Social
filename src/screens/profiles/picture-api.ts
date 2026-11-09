@@ -6,6 +6,7 @@
 // /v1/assets like a generated one.
 //
 // Preview states: `?picture=fail` makes the generation fail, `?picture=nomodel` says no image model is set up.
+import { ANIMATION_PROBE_BYTES, isAnimatedImage } from "@/lib/animated-image";
 import { PREVIEW, ApiError } from "@/lib/api";
 import type { Opt } from "@/screens/settings/controls";
 
@@ -100,14 +101,22 @@ export function fitSize(w: number, h: number, max = PICTURE_MAX_SIDE): { w: numb
   return { w: Math.max(1, Math.round(w * k)), h: Math.max(1, Math.round(h * k)) };
 }
 
-/** Scales a still image down to PICTURE_MAX_SIDE (WebP where the browser can, else it stays). GIFs and small images stay as they are. */
-async function shrink(file: File): Promise<{ blob: Blob; mime: string }> {
+/** Scales a still image down to PICTURE_MAX_SIDE (WebP where the browser can, else it stays). GIFs, animated WebP and APNG, and small images stay as they are. */
+async function shrink(file: File, side = PICTURE_MAX_SIDE, keepUnder = 1024 * 1024): Promise<{ blob: Blob; mime: string }> {
   const same = { blob: file as Blob, mime: file.type };
   if (file.type === "image/gif") return same;
+  // an animated WebP or APNG goes as it is: a canvas would keep one frame only (the caller still checks its byte limit)
+  if (file.type === "image/webp" || file.type === "image/png") {
+    try {
+      if (isAnimatedImage(new Uint8Array(await file.slice(0, ANIMATION_PROBE_BYTES).arrayBuffer()))) return same;
+    } catch {
+      // unreadable: treated as a still image below
+    }
+  }
   try {
     const bmp = await createImageBitmap(file);
-    const { w, h } = fitSize(bmp.width, bmp.height);
-    if (w === bmp.width && h === bmp.height && file.size <= 1024 * 1024) return same;
+    const { w, h } = fitSize(bmp.width, bmp.height, side);
+    if (w === bmp.width && h === bmp.height && file.size <= keepUnder) return same;
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
@@ -120,7 +129,7 @@ async function shrink(file: File): Promise<{ blob: Blob; mime: string }> {
 }
 
 /** Stores a picture the user picked from disk. Resolves to its URL; throws an ApiError whose text says what went wrong. */
-export async function uploadPicture(file: File): Promise<string> {
+export async function uploadPicture(file: File, opts: { side?: number; maxBytes?: number } = {}): Promise<string> {
   if (PREVIEW) {
     await delay(300);
     return await new Promise<string>((ok, bad) => {
@@ -130,7 +139,8 @@ export async function uploadPicture(file: File): Promise<string> {
       r.readAsDataURL(file);
     });
   }
-  const { blob, mime } = await shrink(file);
+  const { blob, mime } = await shrink(file, opts.side, opts.maxBytes);
+  if (opts.maxBytes && blob.size > opts.maxBytes) throw new ApiError("the picture is too big", 413);
   const name = file.name.replace(/\.[^.]+$/, "").slice(0, 80) || "picture";
   const res = await fetch(`/v1/assets?name=${encodeURIComponent(name)}`, { method: "PUT", headers: { "content-type": mime }, body: blob });
   const json = (await res.json().catch(() => null)) as { id?: unknown; error?: string } | null;
