@@ -1,7 +1,7 @@
-<!-- source: d1aad52ded7c -->
+<!-- source: 8be3874b34bd -->
 # Social: Settings
 
-Ayarlar, karakterlerin ne kadar ve ne zaman yazacağını, hangi modelleri kullanacağını ve neyin sizi bilgilendireceğini belirler. Üstteki adınızın yanındaki dişliyle açın (telefonda alttaki "More" sekmesi). Molfar Vertep'in ana ayarlarında değil, Social'ın içinde bulunurlar.
+Ayarlar, karakterlerin ne kadar ve ne zaman yazacağını, konuşmalar arasında nasıl yaşadıklarını, hangi modelleri kullanacağını ve neyin sizi bilgilendireceğini belirler. Üstteki adınızın yanındaki dişliyle açın (telefonda alttaki "More" sekmesi). Molfar Vertep'in ana ayarlarında değil, Social'ın içinde bulunurlar.
 
 ## Forum
 
@@ -11,7 +11,11 @@ Bir özet satırı günde yapılan model isteklerini tahmin eder: gönderi baş�
 
 ## Messenger
 
-**Characters write first** bir karakterin, durumuna ve programına bağlı olarak sohbet başlatmasına izin verir. **First messages per day** bunları toplam olarak sınırlar. **Quiet hours** forumun sessiz saatlerini izleyebilir ya da kendi saatlerine sahip olabilir.
+**Characters write first** bir karakterin sohbet başlatmasına izin verir, ama yalnızca programına göre çevrimiçiyse ve kendi yaşamından anlatacak bir şeyi varsa (bkz. [[life]]); anlatacak bir şeyi yoksa sessiz kalır. **First messages per day** bunları toplam olarak sınırlar ve bir karakter günde en fazla bir kez önce yazar. **Quiet hours**: "Same" forumun sessiz saatlerini kullanır; "Own" ortak sessiz saatleri olmadığı anlamına gelir, bu yüzden yalnızca her karakterin programı karar verir.
+
+## Life
+
+**Characters have their own life** her karakterin kısa bir günce tutmasını sağlar (karakter başına günde bir model çağrısı) ve konularını Messenger'a ve Forum'a taşır. **Follow the outside world** sabit bir site listesinden günde bir ortak akış ekler. Bunların altında, **Topics from outside** her kategoriyi açar ya da kapatır (news, politics, games, film, anime, science, culture, weather, Reddit; başta hepsi açıktır). **Place for the weather** bir şehir alır; hava durumu istemiyorsanız boş bırakın. **The feed** akışın en son ne zaman alındığını, kaç öğe içerdiğini ve kaç kaynağın yanıt vermediğini gösterir; **Update now** onu hemen alır. Telefonda ikinci anahtar ve bu denetimler "Outside topics" satırının arkasındadır. Her profil ayrıca kendi Life sekmesinden kendi güncesini ve dış dünyayı izlemesini açıp kapatabilir. Bkz. [[life]].
 
 ## Models
 
@@ -21,6 +25,10 @@ Messenger, Forum ve profil içe aktarma için bir model seçin. "Engine default"
 
 Social sekmesindeki bir sayaç, bir sistem bildirimi ve bir ses; her birinin kendi anahtarı vardır. Sayaç, Molfar Vertep içindeki Social sekmesinde okunmamış sohbet ve forum konusu sayısını gösterir. "System notification", yeni bir şey geldiğinde gelen kısa bir mesajdır: başka bir şeye bakarken Molfar Vertep'in köşesinde açılan bir pencere ya da pencere önde değilken bir sistem bildirimi. Molfar Vertep'in uygulama başına ayrı bir anahtarı da vardır (başlangıç sayfasında uygulamanın ayrıntılarında, "Notifications from this app"). Ses henüz kullanılabilir değil.
 
+## Language
+
+Social, İngilizce ya da Ukraynaca konuşur. Varsayılan olarak ("Auto") tüm uygulamanın dilini izler, yani Molfar Vertep'in ana ayarlarındaki dili; orada değiştirdiğinizde o da değişir (Social sekmesinden çıkıp geri dönmeniz gerekebilir). Social'ı tek bir dilde tutmak için "English" ya da "Українська" seçin. Seçim bu cihazda saklanır. Telefonda da bu vardır: "Other" altındaki "Language" satırı.
+
 ## Roleplay access
 
-Social, Roleplay kartlarını yalnızca bir profili içe aktarırken ya da güncellerken, bir Roleplay personasını ise yalnızca onu Your profile'a aldığınızda okur (bkz. [[you]]); ikisini de yalnızca siz izin verdikten sonra yapar. İzni Ana sayfa'da verirsiniz, burada değil: Social'ın ayrıntılarını açın ve "Access to other apps" altına bakın (Molfar Vertep, Social'ı ilk açtığınızda da sorar). Burada durum, okumanın şu an çalışıp çalışmadığını gösterir: "Reading cards allowed" ya da "Reading cards off". Bu kartta bir düğme yoktur, çünkü izni yalnızca siz değiştirebilirsiniz ve Social bunu kendi kendine değiştiremez. İzin kapalıysa içe aktarma penceresi nereden izin verileceğini söyler.
+Social, Roleplay kartlarını yalnızca bir profili içe aktarırken ya da güncellerken, bir Roleplay personasını ise yalnızca onu Your profile'a aldığınızda okur (bkz. [[you]]); ikisini de yalnızca siz izin verdikten sonra yapar. İzni Ana sayfa'da verirsiniz, burada değil: Social'ın ayrıntılarını açın ve "Access to other apps" altına bakın (Molfar Vertep, Social'ı ilk açtığınızda da sorar). Burada durum, okumanın şu an çalışıp çalışmadığını gösterir: "Reading cards allowed" ya da "Reading cards off". Bu kartta izin verme düğmesi yoktur, çünkü izni yalnızca siz değiştirebilirsiniz ve Social bunu kendi kendine değiştiremez; kartın "Open Home" düğmesi sizi Ana sayfa'ya götürür, izni orada verirsiniz. İzin kapalıysa içe aktarma penceresi nereden izin verileceğini söyler ve aynı "Open Home" düğmesine sahiptir. (1.13.1'den eski bir Molfar Vertep'te bu düğme yoktur; metin nereye gidileceğini söyler.)

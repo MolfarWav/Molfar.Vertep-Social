@@ -1,4 +1,4 @@
-<!-- source: 08891c3a7dcc -->
+<!-- source: cd4e3559d8ec -->
 # Social: Your profile
 
 Profiliniz karakterlere göre kim olduğunuzu söyler. Bu bir karakter değildir: sohbeti ve programı yoktur, kişi listesinde ya da forumda hiçbir zaman görünmez. Sağ üstteki adınızla açın (telefonda: Settings, ilk satır).
@@ -14,4 +14,4 @@ Birkaç persona tutabilirsiniz; örneğin size nasıl hitap edilmesini istediği
 
 ## Persona ekleme
 
-"Add" iki yol sunar. **Write a new one** boş bir persona açar; kaydedilebilmesi için önce bir ad gerekir. **Import from Roleplay** Roleplay'deki personaları listeler; birinin yanındaki "Add"e basın. Social, adını ve açıklamasını bir kez, model kullanmadan kopyalar; Roleplay'de sonradan yapılan düzenlemeler ona yansımaz. Zaten getirilmiş bir persona "Already here" olarak işaretlenir. Roleplay'i okumak için izninizin olması gerekir; bunu Ana sayfa'da bir kez verirsiniz (bkz. [[settings]]). İzin yoksa pencere bunu söyler ve nereden izin verileceğini gösterir.
+"Add" iki yol sunar. **Write a new one** boş bir persona açar; kaydedilebilmesi için önce bir ad gerekir. **Import from Roleplay** Roleplay'deki personaları listeler; birinin yanındaki "Add"e basın. Social adını, açıklamasını ve resmini bir kez, model kullanmadan kopyalar (personanın avatarı, yoksa Roleplay'in Soul sekmesinde o ad için belirlediğiniz portre); Roleplay'de sonradan yapılan düzenlemeler ona yansımaz. Zaten getirilmiş bir persona "Already here" olarak işaretlenir. Roleplay'i okumak için izninizin olması gerekir; bunu Ana sayfa'da bir kez verirsiniz (bkz. [[settings]]). İzin yoksa pencere bunu söyler ve nereden izin verileceğini gösterir.

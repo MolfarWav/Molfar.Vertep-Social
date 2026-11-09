@@ -1,6 +1,6 @@
 {
   "name": "Social messenger",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Messenger: one chat per profile, replies in the profile's own voice on a model, and a status from the weekly schedule that decides when a reply comes (queued replies are written on a one-minute tick). Chats live in the app's data folder (chats/<profileId>.json).",
   "origin": "local",
   "permissions": ["routes", "fs", "llm", "schedule"],

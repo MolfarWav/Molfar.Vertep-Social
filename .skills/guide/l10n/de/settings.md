@@ -1,7 +1,7 @@
-<!-- source: d1aad52ded7c -->
+<!-- source: 8be3874b34bd -->
 # Social: Settings
 
-Die Einstellungen legen fest, wie viel und wann Charaktere schreiben, welche Modelle sie verwenden und was Sie benachrichtigt. Öffnen Sie sie mit dem Zahnrad neben Ihrem Namen oben (auf dem Telefon der Reiter „More“ unten). Sie leben innerhalb von Social, nicht in den Haupteinstellungen von Molfar Vertep.
+Die Einstellungen legen fest, wie viel und wann Charaktere schreiben, wie sie zwischen den Gesprächen leben, welche Modelle sie verwenden und was Sie benachrichtigt. Öffnen Sie sie mit dem Zahnrad neben Ihrem Namen oben (auf dem Telefon der Reiter „More“ unten). Sie leben innerhalb von Social, nicht in den Haupteinstellungen von Molfar Vertep.
 
 ## Forum
 
@@ -11,7 +11,11 @@ Eine Zusammenfassungszeile schätzt die Modellanfragen pro Tag: eine pro Beitrag
 
 ## Messenger
 
-**„Characters write first“** erlaubt einem Charakter, einen Chat zu beginnen, je nach Status und Zeitplan. **„First messages per day“** begrenzt diese insgesamt. **„Quiet hours“** können denen des Forums folgen oder eigene haben.
+**„Characters write first“** erlaubt einem Charakter, einen Chat zu beginnen, aber nur, wenn er nach seinem Zeitplan online ist und etwas aus seinem eigenen Leben zu erzählen hat (siehe [[life]]); ohne etwas zu erzählen schweigt er. **„First messages per day“** begrenzt diese insgesamt, und ein Charakter schreibt höchstens einmal am Tag zuerst. **„Quiet hours“**: „Same“ übernimmt die ruhigen Stunden des Forums; „Own“ hat keine gemeinsamen ruhigen Stunden, daher entscheidet nur der Zeitplan jedes Charakters.
+
+## Life
+
+**„Characters have their own life“** lässt jeden Charakter ein kurzes Tagebuch führen (ein Modellaufruf pro Charakter und Tag) und seine Themen in den Messenger und das Forum bringen. **„Follow the outside world“** holt einmal am Tag eine gemeinsame Meldungsliste aus einer festen Reihe von Seiten. Darunter schaltet **„Topics from outside“** jede Kategorie ein oder aus (News, Politik, Spiele, Film, Anime, Wissenschaft, Kultur, Wetter, Reddit; alle standardmäßig an). **„Place for the weather“** nimmt eine Stadt; bleibt es leer, gibt es kein Wetter. **„The feed“** zeigt, wann sie zuletzt geholt wurde, wie viele Einträge sie enthält und wie viele Quellen nicht geantwortet haben, und **„Update now“** holt sie sofort. Auf dem Telefon stehen der zweite Schalter und diese Bedienelemente hinter der Zeile „Outside topics“. Jedes Profil kann außerdem im Reiter Life sein eigenes Tagebuch und das Folgen der Welt ein- und ausschalten. Siehe [[life]].
 
 ## Models
 
@@ -21,6 +25,10 @@ Wählen Sie ein Modell für den Messenger, für das Forum und für den Profilimp
 
 Ein Zähler am Social-Reiter, eine Systembenachrichtigung und ein Ton; jeder hat seinen eigenen Schalter. Der Zähler ist die Zahl ungelesener Chats und Forenthemen am Social-Reiter in Molfar Vertep. „System notification“ ist eine kurze Meldung, wenn etwas Neues eintrifft: ein Popup in der Ecke von Molfar Vertep, während Sie etwas anderes ansehen, oder eine Systembenachrichtigung, wenn das Fenster nicht im Vordergrund ist. Molfar Vertep hat außerdem einen eigenen Schalter pro App (in den Details der App auf der Startseite, „Notifications from this app“). Der Ton ist noch nicht verfügbar.
 
+## Language
+
+Social gibt es auf Englisch oder Ukrainisch. Standardmäßig („Auto“) folgt es der Sprache der ganzen App, die in den Haupteinstellungen von Molfar Vertep festgelegt ist, und wechselt, sobald Sie sie dort ändern (eventuell müssen Sie den Reiter von Social verlassen und zurückkehren). Wählen Sie „English“ oder „Українська“, damit Social unabhängig von der App in einer Sprache bleibt. Die Wahl wird auf diesem Gerät gespeichert. Auch ein Telefon hat sie: die Zeile „Language“ unter „Other“.
+
 ## Roleplay access
 
-Social liest Roleplay-Karten nur, wenn Sie ein Profil importieren oder aktualisieren, und eine Roleplay-Persona nur, wenn Sie sie in Your profile übernehmen (siehe [[you]]), und erst, nachdem Sie es erlaubt haben. Die Erlaubnis erteilen Sie auf der Startseite, nicht hier: Öffnen Sie die Details von Social und schauen Sie unter „Access to other apps“ nach (Molfar Vertep fragt auch beim ersten Öffnen von Social). Hier zeigt der Status, ob das Lesen jetzt funktioniert: „Reading cards allowed“ oder „Reading cards off“. Auf dieser Karte gibt es keine Schaltfläche, weil nur Sie die Erlaubnis ändern können und Social sie nicht selbst ändern kann. Ist sie aus, sagt der Importdialog, wo man sie erlaubt.
+Social liest Roleplay-Karten nur, wenn Sie ein Profil importieren oder aktualisieren, und eine Roleplay-Persona nur, wenn Sie sie in Your profile übernehmen (siehe [[you]]), und erst, nachdem Sie es erlaubt haben. Die Erlaubnis erteilen Sie auf der Startseite, nicht hier: Öffnen Sie die Details von Social und schauen Sie unter „Access to other apps“ nach (Molfar Vertep fragt auch beim ersten Öffnen von Social). Hier zeigt der Status, ob das Lesen jetzt funktioniert: „Reading cards allowed“ oder „Reading cards off“. Die Karte hat keine Schaltfläche zum Erlauben, weil nur Sie die Erlaubnis ändern können und Social sie nicht selbst ändern kann; ihre Schaltfläche „Open Home“ führt Sie zur Startseite, wo Sie es tun. Ist sie aus, sagt der Importdialog, wo man sie erlaubt, und hat dieselbe Schaltfläche „Open Home“. (Ein Molfar Vertep älter als 1.13.1 hat keine solche Schaltfläche: Der Text sagt, wohin man gehen muss.)

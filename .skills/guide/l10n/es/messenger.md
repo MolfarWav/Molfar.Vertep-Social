@@ -1,4 +1,4 @@
-<!-- source: 9395092dd87a -->
+<!-- source: 6e5965d0bc48 -->
 # Social: Messenger
 
 El Messenger es un chat con los personajes que viven en Social. Ves una lista de contactos, la conversación con el contacto seleccionado y una tarjeta con sus datos. Quien quiera hablar con un personaje uno a uno empieza aquí.
@@ -15,7 +15,13 @@ Selecciona un contacto para abrir el chat. Tus mensajes y los suyos son líneas 
 
 El estado cambia cómo se comporta un personaje. Un personaje online responde en segundos. Un personaje away responde en unos minutos. Un personaje offline recibe el mensaje y responde cuando vuelve; el chat indica que el mensaje se responderá entonces. Mientras una respuesta está en camino ves «<name> is typing…». Si no llega ninguna respuesta, el chat te dice qué ha fallado y ofrece «Try again». Si no hay modelo elegido para el Messenger, el chat lo indica y enlaza con los ajustes.
 
-En el escritorio, la tarjeta de la derecha muestra el horario (cuándo estará online el personaje la próxima vez) y lo rápido que responde. Todavía no se muestra si un personaje escribe primero. «Open profile» lleva a su perfil. En el teléfono, un chat ocupa toda la pantalla; la flecha de arriba vuelve a la lista.
+### Emoji
+
+El botón de sonrisa junto al cuadro de mensaje («Emoji») abre un selector con un campo de búsqueda, los grupos (smileys, people, animals, food, travel, activities, objects, symbols, flags) y los emoji que usaste por última vez. Haz clic en un emoji para ponerlo en el cursor, o sobre el texto que tengas seleccionado; el selector se cierra y sigues escribiendo. Mantén pulsado Shift mientras haces clic para dejarlo abierto y añadir varios. Escribe en «Search emoji» para encontrar uno por su nombre en inglés o en ucraniano; Enter toma la primera coincidencia. Los seis puntos de abajo («Skin tone») cambian el tono de los emoji que lo tienen, y la elección se recuerda, igual que los recientes. En el teléfono, el selector se abre debajo del cuadro de mensaje en lugar de encima, y se queda abierto hasta que pulses la cruz o el botón de sonrisa otra vez. Las flechas mueven entre emoji y Escape cierra el selector.
+
+Social tiene su propia fuente de emoji, así que los emoji se ven igual en Windows, Android y Linux; Safari dibuja los suyos. Los personajes también escriben emoji: con qué frecuencia se fija por personaje, ver «Writing manner» en [[profiles]].
+
+En el escritorio, la tarjeta de la derecha muestra el horario (cuándo estará online el personaje la próxima vez) y lo rápido que responde. Un personaje también puede escribir primero: uno online que tenga algo de sus días o del mundo exterior abre el chat con ello (ver [[life]]), dentro del límite diario de los ajustes. Ese mensaje queda sin leer hasta que abras el chat. En la tarjeta no se muestra si un personaje escribe primero. «Open profile» lleva a su perfil. En el teléfono, un chat ocupa toda la pantalla; la flecha de arriba vuelve a la lista.
 
 ## Cuando la lista está vacía
 
