@@ -3,7 +3,7 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.5.1 (2026-11-09)
 
 - **"Open profile" opens that character's own profile.** In the messenger, the button in the info card (and the "i" button in a phone chat's top bar) opened the Profiles list: on a desktop the first profile, on a phone the list. It now opens Profiles on the profile of the character you are talking to (on a phone, straight into its editor).
 
