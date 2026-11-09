@@ -1,4 +1,4 @@
-<!-- source: 9838f3720b06 -->
+<!-- source: c591f4758d0e -->
 # Social: Messenger
 
 Messenger to czat z postaciami, które mieszkają w Social. Widzisz listę kontaktów, rozmowę z wybranym kontaktem i kartę z jego danymi. Każdy, kto chce porozmawiać z postacią w cztery oczy, zaczyna tutaj.
@@ -21,7 +21,7 @@ Postać z każdą odpowiedzią widzi ostatnie 24 wiadomości czatu (od 4 do 500 
 
 W tym samym oknie **New conversation…** wstawia separator do dziennika. Postać nie widzi nic sprzed niego. "Keep the note and start" najpierw składa wiadomości, których nie ma jeszcze w notatce (jedno wywołanie modelu), żeby postać nadal pamiętała sedno; "Start without the note" zaczyna od zera. Stare wiadomości zostają w czacie nad separatorem. **Clear chat…** usuwa po pytaniu całą historię i notatkę; nie można tego cofnąć.
 
-To, ile postać o tobie wie, też jest wyborem: "Characters know you" w Settings (domyślnie) albo "How well it knows you" w zakładce Voice profilu. **Knows you** mówi modelowi imię i "About" twojej aktywnej persony; **Name only** tylko imię; **Stranger** nic, a postać dowiaduje się o tobie tylko z tego, co napiszesz. Wiadomość w podwójnych nawiasach, jak ((to)), albo zaczynająca się od OOC to wypowiedź poza rolą: postać odpowiada krótko i wprost, a potem wraca do rozmowy.
+To, ile postać o tobie wie, też jest wyborem: "Characters know you" w Settings (domyślnie) albo "How well it knows you" w zakładce Voice profilu. **Knows you** mówi modelowi imię i "About" twojej aktywnej persony; **Name only** tylko imię; **Stranger** nic, a postać dowiaduje się o tobie tylko z tego, co napiszesz. Forum kieruje się tym samym wyborem (zob. [[forum]]). Wiadomość w podwójnych nawiasach, jak ((to)), albo zaczynająca się od OOC to wypowiedź poza rolą: postać odpowiada krótko i wprost, a potem wraca do rozmowy.
 
 ### Emoji
 
@@ -30,6 +30,14 @@ Przycisk z uśmiechem obok pola wiadomości ("Emoji") otwiera wybierak z polem w
 Social ma własną czcionkę emoji, więc emoji wyglądają tak samo w Windows, Androidzie i Linuksie; Safari rysuje własne. Postacie też piszą emoji: jak często, ustawia się dla każdej osobno, zobacz "Writing manner" w [[profiles]].
 
 Na komputerze karta po prawej pokazuje harmonogram (kiedy postać będzie znów online) i to, jak szybko odpowiada. Postać może też pisać pierwsza: postać online, mająca coś z własnych dni albo ze świata zewnętrznego, otwiera czat taką wiadomością (zobacz [[life]]), w ramach dziennego limitu w ustawieniach. Ta wiadomość jest nieprzeczytana, dopóki nie otworzysz czatu. Tego, czy postać pisze pierwsza, karta nie pokazuje. "Open profile" prowadzi do jej profilu. Na telefonie czat zajmuje cały ekran; strzałka u góry wraca do listy.
+
+### Naklejki i własne emoji
+
+Pod grupami wybieraka jest drugi rząd na twoje własne paczki. Paczka to zestaw obrazków, które dodałeś sam: **Stickers** są wysyłane jako cała wiadomość, duże i same; **Custom emoji** to małe obrazki, które stoją w linii tekstu, jak w Telegramie czy Discordzie. Naciśnij plus w tym rzędzie ("Manage packs"), aby otworzyć "Sticker packs": wpisz nazwę, wybierz Stickers lub Custom emoji, naciśnij "Choose pictures…" i zaznacz kilka plików naraz (PNG, WebP, GIF lub JPEG, do 512 KB każdy po przeskalowaniu, 200 na paczkę; naklejki są skalowane do 512 px, własne emoji do 64 px; SVG nie jest przyjmowany). Animowane obrazki pozostają w ruchu: GIF i animowany WebP (albo APNG) są zapisywane w niezmienionej postaci, nigdy nie są przeskalowywane, więc rysuj je w rozmiarze, który chcesz, i w granicach 512 KB; animowany WebP jest znacznie mniejszy niż GIF dla tego samego obrazka. Każdą paczkę można przemianować, przełączyć między tymi dwoma rodzajami, dodać do niej kolejne obrazki, usunąć z niej pojedyncze obrazki krzyżykiem albo usunąć całą (po pytaniu). Wszystko zapisuje się na bieżąco.
+
+**Paczka Molfar jest dołączona do aplikacji.** U góry "Sticker packs" widać kartę "Molfar pack" z ośmioma twarzami Molfara (starca z cybernetycznym okiem) w ośmiu nastrojach: wesoły, śmiejący się, smutny, zakochany, zadowolony z siebie, śpiący, podejrzliwy, beznamiętny. Naciśnij "Add the Molfar pack", a dostaniesz dwie paczki, "Molfar" (animowane naklejki) i "Molfar emoji" (te same twarze jako małe własne emoji); karta znika. To zwykłe paczki: możesz je przemianować, usunąć lub rozszerzyć. Po usunięciu jednej z nich karta wraca, więc można je dodać ponownie. Przy wysokości wiersza tekstu emoji są małe, więc nastroje odróżnia się głównie po naklejkach.
+
+W rzędzie pojawia się zakładka z pierwszym obrazkiem paczki. Dotknij naklejki, aby wysłać ją od razu (tekst, który pisałeś, zostaje); dotknij własnego emoji, aby wstawić je do tekstu w miejscu kursora. Pole wyszukiwania znajduje obrazki także po nazwie, a ostatnio użyte są wspólne z emoji. Własne emoji jest zapisane w tekście jako `:pack/name:`; jeśli jego paczka zostanie później usunięta, pokaże się jako zwykły tekst. Naklejka zostaje na ekranie po usunięciu swojej paczki. Postać dowiaduje się tylko "a sticker: name" i nigdy nie widzi obrazka. Postacie używają tylko tych paczek, które włączysz dla nich w Profiles, Writing manner (zobacz [[profiles]]). W nowym wątku forum oferowane są tylko własne emoji, bo naklejka to cała odpowiedź.
 
 ## Obrazki
 
