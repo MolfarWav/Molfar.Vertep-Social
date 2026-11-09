@@ -788,3 +788,42 @@ test("the user deletes a topic for good", () => {
   expect(route(h, "POST", "/forum/delete-topic", { topic: "../profiles/m1" }).status).toBe(404);
   expect(h.files.has("profiles/m1.json")).toBe(true);
 });
+
+// ---------- emoji (#316) ----------
+
+const hasLoneSurrogate = (s: string) => /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/.test(s);
+
+test("the forum prompt follows the profile's emoji level, 'now and then' when none is set", () => {
+  const profile = (voice: object) => ({ name: "Мавка", about: "x", interests: [], habits: [], voice });
+  expect(plugin.systemPromptFor(profile({ emoji: 0 }))).toContain("Never use emoji.");
+  expect(plugin.systemPromptFor(profile({}))).toContain("Use an emoji now and then");
+  const often = plugin.systemPromptFor(profile({ emoji: 2 }));
+  expect(often).toContain("Use emoji often");
+  expect(often).toContain("never as :codes:");
+});
+
+test("a post with emoji is stored whole and the 4000-character cut never tears one", () => {
+  expect(plugin.cleanReply("<think>x</think>Мавка: Привіт 🌿 ❤️ 👋🏽", "Мавка")).toBe("Привіт 🌿 ❤️ 👋🏽");
+  for (const [pad, emoji] of [[3999, "😀"], [3996, "👨‍👩‍👧"], [3999, "🇺🇦"], [3999, "❤️"]] as const) {
+    const out = plugin.cleanReply("a".repeat(pad) + emoji, "");
+    expect(out.length).toBeLessThanOrEqual(4000);
+    expect(hasLoneSurrogate(out)).toBe(false);
+    expect(/[‍️]$/.test(out)).toBe(false);
+  }
+  const h = makeHost();
+  seedBoards(h);
+  const made = route(h, "POST", "/forum/topic", { board: "b1", title: "Hello 🌿", text: "a".repeat(3999) + "😀" }).json;
+  const topic = get(h, `forum/topics/${made.topic}.json`);
+  expect(topic.title).toBe("Hello 🌿");
+  expect(topic.posts[0].text).toBe("a".repeat(3999));
+});
+
+test("a search snippet never starts or ends in the middle of an emoji", () => {
+  // slide the match along so that the window edges land on every part of the pair
+  for (let pad = 0; pad < 12; pad++) {
+    const text = "😀".repeat(30) + "x".repeat(pad) + " needle " + "😀".repeat(80);
+    const s = plugin.snippetOf(text, ["needle"]);
+    expect(s).toContain("needle");
+    expect(hasLoneSurrogate(s)).toBe(false);
+  }
+});

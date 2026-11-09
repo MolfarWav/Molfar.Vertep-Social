@@ -1,9 +1,9 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
-import { useT, currentLang } from "@/i18n/index";
+import { useT, currentLang, setLangPref, useLangPref, type LangPref } from "@/i18n/index";
 import { PREVIEW, type ModelChoice } from "@/lib/api";
 import { canOpenHome, openHome } from "@/lib/shell-home";
 import { MODEL_IDS, type SettingsMock } from "@/mock/settings";
-import { Pick, Row, Switch } from "./controls";
+import { Pick, Row, Segmented, Switch, type Opt } from "./controls";
 import { ModelPick } from "./model-pick";
 import { modelOptions } from "./real";
 import { roleplayState } from "@/screens/profiles/import-api";
@@ -101,6 +101,35 @@ export function NotifyRows({ s, set }: { s: SettingsMock; set: Patch }) {
       ))}
     </>
   );
+}
+
+/**
+ * Language: "Auto" follows the app (the engine's language), English and Ukrainian pin Social to one. It is a choice of
+ * this device, not a Social setting the server keeps, so it works in preview too. The phone row's hint (`languageHint`)
+ * and this block read the same state.
+ */
+export function LanguageRows() {
+  const t = useT();
+  const { pref, lang } = useLangPref();
+  const options: Opt<LangPref>[] = [
+    { value: "auto", label: t("settings.language.auto") },
+    { value: "en", label: t("settings.language.en") },
+    { value: "uk", label: t("settings.language.uk") },
+  ];
+  return (
+    <div className="blk">
+      <div className="lbl lang-lbl" id="settings-language">
+        {t("settings.section.language")}
+      </div>
+      <Segmented labelledBy="settings-language" options={options} value={pref} onChange={setLangPref} />
+      <div className="k hint">{pref === "auto" ? t("settings.language.hint.auto", { lang: t(`settings.language.${lang}`) }) : t("settings.language.hint.fixed")}</div>
+    </div>
+  );
+}
+
+/** One line for the phone row that opens the language block. */
+export function languageHint(t: ReturnType<typeof useT>, pref: LangPref, lang: "en" | "uk"): string {
+  return pref === "auto" ? t("settings.language.phone.hint.auto", { lang: t(`settings.language.${lang}`) }) : t(`settings.language.${pref}`);
 }
 
 /**

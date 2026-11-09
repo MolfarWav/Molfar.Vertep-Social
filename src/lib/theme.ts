@@ -16,7 +16,7 @@ export interface ShellTheme {
 
 declare global {
   interface Window {
-    molfarShell?: { theme?: () => ShellTheme | null };
+    molfarShell?: { theme?: () => ShellTheme | null; locale?: () => Promise<unknown> };
   }
 }
 

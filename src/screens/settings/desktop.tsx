@@ -3,7 +3,7 @@ import { LIMITS, type SettingsMock } from "@/mock/settings";
 import type { ModelChoice } from "@/lib/api";
 import { Row, Segmented, Slider, Stepper, Switch, TimeRange, type Opt } from "./controls";
 import { LifeMain, LifeWorld } from "./life";
-import { AccessControl, Card, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
+import { AccessControl, Card, LanguageRows, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
 import type { SettingsError } from "./state";
 
 /** Desktop layout: two columns of cards, the same order and placement as the approved board. */
@@ -109,6 +109,10 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
 
       <Card title={t("settings.section.notify")}>
         <NotifyRows s={s} set={set} />
+      </Card>
+
+      <Card title={t("settings.section.language")}>
+        <LanguageRows />
       </Card>
 
       <Card title={t("settings.section.access")}>

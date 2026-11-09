@@ -5,5 +5,6 @@ import { strings as forum } from "@/screens/forum/strings";
 import { strings as profiles } from "@/screens/profiles/strings";
 import { strings as settings } from "@/screens/settings/strings";
 import { strings as you } from "@/screens/you/strings";
+import { strings as emoji } from "@/emoji/strings";
 
-export const sources: Bundle[] = [messenger, forum, profiles, settings, you];
+export const sources: Bundle[] = [messenger, forum, profiles, settings, you, emoji];

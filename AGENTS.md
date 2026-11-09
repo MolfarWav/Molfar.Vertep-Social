@@ -17,6 +17,7 @@ the app changes shape. Plan and decisions: Molfar.Vertep issue #309.
 - `src/screens/<messenger|forum|profiles|settings|you>/`: one folder per screen with `index.tsx`, `<name>.css` (every rule scoped
   under `.s-<name>`), `strings.ts`, and the mock data it needs in `src/mock/`.
 - `src/components/`: `Flower` (status flower + `Envelope`), `Avatar`, `Logo`. Shared, small.
+- `src/emoji/`: the emoji picker, shared by the messenger and the forum (see "Emoji" below). Its CSS is scoped by the `.emo-` prefix, not by a screen class.
 - `src/styles/`: `tokens.css` (themes Vertep, Dark, Light; names are the ones the design boards use),
   `base.css` (root, `.av`, `.btn`, `.ib`), `shell.css`.
 - `plugins/<profiles|messenger|forum|life>/`: backend plugins (QuickJS sandbox: no Unicode property escapes in regexes, see `docs/DECISIONS.md`).
@@ -46,6 +47,12 @@ the messenger contact list and the forum authors pass it on). The picture dialog
 prompt from the profile (`picture.ts`) and calls the engine's `POST /v1/images` and `GET /v1/images/models` (open to every app,
 `picture-api.ts`). The Model tab (`src/screens/profiles/tabs/ModelTab.tsx`) edits it with the settings' `ModelPick`.
 
+## Emoji
+`src/emoji/`: `use-emoji.tsx` (`useEmoji({ target, value, onChange, phone })` gives a host the smiley `button` and, on a phone, the `tray` to put under its message bar; on desktop the button opens a popover in a portal), `Panel.tsx` (search, group tabs, recent, skin tone, arrow keys), `insert.ts` (`insertAt`, caret and selection, never tears a surrogate pair), `search.ts`, `recent.ts` (browser storage only), `data.ts` over `data.json`.
+`data.json` is generated: `scripts/emoji-data.mjs` reads the Emojibase package (not a dependency, the script header says how to fetch it), keeps English and Ukrainian names and stops at Emoji 15.1 because that is what the bundled font covers.
+The font is Noto Color Emoji, the COLRv1 build from `@infolektuell/noto-color-emoji` (`src/emoji/font.css`, family "Social Emoji", placed right after Inter in the font stacks of `.soc` and `.btn`). The SVG build in `@fontsource/noto-color-emoji` draws nothing in Chrome and Edge: do not swap it in. The `@font-face` ranges leave out `# * 0-9 © ® ™` so the emoji font never draws text. Raise the data cap and the font together.
+Plugins: `cut()` in the three plugins never tears an emoji (surrogate pairs, a trailing joiner); the prompt lines for the profile's emoji level (`EMOJI_WORDS`) ask for real emoji characters, not `:codes:`. A new profile starts at emoji level 1 (profiles saved earlier keep their level).
+
 ## The forum
 `plugins/forum/plugin.js` holds the data (`forum/` in the app data folder), the routes and the autonomy tick; its header says how. The screens are `src/screens/forum/`: `live.tsx` (real) and `preview.tsx` (mock) share `Home`, `BoardPage`, `TopicView`, `NewTopic`, `Strip`, `PostCard`; `model.ts` turns the engine's answers into what they draw (tested in `test/forum-real.test.ts`). Pages of a long topic (`PAGE_SIZE`) and search are plugin routes (`/forum/topic?page=`, `/forum/search`), drawn by `Pager.tsx` and `SearchPage.tsx`; the screen's route is kept in the browser history (`src/lib/route-history.ts`) so Back works. Moderation (the user removes a post or a topic) keeps a placeholder: everything that reads posts goes through `livePosts` (see `docs/DECISIONS.md`, "Moderation"). Tests: `test/forum-plugin.test.ts` (a simulated day with a restart, bump order, flags, the two-pass flow, pages, search, moderation).
 
@@ -58,7 +65,10 @@ See `docs/DECISIONS.md` for what the owner decided and where to continue.
 ## Roleplay import
 `manifest.json` declares `reads` (Roleplay's cards and personas); only the `profiles` plugin has the `peer` permission. The plugin lists, imports and
 refreshes cards through `host.peer`; a persona goes to Your profile (`/you/*`, `you.json`, `src/screens/you/`), not to the profile list (see `docs/DECISIONS.md`, "Roleplay import"); the screen side is `src/screens/profiles/import-api.ts` (list, runner, diff)
-and `import.tsx`. In preview (`?screen=`) the same screens run on `src/mock/profiles-import.ts`.
+and `import.tsx`. The picture comes along with an import (`POST /profiles/avatar` finds it, `src/lib/roleplay-avatar.ts` uploads it; see `docs/DECISIONS.md`, "Avatars on import"). In preview (`?screen=`) the same screens run on `src/mock/profiles-import.ts`.
+
+## Language
+`src/i18n/index.ts`: the UI language is `?lang=` (previews), else the user's choice (Settings > Language: Auto, English, Українська; `social:lang-pref`), else the app's language from `window.molfarShell.locale()` (cached in `social:shell-lang` so the next start has no flash), else English. The browser's language is only used outside the engine, where `locale()` fails. The engine has no "language changed" event; `followShellLanguage` asks again on focus, resize and visibility change, which is what happens when the app's tab comes back.
 
 ## Open items
 - The app cannot read the shell's scheme yet: the theme comes from `?theme=`, then the last choice, then Vertep.

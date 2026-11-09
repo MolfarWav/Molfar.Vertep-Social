@@ -225,7 +225,8 @@ test("import: pass A asks the model with the card text in the user message, pass
   expect(p.about).toContain("Мешканка озера");
   expect(p.interests).toEqual(["вода", "очерет", "чутки"]);
   expect(p.habits.map((h: any) => [h.text, h.by])).toEqual([["Пише вечорами", "self"], ["Мовчить, коли її перебивають", "self"]]);
-  expect(p.voice).toMatchObject({ length: 0, formality: 55, emoji: 0, never: ["капслок"] });
+  // an imported profile starts at "now and then" for emoji (#316); the user can change it on the Writing manner tab
+  expect(p.voice).toMatchObject({ length: 0, formality: 55, emoji: 1, never: ["капслок"] });
   expect(p.forum).toMatchObject({ rank: "Мешканка озера", frequency: 35, opensOwn: true });
   expect(p.schedule).toHaveLength(8);
   // filed, and the list shows it
@@ -334,7 +335,91 @@ test("the plugin asks for the peer permission and the app declares what it reads
   const app = JSON.parse(await Bun.file(path.join(root, "manifest.json")).text());
   expect(app.reads).toHaveLength(1);
   expect(app.reads[0].app).toBe("roleplay");
-  expect(app.reads[0].paths).toEqual(["characters/*/card.json", "personas/*.json"]);
+  expect(app.reads[0].paths).toEqual(["characters/*/card.json", "personas/*.json", "litopys/portraits.json"]);
   expect(app.reads[0].why.length).toBeGreaterThan(20);
   expect(app.reads[0].why.length).toBeLessThanOrEqual(200);
+});
+
+// ---------- the picture that comes along ----------
+
+const PNG = "data:image/png;base64,iVBORw0KGgo=";
+const WEBP = "data:image/webp;base64,UklGRg==";
+const profileFrom = (host: any, id: string, name: string, from: object) =>
+  route(host, "PUT", "/profiles/" + id, { name, source: "roleplay", from }).json.profile;
+
+test("avatar: the card's own avatar comes first, the Soul portrait of the name only after it", () => {
+  const rp: Files = {
+    "characters/a/card.json": card("A", {}, { avatar: PNG }),
+    "characters/b/card.json": card("B", {}, { avatar: "" }),
+    "characters/c/card.json": card("C", {}, { studio: { avatar: WEBP } }),
+    "litopys/portraits.json": { a: { name: "A", url: WEBP }, b: { name: "B", url: WEBP } },
+  };
+  const { host } = makeHost(rp);
+  for (const id of ["a", "b", "c"]) profileFrom(host, "rp-" + id, id.toUpperCase(), { kind: "card", id });
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-a" }).json).toEqual({ ok: true, avatar: { url: PNG, from: "card" } });
+  // no avatar on the card: the Soul-tab portrait of the (Soul) name, matched without case
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-b" }).json).toEqual({ ok: true, avatar: { url: WEBP, from: "soul" } });
+  // the studio copy of the avatar counts as the card's own
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-c" }).json.avatar).toEqual({ url: WEBP, from: "card" });
+});
+
+test("avatar: a narrator's member takes the portrait of their name, never the narrator card's avatar", () => {
+  const rp: Files = {
+    "characters/verhy/card.json": card("Хроніки", { molfar_card_type: "narrator" }, { avatar: PNG }),
+    "litopys/portraits.json": { горпина: { name: "Горпина", url: WEBP } },
+  };
+  const { host } = makeHost(rp);
+  profileFrom(host, "rp-v1", "Горпина", { kind: "card", id: "verhy", key: "Горпина" });
+  profileFrom(host, "rp-v2", "Чугайстер", { kind: "card", id: "verhy", key: "Чугайстер" });
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-v1" }).json.avatar).toEqual({ url: WEBP, from: "soul" });
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-v2" }).json).toEqual({ ok: true, avatar: null });
+});
+
+test("avatar: only images the screen can store are handed over", () => {
+  const rp: Files = {
+    "characters/a/card.json": card("A", {}, { avatar: "https://evil.example/x.png" }),
+    "characters/b/card.json": card("B", {}, { avatar: "data:image/svg+xml;base64,PHN2Zz4=" }),
+    "characters/c/card.json": card("C", {}, { avatar: "/v1/assets/" + "ab12".repeat(16) }),
+    "characters/d/card.json": card("D", {}, { avatar: "data:image/png;base64," + "A".repeat(1600000) }),
+    "litopys/portraits.json": { a: { name: "A", url: "javascript:alert(1)" } },
+  };
+  const { host } = makeHost(rp);
+  for (const id of ["a", "b", "c", "d"]) profileFrom(host, "rp-" + id, id.toUpperCase(), { kind: "card", id });
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-a" }).json.avatar).toBeNull();
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-b" }).json.avatar).toBeNull();
+  // an address in the asset store is passed on (the screen decides whether it can read it)
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-c" }).json.avatar).toEqual({ url: "/v1/assets/" + "ab12".repeat(16), from: "card" });
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-d" }).json.avatar).toBeNull();
+});
+
+test("avatar: a persona brings its avatar, else the portrait of its name; an own profile has none", () => {
+  const rp: Files = {
+    "personas/w.json": { name: "Мандрівник", description: "x", avatar: PNG },
+    "personas/n.json": { name: "Нема", description: "x" },
+    "litopys/portraits.json": { нема: { name: "Нема", url: WEBP } },
+  };
+  const { host } = makeHost(rp);
+  for (const id of ["w", "n"]) route(host, "POST", "/you/import", { id });
+  expect(route(host, "POST", "/profiles/avatar", { personaId: "pe-w" }).json.avatar).toEqual({ url: PNG, from: "persona" });
+  expect(route(host, "POST", "/profiles/avatar", { personaId: "pe-n" }).json.avatar).toEqual({ url: WEBP, from: "soul" });
+  route(host, "PUT", "/profiles/own-1", { name: "Own", source: "own" });
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "own-1" }).json).toEqual({ ok: true, avatar: null });
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "nope" }).status).toBe(404);
+  expect(route(host, "POST", "/profiles/avatar", { personaId: "nope" }).status).toBe(404);
+  expect(route(host, "POST", "/profiles/avatar", {}).status).toBe(400);
+});
+
+test("avatar: closed Roleplay, a missing portraits file or a refused read is a quiet miss", () => {
+  const closed = makeHost(null);
+  profileFrom(closed.host, "rp-a", "A", { kind: "card", id: "a" });
+  expect(route(closed.host, "POST", "/profiles/avatar", { profileId: "rp-a" }).json.code).toBe("no-access");
+  // the user allowed Roleplay before the portraits path was declared: the read is refused, the card's avatar still works
+  const { host } = makeHost({ "characters/a/card.json": card("A", {}, {}) });
+  const read = host.peer.read;
+  host.peer.read = (app: string, rel: string) => {
+    if (rel.startsWith("litopys/")) throw new Error("peer read refused: path not declared");
+    return read(app, rel);
+  };
+  profileFrom(host, "rp-a", "A", { kind: "card", id: "a" });
+  expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-a" }).json).toEqual({ ok: true, avatar: null });
 });

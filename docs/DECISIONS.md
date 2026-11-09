@@ -62,7 +62,7 @@ The owner installed the app from the PR branch and sent screenshots.
 - Deferred to issues in MolfarWav/Molfar.Vertep: #313 (Model tab per profile, picture generation), #314 (own persona
   separate from characters, tags, colour), #315 (forum must not post the whole daily limit at once).
 - Owner marked as very important (2026-11-08, issue #316): an emoji picker in the messenger and the forum, characters sending
-  emoji (the profile's Emoji level already feeds the prompt, default 0), and a check for extra emoji packs. Plan and findings are in the issue. Owner's answer on packs: start with (a), Unicode data plus a consistent emoji font; image packs later.
+  emoji (the profile's Emoji level already feeds the prompt), and a check for extra emoji packs. Plan and findings are in the issue. Owner's answer on packs: start with (a), Unicode data plus a consistent emoji font; image packs later. The picker and the font are built: see "Emoji (#316)" at the end of this file.
 - The owner works on several machines and may continue from another account: everything needed is in this file,
   `docs/FORUM-PLAN.md`, issues #310 to #315 and the PR #3 description.
 
@@ -101,14 +101,14 @@ Built as planned in `docs/FORUM-PLAN.md`; what was decided while building it:
 ## Roleplay import (2026-11-09, issue MolfarWav/Molfar.Vertep#322)
 The last piece of #310. The engine side is `reads` in the manifest, the user's one-time answer on Home, and `host.peer.read/list/stat`
 for a plugin with the `peer` permission (engine PR 321).
-- **What is declared:** `manifest.json` `reads`: app `roleplay`, paths `characters/*/card.json` and `personas/*.json` (the Soul and the
+- **What is declared:** `manifest.json` `reads`: app `roleplay`, paths `characters/*/card.json`, `personas/*.json` and `litopys/portraits.json` (the last since the avatar import, see below; the Soul and the
   structured profile live inside the card, the persona's profile inside the persona file, so nothing more is needed). The `why` text
   is what the consent dialog shows. Only the `profiles` plugin has the `peer` permission (`test/profiles-import.test.ts` pins both).
 - **Who may read, and when:** a card is read in two situations only: the user imports it, or presses "Update from Roleplay". No tick,
   route or prompt reads a card on its own. A card's text never goes into a messenger or forum prompt; the model that makes the digest
   gets it once. What the digest model reads: description, personality, scenario, first message, the Soul line (pronouns, class toward
   the user, extreme traits, coping) and the structured profile lines the text does not already say. Never: example dialogue, system
-  prompt, notes for people, avatar, the private note, the sexuality and trauma sections. A card is cut to about 12000 characters.
+  prompt, notes for people, the avatar (it never reaches a model), the private note, the sexuality and trauma sections. A card is cut to about 12000 characters.
 - **Routes** (`plugins/profiles/plugin.js`): `GET /profiles/roleplay/status` (ready or closed), `GET /profiles/roleplay` (the list: titles
   and names only, no card text), `POST /profiles/import {kind, id, key?, model?}` (one card, one profile; the reply is the saved profile),
   `POST /profiles/refresh {profileId, model?}` (a proposal from a new reading; nothing is saved). The screen imports one card per request,
@@ -154,6 +154,27 @@ for a plugin with the `peer` permission (engine PR 321).
   - **Removed from profiles:** `source: "persona"`, the Persona filter, the persona rows of the Roleplay import (cards only), `/profiles/import` refuses `kind: "persona"`. An early build filed personas as profiles; `GET /you` moves such files into `you.json` once (and removes their chat), and until then the messenger and the forum skip them.
   - **Unsaved edits** are drafts kept in memory while the app is open, with a Save bar, as in the profile editor; the screen does not ask when you leave.
 
+## Avatars on import (2026-11-09, owner report "avatars are not imported")
+The import was text only on purpose (the digest model never sees a picture), so a card's portrait was simply dropped. Now it comes along.
+- **Order (owner's words):** the card's own avatar first (`avatar`, else `studio.avatar`), then the portrait set for the name in Roleplay's
+  Soul tab (`litopys/portraits.json`, one image per lower-cased name, matched against the profile's Soul name). Reading of "Souls": the owner's
+  line was «search the main avatar, then the added picture in Souls»; Soul tab portrait is the only data that exists at import time, so that
+  is what is implemented. A picture added inside Social cannot be a source: no profile exists yet when the import runs.
+- **Narrator members:** a profile made from one Soul of a narrator card skips the card's avatar (it is the narrator's face) and uses only the
+  portrait of its own name.
+- **Who does what:** the plugin only FINDS the image (`POST /profiles/avatar {profileId|personaId}`, a second read of the same card, still
+  inside the user's import; it reads the stored `from`, never a client path). It cannot store images, so the screen uploads it
+  (`src/lib/roleplay-avatar.ts`: `PUT /v1/assets`, an asset owned by Social) and files the address as the profile's `picture`
+  (`PUT /profiles/<id>`, or `PUT /you/<id>` for a persona). Any miss leaves the letter avatar and never fails the import.
+- **Roleplay's stored images are not reachable.** Most card avatars are data URLs inside `card.json` and work. An avatar that is an address
+  `/v1/assets/<id>` (a picture Molfar drew for the card) belongs to Roleplay in the engine's asset store and is invisible to Social
+  (`assetVisibleTo`), and the peer read grant covers files, not assets. The screen tries, gets 404, and the profile keeps its letter. Fixing it
+  needs an engine change (an app that holds a read grant on another app may see that app's assets): left for the owner, security code.
+- **Consent cost:** adding `litopys/portraits.json` to `reads` is a new question for the engine. A user who already allowed Roleplay is asked
+  again on Home until they accept the longer list; until then the whole Roleplay import is closed, not only the portraits.
+- **Not done:** "Update from Roleplay" does not touch the picture; a profile imported before this change needs delete and re-import (or a
+  picture in the editor). A file over the engine's 2 MB peer read limit (`portraits.json` with many large portraits) gives no Soul fallback.
+
 ## Home link and forum leftovers (#322, #320; built 2026-11-09, one PR)
 - **Home link:** the engine offers `window.molfarShell.openHome()` (engine PR MolfarWav/Molfar.Vertep#325, official apps only, heard from the app on screen; ships as engine 1.13.1). `src/lib/shell-home.ts` finds it (`homeOpener`) and draws nothing when it is missing, so Social still runs on engine 1.13.0 and older with the text hint. Used in the "no access" dialog of the Roleplay import (a stacked footer on a phone: Check again, Open Home, Cancel) and in Settings > Roleplay access. Pressing it in the dialog closes the dialog first. Not done: telling "Roleplay is not installed" from "not allowed" (the plugin cannot see it).
 - **Paging (#320):** a topic page is `PAGE_SIZE` = 25 posts. `GET /forum/topic?id=&page=` takes a number or `last`; the answer carries only that page's posts and authors, plus `paging {page, pages, size, total, from}`; post numbers count from `from`. A topic opens on page 1, on the last page when it is unread (from a board row), from the front page's last-post link, after sending a reply (the route is replaced, not pushed), and `last` keeps following the end while the user stays. Proposed here, not decided by the owner: pages of 25, first page by default.
@@ -173,6 +194,20 @@ for a plugin with the `peer` permission (engine PR 321).
 - **UI:** a red "Remove" button after Quote and Reply (it stays when the topic is closed, the others go), turning into an inline question "Remove this post for good?" with Remove and Keep; 44 px buttons on a phone. Real forum only; the design preview still has its mock placeholder (`state=moderated`).
 - **Not done:** removing several posts at once, undo, removing a character's post from the character's profile counters beyond the live count, a moderation log.
 
+## Language (2026-11-09)
+- **Bug:** Social showed Ukrainian while the whole app was English, and had no language switch at all. Cause: `pickLang` fell back to `navigator.language` (the phone's language), the engine's `molfarShell.locale()` was never asked, and `setLang` was not wired to any control.
+- **Now:** Auto (follow the app's language, any non-Ukrainian shell locale reads as English) / English / Ukrainian in Settings (a card on desktop, the first row under "Other" on a phone). Proposed here, not asked: a shell locale other than uk or en (for example Russian) gives English.
+- **Not done:** an engine event for a language change (today Social re-asks when its tab comes back into view).
+
+## Emoji (#316, built 2026-11-09)
+Owner's order (2026-11-08): the picker with a bundled Unicode data set first, a consistent emoji font next, image packs and stickers only after that. This change is the first two; the third is not built.
+- **Picker:** a smiley button ("Emoji") next to the message box (messenger) and the reply box (forum), and in the label row of the new-topic text. Desktop: a popover above the button. Phone: a tray under the message bar, in the page flow, so the box stays visible and the keyboard gives way to it. Insert at the caret or over the selection; the popover closes after a pick (Shift or Ctrl keeps it open), the tray stays open. Search in both languages, nine groups, recent (24, browser storage), skin tone (six swatches, remembered). The titles of topics have no button (system emoji input still works there).
+- **Data:** Emojibase (MIT) reduced to a 370 KB `src/emoji/data.json` (English and Ukrainian names and words, skin-tone variants of 1898 emoji). The generator script is in the repo; the package is not a dependency (52 MB with all languages). The data stops at Emoji 15.1: the bundled font has no glyph for newer ones (checked in the font's cmap and ligature tables), and a missing glyph draws as an empty box. Search ranks name matches first, then a short list of classics ("heart" finds the red heart first).
+- **Font:** `@infolektuell/noto-color-emoji` (OFL-1.1, COLRv1 woff2 slices, 2 MB). Found while checking: the better-known `@fontsource/noto-color-emoji` ships only OpenType-SVG, which Chrome and Edge do not draw (the glyphs came out empty in the browser check). COLRv1 loads in Chrome, Edge and Firefox; Safari keeps its own Apple emoji (the `tech(color-COLRv1)` hint makes it skip the file). The family is renamed "Social Emoji" and `# * 0-9 © ® ™` are cut out of its ranges, otherwise every digit would come from the emoji font. It sits after Inter in the stack, so Inter draws all text. Keycap emoji (1️⃣) fall back to the system font because their digit is not in the range.
+- **Characters:** the Emoji level of a profile (Never, Sometimes, Often) already fed the prompt of the messenger and the forum. New profiles (made by hand, imported from a card) now start at "Sometimes" (it was "Never"); a profile saved before keeps its level, because there is no way to tell a deliberate "Never" from the old default. The prompt asks for real emoji characters, never `:codes:` or text faces.
+- **Cutting text:** `cut()` in the three plugins counted UTF-16 units and could split an emoji at a limit (2000 characters in the messenger, 4000 in the forum), and so could the search snippet. It now never ends in the middle of a surrogate pair or on a joiner. Tests in `test/messenger-plugin.test.ts` and `test/forum-plugin.test.ts` fail on the old code.
+- **Not done:** image packs and stickers (#316 point 3b: a format with a manifest per pack, `:pack/id:` tokens drawn as images, the prompt listing ids for characters); an emoji button in the profile editor; a migration of profiles saved with level "Never"; Emoji 16 and newer (needs a newer font build); a Safari colour font.
+- **Checked:** `bun test` (picker data, search, insert at caret and selection, recents with broken storage, the plugin round trip and cuts), the design preview in Chromium (dark, light, Vertep; 1280 and 390 px; messenger, forum topic, new topic), and a real engine 1.13.1 with Social installed: the app builds in the engine's in-browser builder, all 11 font slices load, a message with an emoji is stored and drawn. **Not checked:** Firefox and Safari, a real model writing emoji, Windows.
 
 ## Life: diary, first messages, the outside world (#311, built 2026-11-09)
 The plan was posted in the issue before the code; what follows is what was built and what was chosen without asking.
@@ -185,4 +220,3 @@ The plan was posted in the issue before the code; what follows is what was built
 - **Checked:** `bun test` (the plugin, the surfaces, the settings, the profile); the three plugins run in the engine's real QuickJS sandbox (`PluginSandbox`) with a real folder: routes, the world and day passes, a forum topic request with a diary subject; the screens in a browser at 1280 and 390 px (dark, light) on the design preview. **From the build container the hosts of BBC, PC Gamer, NASA, Variety, both Pravda sites, Wikipedia and the Open-Meteo geocoder answered; Anime News Network answered 403, Reddit 429, and the Open-Meteo forecast timed out**, so those three are unconfirmed from a user's machine. **Not checked:** a real model writing the diary, a first message or a topic (only fake answers), and the engine's update dialog for the new `network` permission.
 - **A week of its own (owner, 2026-11-09, found while testing first messages):** every new or imported profile got the same fixed week, so all characters were online at the same hours and first messages bunched up. `scheduleFor(seed, text)` in `plugins/profiles/plugin.js` now builds the week: word-start hints in About, interests, tags and habits pick a kind of day (office, early riser, night owl, evening, homebody, busy); with no hint the kind is drawn from the seed by weights. The seed is the profile id, so one profile always gets the same week and two profiles with the same text still differ. Then a timing shift of up to 3 hours, some days off and late days, small online/away swaps; every day keeps at least one online band, and the result is never the old shared week. Used by `cleanProfile` (no valid week sent), imports (`profileFromDigest`) and `src/mock/schedule.ts`, a client twin for `plain()` (a new profile is made in the client, so the engine cannot fill it in; `test/profile-schedule.test.ts` pins that both give the same week). Profiles whose stored week is exactly the old shared one get their own when `GET /profiles` runs (`migrateSchedules`, idempotent, stamps kept); an edited week is never touched, but a week someone deliberately kept equal to the old default is replaced too, since it cannot be told apart. The hint lists are short and in English and Ukrainian only; a character with no hint is random, not wrong.
 - **Not done:** characters meeting each other in a diary, extending `habitsAuto` from the diary, own feeds, notifications for first messages beyond the chat's unread mark and the tab count, translations of the new guide page and the changed pages (`l10n/` is stale until refreshed), a version bump of the app (0.3.0 at merge: the update dialog then shows the new plugin and its hosts).
-

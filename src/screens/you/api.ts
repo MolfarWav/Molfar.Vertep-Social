@@ -1,5 +1,6 @@
 // Your profile on the engine (the profiles plugin, /you routes). Preview mode never calls it.
 import { call } from "@/lib/api";
+import { avatarFor } from "@/lib/roleplay-avatar";
 import { readPersona, readScan, readYou, type Persona, type PersonaScan, type YouState } from "./model";
 
 type Reply = { ok?: boolean; error?: string; you?: unknown; persona?: unknown };
@@ -39,5 +40,15 @@ export async function importPersona(rpId: string): Promise<{ persona: Persona; y
   const json = checked(await call<Reply>("POST", "/you/import", { id: rpId }));
   const persona = readPersona(json.persona);
   if (!persona) throw new Error("the engine sent no persona");
-  return { persona, you: readYou(json.you) };
+  const you = readYou(json.you);
+  if (persona.picture) return { persona, you };
+  // the picture comes along (persona avatar, else the Soul-tab portrait); a miss never fails the import
+  const picture = await avatarFor({ personaId: persona.id }, persona.name);
+  if (!picture) return { persona, you };
+  try {
+    const next = await savePersona({ ...persona, picture });
+    return { persona: next.personas.find((p) => p.id === persona.id) ?? { ...persona, picture }, you: next };
+  } catch {
+    return { persona, you };
+  }
 }

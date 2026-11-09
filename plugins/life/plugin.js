@@ -42,7 +42,15 @@ const TEXT_CHARS = 300;
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v) => (typeof v === "string" ? v.trim() : "");
-const cut = (s, n) => (s.length > n ? s.slice(0, n) : s);
+// Cuts to at most n UTF-16 units without tearing an emoji (the same as the other plugins): a surrogate pair is never split,
+// and a joiner or a variation selector never ends the text.
+const cut = (s, n) => {
+  if (s.length <= n) return s;
+  let out = s.slice(0, n);
+  const last = out.charCodeAt(out.length - 1);
+  if (last >= 0xd800 && last <= 0xdbff) out = out.slice(0, -1);
+  return out.replace(/[\u200d\ufe0f]+$/, "");
+};
 const ok = (json, status) => ({ status: status || 200, json });
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
 const noControls = (s) => Array.from(s, (ch) => (ch.charCodeAt(0) < 32 && ch !== "\n" ? " " : ch)).join("");

@@ -1,0 +1,36 @@
+import type { Bundle } from "@/i18n/index";
+
+export const strings: Bundle = {
+  en: {
+    "emoji.open": "Emoji",
+    "emoji.panel": "Emoji picker",
+    "emoji.search": "Search emoji",
+    "emoji.recent": "Recent",
+    "emoji.none": "No emoji found",
+    "emoji.close": "Close",
+    "emoji.groups": "Emoji groups",
+    "emoji.tone": "Skin tone",
+    "emoji.tone.0": "Default",
+    "emoji.tone.1": "Light",
+    "emoji.tone.2": "Medium-light",
+    "emoji.tone.3": "Medium",
+    "emoji.tone.4": "Medium-dark",
+    "emoji.tone.5": "Dark",
+  },
+  uk: {
+    "emoji.open": "Емодзі",
+    "emoji.panel": "Вибір емодзі",
+    "emoji.search": "Шукати емодзі",
+    "emoji.recent": "Нещодавні",
+    "emoji.none": "Емодзі не знайдено",
+    "emoji.close": "Закрити",
+    "emoji.groups": "Групи емодзі",
+    "emoji.tone": "Колір шкіри",
+    "emoji.tone.0": "Стандартний",
+    "emoji.tone.1": "Світлий",
+    "emoji.tone.2": "Помірно світлий",
+    "emoji.tone.3": "Середній",
+    "emoji.tone.4": "Помірно темний",
+    "emoji.tone.5": "Темний",
+  },
+};

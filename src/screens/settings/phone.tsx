@@ -2,15 +2,15 @@ import { useState, type ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
 import { useNav } from "@/shell/nav";
 import { useYou } from "@/screens/you/store";
-import { useT } from "@/i18n/index";
+import { useT, useLangPref } from "@/i18n/index";
 import { LIMITS, type SettingsMock } from "@/mock/settings";
 import { PREVIEW, type ModelChoice } from "@/lib/api";
 import { Row, Segmented, Stepper, Switch, TimeRange, type Opt } from "./controls";
 import { LifeMain, LifeWorld } from "./life";
-import { AccessControl, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
+import { AccessControl, LanguageRows, languageHint, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
 import type { SettingsError } from "./state";
 
-type Open = "quiet" | "life" | "models" | "notify" | "access" | null;
+type Open = "quiet" | "life" | "models" | "notify" | "access" | "language" | null;
 
 /** A row that opens a section underneath it. Only one is open at a time. */
 function Disclosure({ id, open, onToggle, title, hint, children }: { id: Exclude<Open, null>; open: Open; onToggle: (id: Open) => void; title: string; hint: string; children: ReactNode }) {
@@ -40,6 +40,7 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
   const t = useT();
   const { go } = useNav();
   const you = useYou();
+  const { pref, lang } = useLangPref();
   const me = you?.personas.find((p) => p.id === you.active);
   const [open, setOpen] = useState<Open>(null);
   const toggle = (id: Open) => setOpen(id);
@@ -122,6 +123,9 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
 
         <h2 className="gl">{t("settings.group.other")}</h2>
         <section className="sec" aria-label={t("settings.group.other")}>
+          <Disclosure id="language" open={open} onToggle={toggle} title={t("settings.section.language")} hint={languageHint(t, pref, lang)}>
+            <LanguageRows />
+          </Disclosure>
           <Disclosure id="models" open={open} onToggle={toggle} title={t("settings.section.models")} hint={t("settings.models.phone.hint")}>
             <ModelRows s={s} set={set} choices={choices} />
           </Disclosure>

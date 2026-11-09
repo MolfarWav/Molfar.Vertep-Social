@@ -182,3 +182,50 @@ test("input checks: unknown profile, empty text, ids that are not ids, foreign p
   expect(route(h.host, "GET", "/profiles")).toBeNull();
   expect(route(h.host, "GET", "/messenger/other").status).toBe(404);
 });
+
+// ---------- emoji (#316) ----------
+
+/** True when the text has a half of a surrogate pair, which would draw as a broken character. */
+const hasLoneSurrogate = (s: string) => /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/.test(s);
+
+test("the emoji level shapes the prompt; a profile that never set one gets 'now and then'", () => {
+  const base = { name: "Мавка", about: "x", interests: [], habits: [] };
+  expect(plugin.systemPromptFor({ ...base, voice: { emoji: 0 } })).toContain("Never use emoji.");
+  expect(plugin.systemPromptFor({ ...base, voice: {} })).toContain("Use an emoji now and then");
+  expect(plugin.systemPromptFor({ ...base, voice: { emoji: 1 } })).toContain("Use an emoji now and then");
+  const often = plugin.systemPromptFor({ ...base, voice: { emoji: 2 } });
+  expect(often).toContain("Use emoji often");
+  // the model is told to write the characters, not :codes:, so the app's emoji font draws them
+  expect(often).toContain("never as :codes:");
+});
+
+test("emoji survive the round trip: the user's message and the character's reply", () => {
+  const first = makeHost();
+  seed(first, "mavka", "online");
+  const text = "Привіт 😀 як ти 👋🏽 🏳️‍🌈 ❤️";
+  const pending = route(first.host, "POST", "/messenger/send", { id: "mavka", text });
+  expect(first.requests[0].req.messages).toEqual([{ role: "user", content: text }]);
+  const second = makeHost({ reply: { text: "Мавка: Тихо тут 🌿 Заходь 🫶" } });
+  second.host.fs = first.host.fs;
+  const done = route(second.host, "POST", "/messenger/send", { id: "mavka", text }, { stash: pending.stash }).json;
+  expect(done.chat.messages.map((m: any) => m.text)).toEqual([text, "Тихо тут 🌿 Заходь 🫶"]);
+});
+
+test("a message cut at the limit never tears an emoji", () => {
+  const max = 2000;
+  // the emoji straddles the limit: a pair, a ZWJ family, a flag, and one that ends exactly on it
+  for (const [pad, emoji] of [[max - 1, "😀"], [max - 4, "👨‍👩‍👧"], [max - 1, "🇺🇦"], [max - 2, "😀"], [max - 1, "❤️"]] as const) {
+    const out = plugin.cleanReply("a".repeat(pad) + emoji, "");
+    expect(out.length).toBeLessThanOrEqual(max);
+    expect(hasLoneSurrogate(out)).toBe(false);
+    expect(/[‍️]$/.test(out)).toBe(false);
+  }
+  expect(plugin.cleanReply("a".repeat(max - 2) + "😀", "")).toBe("a".repeat(max - 2) + "😀"); // fits exactly: kept whole
+  // and the user's own text goes through the same cut when it is sent
+  const h = makeHost();
+  seed(h, "mavka", "off");
+  const r = route(h.host, "POST", "/messenger/send", { id: "mavka", text: "a".repeat(max - 1) + "😀" }).json;
+  const stored = r.chat.messages[0].text;
+  expect(stored).toBe("a".repeat(max - 1));
+  expect(hasLoneSurrogate(stored)).toBe(false);
+});

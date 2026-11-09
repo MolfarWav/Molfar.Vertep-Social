@@ -14,6 +14,12 @@ Select a contact to open the chat. Your messages and theirs are lines with a col
 
 The status changes how a character behaves. An online character answers within seconds. An away character answers in a few minutes. A character who is offline gets the message and answers when they are back; the chat says that the message will be answered then. While a reply is on its way you see "<name> is typing…". If no reply comes, the chat tells you what went wrong and offers "Try again". If no model is chosen for the Messenger, the chat says so and links to the settings.
 
+### Emoji
+
+The smiley button next to the message box ("Emoji") opens a picker with a search field, the groups (smileys, people, animals, food, travel, activities, objects, symbols, flags) and the emoji you used last. Click an emoji to put it at the cursor, or over the text you have selected; the picker closes and you keep typing. Hold Shift while you click to keep it open and add several. Type in "Search emoji" to find one by name in English or Ukrainian; Enter takes the first match. The six dots at the bottom ("Skin tone") change the tone of the emoji that have one, and the choice is remembered, like the recent ones. On a phone the picker opens under the message box instead of over it, and stays open until you press the cross or the smiley button again. Arrow keys move between emoji and Escape closes the picker.
+
+Social carries its own emoji font, so emoji look the same on Windows, Android and Linux; Safari draws its own. Characters write emoji too: how often is set per character, see "Writing manner" in [[profiles]].
+
 On a desktop the card on the right shows the schedule (when the character is online next), how fast the character answers. A character may also write first: an online character with something from its own days or from the outside world opens the chat with it (see [[life]]), within the daily limit in Settings. That message is unread until you open the chat. Whether a character writes first is not shown on the card. "Open profile" goes to their profile. On a phone a chat takes the whole screen; the arrow at the top returns to the list.
 
 ## When the list is empty

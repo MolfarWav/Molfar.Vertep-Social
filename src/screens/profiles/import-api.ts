@@ -4,6 +4,7 @@
 // (`?screen=`) never calls them: the screen gives the runner a mock `exec` instead. Pure parts are tested in
 // test/import-api.test.ts.
 import { call } from "@/lib/api";
+import { avatarFor } from "@/lib/roleplay-avatar";
 import type { MockProfile, ProfileForm } from "@/mock/profiles";
 import type { ImportEntry, ImportKind, ImportRef } from "@/mock/profiles-import";
 import { stripStamps } from "./persist";
@@ -85,7 +86,17 @@ export async function importOne(entry: ImportEntry, model: string): Promise<Mock
   const body = { ...entry.ref, ...(model ? { model } : {}) };
   const res = await call<PluginReply<{ profile: MockProfile & { createdAt?: string; updatedAt?: string } }>>("POST", "/profiles/import", body);
   if (!res.ok) throw new ImportError(res.error, res.code);
-  return stripStamps(res.profile);
+  const profile = stripStamps(res.profile);
+  if (profile.picture) return profile;
+  // the picture comes along (card avatar, else the Soul-tab portrait); a miss never fails the import
+  const picture = await avatarFor({ profileId: profile.id }, profile.name);
+  if (!picture) return profile;
+  try {
+    await call("PUT", `/profiles/${encodeURIComponent(profile.id)}`, { ...profile, picture });
+    return { ...profile, picture };
+  } catch {
+    return profile;
+  }
 }
 
 /** What a new reading of the card proposes for the profile's text fields. */
