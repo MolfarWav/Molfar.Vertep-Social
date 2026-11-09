@@ -152,6 +152,8 @@ export interface EnginePost {
   at: number;
   text: string;
   quote?: { by: string; name: string; text: string };
+  /** The user removed it: the text is gone, the place stays. */
+  removed?: boolean;
 }
 export interface EngineAuthor {
   name: string;
@@ -185,6 +187,8 @@ export interface EnginePaging {
   size: number;
   total: number;
   from: number;
+  /** The posts that still exist (a removed post keeps its place but is not counted). */
+  live?: number;
 }
 /** One topic that matched a search: the first matching post, a snippet around the match and the page that post is on. */
 export interface EngineSearchHit {
@@ -338,6 +342,7 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
       clock: clock(p.at),
       when: whenLabel(p.at, now, lang, t).replace(/^./, (c) => c.toUpperCase()),
       text: p.text,
+      ...(p.removed ? { removed: true } : {}),
       ...(p.quote ? { quote: { who: p.quote.by === "me" ? t("shell.me") : p.quote.name, text: p.quote.text } } : {}),
       ...(a?.signature ? { sig: a.signature } : {}),
       online: a?.online ?? false,

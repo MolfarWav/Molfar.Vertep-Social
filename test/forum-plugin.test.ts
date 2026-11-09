@@ -629,7 +629,7 @@ test("a long topic comes in pages: the page, the count, the first post, and only
   seedTopic(h, "t1", "b1", 6000, posts);
   const size = plugin.PAGE_SIZE;
   const first = route(h, "GET", "/forum/topic", undefined, { id: "t1" }).json;
-  expect(first.paging).toEqual({ page: 1, pages: Math.ceil(60 / size), size, total: 60, from: 0 });
+  expect(first.paging).toEqual({ page: 1, pages: Math.ceil(60 / size), size, total: 60, from: 0, live: 60 });
   expect(first.topic.posts).toHaveLength(size);
   expect(first.topic.posts[0].id).toBe("p1");
   expect(Object.keys(first.authors)).toEqual(["m1"]);
@@ -705,4 +705,86 @@ test("search keeps to the cap and says it was cut", () => {
   expect(r.topics).toHaveLength(50);
   expect(r.truncated).toBe(true);
   expect(r.topics[0].id).toBe("t59"); // newest first among the same kind of hit
+});
+
+// ---------- removing posts and topics (the user is the only moderator) ----------
+
+const secret = "SECRET-TEXT-9f3";
+function moderated() {
+  const h = makeHost();
+  seedBoards(h);
+  seedProfile(h, "m1", "Мавка");
+  const posts = [
+    { id: "p1", by: "m1", name: "Мавка", hue: 150, at: 1000, text: "Opening post" },
+    { id: "p2", by: "me", name: "", hue: 200, at: 2000, text: secret },
+    { id: "p3", by: "m1", name: "Мавка", hue: 150, at: 3000, text: "Answer to it", quote: { by: "me", name: "", text: secret } },
+    { id: "p4", by: "m1", name: "Мавка", hue: 150, at: 4000, text: "Another", quote: { by: "me", name: "", text: "something else" } },
+  ];
+  seedTopic(h, "t1", "b1", 4000, posts, { owe: 2 });
+  return h;
+}
+
+test("removing a post erases its text and keeps its place; quotes of it go; the others stay", () => {
+  const h = moderated();
+  const r = route(h, "POST", "/forum/remove-post", { topic: "t1", post: "p2" });
+  expect(r.status).toBe(200);
+  const file = h.files.get("forum/topics/t1.json")!;
+  expect(file).not.toContain(secret); // nothing of it is left on disk, quotes included
+  const t = route(h, "GET", "/forum/topic", undefined, { id: "t1" }).json;
+  expect(t.topic.posts.map((p: any) => p.id)).toEqual(["p1", "p2", "p3", "p4"]); // numbers and pages stay put
+  expect(t.topic.posts[1]).toMatchObject({ id: "p2", by: "me", removed: true, text: "" });
+  expect(t.topic.posts[2].quote).toBeUndefined();
+  expect(t.topic.posts[3].quote.text).toBe("something else");
+  expect(get(h, "forum/topics/t1.json").owe).toBe(0); // no live post of the user is left to answer
+  // twice is fine; unknown ids and the opening post are refused
+  expect(route(h, "GET", "/forum/topic", undefined, { id: "t1" }).json.paging).toMatchObject({ total: 4, live: 3 });
+  expect(route(h, "POST", "/forum/remove-post", { topic: "t1", post: "p2" }).json).toMatchObject({ ok: true });
+  expect(route(h, "POST", "/forum/remove-post", { topic: "t1", post: "nope" }).status).toBe(404);
+  expect(route(h, "POST", "/forum/remove-post", { topic: "nope", post: "p2" }).status).toBe(404);
+  expect(route(h, "POST", "/forum/remove-post", { topic: "t1", post: "p1" }).status).toBe(409);
+  expect(route(h, "POST", "/forum/remove-post", { topic: "../x", post: "p2" }).status).toBe(404);
+});
+
+test("a removed post is not counted, not shown on the board, not read by a character and not found by search", () => {
+  const h = moderated();
+  put(h, "profiles/m1.json", { ...get(h, "profiles/m1.json") });
+  route(h, "POST", "/forum/remove-post", { topic: "t1", post: "p2" });
+  const home = route(h, "GET", "/forum/home").json;
+  expect(home.categories[0].boards[0].posts).toBe(3);
+  expect(home.stats.posts).toBe(3);
+  expect(route(h, "GET", "/forum/board", undefined, { id: "b1" }).json.topics[0].replies).toBe(2);
+  expect(route(h, "GET", "/forum/topic", undefined, { id: "t1" }).json.authors.me.count).toBe(0);
+  expect(route(h, "GET", "/forum/search", undefined, { q: "secret" }).json.topics).toEqual([]);
+  const topic = plugin.readTopic(h.host.fs, "t1");
+  const ctx = plugin.replyContext({ name: "Guest", desc: "" }, topic, null);
+  expect(ctx).not.toContain("User:");
+  expect(ctx).toContain("Opening post");
+  // the user's removed post is no longer something a character owes an answer to
+  const prof = plugin.loadProfiles(h.host.fs)[0];
+  const t2 = { ...topic, owe: 2, posts: topic.posts.slice(0, 2).concat([]) };
+  expect(plugin.targetsFor({ ...prof, id: "other" }, [t2], Date.now(), null).owed).toEqual([]);
+});
+
+test("a removed post cannot be quoted, and removing works in a closed topic", () => {
+  const h = moderated();
+  route(h, "POST", "/forum/remove-post", { topic: "t1", post: "p2" });
+  route(h, "POST", "/forum/lock", { topic: "t1", locked: true });
+  expect(route(h, "POST", "/forum/remove-post", { topic: "t1", post: "p3" }).status).toBe(200);
+  route(h, "POST", "/forum/lock", { topic: "t1", locked: false });
+  route(h, "POST", "/forum/reply", { topic: "t1", text: "Late answer", quoteOf: "p2" });
+  const last = get(h, "forum/topics/t1.json").posts.at(-1);
+  expect(last.text).toBe("Late answer");
+  expect(last.quote).toBeUndefined();
+});
+
+test("the user deletes a topic for good", () => {
+  const h = moderated();
+  seedTopic(h, "t2", "b1", 5000);
+  expect(route(h, "POST", "/forum/delete-topic", { topic: "t1" }).json).toMatchObject({ ok: true, deleted: "t1", board: "b1" });
+  expect(h.files.has("forum/topics/t1.json")).toBe(false);
+  expect(route(h, "GET", "/forum/topic", undefined, { id: "t1" }).status).toBe(404);
+  expect(route(h, "GET", "/forum/board", undefined, { id: "b1" }).json.topics.map((t: any) => t.id)).toEqual(["t2"]);
+  expect(route(h, "POST", "/forum/delete-topic", { topic: "t1" }).status).toBe(404);
+  expect(route(h, "POST", "/forum/delete-topic", { topic: "../profiles/m1" }).status).toBe(404);
+  expect(h.files.has("profiles/m1.json")).toBe(true);
 });
