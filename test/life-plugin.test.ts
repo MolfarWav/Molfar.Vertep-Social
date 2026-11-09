@@ -210,8 +210,11 @@ test("onTick asks for the world first, then for at most two days per tick; the a
   // pass B: some answered, some did not
   const results: Record<string, unknown> = {};
   for (const r of asked) results[r.key] = r.key === "w:bbc-world" ? { ok: true, status: 200, text: RSS } : { ok: false, status: 500 };
+  put(h, "life/world.json", { items: [] }); // a copy an earlier build left where sync would carry it between devices
   life.onTick({}, h.hostWith({}, results));
-  const world = get(h, "life/world.json");
+  const world = get(h, ".cache/life/world.json");
+  expect(h.files.has("life/world.json")).toBe(false);
+  expect([...h.files.keys()].filter((k) => k.includes("world.json"))).toEqual([".cache/life/world.json"]);
   expect(world.items.length).toBe(3);
   expect(Object.keys(world.errors).length).toBe(asked.length - 1);
   // the world is fresh now: the next tick asks for days (the clock may be before 06:00 where this runs: only check the shape then)
@@ -357,6 +360,6 @@ test("an entry or a feed item without a string id is dropped, and an entry has n
   expect(d.entries.map((e: any) => e.id)).toEqual(["e1", "e2"]);
   expect(d.entries[0].item).toBeUndefined();
   expect(d.entries[1].item).toBe("w1");
-  put(h, "life/world.json", { items: [{ cat: "news", title: "No id" }, { id: "w1", cat: "news", title: "Has id" }] });
+  put(h, ".cache/life/world.json", { items: [{ cat: "news", title: "No id" }, { id: "w1", cat: "news", title: "Has id" }] });
   expect(life.readWorld(h.host.fs).items.map((i: any) => i.id)).toEqual(["w1"]);
 });

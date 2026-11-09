@@ -38,7 +38,7 @@ const seedProfile = (h: H, id: string, extra: Record<string, unknown> = {}) =>
   put(h, `profiles/${id}.json`, { id, name: `Name ${id}`, hue: 100, about: "A quiet one.", interests: ["reeds"], habits: [], voice: { text: "Quiet.", length: 0, emoji: 0 }, schedule: always("online"), forum: { frequency: 50 }, ...extra });
 const seedDiary = (h: H, id: string, entries: object[]) => put(h, `life/diary/${id}.json`, { entries, mood: "calm", plan: "", lastDay: "2026-11-09" });
 const entry = (id: string, text: string, at = NOW - 3600 * 1000) => ({ id, at, day: "2026-11-09", text, kind: "routine", by: "model" });
-const seedWorld = (h: H, items: object[]) => put(h, "life/world.json", { day: "2026-11-09", fetchedAt: NOW, cats: ["news"], place: "", items, errors: {} });
+const seedWorld = (h: H, items: object[]) => put(h, ".cache/life/world.json", { day: "2026-11-09", fetchedAt: NOW, cats: ["news"], place: "", items, errors: {} });
 const settings = (h: H, patch: Record<string, unknown> = {}) => put(h, "settings.json", { tzOffset: 0, quietFrom: "01:00", quietTo: "08:00", messengerFirst: true, messengerPerDay: 5, messengerQuiet: "same", ...patch });
 const always1 = () => 0; // rand: always the first choice, always under every chance
 
