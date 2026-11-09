@@ -3,6 +3,10 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+- **A character's reply no longer arrives twice (#343).** When you sent a message to an online character, the engine's one-minute tick could ask the model for a second reply while the first call was still running, and both answers were filed (two different texts, the second with the picture). The chat now marks a reply as being written, the tick leaves it alone (a call that never came back is asked again after 5 minutes), and a second answer to a message that was already answered is dropped.
+
 ## 0.5.1 (2026-11-09)
 
 - **"Open profile" opens that character's own profile.** In the messenger, the button in the info card (and the "i" button in a phone chat's top bar) opened the Profiles list: on a desktop the first profile, on a phone the list. It now opens Profiles on the profile of the character you are talking to (on a phone, straight into its editor).
