@@ -101,13 +101,13 @@ export function fitSize(w: number, h: number, max = PICTURE_MAX_SIDE): { w: numb
 }
 
 /** Scales a still image down to PICTURE_MAX_SIDE (WebP where the browser can, else it stays). GIFs and small images stay as they are. */
-async function shrink(file: File): Promise<{ blob: Blob; mime: string }> {
+async function shrink(file: File, side = PICTURE_MAX_SIDE, keepUnder = 1024 * 1024): Promise<{ blob: Blob; mime: string }> {
   const same = { blob: file as Blob, mime: file.type };
   if (file.type === "image/gif") return same;
   try {
     const bmp = await createImageBitmap(file);
-    const { w, h } = fitSize(bmp.width, bmp.height);
-    if (w === bmp.width && h === bmp.height && file.size <= 1024 * 1024) return same;
+    const { w, h } = fitSize(bmp.width, bmp.height, side);
+    if (w === bmp.width && h === bmp.height && file.size <= keepUnder) return same;
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
@@ -120,7 +120,7 @@ async function shrink(file: File): Promise<{ blob: Blob; mime: string }> {
 }
 
 /** Stores a picture the user picked from disk. Resolves to its URL; throws an ApiError whose text says what went wrong. */
-export async function uploadPicture(file: File): Promise<string> {
+export async function uploadPicture(file: File, opts: { side?: number; maxBytes?: number } = {}): Promise<string> {
   if (PREVIEW) {
     await delay(300);
     return await new Promise<string>((ok, bad) => {
@@ -130,7 +130,8 @@ export async function uploadPicture(file: File): Promise<string> {
       r.readAsDataURL(file);
     });
   }
-  const { blob, mime } = await shrink(file);
+  const { blob, mime } = await shrink(file, opts.side, opts.maxBytes);
+  if (opts.maxBytes && blob.size > opts.maxBytes) throw new ApiError("the picture is too big", 413);
   const name = file.name.replace(/\.[^.]+$/, "").slice(0, 80) || "picture";
   const res = await fetch(`/v1/assets?name=${encodeURIComponent(name)}`, { method: "PUT", headers: { "content-type": mime }, body: blob });
   const json = (await res.json().catch(() => null)) as { id?: unknown; error?: string } | null;

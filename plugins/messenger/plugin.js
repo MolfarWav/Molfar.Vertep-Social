@@ -184,7 +184,7 @@ function allProfileIds(fsx) {
 
 // <images-shared>
 // ---------- pictures in messages and posts (issue #331): identical copies in the messenger and the forum plugin ----------
-// A message or post may carry `image`: {state: "ready", url: "/v1/assets/<id>", alt?, gen?} (a picture the user attached, or a
+// A message or post may carry `image`: {state: "ready", url: "/v1/assets/<id>", alt?, gen?, sticker?} (a picture the user attached, or a
 // generated one that has arrived), {state: "pending", prompt, gen: true} (a character asked for one: the page draws it with an
 // engine image model and files it with POST .../image), or {state: "failed", prompt, gen: true}. The plugins cannot draw (they
 // only have text models); the Social page does, through the engine's /v1/images, so a picture arrives while the page is open.
@@ -192,6 +192,8 @@ function allProfileIds(fsx) {
 // when the model puts [[image: a short English description]] at the end of its text.
 
 const IMAGE_URL = /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/;
+/** A sticker: the picture is a whole message from a pack ("pack/item", ids as in the packs file, issue #329). */
+const STICKER_REF = /^[A-Za-z0-9_-]{1,40}\/[A-Za-z0-9_-]{1,40}$/;
 const IMAGE_MARKER = /\[\[\s*image\s*:\s*([^\]]{0,400}?)\s*\]\]/i;
 
 /** The picture of a message or post as stored; null when there is none or it is not usable. */
@@ -203,7 +205,8 @@ export function cleanImage(raw) {
     return prompt ? { state: raw.state, prompt, gen: true } : null;
   }
   if (typeof raw.url !== "string" || !IMAGE_URL.test(raw.url)) return null;
-  return { state: "ready", url: raw.url, ...(alt ? { alt } : {}), ...(raw.gen === true ? { gen: true } : {}) };
+  const sticker = typeof raw.sticker === "string" && STICKER_REF.test(raw.sticker) ? raw.sticker : "";
+  return { state: "ready", url: raw.url, ...(alt ? { alt } : {}), ...(raw.gen === true ? { gen: true } : {}), ...(sticker ? { sticker } : {}) };
 }
 
 /** Settings > Pictures: whether characters may send pictures, and how many a day each (per surface). */
@@ -238,7 +241,7 @@ export const IMAGE_HINT =
   "You may send a picture, rarely, and only when it really fits the moment (a photo of where you are, something you made). To do it, end your message with [[image: a short visual description in English]] on its own. Never explain or mention this. Most messages carry no picture and no marker.";
 
 /** A picture as one short line for a model's history: the user's pictures are never shown to the model. */
-export const imageLine = (img) => (img ? "[a picture: " + (str(img.alt) || str(img.prompt) || "no description") + "]" : "");
+export const imageLine = (img) => (img ? (img.sticker ? "[a sticker: " : "[a picture: ") + (str(img.alt) || str(img.prompt) || "no description") + "]" : "");
 // </images-shared>
 
 // ---------- life: read-only access to what the `life` plugin wrote (issue #311) ----------

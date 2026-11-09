@@ -19,7 +19,14 @@ export interface Attached {
   alt: string;
   /** Drawn by a model (the user asked for it), not a file from disk. */
   gen: boolean;
+  /** "pack/item" when it is a sticker from a pack (issue #329): shown large, as a whole message. */
+  sticker?: string;
 }
+
+/** The picture as a request carries it. */
+export const imageBody = (a: Attached) => ({ url: a.url, alt: a.alt, gen: a.gen, ...(a.sticker ? { sticker: a.sticker } : {}) });
+/** The picture as a message shows it before the answer comes back. */
+export const imageShown = (a: Attached) => ({ state: "ready" as const, url: a.url, alt: a.alt, ...(a.gen ? { gen: true } : {}), ...(a.sticker ? { sticker: a.sticker } : {}) });
 
 const MODEL_KEY = "social:image-model";
 const readModel = (): string => {

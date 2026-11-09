@@ -7,7 +7,7 @@ import { PREVIEW } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
 import { CONTACTS, LOGS, type Contact, type LogItem } from "@/mock/messenger";
 import type { Status } from "@/mock/status";
-import { usePicture } from "@/pictures/use-picture";
+import { imageShown, usePicture } from "@/pictures/use-picture";
 import { useNav } from "@/shell/nav";
 import { useLiveMessenger } from "./live";
 import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
@@ -105,7 +105,7 @@ export function Messenger() {
       if (busy) return; // one message at a time: the composer waits for the answer
       live.send(cur.id, text, image ?? undefined);
     } else {
-      setLogs((l) => ({ ...l, [cur.id]: [...(l[cur.id] ?? []), { kind: "msg", who: "me", time: hhmm(), text, ...(image ? { image: { state: "ready" as const, url: image.url, alt: image.alt, gen: image.gen } } : {}) }] }));
+      setLogs((l) => ({ ...l, [cur.id]: [...(l[cur.id] ?? []), { kind: "msg", who: "me", time: hhmm(), text, ...(image ? { image: imageShown(image) } : {}) }] }));
     }
     setDraft("");
     pic.clear();

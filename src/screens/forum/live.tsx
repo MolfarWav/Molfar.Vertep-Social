@@ -1,5 +1,6 @@
 // The real forum: the boards, a board's topics, a topic, a new topic. Data comes from the forum plugin
 // (plugins/forum/plugin.js) through the app's routes; the pages are the same components the design preview uses.
+import { imageBody } from "@/pictures/use-picture";
 import { refreshImages } from "@/pictures/worker";
 import { useCallback, useEffect, useMemo } from "react";
 import "./forum.css";
@@ -140,7 +141,7 @@ export function ForumLive() {
         pictures
         onSubmit={async (boardId, title, text, image) => {
           try {
-            const r = await call<{ topic: string }>("POST", "/forum/topic", { board: boardId, title, text, ...(image ? { image: { url: image.url, alt: image.alt, gen: image.gen } } : {}) });
+            const r = await call<{ topic: string }>("POST", "/forum/topic", { board: boardId, title, text, ...(image ? { image: imageBody(image) } : {}) });
             void home.reload();
             go({ view: "topic", id: r.topic, page: 1 }, { replace: true });
             return null;
@@ -236,7 +237,7 @@ export function ForumLive() {
         onSearch={() => openSearch("")}
         onSend={async (text, quoteOf, image) => {
           try {
-            await call("POST", "/forum/reply", { topic: route.id, text, ...(quoteOf ? { quoteOf } : {}), ...(image ? { image: { url: image.url, alt: image.alt, gen: image.gen } } : {}) });
+            await call("POST", "/forum/reply", { topic: route.id, text, ...(quoteOf ? { quoteOf } : {}), ...(image ? { image: imageBody(image) } : {}) });
             // the answer is at the end: show the last page, and keep following it
             if (route.page === "last") await topic.reload();
             else go({ view: "topic", id: route.id, page: "last" }, { replace: true });
