@@ -3,7 +3,9 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.7.0 (2026-11-09)
+
+A catalog of free sticker packs, new messages first in the contact list, custom emoji in previews. The stickers plugin is 0.2.0, the messenger 0.6.1, the forum 0.5.1 (Profiles 0.6.0, Life 0.1.0).
 
 - **A catalog of free sticker packs (#348).** "Sticker packs" has a card "Free packs" that opens a catalog: a preview, the author, the licence and a link to the source on every card, and one button that downloads the pictures and makes an ordinary pack of yours (the credit stays on it). It starts with two packs: the animated Noto emoji by Google (CC BY 4.0, 12 stickers, resized to 160 px) and the Fluent 3D emoji by Microsoft (MIT, 20 stickers). Only CC0, CC BY and MIT packs are accepted, and only the owner of Social adds them (`catalog/README.md`). The stickers plugin (0.2.0) now has the network permission for `raw.githubusercontent.com` only; ids and file names are checked, a file must really be a PNG, WebP or GIF under 512 KB. Checked on a throwaway engine against the real GitHub files (desktop dark, phone light). The list needs an internet connection; the descriptions are English.
 
