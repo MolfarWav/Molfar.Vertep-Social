@@ -181,8 +181,10 @@
 .s-profiles .pf-dlg { display: flex; flex-direction: column; min-height: 0; max-height: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); overflow: hidden; box-shadow: 0 24px 60px rgb(0 0 0 / 0.5); }
 .s-profiles .pf-dlg:focus { outline: none; }
 .s-profiles .pf-head { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 16px; flex: none; font-weight: 600; font-size: 15px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
-.s-profiles .pf-body { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; flex: none; min-height: 0; }
+.s-profiles .pf-body { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .s-profiles .pf-body p { margin: 0; }
+/* a tall child (the diff) must not shrink and clip itself: the body scrolls instead, with the head and the buttons in view */
+.s-profiles .pf-body > * { flex-shrink: 0; }
 .s-profiles .pf-body.run { overflow: auto; }
 .s-profiles .access { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .s-profiles .pf-list { flex: 1; min-height: 0; overflow: auto; border-top: 1px solid var(--line); }

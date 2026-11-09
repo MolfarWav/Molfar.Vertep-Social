@@ -93,6 +93,11 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
             <Stepper name={t("settings.messenger.limit")} value={s.messengerPerDay} min={LIMITS.messengerPerDay.min} max={LIMITS.messengerPerDay.max} onChange={(v) => set({ messengerPerDay: v })} />
           )}
         </Row>
+        <Row title={t("settings.messenger.context")} hint={t("settings.messenger.context.hint")}>
+          {() => (
+            <Stepper name={t("settings.messenger.context")} step={4} value={s.messengerContext} min={LIMITS.messengerContext.min} max={LIMITS.messengerContext.max} onChange={(v) => set({ messengerContext: v })} />
+          )}
+        </Row>
         <Row title={t("settings.quiet")} hint={t("settings.messenger.quiet.hint")}>
           {(id) => <Segmented labelledBy={id} options={chat} value={s.messengerQuiet} onChange={(v) => set({ messengerQuiet: v })} />}
         </Row>

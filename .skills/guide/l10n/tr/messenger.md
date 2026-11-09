@@ -1,4 +1,4 @@
-<!-- source: 052140028b49 -->
+<!-- source: b52f839cace6 -->
 # Social: Messenger
 
 Messenger, Social'da yaşayan karakterlerle yapılan bir sohbettir. Bir kişi listesi, seçili kişiyle konuşma ve onun bilgilerinin olduğu bir kart görürsünüz. Bir karakterle birebir konuşmak isteyen buradan başlar.
@@ -16,6 +16,8 @@ Sohbeti açmak için bir kişi seçin. Sizin mesajlarınız ve onların mesajlar
 Durum, bir karakterin davranışını değiştirir. Online bir karakter birkaç saniye içinde yanıt verir. Away bir karakter birkaç dakika içinde yanıt verir. Offline bir karakter mesajı alır ve geri döndüğünde yanıtlar; sohbet, mesajın o zaman yanıtlanacağını söyler. Bir yanıt yoldayken "<name> is typing…" görürsünüz. Yanıt gelmezse sohbet neyin ters gittiğini bildirir ve "Try again" önerir. Messenger için bir model seçilmemişse sohbet bunu söyler ve ayarlara bağlantı verir.
 
 ### Emoji
+
+Bir karakter her yanıtta sohbetin son 24 mesajını görür; bu yüzden uzun bir sohbet yalnızca o kadar geriye kadar hatırlanır. Sayıyı Settings, Messenger, "Messages a character remembers" altından değiştirebilirsiniz (4 ile 500 arası; bkz. [[settings]]).
 
 Mesaj kutusunun yanındaki gülen yüz düğmesi ("Emoji"), bir arama alanı, grupları (smileys, people, animals, food, travel, activities, objects, symbols, flags) ve en son kullandığınız emojileri içeren bir seçici açar. Bir emojiye tıklayarak onu imlecin olduğu yere ya da seçtiğiniz metnin üstüne koyun; seçici kapanır ve yazmaya devam edersiniz. Birden çok eklemek için tıklarken Shift tuşunu basılı tutun; seçici açık kalır. "Search emoji" alanına adını İngilizce ya da Ukraynaca yazarak bulun; Enter ilk eşleşmeyi seçer. Alttaki altı nokta ("Skin tone") tonu olan emojilerin tonunu değiştirir; seçim, en son kullanılanlar gibi hatırlanır. Telefonda seçici, mesaj kutusunun üstünde değil altında açılır ve çarpıya ya da gülen yüz düğmesine tekrar basana kadar açık kalır. Ok tuşları emojiler arasında gezinir; Escape seçiciyi kapatır.
 

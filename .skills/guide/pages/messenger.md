@@ -16,6 +16,8 @@ The status changes how a character behaves. An online character answers within s
 
 ### Emoji
 
+A character sees the latest 24 messages of the chat with each reply, so a long chat is remembered only as far back as that. You can change the number in Settings, Messenger, "Messages a character remembers" (4 to 500; see [[settings]]).
+
 The smiley button next to the message box ("Emoji") opens a picker with a search field, the groups (smileys, people, animals, food, travel, activities, objects, symbols, flags) and the emoji you used last. Click an emoji to put it at the cursor, or over the text you have selected; the picker closes and you keep typing. Hold Shift while you click to keep it open and add several. Type in "Search emoji" to find one by name in English or Ukrainian; Enter takes the first match. The six dots at the bottom ("Skin tone") change the tone of the emoji that have one, and the choice is remembered, like the recent ones. On a phone the picker opens under the message box instead of over it, and stays open until you press the cross or the smiley button again. Arrow keys move between emoji and Escape closes the picker.
 
 Social carries its own emoji font, so emoji look the same on Windows, Android and Linux; Safari draws its own. Characters write emoji too: how often is set per character, see "Writing manner" in [[profiles]].

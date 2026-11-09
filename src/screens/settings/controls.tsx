@@ -87,17 +87,17 @@ export function Segmented<T extends string>({ options, value, onChange, labelled
 }
 
 /** − value + with a clamped range. The value is an output, so screen readers hear the change. */
-export function Stepper({ value, min, max, onChange, name }: { value: number; min: number; max: number; onChange: (v: number) => void; name: string }) {
+export function Stepper({ value, min, max, onChange, name, step = 1 }: { value: number; min: number; max: number; onChange: (v: number) => void; name: string; step?: number }) {
   const t = useT();
   return (
     <div className="stp" role="group" aria-label={name}>
-      <button type="button" className="b" aria-label={t("settings.stepper.less", { name })} disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))}>
+      <button type="button" className="b" aria-label={t("settings.stepper.less", { name })} disabled={value <= min} onClick={() => onChange(Math.max(min, value - step))}>
         −
       </button>
       <output className="v" aria-live="polite">
         {value}
       </output>
-      <button type="button" className="b" aria-label={t("settings.stepper.more", { name })} disabled={value >= max} onClick={() => onChange(Math.min(max, value + 1))}>
+      <button type="button" className="b" aria-label={t("settings.stepper.more", { name })} disabled={value >= max} onClick={() => onChange(Math.min(max, value + step))}>
         +
       </button>
     </div>

@@ -37,6 +37,8 @@ export interface SettingsMock {
   messengerFirst: boolean;
   messengerPerDay: number;
   messengerQuiet: ChatHours;
+  /** How many of the latest messages of a chat go to the model with each reply. */
+  messengerContext: number;
   /** Model choices: preview uses the four ids below; real mode uses "provider/model" or "" (engine default). */
   models: { messenger: string; forum: string; import: string; image: string };
   notify: { tab: boolean; system: boolean; sound: boolean };
@@ -60,6 +62,7 @@ export const SETTINGS_MOCK: SettingsMock = {
   messengerFirst: true,
   messengerPerDay: 5,
   messengerQuiet: "same",
+  messengerContext: 24,
   models: { messenger: "default", forum: "default", import: "default", image: "" },
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: true,
@@ -76,6 +79,7 @@ export const LIMITS = {
   postsPerAuthor: { min: 1, max: 50 },
   messengerPerDay: { min: 0, max: 50 },
   imagesPerDay: { min: 0, max: 20 },
+  messengerContext: { min: 4, max: 500 },
 } as const;
 
 /** Quiet-hour choices, every half hour. */

@@ -1,4 +1,4 @@
-<!-- source: 052140028b49 -->
+<!-- source: b52f839cace6 -->
 # Social: Messenger
 
 El Messenger es un chat con los personajes que viven en Social. Ves una lista de contactos, la conversación con el contacto seleccionado y una tarjeta con sus datos. Quien quiera hablar con un personaje uno a uno empieza aquí.
@@ -16,6 +16,8 @@ Selecciona un contacto para abrir el chat. Tus mensajes y los suyos son líneas 
 El estado cambia cómo se comporta un personaje. Un personaje online responde en segundos. Un personaje away responde en unos minutos. Un personaje offline recibe el mensaje y responde cuando vuelve; el chat indica que el mensaje se responderá entonces. Mientras una respuesta está en camino ves «<name> is typing…». Si no llega ninguna respuesta, el chat te dice qué ha fallado y ofrece «Try again». Si no hay modelo elegido para el Messenger, el chat lo indica y enlaza con los ajustes.
 
 ### Emoji
+
+Un personaje ve los últimos 24 mensajes del chat con cada respuesta, así que un chat largo se recuerda solo hasta ahí. Puedes cambiar el número en Settings, Messenger, «Messages a character remembers» (de 4 a 500; ver [[settings]]).
 
 El botón de sonrisa junto al cuadro de mensaje («Emoji») abre un selector con un campo de búsqueda, los grupos (smileys, people, animals, food, travel, activities, objects, symbols, flags) y los emoji que usaste por última vez. Haz clic en un emoji para ponerlo en el cursor, o sobre el texto que tengas seleccionado; el selector se cierra y sigues escribiendo. Mantén pulsado Shift mientras haces clic para dejarlo abierto y añadir varios. Escribe en «Search emoji» para encontrar uno por su nombre en inglés o en ucraniano; Enter toma la primera coincidencia. Los seis puntos de abajo («Skin tone») cambian el tono de los emoji que lo tienen, y la elección se recuerda, igual que los recientes. En el teléfono, el selector se abre debajo del cuadro de mensaje en lugar de encima, y se queda abierto hasta que pulses la cruz o el botón de sonrisa otra vez. Las flechas mueven entre emoji y Escape cierra el selector.
 

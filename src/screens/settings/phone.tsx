@@ -112,6 +112,11 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
               <Stepper name={t("settings.messenger.limit")} value={s.messengerPerDay} min={LIMITS.messengerPerDay.min} max={LIMITS.messengerPerDay.max} onChange={(v) => set({ messengerPerDay: v })} />
             )}
           </Row>
+          <Row title={t("settings.messenger.context")} hint={t("settings.messenger.context.phone.hint")}>
+            {() => (
+              <Stepper name={t("settings.messenger.context")} step={4} value={s.messengerContext} min={LIMITS.messengerContext.min} max={LIMITS.messengerContext.max} onChange={(v) => set({ messengerContext: v })} />
+            )}
+          </Row>
         </section>
 
         <h2 className="gl">{t("settings.group.life")}</h2>

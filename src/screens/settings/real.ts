@@ -21,6 +21,7 @@ export const REAL_DEFAULTS: SettingsMock = {
   messengerFirst: true,
   messengerPerDay: 5,
   messengerQuiet: "same",
+  messengerContext: 24,
   models: { messenger: "", forum: "", import: "", image: "" },
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: false,
