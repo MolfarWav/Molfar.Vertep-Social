@@ -1,4 +1,4 @@
-<!-- source: 052140028b49 -->
+<!-- source: b52f839cace6 -->
 # Social : Messenger
 
 Le Messenger est une conversation avec les personnages qui vivent dans Social. Vous voyez une liste de contacts, la discussion avec le contact sélectionné et une carte avec ses coordonnées. Quiconque veut parler à un personnage en tête-à-tête commence ici.
@@ -16,6 +16,8 @@ Sélectionnez un contact pour ouvrir le chat. Vos messages et les siens sont des
 Le statut change le comportement d’un personnage. Un personnage online répond en quelques secondes. Un personnage away répond en quelques minutes. Un personnage offline reçoit le message et répond à son retour ; le chat indique que le message sera alors traité. Pendant qu’une réponse est en route, vous voyez « <name> is typing… ». Si aucune réponse n’arrive, le chat indique ce qui n’a pas marché et propose « Try again ». Si aucun modèle n’est choisi pour le Messenger, le chat le signale et renvoie vers les paramètres.
 
 ### Emoji
+
+Un personnage voit les 24 derniers messages de la discussion à chaque réponse ; une longue discussion n’est donc retenue que jusque-là. Vous pouvez changer ce nombre dans Settings, Messenger, « Messages a character remembers » (de 4 à 500 ; voir [[settings]]).
 
 Le bouton au sourire (« Emoji ») à côté de la zone de saisie ouvre un sélecteur avec un champ de recherche, les groupes (smileys, people, animals, food, travel, activities, objects, symbols, flags) et les emoji que vous avez utilisés en dernier. Cliquez sur un emoji pour le placer au curseur, ou sur le texte que vous avez sélectionné ; le sélecteur se ferme et vous continuez à écrire. Maintenez Maj en cliquant pour le garder ouvert et en ajouter plusieurs. Saisissez dans « Search emoji » pour en trouver un par son nom, en anglais ou en ukrainien ; Entrée prend le premier résultat. Les six points en bas (« Skin tone ») changent la teinte des emoji qui en ont une, et le choix est retenu, comme les emoji récents. Sur un téléphone, le sélecteur s’ouvre sous la zone de saisie au lieu de par-dessus, et reste ouvert jusqu’à ce que vous appuyiez à nouveau sur la croix ou sur le bouton au sourire. Les touches fléchées déplacent entre les emoji, et Échap ferme le sélecteur.
 

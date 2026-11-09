@@ -1,4 +1,4 @@
-<!-- source: 052140028b49 -->
+<!-- source: b52f839cace6 -->
 # Social: Messenger
 
 Messenger to czat z postaciami, które mieszkają w Social. Widzisz listę kontaktów, rozmowę z wybranym kontaktem i kartę z jego danymi. Każdy, kto chce porozmawiać z postacią w cztery oczy, zaczyna tutaj.
@@ -16,6 +16,8 @@ Wybierz kontakt, aby otworzyć czat. Twoje wiadomości i ich wiadomości to wier
 Status zmienia zachowanie postaci. Postać online odpowiada w ciągu sekund. Postać away odpowiada w ciągu kilku minut. Postać offline dostaje wiadomość i odpowiada, gdy wróci; czat mówi, że wtedy otrzyma odpowiedź. Gdy odpowiedź jest w drodze, widzisz "<name> is typing…". Jeśli odpowiedź nie nadejdzie, czat wyjaśnia, co się stało, i proponuje "Try again". Jeśli dla Messengera nie wybrano modelu, czat o tym informuje i prowadzi do ustawień.
 
 ### Emoji
+
+Postać z każdą odpowiedzią widzi ostatnie 24 wiadomości czatu, więc długi czat jest pamiętany tylko tak daleko wstecz. Liczbę możesz zmienić w Settings, Messenger, "Messages a character remembers" (od 4 do 500; zobacz [[settings]]).
 
 Przycisk z uśmiechem obok pola wiadomości ("Emoji") otwiera wybierak z polem wyszukiwania, grupami (buźki, ludzie, zwierzęta, jedzenie, podróże, aktywności, przedmioty, symbole, flagi) i emoji, których użyłeś ostatnio. Kliknij emoji, aby wstawić je w miejscu kursora albo zamiast zaznaczonego tekstu; wybierak się zamknie, a ty piszesz dalej. Przytrzymaj Shift podczas klikania, aby zostawał otwarty i dodać kilka. Wpisz w "Search emoji", aby znaleźć emoji po nazwie po angielsku lub po ukraińsku; Enter wybiera pierwsze trafienie. Sześć kropek na dole ("Skin tone") zmienia odcień tych emoji, które go mają; wybór jest zapamiętywany, podobnie jak ostatnio użyte. Na telefonie wybierak otwiera się pod polem wiadomości, a nie nad nim, i zostaje otwarty, aż naciśniesz krzyżyk albo przycisk z uśmiechem ponownie. Strzałki przesuwają między emoji, a Escape zamyka wybierak.
 

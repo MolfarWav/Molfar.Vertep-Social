@@ -1,4 +1,4 @@
-<!-- source: 052140028b49 -->
+<!-- source: b52f839cace6 -->
 # Social: Messenger
 
 Il Messenger è una chat con i personaggi che vivono in Social. Vedi un elenco di contatti, la conversazione con il contatto selezionato e una scheda con i suoi dati. Chi vuole parlare con un personaggio a tu per tu inizia da qui.
@@ -16,6 +16,8 @@ Seleziona un contatto per aprire la chat. I tuoi messaggi e i suoi sono righe co
 Lo stato cambia il comportamento di un personaggio. Un personaggio online risponde in pochi secondi. Un personaggio away risponde in pochi minuti. Un personaggio offline riceve il messaggio e risponde quando torna; la chat indica che il messaggio avrà risposta allora. Mentre una risposta è in arrivo vedi «<name> is typing…». Se non arriva alcuna risposta, la chat spiega che cosa è andato storto e propone «Try again». Se per il Messenger non è scelto alcun modello, la chat lo segnala e rimanda alle impostazioni.
 
 ### Emoji
+
+Un personaggio vede gli ultimi 24 messaggi della chat a ogni risposta, quindi una chat lunga viene ricordata solo fino a quel punto. Puoi cambiare il numero in Settings, Messenger, «Messages a character remembers» (da 4 a 500; vedi [[settings]]).
 
 Il pulsante con lo smile accanto alla casella del messaggio («Emoji») apre un selettore con un campo di ricerca, i gruppi (faccine, persone, animali, cibo, viaggi, attività, oggetti, simboli, bandiere) e le emoji che hai usato per ultime. Fai clic su un’emoji per metterla nel punto del cursore, o al posto del testo selezionato: il selettore si chiude e continui a scrivere. Tieni premuto Maiusc mentre fai clic per tenerlo aperto e aggiungerne più d’una. Scrivi in «Search emoji» per trovarne una per nome, in inglese o in ucraino; Invio prende la prima corrispondenza. I sei puntini in basso («Skin tone») cambiano il tono delle emoji che lo prevedono, e la scelta viene ricordata, come quelle recenti. Su un telefono il selettore si apre sotto la casella del messaggio invece che sopra, e resta aperto finché non premi la croce o di nuovo il pulsante con lo smile. I tasti freccia spostano il cursore tra le emoji ed Esc chiude il selettore.
 

@@ -1,4 +1,4 @@
-<!-- source: 052140028b49 -->
+<!-- source: b52f839cace6 -->
 # Social: Messenger
 
 O Messenger é um chat com os personagens que vivem no Social. Você vê uma lista de contatos, a conversa com o contato selecionado e um cartão com os detalhes dele. Quem quer falar com um personagem de um para um começa aqui.
@@ -16,6 +16,8 @@ Selecione um contato para abrir o chat. As suas mensagens e as dele são linhas 
 O status muda o comportamento do personagem. Um personagem online responde em segundos. Um personagem away responde em alguns minutos. Um personagem offline recebe a mensagem e responde quando voltar; o chat diz que a mensagem será respondida então. Enquanto uma resposta está a caminho, você vê "<name> is typing…". Se nenhuma resposta chegar, o chat diz o que deu errado e oferece "Try again". Se nenhum modelo estiver escolhido para o Messenger, o chat avisa e leva às configurações.
 
 ### Emoji
+
+Um personagem vê as últimas 24 mensagens do chat a cada resposta, então um chat longo é lembrado só até esse ponto. Você pode mudar o número em Settings, Messenger, "Messages a character remembers" (de 4 a 500; veja [[settings]]).
 
 O botão de sorriso ao lado da caixa de mensagem ("Emoji") abre um seletor com um campo de busca, os grupos (sorrisos, pessoas, animais, comida, viagem, atividades, objetos, símbolos, bandeiras) e os emoji que você usou por último. Clique em um emoji para colocá-lo no cursor, ou sobre o texto que você selecionou; o seletor fecha e você continua digitando. Mantenha Shift pressionado ao clicar para deixá-lo aberto e adicionar vários. Digite em "Search emoji" para encontrar um pelo nome, em inglês ou em ucraniano; Enter escolhe o primeiro resultado. Os seis pontos embaixo ("Skin tone") mudam o tom dos emoji que têm tons, e a escolha fica guardada, como os recentes. Em um celular, o seletor abre sob a caixa de mensagem em vez de sobre ela, e fica aberto até você pressionar o X ou o botão de sorriso de novo. As setas movem entre os emoji, e Escape fecha o seletor.
 

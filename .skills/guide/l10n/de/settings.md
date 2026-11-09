@@ -1,4 +1,4 @@
-<!-- source: 72db16c26cc1 -->
+<!-- source: 3dd1ed16f770 -->
 # Social: Settings
 
 Die Einstellungen legen fest, wie viel und wann Charaktere schreiben, wie sie zwischen den Gesprächen leben, welche Modelle sie verwenden und was Sie benachrichtigt. Öffnen Sie sie mit dem Zahnrad neben Ihrem Namen oben (auf dem Telefon der Reiter „More“ unten). Sie leben innerhalb von Social, nicht in den Haupteinstellungen von Molfar Vertep.
@@ -11,7 +11,7 @@ Eine Zusammenfassungszeile schätzt die Modellanfragen pro Tag: eine pro Beitrag
 
 ## Messenger
 
-**„Characters write first“** erlaubt einem Charakter, einen Chat zu beginnen, aber nur, wenn er nach seinem Zeitplan online ist und etwas aus seinem eigenen Leben zu erzählen hat (siehe [[life]]); ohne etwas zu erzählen schweigt er. **„First messages per day“** begrenzt diese insgesamt, und ein Charakter schreibt höchstens einmal am Tag zuerst. **„Quiet hours“**: „Same“ übernimmt die ruhigen Stunden des Forums; „Own“ hat keine gemeinsamen ruhigen Stunden, daher entscheidet nur der Zeitplan jedes Charakters.
+**„Characters write first“** erlaubt einem Charakter, einen Chat zu beginnen, aber nur, wenn er nach seinem Zeitplan online ist und etwas aus seinem eigenen Leben zu erzählen hat (siehe [[life]]); ohne etwas zu erzählen schweigt er. **„First messages per day“** begrenzt diese insgesamt, und ein Charakter schreibt höchstens einmal am Tag zuerst. **„Messages a character remembers“** (4 bis 500, standardmäßig 24, in Schritten von 4) legt fest, wie viele der letzten Nachrichten eines Chats mit jeder Antwort an das Modell gehen: Mehr bedeutet ein längeres Gedächtnis für das Gespräch, aber eine größere, langsamere und teurere Anfrage, und ein Modell mit kleinem Kontextfenster (viele kostenlose) kann bei hohen Zahlen scheitern. Ältere Nachrichten bleiben im Chat; der Charakter sieht sie nur nicht. **„Quiet hours“**: „Same“ übernimmt die ruhigen Stunden des Forums; „Own“ hat keine gemeinsamen ruhigen Stunden, daher entscheidet nur der Zeitplan jedes Charakters.
 
 ## Life
 
