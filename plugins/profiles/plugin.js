@@ -20,6 +20,8 @@
  *   GET    /profiles/roleplay         what can be imported: {state, characters, hidden, truncated}
  *   POST   /profiles/import {kind: "card", id, key?, model?}   one card -> one profile (the one-time digest)
  *   POST   /profiles/refresh {profileId, model?}       a new digest of the source, as a proposal: nothing is saved
+ *   POST   /profiles/avatar {profileId} or {personaId}  the picture to bring along: {ok, avatar: {url, from} | null}
+ *          (the card's avatar, else the Soul-tab portrait of the name; the screen uploads it, nothing is stored here)
  *   GET    /you                       Your profile: {you: {active, personas: [...]}} (the user's own personas, not characters)
  *   PUT    /you/<id>                  save one persona (create or replace): {ok, persona, you}
  *   DELETE /you/<id>                  remove it (the active one passes to the first left)
@@ -931,6 +933,75 @@ function refreshRoute(req, host) {
   return ok({ ok: true, proposal: out.digest, cardDate: today() });
 }
 
+// ---------- avatars from Roleplay ----------
+//
+// An import brings the picture too. The plugin cannot store an image (that is the engine's asset store, reached by the
+// screen), so this route only FINDS the image and hands it over; the screen uploads it as an asset of Social and puts the
+// asset address into the profile's `picture`. Order: the card's own avatar, then the portrait set for the name in
+// Roleplay's Soul tab (`litopys/portraits.json`). A member of a narrator card skips the card's avatar (it is the
+// narrator's face, not theirs) and goes straight to the portrait of their name.
+
+const ASSET_URL = /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/;
+const IMAGE_DATA = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
+const AVATAR_MAX = 1500000; // characters of a data URL; Roleplay keeps portraits at 512 px, far below this
+const PORTRAITS_FILE = "litopys/portraits.json";
+
+/** An image reference the screen can fetch or upload: an engine asset address or a small data:image. Else "". */
+export function avatarSource(v) {
+  const s = typeof v === "string" ? v.trim() : "";
+  if (!s || s.length > AVATAR_MAX) return "";
+  return ASSET_URL.test(s) || IMAGE_DATA.test(s) ? s : "";
+}
+
+/** The portrait the user set in Roleplay's Soul tab for this name, or "". */
+function soulPortrait(peer, name) {
+  const got = readRoleplayJson(peer, PORTRAITS_FILE);
+  if (!got.doc) return "";
+  const hit = got.doc[String(name).toLowerCase()];
+  return isObj(hit) ? avatarSource(hit.url) : "";
+}
+
+/** POST /profiles/avatar {profileId} or {personaId}: {ok, avatar: {url, from: "card"|"persona"|"soul"} | null}. */
+function avatarRoute(req, host) {
+  const b = isObj(req.body) ? req.body : {};
+  const fsx = host.fs;
+  let name = "";
+  let docPath = "";
+  let key = "";
+  let own = "card";
+  if (b.profileId !== undefined) {
+    const id = String(b.profileId);
+    if (!ID.test(id)) return ok({ error: "profileId is not valid" }, 400);
+    const p = cleanProfile(readJson(fsx, profilePath(id), null), id, 0, null);
+    if (!p) return ok({ error: "no such profile" }, 404);
+    const ref = cleanFrom(p.from);
+    if (!ref) return ok({ ok: true, avatar: null });
+    name = p.name;
+    key = ref.key || "";
+    docPath = refPath(ref);
+  } else {
+    const id = String(b.personaId || "");
+    if (!ID.test(id)) return ok({ error: "personaId is not valid" }, 400);
+    const found = readYou(fsx).personas.find((x) => x.id === id);
+    if (!found) return ok({ error: "no such persona" }, 404);
+    if (!found.from) return ok({ ok: true, avatar: null });
+    name = found.name;
+    docPath = "personas/" + found.from.id + ".json";
+    own = "persona";
+  }
+  const peer = roleplayPeer(host);
+  if (!peer) return ok({ ok: false, code: "no-access", error: CLOSED_TEXT });
+  if (!key) {
+    const got = readRoleplayJson(peer, docPath);
+    if (got.doc) {
+      const main = avatarSource(got.doc.avatar) || avatarSource(isObj(got.doc.studio) ? got.doc.studio.avatar : "");
+      if (main) return ok({ ok: true, avatar: { url: main, from: own } });
+    }
+  }
+  const soul = soulPortrait(peer, name);
+  return ok({ ok: true, avatar: soul ? { url: soul, from: "soul" } : null });
+}
+
 function roleplayRoute(req, host, path) {
   if (req.method !== "GET") return ok({ error: "method not allowed" }, 405);
   const peer = roleplayPeer(host);
@@ -1096,6 +1167,7 @@ export function handleRoute(req, host) {
   if (path === "/profiles/fill" && method === "POST") return fillRoute(req, host);
   if (path === "/profiles/import" && method === "POST") return importRoute(req, host);
   if (path === "/profiles/refresh" && method === "POST") return refreshRoute(req, host);
+  if (path === "/profiles/avatar" && method === "POST") return avatarRoute(req, host);
   if (path === "/profiles/roleplay" || path === "/profiles/roleplay/status") return roleplayRoute(req, host, path);
   const m = /^\/profiles\/([A-Za-z0-9_-]{1,60})$/.exec(path);
   if (m && method === "PUT") return saveRoute(req, host, m[1]);

@@ -101,14 +101,14 @@ Built as planned in `docs/FORUM-PLAN.md`; what was decided while building it:
 ## Roleplay import (2026-11-09, issue MolfarWav/Molfar.Vertep#322)
 The last piece of #310. The engine side is `reads` in the manifest, the user's one-time answer on Home, and `host.peer.read/list/stat`
 for a plugin with the `peer` permission (engine PR 321).
-- **What is declared:** `manifest.json` `reads`: app `roleplay`, paths `characters/*/card.json` and `personas/*.json` (the Soul and the
+- **What is declared:** `manifest.json` `reads`: app `roleplay`, paths `characters/*/card.json`, `personas/*.json` and `litopys/portraits.json` (the last since the avatar import, see below; the Soul and the
   structured profile live inside the card, the persona's profile inside the persona file, so nothing more is needed). The `why` text
   is what the consent dialog shows. Only the `profiles` plugin has the `peer` permission (`test/profiles-import.test.ts` pins both).
 - **Who may read, and when:** a card is read in two situations only: the user imports it, or presses "Update from Roleplay". No tick,
   route or prompt reads a card on its own. A card's text never goes into a messenger or forum prompt; the model that makes the digest
   gets it once. What the digest model reads: description, personality, scenario, first message, the Soul line (pronouns, class toward
   the user, extreme traits, coping) and the structured profile lines the text does not already say. Never: example dialogue, system
-  prompt, notes for people, avatar, the private note, the sexuality and trauma sections. A card is cut to about 12000 characters.
+  prompt, notes for people, the avatar (it never reaches a model), the private note, the sexuality and trauma sections. A card is cut to about 12000 characters.
 - **Routes** (`plugins/profiles/plugin.js`): `GET /profiles/roleplay/status` (ready or closed), `GET /profiles/roleplay` (the list: titles
   and names only, no card text), `POST /profiles/import {kind, id, key?, model?}` (one card, one profile; the reply is the saved profile),
   `POST /profiles/refresh {profileId, model?}` (a proposal from a new reading; nothing is saved). The screen imports one card per request,
@@ -153,6 +153,27 @@ for a plugin with the `peer` permission (engine PR 321).
   - **What reaches a prompt:** the messenger tells a character the active persona's name and its About (up to 600 characters), nothing else. The forum does not read personas yet (posts by the user show as "You"); that is a follow-up if the owner wants the name there.
   - **Removed from profiles:** `source: "persona"`, the Persona filter, the persona rows of the Roleplay import (cards only), `/profiles/import` refuses `kind: "persona"`. An early build filed personas as profiles; `GET /you` moves such files into `you.json` once (and removes their chat), and until then the messenger and the forum skip them.
   - **Unsaved edits** are drafts kept in memory while the app is open, with a Save bar, as in the profile editor; the screen does not ask when you leave.
+
+## Avatars on import (2026-11-09, owner report "avatars are not imported")
+The import was text only on purpose (the digest model never sees a picture), so a card's portrait was simply dropped. Now it comes along.
+- **Order (owner's words):** the card's own avatar first (`avatar`, else `studio.avatar`), then the portrait set for the name in Roleplay's
+  Soul tab (`litopys/portraits.json`, one image per lower-cased name, matched against the profile's Soul name). Reading of "Souls": the owner's
+  line was «search the main avatar, then the added picture in Souls»; Soul tab portrait is the only data that exists at import time, so that
+  is what is implemented. A picture added inside Social cannot be a source: no profile exists yet when the import runs.
+- **Narrator members:** a profile made from one Soul of a narrator card skips the card's avatar (it is the narrator's face) and uses only the
+  portrait of its own name.
+- **Who does what:** the plugin only FINDS the image (`POST /profiles/avatar {profileId|personaId}`, a second read of the same card, still
+  inside the user's import; it reads the stored `from`, never a client path). It cannot store images, so the screen uploads it
+  (`src/lib/roleplay-avatar.ts`: `PUT /v1/assets`, an asset owned by Social) and files the address as the profile's `picture`
+  (`PUT /profiles/<id>`, or `PUT /you/<id>` for a persona). Any miss leaves the letter avatar and never fails the import.
+- **Roleplay's stored images are not reachable.** Most card avatars are data URLs inside `card.json` and work. An avatar that is an address
+  `/v1/assets/<id>` (a picture Molfar drew for the card) belongs to Roleplay in the engine's asset store and is invisible to Social
+  (`assetVisibleTo`), and the peer read grant covers files, not assets. The screen tries, gets 404, and the profile keeps its letter. Fixing it
+  needs an engine change (an app that holds a read grant on another app may see that app's assets): left for the owner, security code.
+- **Consent cost:** adding `litopys/portraits.json` to `reads` is a new question for the engine. A user who already allowed Roleplay is asked
+  again on Home until they accept the longer list; until then the whole Roleplay import is closed, not only the portraits.
+- **Not done:** "Update from Roleplay" does not touch the picture; a profile imported before this change needs delete and re-import (or a
+  picture in the editor). A file over the engine's 2 MB peer read limit (`portraits.json` with many large portraits) gives no Soul fallback.
 
 ## Home link and forum leftovers (#322, #320; built 2026-11-09, one PR)
 - **Home link:** the engine offers `window.molfarShell.openHome()` (engine PR MolfarWav/Molfar.Vertep#325, official apps only, heard from the app on screen; ships as engine 1.13.1). `src/lib/shell-home.ts` finds it (`homeOpener`) and draws nothing when it is missing, so Social still runs on engine 1.13.0 and older with the text hint. Used in the "no access" dialog of the Roleplay import (a stacked footer on a phone: Check again, Open Home, Cancel) and in Settings > Roleplay access. Pressing it in the dialog closes the dialog first. Not done: telling "Roleplay is not installed" from "not allowed" (the plugin cannot see it).

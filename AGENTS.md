@@ -55,7 +55,7 @@ See `docs/DECISIONS.md` for what the owner decided and where to continue.
 ## Roleplay import
 `manifest.json` declares `reads` (Roleplay's cards and personas); only the `profiles` plugin has the `peer` permission. The plugin lists, imports and
 refreshes cards through `host.peer`; a persona goes to Your profile (`/you/*`, `you.json`, `src/screens/you/`), not to the profile list (see `docs/DECISIONS.md`, "Roleplay import"); the screen side is `src/screens/profiles/import-api.ts` (list, runner, diff)
-and `import.tsx`. In preview (`?screen=`) the same screens run on `src/mock/profiles-import.ts`.
+and `import.tsx`. The picture comes along with an import (`POST /profiles/avatar` finds it, `src/lib/roleplay-avatar.ts` uploads it; see `docs/DECISIONS.md`, "Avatars on import"). In preview (`?screen=`) the same screens run on `src/mock/profiles-import.ts`.
 
 ## Open items
 - The app cannot read the shell's scheme yet: the theme comes from `?theme=`, then the last choice, then Vertep.
