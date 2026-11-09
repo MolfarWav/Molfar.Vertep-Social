@@ -127,10 +127,15 @@ test("a reply request carries as many messages as the window says", () => {
   const always = Array.from({ length: 8 }, () => Array.from({ length: 7 }, () => "online"));
   put(h, "profiles/a.json", { id: "a", name: "Ada", hue: 100, voice: {}, schedule: always });
   put(h, "chats/a.json", { id: "a", messages: Array.from({ length: 60 }, (_, i) => ({ id: "m" + i, who: i % 2 ? "them" : "me", at: i + 1, text: "t" + i })), pending: null, failed: null, unread: false, shared: [] });
-  put(h, "settings.json", { tzOffset: 0, messengerContext: 40 });
+  // the note switched off: exactly the window
+  put(h, "settings.json", { tzOffset: 0, messengerContext: 40, messengerSummary: false });
   route(messenger, h, "POST", "/messenger/send", { id: "a", text: "now" });
   expect(reqs[0].messages.length).toBe(40);
-  put(h, "settings.json", { tzOffset: 0 });
+  put(h, "settings.json", { tzOffset: 0, messengerSummary: false });
   route(messenger, h, "POST", "/messenger/send", { id: "a", text: "again" });
   expect(reqs[1].messages.length).toBe(24);
+  // the note on (the default): messages not yet folded into it stay, up to the window plus a third of it (#333)
+  put(h, "settings.json", { tzOffset: 0, messengerContext: 40 });
+  route(messenger, h, "POST", "/messenger/send", { id: "a", text: "third" });
+  expect(reqs[2].messages.length).toBe(54);
 });

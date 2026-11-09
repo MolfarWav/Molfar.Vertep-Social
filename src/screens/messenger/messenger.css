@@ -81,3 +81,10 @@
 .s-messenger .pscreen .btn { height: 44px; }
 .s-messenger .comp.p .btn { border: 0; }
 .s-messenger .pscreen .note .btn { height: 44px; }
+
+/* memory and conversation (issue #333) */
+.s-messenger .sys.brk { border-style: solid; }
+.s-messenger .info .mem-note { white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px; }
+.s-messenger .info .mem-none { color: var(--muted); font-size: 13px; }
+.s-messenger .info .mem-open { margin-top: 8px; }
+.s-profiles .mem-start { display: flex; flex-wrap: wrap; gap: 8px; }

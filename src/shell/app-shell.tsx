@@ -7,6 +7,7 @@ import { NavProvider, useNav, type Tab } from "@/shell/nav";
 import { Messenger } from "@/screens/messenger";
 import { Forum } from "@/screens/forum";
 import { useBadgePoll } from "@/lib/badges";
+import { onShellView } from "@/lib/shell-view";
 import { useImageWorker } from "@/pictures/worker";
 import { Profiles } from "@/screens/profiles";
 import { Settings } from "@/screens/settings";
@@ -53,6 +54,8 @@ function Chrome() {
   useBadgePoll();
   useImageWorker();
   useEffect(ensureYou, []);
+  // the shell's Settings lists Social under "App settings" (manifest `settingsView`) and opens it on Settings
+  useEffect(() => onShellView((v) => { if (v === "settings") go("settings"); }), [go]);
   const you = useYou();
   const me = you?.personas.find((p) => p.id === you.active);
   // a phone has no "You" chip: Settings opens Your profile, so More stays lit while it is open

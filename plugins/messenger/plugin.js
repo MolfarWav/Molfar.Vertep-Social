@@ -9,6 +9,10 @@
  *          ({ok, queued, chat} or {ok: false, error, code?, chat}); otherwise the reply is queued (see below)
  *   POST /messenger/retry {id}          asks again for the reply to the last message (after a failure, or a queued one now)
  *   POST /messenger/read {id}           marks the chat read
+ *   POST /messenger/summary {id, text}  the user edits the memory note of the chat ("" empties it) -> {ok, chat}
+ *   POST /messenger/new {id, keepNote}  a new conversation: a divider in the log, the model sees only what comes after it; with keepNote the
+ *          messages not yet in the note are folded into it first (a model call), without it the note is dropped -> {ok, chat, warn?}
+ *   POST /messenger/clear {id}          deletes the whole history and the note -> {ok, chat}
  *   GET  /messenger/images              the pictures characters asked for that nobody has drawn yet: {items: [{id, messageId, prompt, model}]}
  *   POST /messenger/image {id, messageId, url? | error?}   the page files a drawn picture (or says it failed)
  *   (send also takes {image: {url, alt?, gen?}}: a picture the user attached, with or without text; see the images block below)
@@ -24,6 +28,11 @@
  * diary entry, or an item of the world feed; both written by the `life` plugin, only read here). Never without a subject, so there
  * are no generic greetings. Limits: Settings (messengerFirst, messengerPerDay, messengerQuiet), one per profile per day, a gap of
  * 20 minutes, never twice in a row without an answer. A first message carries `first: true`.
+ *
+ * Memory note (issue #333): the model sees the newest messages of the current conversation, and the messages that scroll out of that window
+ * are folded by one model call into a short note (`chat.summary: {text, upto, at, edited?}`; `upto` is the time of the last message in it) that
+ * goes into the prompt. A fold runs from `onTick` when the open messages (after `upto`) exceed the window by a slack of a third; Settings >
+ * Messenger switches it (`messengerSummary`). A "new conversation" is a divider (`chat.breaks`, times): the model sees nothing before the last one.
  */
 
 const ID = /^[A-Za-z0-9_-]{1,60}$/;
@@ -35,6 +44,12 @@ const TEXT_MAX = 2000;
 const KEEP = 500;
 const TICK_BATCH = 2;
 const SELF = "me";
+const SUMMARY_MAX = 1500;
+const FOLD_INPUT_MAX = 12000;
+const FOLD_MSG_MAX = 600;
+const FOLD_FAIL_WAIT_MS = 10 * 60 * 1000;
+const BREAKS_KEEP = 50;
+const KNOWS = ["knows", "name", "stranger"];
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -112,7 +127,13 @@ export function youOf(fsx) {
 }
 
 function emptyChat(id) {
-  return { id, messages: [], pending: null, failed: null, unread: false, shared: [] };
+  return { id, messages: [], pending: null, failed: null, unread: false, shared: [], summary: null, breaks: [], foldFailAt: 0 };
+}
+
+/** The memory note of a chat as stored: {text, upto, at, edited?} or null. */
+function cleanSummary(raw) {
+  if (!isObj(raw) || typeof raw.text !== "string") return null;
+  return { text: cut(noControls(raw.text).trim(), SUMMARY_MAX), upto: Number.isFinite(raw.upto) ? raw.upto : 0, at: Number.isFinite(raw.at) ? raw.at : 0, ...(raw.edited === true ? { edited: true } : {}) };
 }
 
 function readChat(fsx, id) {
@@ -124,7 +145,8 @@ function readChat(fsx, id) {
   const pending = isObj(c.pending) && Number.isFinite(c.pending.at) ? { at: c.pending.at, dueAt: Number.isFinite(c.pending.dueAt) ? c.pending.dueAt : null } : null;
   const failed = isObj(c.failed) ? { error: str(c.failed.error), ...(c.failed.code === "no-model" ? { code: "no-model" } : {}) } : null;
   const shared = (Array.isArray(c.shared) ? c.shared : []).filter((x) => typeof x === "string" && ID.test(x)).slice(-60);
-  return { id, messages, pending, failed, unread: c.unread === true, shared };
+  const breaks = (Array.isArray(c.breaks) ? c.breaks : []).filter((x) => Number.isFinite(x)).slice(-BREAKS_KEEP);
+  return { id, messages, pending, failed, unread: c.unread === true, shared, summary: cleanSummary(c.summary), breaks, foldFailAt: Number.isFinite(c.foldFailAt) ? c.foldFailAt : 0 };
 }
 
 function writeChat(fsx, chat) {
@@ -145,6 +167,8 @@ function viewOf(chat, profile, now, tz) {
     messages: chat.messages,
     pending: chat.pending,
     failed: chat.failed,
+    summary: chat.summary ? { text: chat.summary.text, at: chat.summary.at, edited: chat.summary.edited === true } : null,
+    breaks: chat.breaks,
   };
 }
 
@@ -303,6 +327,10 @@ const EMOJI_WORDS = [
 ];
 const MAX_TOKENS = [200, 400, 800];
 
+/** Out of character: the person stepping out of the chat to say something about it (issue #333). */
+export const OOC_HINT =
+  "A message in double parentheses, like ((this)), or one that starts with OOC, is the person speaking as themselves, out of character: answer it briefly and plainly as yourself, outside the story, then carry on as before.";
+
 /** The system prompt that makes the model write as this profile. */
 export function systemPromptFor(p, you, recent, opts) {
   const user = isObj(you) ? you : { name: typeof you === "string" ? you : "", about: "" };
@@ -310,18 +338,22 @@ export function systemPromptFor(p, you, recent, opts) {
   const length = [0, 1, 2].includes(v.length) ? v.length : 1;
   const emoji = [0, 1, 2].includes(v.emoji) ? v.emoji : 1;
   const formality = Number.isFinite(v.formality) ? v.formality : 30;
+  const stranger = !!(isObj(opts) && opts.stranger);
   const lines = [
-    "You are " + str(p.name) + ", a character chatting in a messenger with " + (str(user.name) || "the user") + ". Stay in character at all times.",
+    "You are " + str(p.name) + ", a character chatting in a messenger with " + (stranger ? "someone you do not know yet" : str(user.name) || "the user") + ". Stay in character at all times.",
   ];
+  if (stranger) lines.push("You know nothing about this person, not even their name, until they tell you; do not guess or invent it.");
   if (str(user.about)) lines.push("About the person you are writing to (what they told you about themselves): " + cut(str(user.about), 600));
   if (str(p.about)) lines.push("Who you are: " + cut(str(p.about), 1500));
   if (Array.isArray(p.interests) && p.interests.length) lines.push("Your interests: " + p.interests.slice(0, 12).join(", ") + ".");
   if (Array.isArray(p.habits) && p.habits.length) lines.push("Your habits: " + p.habits.slice(0, 10).map((h) => str(h && h.text)).filter(Boolean).join("; ") + ".");
   if (str(v.text)) lines.push("How you write: " + cut(str(v.text), 800));
   if (str(recent)) lines.push(recent);
+  if (isObj(opts) && str(opts.summary)) lines.push("What you remember from earlier in this conversation (your own notes, in order of importance): " + cut(str(opts.summary), SUMMARY_MAX));
   lines.push(LENGTH_WORDS[length] + " " + EMOJI_WORDS[emoji] + " " + (formality >= 66 ? "Formal, polite address." : formality <= 33 ? "Informal, on first-name terms." : "Neutral tone."));
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
   lines.push("Write only your next message, as plain chat text: no quotation marks around it, no stage directions or narration, no name label.");
+  lines.push(OOC_HINT);
   lines.push("Answer in the language the user writes in. If you do not know something about the real world, say so in your own voice instead of inventing facts.");
   if (isObj(opts) && opts.images) lines.push(IMAGE_HINT);
   return lines.join("\n");
@@ -338,6 +370,107 @@ export function historyLimit(fsx) {
 export function historyFor(messages, limit) {
   const tail = messages.slice(-(Number.isInteger(limit) && limit > 0 ? limit : HISTORY));
   return tail.map((m) => ({ role: m.who === SELF ? "user" : "assistant", content: [m.text, imageLine(m.image)].filter(Boolean).join(" ") }));
+}
+
+// ---------- how much the model sees: the window, the memory note, new conversations (issue #333) ----------
+
+/** The memory note switch (Settings > Messenger): on unless it was switched off. */
+export function summaryOn(fsx) {
+  const s = readJson(fsx, "settings.json", null);
+  return !(isObj(s) && s.messengerSummary === false);
+}
+
+/** How well the profile knows the user: its own choice, else Settings > Messenger, else "knows" (the name and About of the active persona). */
+export function knowsOf(fsx, profile) {
+  if (isObj(profile) && KNOWS.includes(profile.knows)) return profile.knows;
+  const s = readJson(fsx, "settings.json", null);
+  return isObj(s) && KNOWS.includes(s.messengerKnows) ? s.messengerKnows : "knows";
+}
+
+/** The person as this profile may know them: the whole persona, only its name, or nobody (a stranger). */
+export function youFor(fsx, profile) {
+  const k = knowsOf(fsx, profile);
+  const y = youOf(fsx);
+  if (k === "stranger") return null;
+  if (k === "name") return y ? { name: y.name, about: "" } : null;
+  return y;
+}
+
+/** The time of the last "new conversation" divider; 0 when there is none. */
+export const startOf = (chat) => (chat.breaks.length ? chat.breaks[chat.breaks.length - 1] : 0);
+
+/** The messages of the current conversation (after the last divider). */
+export const sinceBreak = (chat) => chat.messages.filter((m) => m.at >= startOf(chat));
+
+/** How far the window may grow before the oldest messages are folded: a third of it, at least four. */
+const slackOf = (n) => Math.max(4, Math.ceil(n / 3));
+
+/** What the model sees of a chat: {messages, summary}. With the note on, every message after the note's `upto` goes (at most the window plus its slack), and the note goes with them; off, the last `window` messages only. */
+export function contextOf(fsx, chat) {
+  const n = historyLimit(fsx);
+  const msgs = sinceBreak(chat);
+  if (!summaryOn(fsx)) return { messages: historyFor(msgs, n), summary: "" };
+  const upto = chat.summary ? chat.summary.upto : 0;
+  return { messages: historyFor(msgs.filter((m) => m.at > upto), n + slackOf(n)), summary: chat.summary ? chat.summary.text : "" };
+}
+
+/**
+ * The messages the next fold should put into the note: {upto, messages} or null. Normally the ones that left the window once the open
+ * messages exceed it by the slack (oldest first, as many as fit in one request). With `all` (a new conversation that keeps the note, asked
+ * before the divider is made) every open message of the conversation goes, however few.
+ */
+export function foldPlan(fsx, chat, all, now) {
+  if (!summaryOn(fsx)) return null;
+  if (!all && now - chat.foldFailAt < FOLD_FAIL_WAIT_MS) return null;
+  const n = historyLimit(fsx);
+  const upto = chat.summary ? chat.summary.upto : 0;
+  const open = sinceBreak(chat).filter((m) => m.at > upto);
+  const leaving = all ? open : open.length > n + slackOf(n) ? open.slice(0, open.length - n) : [];
+  const take = [];
+  let size = 0;
+  for (const m of leaving) {
+    const line = cut(imageLine(m.image) ? [m.text, imageLine(m.image)].filter(Boolean).join(" ") : m.text, FOLD_MSG_MAX);
+    if (size + line.length > FOLD_INPUT_MAX && take.length) break;
+    size += line.length;
+    take.push(m);
+  }
+  return take.length ? { upto: take[take.length - 1].at, messages: take } : null;
+}
+
+/** The note cleaned for the chat: no thinking notes or markup, cut to the limit. */
+export function cleanNote(text) {
+  const s = String(text || "").replace(/<think(?:ing)?>[\s\S]*?(?:<\/think(?:ing)?>|$)/gi, "").replace(/<[^>]*>/g, " ");
+  return cut(noControls(s).replace(/[ \t]{2,}/g, " ").trim(), SUMMARY_MAX);
+}
+
+/** The model call that folds messages into the note. */
+function requestFold(host, key, profile, chat, plan) {
+  const model = messengerModel(host.fs, profile);
+  const you = youFor(host.fs, profile);
+  const who = you ? you.name : "the person";
+  const lines = plan.messages.map((m) => (m.who === SELF ? who : str(profile.name)) + ": " + cut([m.text, imageLine(m.image)].filter(Boolean).join(" "), FOLD_MSG_MAX));
+  host.llm.request(key, {
+    ...(model ? { model } : {}),
+    systemPrompt:
+      "You keep the memory of " + str(profile.name) + ", a character who chats in a messenger with " + who + ". You are given the current memory note (it may be empty) and older messages that are leaving the chat's context. Write the updated note.\n" +
+      "Keep what still matters: facts the person told about themselves, plans and promises, how the two get on, open questions, running topics and jokes, what was important to either of them. Drop greetings, small talk and anything that no longer matters. Shorten older parts to make room for new ones.\n" +
+      "Write plain text in the third person (\"" + str(profile.name) + " promised ...\"), no headings or lists, at most about 180 words, in the language of the conversation. Reply with the note only.",
+    messages: [{ role: "user", content: "Current note:\n" + (chat.summary && chat.summary.text ? chat.summary.text : "(empty)") + "\n\nMessages leaving the context:\n" + lines.join("\n") }],
+    presetParams: { temperature: 0.3, max_tokens: 600 },
+  });
+}
+
+/** Files a fold's answer into the chat: the note and `upto`, or a note that the call failed (not retried at once). Returns true when it worked. */
+function fileFold(chat, upto, result, now) {
+  const r = isObj(result) ? result : {};
+  const text = r.error ? "" : cleanNote(r.text);
+  if (!text) {
+    chat.foldFailAt = now;
+    return false;
+  }
+  chat.summary = { text, upto, at: now };
+  chat.foldFailAt = 0;
+  return true;
 }
 
 /** A reply cleaned for the chat: no thinking notes, no leading name label, no wrapping quotes. */
@@ -382,10 +515,15 @@ const messengerModel = (fsx, profile) => {
 function requestReply(host, key, profile, chat) {
   const model = messengerModel(host.fs, profile);
   const length = isObj(profile.voice) && [0, 1, 2].includes(profile.voice.length) ? profile.voice.length : 1;
+  const ctx = contextOf(host.fs, chat);
   host.llm.request(key, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(profile, youOf(host.fs), recentDays(host.fs, profile, Date.now()), { images: mayImage(host.fs, chat, Date.now()) }),
-    messages: historyFor(chat.messages, historyLimit(host.fs)),
+    systemPrompt: systemPromptFor(profile, youFor(host.fs, profile), recentDays(host.fs, profile, Date.now()), {
+      images: mayImage(host.fs, chat, Date.now()),
+      summary: ctx.summary,
+      stranger: knowsOf(host.fs, profile) === "stranger",
+    }),
+    messages: ctx.messages,
     presetParams: { temperature: 0.85, max_tokens: MAX_TOKENS[length] },
   });
 }
@@ -560,6 +698,66 @@ function readRoute(req, host) {
   return ok({ ok: true });
 }
 
+/** The user edits the memory note ("" empties it; what was folded stays folded, so it is not folded again). */
+function summaryRoute(req, host) {
+  const fsx = host.fs;
+  const b = isObj(req.body) ? req.body : {};
+  const id = String(b.id || "");
+  const p = readProfile(fsx, id);
+  if (!p) return ok({ error: "no such profile" }, 404);
+  if (typeof b.text !== "string") return ok({ error: "text is needed" }, 400);
+  const chat = readChat(fsx, id);
+  const now = Date.now();
+  chat.summary = { text: cleanNote(b.text), upto: chat.summary ? chat.summary.upto : 0, at: now, edited: true };
+  writeChat(fsx, chat);
+  return ok({ ok: true, chat: viewOf(chat, p, now, tzOf(fsx)) });
+}
+
+/**
+ * A new conversation: a divider in the log; the model sees nothing from before it. `keepNote` (default) folds the messages that are not yet in
+ * the note into it first (a model call, so this route has two passes); without it the note is dropped. A failed fold still makes the divider and
+ * says so in `warn`.
+ */
+function newRoute(req, host) {
+  const fsx = host.fs;
+  const b = isObj(req.body) ? req.body : {};
+  const id = String(b.id || "");
+  const p = readProfile(fsx, id);
+  if (!p) return ok({ error: "no such profile" }, 404);
+  const chat = readChat(fsx, id);
+  const now = Date.now();
+  const stash = isObj(req.stash) ? req.stash : null;
+  const keep = b.keepNote !== false;
+  let warn = "";
+  if (!stash) {
+    if (!sinceBreak(chat).length) return ok({ error: "nothing to start over" }, 400);
+    const plan = keep ? foldPlan(fsx, chat, true, now) : null;
+    if (plan) {
+      requestFold(host, "newsum", p, chat, plan);
+      return { __llmPending: true, stash: { upto: plan.upto } };
+    }
+  } else if (!fileFold(chat, Number(stash.upto), host.llm.results.newsum, now)) {
+    warn = "note";
+  }
+  chat.breaks = [...chat.breaks, now].slice(-BREAKS_KEEP);
+  if (!keep) chat.summary = null;
+  chat.pending = null;
+  chat.failed = null;
+  writeChat(fsx, chat);
+  return ok({ ok: true, ...(warn ? { warn } : {}), chat: viewOf(chat, p, now, tzOf(fsx)) });
+}
+
+/** Deletes the whole history of the chat and its note. */
+function clearRoute(req, host) {
+  const b = isObj(req.body) ? req.body : {};
+  const id = String(b.id || "");
+  const p = readProfile(host.fs, id);
+  if (!p) return ok({ error: "no such profile" }, 404);
+  const chat = emptyChat(id);
+  writeChat(host.fs, chat);
+  return ok({ ok: true, chat: viewOf(chat, p, Date.now(), tzOf(host.fs)) });
+}
+
 // ---------- onTick: replies that were waiting for the profile ----------
 
 /** The chats whose reply is due now: a reply is owed, its time has come, the profile is online (or away and the delay passed). */
@@ -584,11 +782,21 @@ export function onTick(_ctx, host) {
   if (!fsx || !host.llm) return;
   const now = Date.now();
   const results = host.llm.results || {};
-  const done = Object.keys(results).filter((k) => k.startsWith("rep:") || k.startsWith("fm:"));
+  const done = Object.keys(results).filter((k) => k.startsWith("rep:") || k.startsWith("fm:") || k.startsWith("sum:"));
   if (done.length) {
     for (const key of done) {
       if (key.startsWith("fm:")) {
         fileFirst(fsx, key, results[key], now);
+        continue;
+      }
+      if (key.startsWith("sum:")) {
+        const m = /^sum:([A-Za-z0-9_-]+):(\d+)$/.exec(key);
+        const chat = m && readProfile(fsx, m[1]) ? readChat(fsx, m[1]) : null;
+        // a fold that is no longer needed (the note moved on, or the chat was cleared) is dropped
+        if (chat && (!chat.summary || chat.summary.upto < Number(m[2]))) {
+          fileFold(chat, Number(m[2]), results[key], now);
+          writeChat(fsx, chat);
+        }
         continue;
       }
       const id = key.slice(4);
@@ -610,6 +818,18 @@ export function onTick(_ctx, host) {
     if (++asked >= TICK_BATCH) break;
   }
   if (asked) return;
+  // one fold per tick: older messages leave the window into the chat's memory note
+  for (const id of allProfileIds(fsx)) {
+    const p = readProfile(fsx, id);
+    if (!p) continue;
+    const chat = readChat(fsx, id);
+    if (chat.pending) continue;
+    const fold = foldPlan(fsx, chat, false, now);
+    if (fold) {
+      requestFold(host, "sum:" + id + ":" + fold.upto, p, chat, fold);
+      return;
+    }
+  }
   const plan = planFirst(fsx, now, Math.random);
   if (plan) requestFirst(host, plan, readChat(fsx, plan.profile.id));
 }
@@ -713,7 +933,8 @@ export function planFirst(fsx, now, rand) {
 function requestFirst(host, plan, chat) {
   const p = plan.profile;
   const model = messengerModel(host.fs, p);
-  const you = youOf(host.fs);
+  const you = youFor(host.fs, p);
+  const ctx = contextOf(host.fs, chat);
   const length = isObj(p.voice) && [0, 1, 2].includes(p.voice.length) ? p.voice.length : 1;
   const ask =
     "You are starting this conversation yourself: " + (you ? you.name : "the user") + " has not written to you just now. " +
@@ -722,8 +943,8 @@ function requestFirst(host, plan, chat) {
     ", in your own voice, about this and nothing else. No generic greeting like \"how are you\", no stage directions. If the chat has no messages yet, write in the language of your description.";
   host.llm.request("fm:" + p.id + ":" + plan.subject.ref, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now())),
-    messages: [...historyFor(chat.messages.slice(-6)), { role: "user", content: ask }],
+    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now()), { summary: ctx.summary, stranger: knowsOf(host.fs, p) === "stranger" }),
+    messages: [...ctx.messages.slice(-6), { role: "user", content: ask }],
     presetParams: { temperature: 0.9, max_tokens: MAX_TOKENS[length] },
   });
 }
@@ -763,6 +984,9 @@ export function handleRoute(req, host) {
   if (path === "/messenger/send" && method === "POST") return sendRoute(req, host);
   if (path === "/messenger/retry" && method === "POST") return retryRoute(req, host);
   if (path === "/messenger/read" && method === "POST") return readRoute(req, host);
+  if (path === "/messenger/summary" && method === "POST") return summaryRoute(req, host);
+  if (path === "/messenger/new" && method === "POST") return newRoute(req, host);
+  if (path === "/messenger/clear" && method === "POST") return clearRoute(req, host);
   if (path === "/messenger/images" && method === "GET") return imagesRoute(host);
   if (path === "/messenger/image" && method === "POST") return imageRoute(req, host);
   return ok({ error: "not found" }, 404);

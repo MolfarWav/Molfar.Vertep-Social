@@ -12,6 +12,7 @@ import { useNav } from "@/shell/nav";
 import { useLiveMessenger } from "./live";
 import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
 import { PhoneChat, PhoneList } from "./phone";
+import { MemoryDialog } from "./memory";
 import { dayLabel } from "./real";
 
 // Real mode (no `?screen=`): the contacts and chats come from the engine (live.ts, real.ts), and the
@@ -61,6 +62,7 @@ export function Messenger() {
   const [logs, setLogs] = useState<Record<string, LogItem[]>>(LOGS);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState(pv.state === "failed");
+  const [memOpen, setMemOpen] = useState(false);
 
   // Real mode: the engine's contacts and the open chat (inert in preview, where the mock is used).
   const live = useLiveMessenger(sel, phone ? open : true);
@@ -113,6 +115,22 @@ export function Messenger() {
     if (real) live.retry(curId);
     else setFailed(false);
   };
+  useEffect(() => setMemOpen(false), [curId]);
+  const memory = real && cur ? (
+    memOpen && (
+      <MemoryDialog
+        name={cur.name}
+        note={view.note}
+        edited={view.noteEdited}
+        count={view.count}
+        phone={phone}
+        onClose={() => setMemOpen(false)}
+        onSave={(text) => live.saveNote(cur.id, text)}
+        onNew={(keep) => live.startNew(cur.id, keep)}
+        onClear={() => live.clearChat(cur.id)}
+      />
+    )
+  ) : null;
   const toSettings = () => go("settings");
   const toProfiles = () => go("profiles");
   // Real mode: what is not built yet goes to Profiles (the "+", the profile buttons).
@@ -143,6 +161,7 @@ export function Messenger() {
             onRetry={retry}
             onSettings={toSettings}
             onProfile={toProfilesReal}
+            onMemory={real ? () => setMemOpen(true) : undefined}
           />
         ) : (
           <PhoneList
@@ -161,12 +180,14 @@ export function Messenger() {
             onProfiles={toProfiles}
           />
         )}
+        {memory}
       </div>
     );
   }
 
   return (
     <div className="s-messenger">
+      {memory}
       <div className="desk">
         <aside className="col list">
           <div className="tbar">{t("messenger.title")}</div>
@@ -264,6 +285,13 @@ export function Messenger() {
                 <div>
                   <div className="k">{t("messenger.info.first")}</div>
                   <p>{cur.first}</p>
+                </div>
+              )}
+              {real && (
+                <div>
+                  <div className="k">{t("messenger.info.memory")}</div>
+                  <p className={view.note ? "mem-note" : "mem-none"}>{view.note || t("messenger.memory.none")}</p>
+                  <button type="button" className="btn wide mem-open" onClick={() => setMemOpen(true)}>{t("messenger.memory.open")}</button>
                 </div>
               )}
               <button type="button" className="btn wide" onClick={toProfilesReal}>{t("messenger.info.open")}</button>

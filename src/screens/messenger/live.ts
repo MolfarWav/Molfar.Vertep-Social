@@ -29,6 +29,11 @@ export interface LiveMessenger {
   chat: (id: string) => ChatView;
   send: (id: string, text: string, image?: Attached) => void;
   retry: (id: string) => void;
+  /** Memory and conversation (issue #333): each resolves with "" when it worked, or the error text. */
+  saveNote: (id: string, text: string) => Promise<string>;
+  /** A new conversation; `keepNote` folds what is not in the note yet into it first (a model call). `warn` = the note could not be updated. */
+  startNew: (id: string, keepNote: boolean) => Promise<{ error: string; warn: boolean }>;
+  clearChat: (id: string) => Promise<string>;
 }
 
 /**
@@ -158,6 +163,30 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
     [settle],
   );
 
+  /** Runs a call that answers with a whole chat, and shows that chat. */
+  const chatCall = useCallback(
+    async (id: string, path: string, body: object): Promise<EngineAnswer> => {
+      try {
+        const ans = await call<EngineAnswer>("POST", path, { id, ...body });
+        if (ans.chat && alive.current) setChats((c) => ({ ...c, [id]: chatView(ans.chat as EngineChat, id) }));
+        void loadContacts();
+        return ans;
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : String(e) };
+      }
+    },
+    [loadContacts],
+  );
+  const saveNote = useCallback(async (id: string, text: string) => ((await chatCall(id, "/messenger/summary", { text })).ok ? "" : "failed"), [chatCall]);
+  const startNew = useCallback(
+    async (id: string, keepNote: boolean) => {
+      const ans = await chatCall(id, "/messenger/new", { keepNote });
+      return { error: ans.ok ? "" : ans.error || "failed", warn: ans.warn === "note" };
+    },
+    [chatCall],
+  );
+  const clearChat = useCallback(async (id: string) => ((await chatCall(id, "/messenger/clear", {})).ok ? "" : "failed"), [chatCall]);
+
   const lang = currentLang();
   const contacts = raw ? raw.map((e) => contactFromEngine(e, lang, t)) : [];
 
@@ -167,5 +196,8 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
     chat: (id: string) => chats[id] ?? EMPTY_CHAT,
     send,
     retry,
+    saveNote,
+    startNew,
+    clearChat,
   };
 }

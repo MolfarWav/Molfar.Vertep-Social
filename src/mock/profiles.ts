@@ -51,6 +51,8 @@ export interface ProfileForm {
   life: { on: boolean; world: boolean };
   /** "provider/model" used for this profile alone; "" = the app's model (Settings > Models). */
   model: string;
+  /** How well the character knows you in the messenger: "" = the app default (Settings > Messenger), else "knows", "name" or "stranger". */
+  knows?: "" | "knows" | "name" | "stranger";
   /** The image model for pictures this character sends; "" = the app's (Settings > Pictures). */
   imageModel: string;
   /** An engine asset URL ("/v1/assets/<id>") of a generated picture; "" = the letter avatar. */
