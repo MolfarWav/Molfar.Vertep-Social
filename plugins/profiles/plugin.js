@@ -9,7 +9,7 @@
  * Routes (relative to /v1/apps/social):
  *   GET    /profiles                  {profiles: [...]}  every profile, newest edit last
  *   PUT    /profiles/<id>             save one profile (create or replace); the reply is {ok, profile}
- *   DELETE /profiles/<id>             remove it and its chat (chats/<id>.json)
+ *   DELETE /profiles/<id>             remove it, its chat (chats/<id>.json) and its diary (life/diary/<id>.json)
  *   POST   /profiles/suggest {idea?, image?, wish?}  three drafts of a new profile and up to two quick
  *          questions: {ok, drafts, questions} or {ok: false, error, code?}; nothing is filed
  *   POST   /profiles/fill {profileId, fields}        proposals for the profile's EMPTY fields only:
@@ -108,6 +108,7 @@ export function cleanProfile(raw, id, now, prev) {
   if (!name) return null;
   const v = isObj(raw.voice) ? raw.voice : {};
   const f = isObj(raw.forum) ? raw.forum : {};
+  const lf = isObj(raw.life) ? raw.life : {};
   const habits = [];
   for (const h of Array.isArray(raw.habits) ? raw.habits : []) {
     if (!isObj(h)) continue;
@@ -166,6 +167,8 @@ export function cleanProfile(raw, id, now, prev) {
       repliesOthers: f.repliesOthers !== false,
       favourites,
     },
+    /** Life (issue #311): does the character keep a diary, and does it follow the outside world. */
+    life: { on: lf.on !== false, world: lf.world !== false },
     schedule: cleanSchedule(raw.schedule),
     createdAt: prev && Number.isFinite(prev.createdAt) ? prev.createdAt : now,
     updatedAt: now,
@@ -225,6 +228,16 @@ export const DEFAULT_SETTINGS = {
   models: { messenger: "", forum: "", import: "" },
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: false,
+  /**
+   * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
+   * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
+   */
+  life: {
+    on: true,
+    world: true,
+    cats: { news: true, politics: true, games: true, film: true, anime: true, science: true, culture: true, weather: true, reddit: true },
+    place: "",
+  },
   /** The browser's UTC offset in minutes (UTC minus local), stored so schedules run in the user's own time; null until known. */
   tzOffset: null,
 };
@@ -240,7 +253,19 @@ export function mergeSettings(base, patch) {
   const p = isObj(patch) ? patch : {};
   const m = isObj(p.models) ? p.models : {};
   const n = isObj(p.notify) ? p.notify : {};
+  const l = isObj(p.life) ? p.life : {};
+  const lc = isObj(l.cats) ? l.cats : {};
+  const bl = isObj(b.life) ? b.life : DEFAULT_SETTINGS.life;
+  const blc = isObj(bl.cats) ? bl.cats : DEFAULT_SETTINGS.life.cats;
+  const cats = {};
+  for (const k of Object.keys(DEFAULT_SETTINGS.life.cats)) cats[k] = bool(lc[k], bool(blc[k], true));
   return {
+    life: {
+      on: bool(l.on, bool(bl.on, true)),
+      world: bool(l.world, bool(bl.world, true)),
+      cats,
+      place: typeof l.place === "string" ? plain(l.place, 80) : typeof bl.place === "string" ? bl.place : "",
+    },
     autonomous: bool(p.autonomous, b.autonomous),
     activity: oneOf(p.activity, ["quiet", "moderate", "lively", "chaotic"], b.activity),
     postsPerDay: clampInt(p.postsPerDay, 0, 200, b.postsPerDay),
@@ -1101,6 +1126,12 @@ export function handleRoute(req, host) {
   if (m && method === "PUT") return saveRoute(req, host, m[1]);
   if (m && method === "DELETE") {
     host.fs.remove(profilePath(m[1]));
+    // The diary (life/diary) belongs to the profile as well
+    try {
+      host.fs.remove("life/diary/" + m[1] + ".json");
+    } catch {
+      /* no diary yet */
+    }
     // The chat belongs to the profile: without it the history would sit orphaned on disk
     // (and come back if a new profile reused the id). A profile that never had a chat is fine.
     try {

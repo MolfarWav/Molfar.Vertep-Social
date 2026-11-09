@@ -15,8 +15,10 @@ export interface TabProps {
   onRefresh?: () => void;
   /** "Fill empty" under the About note (absent in tabs that do not show it). */
   fill?: FillProps;
+  /** The saved profile's id; the Life tab reads its diary by it (a profile not yet saved has none). */
+  profileId?: string;
 }
 
-export type TabId = "about" | "voice" | "statuses" | "forum" | "habits" | "model";
-export const TAB_IDS: TabId[] = ["about", "voice", "statuses", "forum", "habits", "model"];
+export type TabId = "about" | "voice" | "statuses" | "forum" | "habits" | "life" | "model";
+export const TAB_IDS: TabId[] = ["about", "voice", "statuses", "forum", "habits", "life", "model"];
 export const isTab = (v: unknown): v is TabId => typeof v === "string" && (TAB_IDS as string[]).includes(v);

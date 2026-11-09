@@ -46,6 +46,8 @@ export interface ProfileForm {
   forum: ForumForm;
   /** The profile may add habits itself (the switch in the Habits tab). */
   habitsAuto: boolean;
+  /** Life (issue #311): does the profile keep a diary, and does it follow the outside world. */
+  life: { on: boolean; world: boolean };
   /** "provider/model" used for this profile alone; "" = the app's model (Settings > Models). */
   model: string;
   /** An engine asset URL ("/v1/assets/<id>") of a generated picture; "" = the letter avatar. */
@@ -108,6 +110,7 @@ export function plain(id: string, name: string, hue: number, source: ProfileSour
     interests: [],
     habits: [],
     habitsAuto: true,
+    life: { on: true, world: true },
     model: "",
     picture: "",
     tags: [],
@@ -135,6 +138,7 @@ export const PROFILES: MockProfile[] = [
       { id: "h3", text: "Не любить, коли її перебивають", by: "you" },
     ],
     habitsAuto: true,
+    life: { on: true, world: true },
     model: "",
     picture: "",
     voice: {

@@ -128,3 +128,18 @@
 .s-settings.is-phone .sub .btn { height: 44px; }
 .s-settings.is-phone .sub .sl-in { height: 44px; }
 .s-settings.is-phone .hint { margin: 0; }
+
+/* life: switches, categories of the world feed, the weather place, the feed status */
+.s-settings .life-world { display: flex; flex-direction: column; gap: 12px; }
+.s-settings .life-world.is-off { opacity: 0.55; }
+.s-settings .cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.s-settings .cat { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--muted); font: 600 13px Inter, "Inter Variable", system-ui, sans-serif; cursor: pointer; }
+.s-settings .cat.on { background: color-mix(in srgb, var(--accent) 22%, var(--raised)); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); color: var(--ink); }
+.s-settings .cat:disabled, .s-settings .life-world .txt:disabled { cursor: default; }
+.s-settings .life-world .ln.col { flex-direction: column; align-items: stretch; gap: 6px; }
+.s-settings .txt { height: 40px; min-width: 0; border-radius: 8px; border: 1px solid var(--line); background: var(--raised); color: var(--ink); padding: 0 12px; font: inherit; }
+.s-settings .life-note.ok { color: var(--ok); }
+.s-settings .life-note.none { color: var(--warn); }
+.s-settings.is-phone .cat { height: 44px; padding: 0 14px; }
+.s-settings.is-phone .txt { height: 44px; }
+.s-settings.is-phone .life-world .ln.col { padding: 0; }
