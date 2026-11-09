@@ -24,6 +24,8 @@ export interface ListProps {
   onImport?: () => void;
   /** "New profile": the desktop button and the phone button. */
   onNew?: () => void;
+  /** "Update all from Roleplay": only given when some profile came from a card. */
+  onUpdateAll?: () => void;
 }
 
 const FILTER_KEY: Record<SourceFilter, string> = {
@@ -31,6 +33,12 @@ const FILTER_KEY: Record<SourceFilter, string> = {
   roleplay: "profiles.filter.roleplay",
   own: "profiles.filter.own",
 };
+
+const RefreshIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 const SearchIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -145,6 +153,11 @@ export function ProfileListDesktop(props: ListProps) {
         <button type="button" className="btn cta" onClick={props.onNew}>{t("profiles.new")}</button>
         {props.onImport && <button type="button" className="btn" onClick={props.onImport}>{t("profiles.import")}</button>}
       </div>
+      {props.onUpdateAll && (
+        <div className="desk-btns desk-btns-2">
+          <button type="button" className="btn" onClick={props.onUpdateAll}><RefreshIcon />{t("profiles.updateAll")}</button>
+        </div>
+      )}
       <SearchBox value={props.query} onChange={props.onQuery} phone={false} />
       <div className="seg seg-small" role="radiogroup" aria-label={t("profiles.filter.label")}>
         {FILTERS.map((f) => (
@@ -178,6 +191,11 @@ export function ProfileListPhone(props: ListProps) {
     <div className="pl-phone">
       <header className="hd-list">
         <h1 className="title">{t("profiles.title")}</h1>
+        {props.onUpdateAll && (
+          <button type="button" className="hbtn" aria-label={t("profiles.updateAll")} title={t("profiles.updateAll")} onClick={props.onUpdateAll}>
+            <RefreshIcon />
+          </button>
+        )}
         {props.onImport && (
           <button type="button" className="hbtn" aria-label={t("profiles.import")} onClick={props.onImport}>
             <ImportIcon />

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { ImportRunner, cardDateLabel, makeDiff, readEntry, readScan, type RunStatus } from "../src/screens/profiles/import-api";
+import { ImportRunner, cardDateLabel, makeDiff, readEntry, readScan, refreshMany, type RefreshResult, type RunStatus } from "../src/screens/profiles/import-api";
 import { PROFILES, type MockProfile, type ProfileForm } from "../src/mock/profiles";
 import type { ImportEntry } from "../src/mock/profiles-import";
 
@@ -158,4 +158,43 @@ test("the card date reads in the UI language, and a ready text stays as it is", 
   expect(cardDateLabel("8 листопада", "uk")).toBe("8 листопада");
   expect(cardDateLabel(undefined, "en")).toBe("");
   expect(cardDateLabel("2026-13-45", "en")).not.toContain("undefined");
+});
+
+const fresh = (about: string) => ({ digest: { about, interests: [], voiceText: "" }, cardDate: "2026-11-09", cardHash: "00000000-1" });
+
+test("refreshMany reads cards one after another, a failing card stops only itself", async () => {
+  const order: string[] = [];
+  const got: RefreshResult[] = [];
+  await refreshMany(
+    ["a", "b", "c"],
+    async (id) => {
+      order.push(id);
+      if (id === "b") throw new Error("no answer");
+      return fresh("about " + id);
+    },
+    (r) => got.push(r),
+    () => false,
+  );
+  expect(order).toEqual(["a", "b", "c"]);
+  expect(got.map((r) => [r.id, r.ok])).toEqual([["a", true], ["b", false], ["c", true]]);
+  expect(got[1]).toMatchObject({ error: "no answer" });
+  expect(got[0]).toMatchObject({ cardHash: "00000000-1" });
+});
+
+test("refreshMany stops before the next card, and drops an answer that arrives after the stop", async () => {
+  let stop = false;
+  const got: string[] = [];
+  const order: string[] = [];
+  await refreshMany(
+    ["a", "b", "c"],
+    async (id) => {
+      order.push(id);
+      if (id === "b") stop = true; // Stop pressed while b is being read
+      return fresh(id);
+    },
+    (r) => got.push(r.id),
+    () => stop,
+  );
+  expect(order).toEqual(["a", "b"]);
+  expect(got).toEqual(["a"]);
 });

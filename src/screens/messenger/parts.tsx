@@ -4,6 +4,8 @@ import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { Avatar, themColor } from "@/components/Avatar";
 import { Envelope, Flower } from "@/components/Flower";
 import { useEmoji } from "@/emoji/use-emoji";
+import { MsgPicture } from "@/pictures/MsgPicture";
+import type { usePicture } from "@/pictures/use-picture";
 import { useT } from "@/i18n/index";
 import { CONTACTS, type Contact, type LogItem } from "@/mock/messenger";
 import { STATUS_ORDER, type Status } from "@/mock/status";
@@ -138,7 +140,8 @@ export function ChatLog({
               {who}
               <span className="time">{m.time}</span>
             </div>
-            <div>{m.text}</div>
+            {m.text && <div>{m.text}</div>}
+            {m.image && <MsgPicture image={m.image} />}
           </div>
         );
       })}
@@ -174,12 +177,15 @@ export function Composer({
   onChange,
   onSend,
   onClear,
+  pic,
 }: {
   c: Contact;
   value: string;
   phone: boolean;
   real: boolean;
   busy: boolean;
+  /** The attach control (button, chip, dialog) of this text box. */
+  pic: ReturnType<typeof usePicture>;
   onChange: (v: string) => void;
   onSend: () => void;
   onClear: () => void;
@@ -199,24 +205,30 @@ export function Composer({
   if (phone) {
     return (
       <>
+        {pic.chip && <div className="comp-chip">{pic.chip}</div>}
         <div className="comp p">
+          {pic.button}
           {emoji.button}
           <textarea ref={box} className="inp p" rows={1} aria-label={label} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKey} />
           <button type="button" className="btn cta" disabled={busy} onClick={onSend}>{t("messenger.composer.send")}</button>
         </div>
         {emoji.tray}
+        {pic.dialog}
       </>
     );
   }
   return (
     <div className="comp">
+      {pic.chip}
       <textarea ref={box} className="inp" aria-label={label} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKey} />
       <div className="comp-row">
+        {pic.button}
         {emoji.button}
         <span className="hint">{t("messenger.composer.hint")}</span>
         <button type="button" className="btn" onClick={onClear}>{t("messenger.composer.clear")}</button>
         <button type="button" className="btn cta" disabled={busy} onClick={onSend}>{t("messenger.composer.send")}</button>
       </div>
+      {pic.dialog}
     </div>
   );
 }

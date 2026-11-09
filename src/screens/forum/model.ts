@@ -1,6 +1,8 @@
 // What the Forum screens draw, and the engine's answers turned into it. Pure: no React and no network, so
 // test/forum-real.test.ts can drive it. The mock data (src/mock/forum.ts) is shaped like these types too, so
 // the design preview and the real forum share every component.
+import type { MsgImage } from "@/pictures/MsgPicture";
+
 export type Translate = (key: string, vars?: Record<string, string | number>) => string;
 
 // ---------- what the components draw ----------
@@ -69,6 +71,7 @@ export interface ShownPost {
   when?: string;
   text: string;
   quote?: { who: string; text: string };
+  image?: MsgImage;
   sig?: string;
   /** false: the author is offline now (real mode). Undefined counts as online. */
   online?: boolean;
@@ -152,6 +155,8 @@ export interface EnginePost {
   at: number;
   text: string;
   quote?: { by: string; name: string; text: string };
+  /** A picture the user attached or a character sent (drawn, or waiting to be). */
+  image?: MsgImage;
   /** The user removed it: the text is gone, the place stays. */
   removed?: boolean;
 }
@@ -342,6 +347,7 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
       clock: clock(p.at),
       when: whenLabel(p.at, now, lang, t).replace(/^./, (c) => c.toUpperCase()),
       text: p.text,
+      ...(p.image && !p.removed ? { image: p.image } : {}),
       ...(p.removed ? { removed: true } : {}),
       ...(p.quote ? { quote: { who: p.quote.by === "me" ? t("shell.me") : p.quote.name, text: p.quote.text } } : {}),
       ...(a?.signature ? { sig: a.signature } : {}),

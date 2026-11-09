@@ -39,7 +39,7 @@ test("mergePatch with no earlier patch returns a copy of the new one; no nested 
 test("applyPatch changes only the given keys", () => {
   const s = applyPatch(REAL_DEFAULTS, { activity: "lively", models: { messenger: "x/a" } as never });
   expect(s.activity).toBe("lively");
-  expect(s.models).toEqual({ messenger: "x/a", forum: "", import: "" });
+  expect(s.models).toEqual({ messenger: "x/a", forum: "", import: "", image: "" });
   expect(s.postsPerDay).toBe(REAL_DEFAULTS.postsPerDay);
 });
 

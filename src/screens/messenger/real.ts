@@ -3,6 +3,7 @@
 // test/messenger-real.test.ts can drive them directly.
 import type { Contact, LogItem } from "@/mock/messenger";
 import type { Status } from "@/mock/status";
+import type { MsgImage } from "@/pictures/MsgPicture";
 
 export type Translate = (key: string, vars?: Record<string, string | number>) => string;
 
@@ -26,6 +27,8 @@ export interface EngineMessage {
   who: "me" | "them";
   at: number;
   text: string;
+  /** A picture the user attached or a character sent (drawn, or waiting to be). */
+  image?: MsgImage;
 }
 
 export interface EngineFailure {
@@ -122,7 +125,7 @@ export function contactFromEngine(e: EngineContact, lang: string, t: Translate):
 
 /** The messages of a chat as log lines: the user's as "me", the character's as the contact id. */
 export function logItems(messages: EngineMessage[], contactId: string): LogItem[] {
-  return messages.map((m) => ({ kind: "msg", who: m.who === "me" ? "me" : contactId, time: clock(m.at), text: m.text }));
+  return messages.map((m) => ({ kind: "msg", who: m.who === "me" ? "me" : contactId, time: clock(m.at), text: m.text, ...(m.image ? { image: m.image } : {}) }));
 }
 
 /** An engine chat as the screen's chat view. */

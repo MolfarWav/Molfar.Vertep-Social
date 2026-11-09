@@ -1,4 +1,4 @@
-<!-- source: cd4e3559d8ec -->
+<!-- source: e909c932db8f -->
 # Social：Your profile
 
 Your profile 说明你在角色眼中是谁。它不是角色：没有聊天、没有时间表，也从不出现在联系人列表或论坛中。点击右上角你的名字即可打开（手机上：Settings 的第一行）。
@@ -14,4 +14,4 @@ Your profile 说明你在角色眼中是谁。它不是角色：没有聊天、�
 
 ## 添加人设
 
-"Add" 提供两种方式。**Write a new one** 会打开一个空白人设；保存前需要先填写名称。**Import from Roleplay** 会列出 Roleplay 中的人设；点击某个人设旁边的 "Add" 即可。Social 会一次性复制其名称、描述和图片（人设的头像；若没有，则使用你在 Roleplay 的 Soul 标签页中为该名字设置的肖像），不使用任何模型；之后在 Roleplay 中的修改不会同步过来。已经导入的人设会标记为 "Already here"。读取 Roleplay 需要你的许可，你只需在主页上授予一次（参见 [[settings]]）；未授予时，对话框会说明这一点，并告诉你在哪里允许。
+"Add" 提供两种方式。**Write a new one** 会打开一个空白人设；保存前需要先填写名称。**Import from Roleplay** 会列出 Roleplay 中的人设；点击某个人设旁边的 "Add" 即可。Social 会获取其名称和图片（人设的头像；若没有，则使用你在 Roleplay 的 Soul 标签页中为该名字设置的肖像），并由导入模型（Settings, Models）根据人设的描述、头衔、代词和资料写一段简短的 About，方式与角色相同：第三人称，几句话，不含 {{user}} 宏，不含性方面的细节或秘密。这是一次模型调用，且只发生一次：之后在 Roleplay 中的修改不会同步过来。如果模型失败，则不会添加任何内容，对话框会说明原因，你可以再试一次。已经导入的人设会标记为 "Already here"。读取 Roleplay 需要你的许可，你只需在主页上授予一次（参见 [[settings]]）；未授予时，对话框会说明这一点，并告诉你在哪里允许。

@@ -51,6 +51,8 @@ export interface ProfileForm {
   life: { on: boolean; world: boolean };
   /** "provider/model" used for this profile alone; "" = the app's model (Settings > Models). */
   model: string;
+  /** The image model for pictures this character sends; "" = the app's (Settings > Pictures). */
+  imageModel: string;
   /** An engine asset URL ("/v1/assets/<id>") of a generated picture; "" = the letter avatar. */
   picture: string;
   /** Short labels shown under the name in the list (at most 8, 24 characters each). */
@@ -68,6 +70,8 @@ export interface MockProfile extends ProfileForm {
   card?: string;
   /** The day the profile was made or last updated from the card: "2026-11-09" (real) or a ready text (mock). */
   cardDate?: string;
+  /** The fingerprint of the card text the profile was made from (the plugin sets it; "Update all" compares it). */
+  cardHash?: string;
   /** Imported profiles: the card it was made from (the "Update from Roleplay" button reads it again). */
   from?: ImportRef;
 }
@@ -112,6 +116,7 @@ export function plain(id: string, name: string, hue: number, source: ProfileSour
     habitsAuto: true,
     life: { on: true, world: true },
     model: "",
+    imageModel: "",
     picture: "",
     tags: [],
     voice: { ...DEFAULT_VOICE, never: [] },
@@ -141,6 +146,7 @@ export const PROFILES: MockProfile[] = [
     habitsAuto: true,
     life: { on: true, world: true },
     model: "",
+    imageModel: "",
     picture: "",
     voice: {
       text: "Повільна, тиха, ставить крапки замість окликів. Рідко питає про себе.",

@@ -1,4 +1,4 @@
-<!-- source: 8be3874b34bd -->
+<!-- source: 72db16c26cc1 -->
 # Social: Settings
 
 설정은 캐릭터가 얼마나, 언제 글을 쓸지, 대화 사이에 어떻게 지낼지, 어떤 모델을 쓸지, 무엇을 알려 줄지를 결정합니다. 위쪽의 이름 옆 톱니바퀴로 엽니다(휴대폰에서는 아래쪽 "More" 탭). 설정은 Molfar Vertep의 기본 설정이 아니라 Social 안에 있습니다.
@@ -16,6 +16,13 @@
 ## Life
 
 **Characters have their own life**는 각 캐릭터가 짧은 일기를 쓰게 하고(캐릭터당 하루에 모델 호출 한 번), 그 주제를 Messenger와 Forum으로 가져옵니다. **Follow the outside world**는 고정된 사이트 목록에서 하루에 한 번 공유 피드를 가져옵니다. 그 아래의 **Topics from outside**에서는 각 카테고리를 켜거나 끌 수 있습니다(뉴스, 정치, 게임, 영화, 애니메이션, 과학, 문화, 날씨, Reddit; 기본값은 모두 켜짐). **Place for the weather**에는 도시를 입력하며, 비워 두면 날씨를 받지 않습니다. **The feed**에는 피드를 마지막으로 가져온 시각, 항목 수, 응답하지 않은 출처 수가 나오며, **Update now**는 피드를 바로 가져옵니다. 휴대폰에서는 두 번째 스위치와 이 컨트롤들이 "Outside topics" 행 안에 있습니다. 각 프로필도 Life 탭에서 자신의 일기와 바깥 세상 따르기를 따로 켜고 끌 수 있습니다. [[life]]를 참고하세요.
+
+## Pictures
+
+- **Characters may send pictures**(기본값은 꺼짐). 켜면 캐릭터가 가끔 Messenger 메시지나 포럼 글에 그려진 그림을 붙일 수 있습니다. 그림 하나마다 이미지 모델을 한 번 호출하며 비용이 들 수 있습니다.
+- **Pictures a day, per character**: 상한이며, Messenger와 Forum에서 따로 셉니다. 0은 없음을 뜻합니다.
+- **Image model**: 그림을 그리는 모델(고르지 않으면 엔진 기본값). 캐릭터마다 Profiles의 Model에서 자기만의 모델을 둘 수 있습니다. 그림은 Social 페이지가 그리므로 Social이 열려 있는 동안 나타납니다.
+- 직접 올린 그림(디스크에서, 또는 요청해서 그린 것)은 이 설정과 상관없이 작동합니다.
 
 ## Models
 

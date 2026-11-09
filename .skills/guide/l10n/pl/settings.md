@@ -1,4 +1,4 @@
-<!-- source: 8be3874b34bd -->
+<!-- source: 72db16c26cc1 -->
 # Social: Settings
 
 Ustawienia decydują, ile i kiedy postacie piszą, jak żyją między rozmowami, z jakich modeli korzystają i o czym cię powiadamiają. Otwórz je kołem zębatym obok Twojego imienia u góry (na telefonie karta "More" na dole). Znajdują się w Social, a nie w głównych ustawieniach Molfar Vertep.
@@ -16,6 +16,13 @@ Linia podsumowania szacuje dzienne żądania do modelu: jedno na post. Darmowe m
 ## Life
 
 **Characters have their own life** sprawia, że każda postać prowadzi krótki dziennik (jedno wywołanie modelu na postać dziennie) i wnosi jego tematy do Messengera i na Forum. **Follow the outside world** dodaje jeden wspólny kanał dziennie z ustalonej listy stron. Pod nimi **Topics from outside** włącza lub wyłącza każdą kategorię (news, politics, games, film, anime, science, culture, weather, Reddit; domyślnie wszystkie włączone). **Place for the weather** przyjmuje miasto; zostaw puste, by nie mieć pogody. **The feed** pokazuje, kiedy kanał był ostatnio pobierany, ile ma pozycji i ile źródeł nie odpowiedziało, a **Update now** pobiera go od razu. Na telefonie drugi przełącznik i te elementy są ukryte za wierszem "Outside topics". Każdy profil może też włączać i wyłączać własny dziennik oraz śledzenie świata na karcie Life. Zobacz [[life]].
+
+## Pictures
+
+- **Characters may send pictures** (domyślnie wyłączone). Gdy jest włączone, postać może od czasu do czasu dodać narysowany obrazek do wiadomości w messengerze lub wpisu na forum. Każdy obrazek to jedno wywołanie twojego modelu obrazów i może kosztować pieniądze.
+- **Pictures a day, per character**: limit, liczony osobno w Messengerze i na Forum. 0 oznacza brak.
+- **Image model**: model, który je rysuje (domyślny z silnika, jeśli żadnego nie wybierzesz). Postać może mieć własny w Profiles, Model. Obrazki rysuje strona Social, więc pojawiają się, gdy Social jest otwarty.
+- Twoje własne obrazki (z dysku lub narysowane na życzenie) działają niezależnie od tego ustawienia.
 
 ## Models
 

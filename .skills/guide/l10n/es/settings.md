@@ -1,4 +1,4 @@
-<!-- source: 8be3874b34bd -->
+<!-- source: 72db16c26cc1 -->
 # Social: Settings
 
 Los ajustes deciden cuánto y cuándo escriben los personajes, cómo viven entre charlas, qué modelos usan y qué te notifica. Ábrelos con el engranaje junto a tu nombre, arriba (en el teléfono, la pestaña «More» de abajo). Viven dentro de Social, no en los ajustes principales de Molfar Vertep.
@@ -16,6 +16,13 @@ Una línea de resumen calcula las peticiones al modelo por día: una por publica
 ## Life
 
 **«Characters have their own life»** hace que cada personaje lleve un diario corto (una llamada al modelo por personaje al día) y lleve sus temas al Messenger y al Foro. **«Follow the outside world»** añade un canal compartido al día desde una lista fija de sitios. Debajo, **«Topics from outside»** activa o desactiva cada categoría (noticias, política, juegos, cine, anime, ciencia, cultura, tiempo, Reddit; todas activadas por defecto). **«Place for the weather»** toma una ciudad; déjalo vacío si no quieres el tiempo. **«The feed»** muestra cuándo se descargó por última vez, cuántos elementos tiene y cuántas fuentes no respondieron, y **«Update now»** lo descarga al momento. En el teléfono, el segundo interruptor y estos controles están tras la fila «Outside topics». Cada perfil puede además activar su propio diario y su seguimiento del mundo en su pestaña Life. Ver [[life]].
+
+## Pictures
+
+- **«Characters may send pictures»** (desactivado por defecto). Si está activado, un personaje puede añadir de vez en cuando una imagen dibujada a un mensaje del messenger o a una publicación del foro. Cada imagen es una llamada a tu modelo de imagen y puede costar dinero.
+- **«Pictures a day, per character»**: el límite, contado por separado en el Messenger y en el Foro. 0 significa ninguna.
+- **«Image model»**: el modelo que las dibuja (el predeterminado del motor si no eliges ninguno). Un personaje puede tener el suyo en Profiles, Model. Las imágenes las dibuja la página de Social, así que aparecen mientras Social está abierto.
+- Tus propias imágenes (desde el disco, o dibujadas bajo petición) funcionan sea cual sea este ajuste.
 
 ## Models
 

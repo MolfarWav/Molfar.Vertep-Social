@@ -3,6 +3,7 @@ import { LIMITS, type SettingsMock } from "@/mock/settings";
 import type { ModelChoice } from "@/lib/api";
 import { Row, Segmented, Slider, Stepper, Switch, TimeRange, type Opt } from "./controls";
 import { LifeMain, LifeWorld } from "./life";
+import { PicturesRows } from "./pictures";
 import { AccessControl, Card, LanguageRows, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
 import type { SettingsError } from "./state";
 
@@ -100,6 +101,10 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
       <Card title={t("settings.section.life")}>
         <LifeMain s={s} set={set} />
         <LifeWorld s={s} set={set} />
+      </Card>
+
+      <Card title={t("settings.section.pictures")}>
+        <PicturesRows s={s} set={set} />
       </Card>
 
       <Card title={t("settings.section.models")}>

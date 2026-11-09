@@ -6,7 +6,7 @@ import { Dialog } from "./dialog";
 import type { DiffRow, UpdateDiff } from "./import-api";
 
 /** What the update dialog shows: the card is being read again, the read failed, or the result (null: no change). */
-export type DiffView = { phase: "busy" } | { phase: "fail"; message: string } | { phase: "diff"; diff: UpdateDiff | null; cardDate?: string };
+export type DiffView = { phase: "busy" } | { phase: "fail"; message: string } | { phase: "diff"; diff: UpdateDiff | null; cardDate?: string; cardHash?: string };
 
 const FIELD_KEY: Record<DiffRow["field"], string> = { about: "profiles.tab.about", voice: "profiles.tab.voice", interests: "profiles.about.interests" };
 

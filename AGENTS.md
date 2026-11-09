@@ -17,6 +17,7 @@ the app changes shape. Plan and decisions: Molfar.Vertep issue #309.
 - `src/screens/<messenger|forum|profiles|settings|you>/`: one folder per screen with `index.tsx`, `<name>.css` (every rule scoped
   under `.s-<name>`), `strings.ts`, and the mock data it needs in `src/mock/`.
 - `src/components/`: `Flower` (status flower + `Envelope`), `Avatar`, `Logo`. Shared, small.
+- `src/pictures/`: pictures in messages and posts (#331): `use-picture.tsx` (the attach button, chip and dialog of a text box: file from disk or a drawn picture, ends as a stored asset URL), `MsgPicture.tsx` (a picture, a placeholder or a failure inside a message or post), `worker.ts` (draws the pictures characters asked for, page-side, see "Pictures" below), `strings.ts`.
 - `src/emoji/`: the emoji picker, shared by the messenger and the forum (see "Emoji" below). Its CSS is scoped by the `.emo-` prefix, not by a screen class.
 - `src/styles/`: `tokens.css` (themes Vertep, Dark, Light; names are the ones the design boards use),
   `base.css` (root, `.av`, `.btn`, `.ib`), `shell.css`.
@@ -46,6 +47,10 @@ A profile may carry its own `model` ("provider/model", "" = the app's model). Th
 the messenger contact list and the forum authors pass it on). The picture dialog (`src/screens/profiles/picture-dialog.tsx`) builds a
 prompt from the profile (`picture.ts`) and calls the engine's `POST /v1/images` and `GET /v1/images/models` (open to every app,
 `picture-api.ts`). The Model tab (`src/screens/profiles/tabs/ModelTab.tsx`) edits it with the settings' `ModelPick`.
+
+## Pictures (#331)
+A message or post may carry `image`: `{state: "ready", url: "/v1/assets/<id>", alt?, gen?}`, `{state: "pending", prompt, gen: true}` or `{state: "failed", prompt, gen: true}` (`cleanImage` in the plugins; only an engine asset URL is accepted). The block between `// <images-shared>` and `// </images-shared>` is identical in the messenger and forum plugins (a test pins it). The user's picture goes in with `POST /messenger/send`, `/forum/topic`, `/forum/reply` (`image`, text optional); the model sees only `[a picture: ...]` as text, never the bytes.
+Characters send pictures only when Settings > Pictures is on (`settings.images {on, perDay}`, off by default; `models.image`; a profile's own `imageModel` wins): the prompt then asks for `[[image: short English description]]` at the end of a reply (a JSON `image` field for a new forum topic), the plugin files the message with a `pending` image (the marker is cut out of the text whether or not pictures are allowed), and the cap per character per day is counted from what is stored (messenger and forum each). A plugin can only write text, so the Social page draws: `src/pictures/worker.ts` polls `GET /messenger/images` and `GET /forum/images` every 20 s (and when a chat or topic shows a pending picture), draws each with the engine's `POST /v1/images` and files it with `POST /messenger/image` or `POST /forum/image`; a failed drawing is filed as `failed` and is not retried. A localStorage lock per picture keeps two windows of one browser from drawing it twice; two devices are not covered. Pictures arrive while Social is open.
 
 ## Emoji
 `src/emoji/`: `use-emoji.tsx` (`useEmoji({ target, value, onChange, phone })` gives a host the smiley `button` and, on a phone, the `tray` to put under its message bar; on desktop the button opens a popover in a portal), `Panel.tsx` (search, group tabs, recent, skin tone, arrow keys), `insert.ts` (`insertAt`, caret and selection, never tears a surrogate pair), `search.ts`, `recent.ts` (browser storage only), `data.ts` over `data.json`.

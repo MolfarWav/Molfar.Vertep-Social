@@ -9,6 +9,9 @@
  *          ({ok, queued, chat} or {ok: false, error, code?, chat}); otherwise the reply is queued (see below)
  *   POST /messenger/retry {id}          asks again for the reply to the last message (after a failure, or a queued one now)
  *   POST /messenger/read {id}           marks the chat read
+ *   GET  /messenger/images              the pictures characters asked for that nobody has drawn yet: {items: [{id, messageId, prompt, model}]}
+ *   POST /messenger/image {id, messageId, url? | error?}   the page files a drawn picture (or says it failed)
+ *   (send also takes {image: {url, alt?, gen?}}: a picture the user attached, with or without text; see the images block below)
  *
  * When a reply comes (the profile's status at the time of the message): online, now; away, after a short
  * delay; do not disturb, unavailable or offline, when the schedule next makes the profile online. A queued reply is
@@ -117,7 +120,7 @@ function readChat(fsx, id) {
   if (!isObj(c)) return emptyChat(id);
   const messages = (Array.isArray(c.messages) ? c.messages : [])
     .filter((m) => isObj(m) && (m.who === SELF || m.who === "them") && typeof m.text === "string" && Number.isFinite(m.at))
-    .map((m) => ({ id: String(m.id), who: m.who, at: m.at, text: m.text, ...(m.first === true ? { first: true } : {}) }));
+    .map((m) => ({ id: String(m.id), who: m.who, at: m.at, text: m.text, ...(m.first === true ? { first: true } : {}), ...(cleanImage(m.image) ? { image: cleanImage(m.image) } : {}) }));
   const pending = isObj(c.pending) && Number.isFinite(c.pending.at) ? { at: c.pending.at, dueAt: Number.isFinite(c.pending.dueAt) ? c.pending.dueAt : null } : null;
   const failed = isObj(c.failed) ? { error: str(c.failed.error), ...(c.failed.code === "no-model" ? { code: "no-model" } : {}) } : null;
   const shared = (Array.isArray(c.shared) ? c.shared : []).filter((x) => typeof x === "string" && ID.test(x)).slice(-60);
@@ -155,6 +158,65 @@ function allProfileIds(fsx) {
   return names.map((n) => /^([A-Za-z0-9_-]{1,60})\.json$/.exec(n)).filter(Boolean).map((m) => m[1]);
 }
 
+// <images-shared>
+// ---------- pictures in messages and posts (issue #331): identical copies in the messenger and the forum plugin ----------
+// A message or post may carry `image`: {state: "ready", url: "/v1/assets/<id>", alt?, gen?} (a picture the user attached, or a
+// generated one that has arrived), {state: "pending", prompt, gen: true} (a character asked for one: the page draws it with an
+// engine image model and files it with POST .../image), or {state: "failed", prompt, gen: true}. The plugins cannot draw (they
+// only have text models); the Social page does, through the engine's /v1/images, so a picture arrives while the page is open.
+// Characters send pictures only when Settings > Pictures is on, within a per-day cap (counted from what is stored), and only
+// when the model puts [[image: a short English description]] at the end of its text.
+
+const IMAGE_URL = /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/;
+const IMAGE_MARKER = /\[\[\s*image\s*:\s*([^\]]{0,400}?)\s*\]\]/i;
+
+/** The picture of a message or post as stored; null when there is none or it is not usable. */
+export function cleanImage(raw) {
+  if (!isObj(raw)) return null;
+  const alt = cut(str(raw.alt).replace(/\s+/g, " "), 200);
+  if (raw.state === "pending" || raw.state === "failed") {
+    const prompt = cut(str(raw.prompt).replace(/\s+/g, " "), 400);
+    return prompt ? { state: raw.state, prompt, gen: true } : null;
+  }
+  if (typeof raw.url !== "string" || !IMAGE_URL.test(raw.url)) return null;
+  return { state: "ready", url: raw.url, ...(alt ? { alt } : {}), ...(raw.gen === true ? { gen: true } : {}) };
+}
+
+/** Settings > Pictures: whether characters may send pictures, and how many a day each (per surface). */
+export function imageSettings(fsx) {
+  const s = readJson(fsx, "settings.json", null);
+  const i = isObj(s) && isObj(s.images) ? s.images : {};
+  return { on: i.on === true, perDay: Number.isInteger(i.perDay) && i.perDay >= 0 && i.perDay <= 20 ? i.perDay : 2 };
+}
+
+/** The image model for a character: its own (Profiles > Model), else Settings > Pictures, else "" (the engine's default). */
+export function imageModelFor(fsx, profile) {
+  const ref = (v) => {
+    const m = str(v);
+    return m && m !== "default" && /^[^\s]{1,200}$/.test(m) ? m : "";
+  };
+  const own = isObj(profile) ? ref(profile.imageModel) : "";
+  if (own) return own;
+  const s = readJson(fsx, "settings.json", null);
+  return ref(isObj(s) && isObj(s.models) ? s.models.image : "");
+}
+
+/** Pulls every [[image: ...]] marker out of a reply: {text, prompt} (prompt "" when there is none, or it is too short to draw from). */
+export function takeImageMarker(text) {
+  const m = IMAGE_MARKER.exec(String(text || ""));
+  if (!m) return { text: String(text || ""), prompt: "" };
+  const prompt = cut(m[1].replace(/\s+/g, " ").trim(), 400);
+  return { text: String(text).replace(new RegExp(IMAGE_MARKER.source, "gi"), "").replace(/[ \t]+\n/g, "\n").replace(/[ \t]{2,}/g, " ").trim(), prompt: prompt.length >= 3 ? prompt : "" };
+}
+
+/** What a model is told when a character may send a picture now. */
+export const IMAGE_HINT =
+  "You may send a picture, rarely, and only when it really fits the moment (a photo of where you are, something you made). To do it, end your message with [[image: a short visual description in English]] on its own. Never explain or mention this. Most messages carry no picture and no marker.";
+
+/** A picture as one short line for a model's history: the user's pictures are never shown to the model. */
+export const imageLine = (img) => (img ? "[a picture: " + (str(img.alt) || str(img.prompt) || "no description") + "]" : "");
+// </images-shared>
+
 // ---------- life: read-only access to what the `life` plugin wrote (issue #311) ----------
 // Copied into the messenger and the forum plugin (plugins cannot import each other); test/life-readers.test.ts pins that the two
 // copies are identical. Only the `life` plugin writes life/*; a surface remembers what it has told in its own file.
@@ -190,9 +252,9 @@ export function recentDays(fsx, p, _now) {
 const lifeWords = (s) => String(s).toLowerCase().split(/[\s.,!?;:'"«»“”()[\]{}<>…—–\-_/\\|]+/).filter((w) => w.length >= 4);
 
 /** A world item for a profile: interest matches first, otherwise a random one half of the time. `skip` holds ids already told. */
-function lifeWorldItem(fsx, p, a, skip, rand) {
+function lifeWorldItem(fsx, p, a, skip, rand, fits) {
   const w = readJson(fsx, WORLD_FILE, null);
-  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id));
+  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id) && (typeof fits !== "function" || fits(i)));
   if (!items.length) return null;
   const mine = new Set((Array.isArray(p.interests) ? p.interests : []).filter((x) => typeof x === "string").flatMap(lifeWords));
   const hits = mine.size ? items.filter((i) => lifeWords(str(i.title) + " " + str(i.text)).some((x) => mine.has(x))) : [];
@@ -204,8 +266,9 @@ function lifeWorldItem(fsx, p, a, skip, rand) {
  * Something a profile can bring up: an unshared diary entry of the last 3 days, or a world item. Returns {text, ref} (ref is the
  * entry or item id, to be remembered once the post or message is filed) or null when there is nothing. Text from outside is
  * quoted inside <outside> tags, with its source, capped; the line tells the model it is data and never instructions.
+ * `fits(item)` (optional) says which world items the caller can use at all (the forum: those that suit the board).
  */
-export function lifeSubject(fsx, p, now, shared, rand) {
+export function lifeSubject(fsx, p, now, shared, rand, fits) {
   const r = rand || Math.random;
   const a = lifeAllowed(fsx, p);
   const skip = shared instanceof Set ? shared : new Set(shared || []);
@@ -215,7 +278,7 @@ export function lifeSubject(fsx, p, now, shared, rand) {
     if (e) cand.push({ ref: String(e.id), text: 'Something from your own recent days, it really happened to you: "' + cut(str(e.text), 400) + '"' });
   }
   if (a.world) {
-    const i = lifeWorldItem(fsx, p, a, skip, r);
+    const i = lifeWorldItem(fsx, p, a, skip, r, fits);
     if (i) {
       const quoted = '<outside source="' + cut(str(i.src).replace(/[<>"]/g, ""), 40) + '" category="' + str(i.cat).replace(/[^a-z]/g, "") + '">' + cut(str(i.title).replace(/[<>]/g, " "), 160) + (str(i.text) ? " — " + cut(str(i.text).replace(/[<>]/g, " "), 300) : "") + "</outside>";
       cand.push({
@@ -241,7 +304,7 @@ const EMOJI_WORDS = [
 const MAX_TOKENS = [200, 400, 800];
 
 /** The system prompt that makes the model write as this profile. */
-export function systemPromptFor(p, you, recent) {
+export function systemPromptFor(p, you, recent, opts) {
   const user = isObj(you) ? you : { name: typeof you === "string" ? you : "", about: "" };
   const v = isObj(p.voice) ? p.voice : {};
   const length = [0, 1, 2].includes(v.length) ? v.length : 1;
@@ -260,13 +323,14 @@ export function systemPromptFor(p, you, recent) {
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
   lines.push("Write only your next message, as plain chat text: no quotation marks around it, no stage directions or narration, no name label.");
   lines.push("Answer in the language the user writes in. If you do not know something about the real world, say so in your own voice instead of inventing facts.");
+  if (isObj(opts) && opts.images) lines.push(IMAGE_HINT);
   return lines.join("\n");
 }
 
 /** The model's history: the last messages, in order, the user's as "user" and the profile's as "assistant". */
 export function historyFor(messages) {
   const tail = messages.slice(-HISTORY);
-  return tail.map((m) => ({ role: m.who === SELF ? "user" : "assistant", content: m.text }));
+  return tail.map((m) => ({ role: m.who === SELF ? "user" : "assistant", content: [m.text, imageLine(m.image)].filter(Boolean).join(" ") }));
 }
 
 /** A reply cleaned for the chat: no thinking notes, no leading name label, no wrapping quotes. */
@@ -313,21 +377,33 @@ function requestReply(host, key, profile, chat) {
   const length = isObj(profile.voice) && [0, 1, 2].includes(profile.voice.length) ? profile.voice.length : 1;
   host.llm.request(key, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(profile, youOf(host.fs), recentDays(host.fs, profile, Date.now())),
+    systemPrompt: systemPromptFor(profile, youOf(host.fs), recentDays(host.fs, profile, Date.now()), { images: mayImage(host.fs, chat, Date.now()) }),
     messages: historyFor(chat.messages),
     presetParams: { temperature: 0.85, max_tokens: MAX_TOKENS[length] },
   });
 }
 
+/** Whether this character may send a picture now: the switch is on and today's cap in this chat is not used up. */
+function mayImage(fsx, chat, now) {
+  const s = imageSettings(fsx);
+  if (!s.on || s.perDay === 0) return false;
+  const tz = tzOf(fsx);
+  const day = localDay(now, tz);
+  return chat.messages.filter((m) => m.who === "them" && m.image && m.image.gen && localDay(m.at, tz) === day).length < s.perDay;
+}
+
 /** Files the model's answer: the reply message, or the failure. Returns an error string or "". */
-function fileReply(chat, profile, result, now) {
+function fileReply(chat, profile, result, now, fsx) {
   const r = isObj(result) ? result : {};
-  const text = r.error ? "" : cleanReply(r.text, profile.name);
-  if (!text) {
+  // the marker is cut out whether or not a picture may be sent: it must never show as text
+  const taken = r.error ? { text: "", prompt: "" } : takeImageMarker(r.text);
+  const text = r.error ? "" : cleanReply(taken.text, profile.name);
+  const draw = fsx && taken.prompt && mayImage(fsx, chat, now) ? { state: "pending", prompt: taken.prompt, gen: true } : null;
+  if (!text && !draw) {
     chat.failed = failure(r.error || "the model returned nothing");
     return chat.failed;
   }
-  chat.messages.push({ id: newId(now, "them"), who: "them", at: now, text });
+  chat.messages.push({ id: newId(now, "them"), who: "them", at: now, text, ...(draw ? { image: draw } : {}) });
   chat.pending = null;
   chat.failed = null;
   return null;
@@ -337,7 +413,7 @@ function fileReply(chat, profile, result, now) {
 
 function lineOf(chat) {
   const last = chat.messages[chat.messages.length - 1];
-  return last ? cut(last.text.replace(/\s+/g, " "), 80) : "";
+  return last ? cut((last.text || (last.image ? "\ud83d\uddbc" : "")).replace(/\s+/g, " "), 80) : "";
 }
 
 function contactsRoute(host) {
@@ -388,8 +464,10 @@ function sendRoute(req, host) {
 
   if (!stash) {
     const text = cut(noControls(String(typeof b.text === "string" ? b.text : "")).trim(), TEXT_MAX);
-    if (!text) return ok({ error: "a message needs text" }, 400);
-    chat.messages.push({ id: newId(now, SELF), who: SELF, at: now, text });
+    // a picture the user attached is a stored asset already: only a ready one is taken from a request
+    const picked = isObj(b.image) ? cleanImage({ ...b.image, state: "ready" }) : null;
+    if (!text && !picked) return ok({ error: "a message needs text" }, 400);
+    chat.messages.push({ id: newId(now, SELF), who: SELF, at: now, text, ...(picked ? { image: picked } : {}) });
     chat.failed = null;
     const status = statusAt(p.schedule, new Date(now), tzOf(fsx));
     if (status === "online") {
@@ -404,7 +482,7 @@ function sendRoute(req, host) {
   }
 
   // second pass: the model has answered
-  const err = fileReply(chat, p, result, now);
+  const err = fileReply(chat, p, result, now, fsx);
   writeChat(fsx, chat);
   if (err) return ok({ ok: false, error: err.error, ...(err.code ? { code: err.code } : {}), chat: viewOf(chat, p, now, tzOf(fsx)) });
   return ok({ ok: true, chat: viewOf(chat, p, now, tzOf(fsx)) });
@@ -426,10 +504,41 @@ function retryRoute(req, host) {
     requestReply(host, "reply", p, chat);
     return { __llmPending: true, stash: { retry: true } };
   }
-  const err = fileReply(chat, p, host.llm.results.reply, now);
+  const err = fileReply(chat, p, host.llm.results.reply, now, fsx);
   writeChat(fsx, chat);
   if (err) return ok({ ok: false, error: err.error, ...(err.code ? { code: err.code } : {}), chat: viewOf(chat, p, now, tzOf(fsx)) });
   return ok({ ok: true, chat: viewOf(chat, p, now, tzOf(fsx)) });
+}
+
+/** The pictures characters asked for that nobody has drawn yet, oldest first, a few at a time. */
+function imagesRoute(host) {
+  const fsx = host.fs;
+  const items = [];
+  for (const id of allProfileIds(fsx)) {
+    const p = readProfile(fsx, id);
+    if (!p) continue;
+    for (const m of readChat(fsx, id).messages) {
+      if (m.image && m.image.state === "pending") items.push({ id, messageId: m.id, prompt: m.image.prompt, model: imageModelFor(fsx, p), at: m.at });
+    }
+  }
+  items.sort((a, b) => a.at - b.at);
+  return ok({ items: items.slice(0, 5).map(({ at: _at, ...x }) => x) });
+}
+
+/** The page drew (or could not draw) a picture a character asked for: file it in the message. */
+function imageRoute(req, host) {
+  const fsx = host.fs;
+  const b = isObj(req.body) ? req.body : {};
+  const id = String(b.id || "");
+  if (!ID.test(id) || !readProfile(fsx, id)) return ok({ error: "no such profile" }, 404);
+  const chat = readChat(fsx, id);
+  const m = chat.messages.find((x) => x.id === String(b.messageId || "") && x.image && x.image.state === "pending");
+  if (!m) return ok({ error: "no such picture to draw" }, 404);
+  const done = typeof b.url === "string" ? cleanImage({ state: "ready", url: b.url, alt: m.image.prompt, gen: true }) : null;
+  m.image = done || { state: "failed", prompt: m.image.prompt, gen: true };
+  if (done) chat.unread = true;
+  writeChat(fsx, chat);
+  return ok({ ok: true, image: m.image });
 }
 
 function readRoute(req, host) {
@@ -480,7 +589,7 @@ export function onTick(_ctx, host) {
       if (!p) continue;
       const chat = readChat(fsx, id);
       if (!chat.pending) continue;
-      const err = fileReply(chat, p, results[key], now);
+      const err = fileReply(chat, p, results[key], now, fsx);
       if (!err) chat.unread = true;
       // a failed background reply is not retried every minute: the chat keeps `failed` and `pending` until the user retries
       writeChat(fsx, chat);
@@ -647,5 +756,7 @@ export function handleRoute(req, host) {
   if (path === "/messenger/send" && method === "POST") return sendRoute(req, host);
   if (path === "/messenger/retry" && method === "POST") return retryRoute(req, host);
   if (path === "/messenger/read" && method === "POST") return readRoute(req, host);
+  if (path === "/messenger/images" && method === "GET") return imagesRoute(host);
+  if (path === "/messenger/image" && method === "POST") return imageRoute(req, host);
   return ok({ error: "not found" }, 404);
 }

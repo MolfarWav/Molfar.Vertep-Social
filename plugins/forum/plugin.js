@@ -25,6 +25,9 @@
  *   POST /forum/boards {categories}   adds categories and boards (merged by name)
  *   POST /forum/topic {board, title, text}    the user opens a topic
  *   POST /forum/reply {topic, text, quoteOf?} the user replies
+ *   (topic and reply also take {image: {url, alt?, gen?}}: a picture the user attached, with or without text)
+ *   GET  /forum/images                the pictures characters asked for that nobody has drawn yet: {items: [{topic, post, prompt, model}]}
+ *   POST /forum/image {topic, post, url? | error?}   the page files a drawn picture (or says it failed)
  *   POST /forum/read {topic}          clears the topic's unread mark
  *   POST /forum/lock {topic, locked}  the user closes (locked: true) or reopens a topic; a closed topic takes no
  *          new posts (the user's or the characters'), keeps its place by its last post and shows a lock
@@ -279,6 +282,7 @@ function readProfile(fsx, id) {
     habits: Array.isArray(p.habits) ? p.habits : [],
     voice: isObj(p.voice) ? p.voice : {},
     model: modelRef(p.model),
+    imageModel: modelRef(p.imageModel),
     picture: typeof p.picture === "string" && /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/.test(p.picture) ? p.picture : "",
     schedule: p.schedule,
     life: isObj(p.life) ? p.life : {},
@@ -303,7 +307,8 @@ function cleanPost(p) {
   if (by !== SELF && !ID.test(by)) return null;
   const q = isObj(p.quote) && str(p.quote.text) ? { by: String(p.quote.by), name: oneLine(p.quote.name, 80), text: cut(String(p.quote.text), 300) } : null;
   if (p.removed === true) return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: "", removed: true };
-  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(q ? { quote: q } : {}) };
+  const image = cleanImage(p.image);
+  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(q ? { quote: q } : {}), ...(image ? { image } : {}) };
 }
 
 export function readTopic(fsx, id) {
@@ -393,6 +398,65 @@ const countByAuthor = (topics) => {
 
 // ---------- the prompt ----------
 
+// <images-shared>
+// ---------- pictures in messages and posts (issue #331): identical copies in the messenger and the forum plugin ----------
+// A message or post may carry `image`: {state: "ready", url: "/v1/assets/<id>", alt?, gen?} (a picture the user attached, or a
+// generated one that has arrived), {state: "pending", prompt, gen: true} (a character asked for one: the page draws it with an
+// engine image model and files it with POST .../image), or {state: "failed", prompt, gen: true}. The plugins cannot draw (they
+// only have text models); the Social page does, through the engine's /v1/images, so a picture arrives while the page is open.
+// Characters send pictures only when Settings > Pictures is on, within a per-day cap (counted from what is stored), and only
+// when the model puts [[image: a short English description]] at the end of its text.
+
+const IMAGE_URL = /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/;
+const IMAGE_MARKER = /\[\[\s*image\s*:\s*([^\]]{0,400}?)\s*\]\]/i;
+
+/** The picture of a message or post as stored; null when there is none or it is not usable. */
+export function cleanImage(raw) {
+  if (!isObj(raw)) return null;
+  const alt = cut(str(raw.alt).replace(/\s+/g, " "), 200);
+  if (raw.state === "pending" || raw.state === "failed") {
+    const prompt = cut(str(raw.prompt).replace(/\s+/g, " "), 400);
+    return prompt ? { state: raw.state, prompt, gen: true } : null;
+  }
+  if (typeof raw.url !== "string" || !IMAGE_URL.test(raw.url)) return null;
+  return { state: "ready", url: raw.url, ...(alt ? { alt } : {}), ...(raw.gen === true ? { gen: true } : {}) };
+}
+
+/** Settings > Pictures: whether characters may send pictures, and how many a day each (per surface). */
+export function imageSettings(fsx) {
+  const s = readJson(fsx, "settings.json", null);
+  const i = isObj(s) && isObj(s.images) ? s.images : {};
+  return { on: i.on === true, perDay: Number.isInteger(i.perDay) && i.perDay >= 0 && i.perDay <= 20 ? i.perDay : 2 };
+}
+
+/** The image model for a character: its own (Profiles > Model), else Settings > Pictures, else "" (the engine's default). */
+export function imageModelFor(fsx, profile) {
+  const ref = (v) => {
+    const m = str(v);
+    return m && m !== "default" && /^[^\s]{1,200}$/.test(m) ? m : "";
+  };
+  const own = isObj(profile) ? ref(profile.imageModel) : "";
+  if (own) return own;
+  const s = readJson(fsx, "settings.json", null);
+  return ref(isObj(s) && isObj(s.models) ? s.models.image : "");
+}
+
+/** Pulls every [[image: ...]] marker out of a reply: {text, prompt} (prompt "" when there is none, or it is too short to draw from). */
+export function takeImageMarker(text) {
+  const m = IMAGE_MARKER.exec(String(text || ""));
+  if (!m) return { text: String(text || ""), prompt: "" };
+  const prompt = cut(m[1].replace(/\s+/g, " ").trim(), 400);
+  return { text: String(text).replace(new RegExp(IMAGE_MARKER.source, "gi"), "").replace(/[ \t]+\n/g, "\n").replace(/[ \t]{2,}/g, " ").trim(), prompt: prompt.length >= 3 ? prompt : "" };
+}
+
+/** What a model is told when a character may send a picture now. */
+export const IMAGE_HINT =
+  "You may send a picture, rarely, and only when it really fits the moment (a photo of where you are, something you made). To do it, end your message with [[image: a short visual description in English]] on its own. Never explain or mention this. Most messages carry no picture and no marker.";
+
+/** A picture as one short line for a model's history: the user's pictures are never shown to the model. */
+export const imageLine = (img) => (img ? "[a picture: " + (str(img.alt) || str(img.prompt) || "no description") + "]" : "");
+// </images-shared>
+
 // ---------- life: read-only access to what the `life` plugin wrote (issue #311) ----------
 // Copied into the messenger and the forum plugin (plugins cannot import each other); test/life-readers.test.ts pins that the two
 // copies are identical. Only the `life` plugin writes life/*; a surface remembers what it has told in its own file.
@@ -428,9 +492,9 @@ export function recentDays(fsx, p, _now) {
 const lifeWords = (s) => String(s).toLowerCase().split(/[\s.,!?;:'"«»“”()[\]{}<>…—–\-_/\\|]+/).filter((w) => w.length >= 4);
 
 /** A world item for a profile: interest matches first, otherwise a random one half of the time. `skip` holds ids already told. */
-function lifeWorldItem(fsx, p, a, skip, rand) {
+function lifeWorldItem(fsx, p, a, skip, rand, fits) {
   const w = readJson(fsx, WORLD_FILE, null);
-  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id));
+  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id) && (typeof fits !== "function" || fits(i)));
   if (!items.length) return null;
   const mine = new Set((Array.isArray(p.interests) ? p.interests : []).filter((x) => typeof x === "string").flatMap(lifeWords));
   const hits = mine.size ? items.filter((i) => lifeWords(str(i.title) + " " + str(i.text)).some((x) => mine.has(x))) : [];
@@ -442,8 +506,9 @@ function lifeWorldItem(fsx, p, a, skip, rand) {
  * Something a profile can bring up: an unshared diary entry of the last 3 days, or a world item. Returns {text, ref} (ref is the
  * entry or item id, to be remembered once the post or message is filed) or null when there is nothing. Text from outside is
  * quoted inside <outside> tags, with its source, capped; the line tells the model it is data and never instructions.
+ * `fits(item)` (optional) says which world items the caller can use at all (the forum: those that suit the board).
  */
-export function lifeSubject(fsx, p, now, shared, rand) {
+export function lifeSubject(fsx, p, now, shared, rand, fits) {
   const r = rand || Math.random;
   const a = lifeAllowed(fsx, p);
   const skip = shared instanceof Set ? shared : new Set(shared || []);
@@ -453,7 +518,7 @@ export function lifeSubject(fsx, p, now, shared, rand) {
     if (e) cand.push({ ref: String(e.id), text: 'Something from your own recent days, it really happened to you: "' + cut(str(e.text), 400) + '"' });
   }
   if (a.world) {
-    const i = lifeWorldItem(fsx, p, a, skip, r);
+    const i = lifeWorldItem(fsx, p, a, skip, r, fits);
     if (i) {
       const quoted = '<outside source="' + cut(str(i.src).replace(/[<>"]/g, ""), 40) + '" category="' + str(i.cat).replace(/[^a-z]/g, "") + '">' + cut(str(i.title).replace(/[<>]/g, " "), 160) + (str(i.text) ? " — " + cut(str(i.text).replace(/[<>]/g, " "), 300) : "") + "</outside>";
       cand.push({
@@ -477,7 +542,7 @@ const EMOJI_WORDS = [
 const MAX_TOKENS = [250, 450, 800];
 
 /** The system prompt that makes the model write forum posts as this profile (the card is never in it). */
-export function systemPromptFor(p, recent) {
+export function systemPromptFor(p, recent, opts) {
   const v = isObj(p.voice) ? p.voice : {};
   const length = [0, 1, 2].includes(v.length) ? v.length : 1;
   const emoji = [0, 1, 2].includes(v.emoji) ? v.emoji : 1;
@@ -493,7 +558,35 @@ export function systemPromptFor(p, recent) {
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
   lines.push("Write plain forum text: no quotation marks around the whole post, no stage directions or narration, no name label, no signature.");
   lines.push("Write in the language of the recent posts. When there are none, write in the language of your description above. If you do not know something about the real world, say so in your own voice instead of inventing facts.");
+  if (isObj(opts) && opts.images) lines.push(IMAGE_HINT);
   return lines.join("\n");
+}
+
+// Which world items a board can take. The board is chosen first (an author's favourites), so an item is offered only when
+// the board is a general one, its name or description shares a word with the item, or the item's category is the board's
+// subject. Boards are written by the user in any language, hence the stems.
+const GENERAL_BOARD = /general|common|random|off.?topic|chat|talk|lounge|misc|other|free|вільн|загальн|різне|флуд|балачк|офтоп|курилк|інше/i;
+const CAT_BOARD = {
+  news: /news|world|current|новин|світ|подій/i,
+  politics: /politic|news|world|polic|політ|новин|світ/i,
+  games: /game|gaming|игр|ігр|гейм/i,
+  film: /film|movie|cinema|series|\btv\b|show|кін|фільм|серіал/i,
+  anime: /anime|manga|аніме|манг/i,
+  science: /scien|space|tech|nature|наук|космос|техн|природ/i,
+  culture: /cultur|histor|bart|book|music|literat|культур|істор|мистец|книг|музик|літератур/i,
+  weather: /weather|climate|погод|клімат/i,
+  reddit: /reddit|meme|internet|мем|інтернет/i,
+};
+
+/** Whether a world item (`{cat, title, text}`) suits a board (`{name, desc}`). */
+export function itemFitsBoard(item, board) {
+  const b = isObj(board) ? board : {};
+  const label = str(b.name) + " " + str(b.desc);
+  if (GENERAL_BOARD.test(label)) return true;
+  const re = CAT_BOARD[item && item.cat];
+  if (re && re.test(label)) return true;
+  const mine = new Set(lifeWords(label));
+  return mine.size > 0 && lifeWords(str(item && item.title) + " " + str(item && item.text)).some((x) => mine.has(x));
 }
 
 /**
@@ -505,8 +598,9 @@ export function pickSubject(profile, world, rand) {
   const r = rand || Math.random;
   const w = isObj(world) ? world : {};
   if (w.fsx) {
-    const life = lifeSubject(w.fsx, profile, Number.isFinite(w.now) ? w.now : Date.now(), new Set(lifeUsed(w.fsx)[profile.id] || []), r);
-    if (life) return { text: life.text + " Base the topic on it, from the angle that suits this board.", ref: life.ref };
+    const fits = w.board ? (i) => itemFitsBoard(i, w.board) : undefined;
+    const life = lifeSubject(w.fsx, profile, Number.isFinite(w.now) ? w.now : Date.now(), new Set(lifeUsed(w.fsx)[profile.id] || []), r, fits);
+    if (life) return { text: life.text + " Use it only if it really fits this board; if it does not, write about something else that suits you and the board.", ref: life.ref };
   }
   if (!profile.interests.length) return { text: "", ref: "" };
   const interest = profile.interests[Math.floor(r() * profile.interests.length)];
@@ -530,7 +624,7 @@ function markLifeUsed(fsx, authorId, ref) {
   fsx.write(LIFE_USED, JSON.stringify(u, null, 2));
 }
 
-const postLine = (p) => (p.by === SELF ? "User" : p.name) + ": " + cut(p.text.replace(/\s+/g, " "), 600);
+const postLine = (p) => (p.by === SELF ? "User" : p.name) + ": " + cut([p.text, imageLine(p.image)].filter(Boolean).join(" ").replace(/\s+/g, " "), 600);
 
 /** The user message of a reply: where we are, the last posts, who is being answered. */
 export function replyContext(board, topic, target) {
@@ -550,11 +644,15 @@ export function replyContext(board, topic, target) {
 }
 
 /** The user message of a new topic: the board, what exists already, a subject (the sentence `pickSubject` made, or ""), and the answer shape. */
-export function newTopicContext(board, titles, subject) {
+export function newTopicContext(board, titles, subject, images) {
   const lines = ["Board: " + board.name + (board.desc ? " (" + board.desc + ")" : "")];
   if (titles.length) lines.push("Topics already on this board (do not repeat them): " + titles.slice(0, 8).map((t) => '"' + t + '"').join("; "));
   lines.push(subject ? subject : "Choose a subject that fits you and the board.");
-  lines.push('Open a new topic. Answer with JSON only: {"title": "a short topic title, up to 12 words", "text": "the first post"}');
+  lines.push(
+    images
+      ? 'Open a new topic. Answer with JSON only: {"title": "a short topic title, up to 12 words", "text": "the first post", "image": "optional: a short visual description in English of a picture to attach, only when it really fits; leave it out otherwise"}'
+      : 'Open a new topic. Answer with JSON only: {"title": "a short topic title, up to 12 words", "text": "the first post"}',
+  );
   return lines.join("\n");
 }
 
@@ -710,12 +808,12 @@ export function planAction(c, rand) {
 
 // ---------- requests and filing ----------
 
-function requestPost(host, key, settings, author, userMessage, maxTokens) {
+function requestPost(host, key, settings, author, userMessage, maxTokens, images) {
   // the author's own model (Profiles > Model) wins over the forum's model in Settings
   const model = author.model || settings.model;
   host.llm.request(key, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(author, recentDays(host.fs, author, Date.now())),
+    systemPrompt: systemPromptFor(author, recentDays(host.fs, author, Date.now()), { images: images === true }),
     messages: [{ role: "user", content: userMessage }],
     presetParams: { temperature: 0.9, max_tokens: maxTokens },
   });
@@ -727,11 +825,12 @@ const lengthIndex = (p) => (isObj(p.voice) && [0, 1, 2].includes(p.voice.length)
 function requestPlan(host, key, settings, plan, boards, topics, rand) {
   if (plan.kind === "reply") {
     const b = boardMap(boards).get(plan.topic.board);
-    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target), MAX_TOKENS[lengthIndex(plan.author)]);
+    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()));
   } else {
     const titles = topics.filter((t) => t.board === plan.board.id).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
     const subject = plan.subject || pickSubject(plan.author, { board: plan.board, titles }, rand);
-    requestPost(host, key, settings, plan.author, newTopicContext(plan.board, titles, subject.text), 900);
+    const images = mayImage(host.fs, plan.author, topics, Date.now());
+    requestPost(host, key, settings, plan.author, newTopicContext(plan.board, titles, subject.text, images), 900, images);
   }
 }
 
@@ -752,6 +851,17 @@ export function parseTickKey(key) {
 
 const quoteOf = (p) => ({ by: p.by, name: p.by === SELF ? "" : p.name, text: cut(p.text.replace(/\s+/g, " "), 160) });
 
+/** Whether this author may send a picture now: the switch is on and today's cap (counted from the stored posts) is not used up. */
+function mayImage(fsx, author, topics, now) {
+  const s = imageSettings(fsx);
+  if (!s.on || s.perDay === 0) return false;
+  const tz = readSettings(fsx).tzOffset;
+  const day = localDay(now, tz);
+  let n = 0;
+  for (const t of topics) for (const p of t.posts) if (p.by === author.id && p.image && p.image.gen && localDay(p.at, tz) === day) n++;
+  return n < s.perDay;
+}
+
 /** The model's answer filed as a post or a new topic. Returns {topicId, post} or {error, code?}. */
 export function fileResult(fsx, f, result, now, boards) {
   const author = readProfile(fsx, f.author);
@@ -762,11 +872,14 @@ export function fileResult(fsx, f, result, now, boards) {
   if (f.kind === "reply") {
     const topic = readTopic(fsx, f.topic);
     if (!topic || topic.locked) return { error: "the topic is not open any more" };
-    const text = cleanReply(r.text, author.name);
-    if (!text) return failure("the model returned nothing");
-    if (livePosts(topic).slice(-CONTEXT_POSTS).some((p) => normal(p.text) === normal(text))) return { error: "the post repeats an earlier one" };
+    // the marker is cut out whether or not a picture may be sent: it must never show as text
+    const taken = takeImageMarker(r.text);
+    const text = cleanReply(taken.text, author.name);
+    const draw = taken.prompt && mayImage(fsx, author, loadTopics(fsx), now) ? { state: "pending", prompt: taken.prompt, gen: true } : null;
+    if (!text && !draw) return failure("the model returned nothing");
+    if (text && livePosts(topic).slice(-CONTEXT_POSTS).some((p) => normal(p.text) === normal(text))) return { error: "the post repeats an earlier one" };
     const target = f.quote ? topic.posts.find((p) => p.id === f.quote && !p.removed) : null;
-    const post = { id: "p-" + now + "-" + rid(), ...mine, at: now, text, ...(target ? { quote: quoteOf(target) } : {}) };
+    const post = { id: "p-" + now + "-" + rid(), ...mine, at: now, text, ...(draw ? { image: draw } : {}), ...(target ? { quote: quoteOf(target) } : {}) };
     topic.posts.push(post);
     topic.lastAt = now;
     topic.unread = true;
@@ -778,10 +891,13 @@ export function fileResult(fsx, f, result, now, boards) {
   if (!hit) return { error: "the board is gone" };
   const j = parseJsonReply(r.text);
   const title = j ? oneLine(j.title, TITLE_MAX) : "";
-  const text = j ? cleanReply(typeof j.text === "string" ? j.text : "", author.name) : "";
-  if (!title || !text) return { error: "the model's answer was not a topic" };
+  const inline = takeImageMarker(j && typeof j.text === "string" ? j.text : "");
+  const text = j ? cleanReply(inline.text, author.name) : "";
+  const wanted = j ? cut(str(typeof j.image === "string" ? j.image : "").replace(/\s+/g, " "), 400) || inline.prompt : "";
+  const draw = wanted && mayImage(fsx, author, loadTopics(fsx), now) ? { state: "pending", prompt: wanted, gen: true } : null;
+  if (!title || (!text && !draw)) return { error: "the model's answer was not a topic" };
   if (loadTopics(fsx).some((t) => t.board === hit.board.id && normal(t.title) === normal(title))) return { error: "the topic repeats an earlier one" };
-  const post = { id: "p-" + now + "-" + rid(), ...mine, at: now, text };
+  const post = { id: "p-" + now + "-" + rid(), ...mine, at: now, text, ...(draw ? { image: draw } : {}) };
   const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: hit.board.id, title, ...mine, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, posts: [post] };
   writeTopic(fsx, topic);
   if (f.ref) markLifeUsed(fsx, author.id, f.ref);
@@ -988,6 +1104,34 @@ function unreadRoute(host) {
   return ok({ unread: unread.length, latest: newest && last ? { title: newest.title, who: last.by === SELF ? "" : last.name, at: newest.lastAt } : null });
 }
 
+/** The pictures characters asked for that nobody has drawn yet, oldest first, a few at a time. */
+function imagesRoute(host) {
+  const fsx = host.fs;
+  const items = [];
+  for (const t of loadTopics(fsx)) {
+    for (const p of t.posts) {
+      if (!p.image || p.image.state !== "pending" || p.by === SELF) continue;
+      items.push({ topic: t.id, post: p.id, prompt: p.image.prompt, model: imageModelFor(fsx, readProfile(fsx, p.by)), at: p.at });
+    }
+  }
+  items.sort((a, b) => a.at - b.at);
+  return ok({ items: items.slice(0, 5).map(({ at: _at, ...x }) => x) });
+}
+
+/** The page drew (or could not draw) a picture a character asked for: file it in the post. */
+function imageRoute(req, host) {
+  const fsx = host.fs;
+  const b = isObj(req.body) ? req.body : {};
+  const topic = readTopic(fsx, String(b.topic || ""));
+  const post = topic ? topic.posts.find((p) => p.id === String(b.post || "") && p.image && p.image.state === "pending") : null;
+  if (!topic || !post) return ok({ error: "no such picture to draw" }, 404);
+  const done = typeof b.url === "string" ? cleanImage({ state: "ready", url: b.url, alt: post.image.prompt, gen: true }) : null;
+  post.image = done || { state: "failed", prompt: post.image.prompt, gen: true };
+  if (done) topic.unread = true;
+  writeTopic(fsx, topic);
+  return ok({ ok: true, image: post.image });
+}
+
 function boardsRoute(req, host) {
   const b = isObj(req.body) ? req.body : {};
   const next = mergeBoards(readBoards(host.fs), b.categories);
@@ -1016,11 +1160,12 @@ function newTopicRoute(req, host) {
   if (!hit) return ok({ error: "no such board" }, 404);
   const title = oneLine(b.title, TITLE_MAX);
   const text = bodyText(b);
+  const picked = isObj(b.image) ? cleanImage({ ...b.image, state: "ready" }) : null;
   if (title.length < 3) return ok({ error: "a topic needs a title" }, 400);
-  if (!text) return ok({ error: "a topic needs text" }, 400);
+  if (!text && !picked) return ok({ error: "a topic needs text" }, 400);
   if (loadTopics(fsx).length >= MAX_TOPICS) return ok({ error: "too many topics (" + MAX_TOPICS + ")" }, 400);
   const now = Date.now();
-  const post = { id: "p-" + now + "-" + rid(), by: SELF, name: "", hue: 200, at: now, text };
+  const post = { id: "p-" + now + "-" + rid(), by: SELF, name: "", hue: 200, at: now, text, ...(picked ? { image: picked } : {}) };
   const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: hit.board.id, title, by: SELF, name: "", hue: 200, createdAt: now, lastAt: now, locked: false, unread: false, owe: 1 + Math.floor(Math.random() * 3), posts: [post] };
   writeTopic(fsx, topic);
   userPosted(fsx, now);
@@ -1034,10 +1179,11 @@ function replyRoute(req, host) {
   if (!topic) return ok({ error: "no such topic" }, 404);
   if (topic.locked) return ok({ error: "the topic is locked" }, 409);
   const text = bodyText(b);
-  if (!text) return ok({ error: "a reply needs text" }, 400);
+  const picked = isObj(b.image) ? cleanImage({ ...b.image, state: "ready" }) : null;
+  if (!text && !picked) return ok({ error: "a reply needs text" }, 400);
   const now = Date.now();
   const target = typeof b.quoteOf === "string" ? topic.posts.find((p) => p.id === b.quoteOf && !p.removed) : null;
-  const post = { id: "p-" + now + "-" + rid(), by: SELF, name: "", hue: 200, at: now, text, ...(target ? { quote: quoteOf(target) } : {}) };
+  const post = { id: "p-" + now + "-" + rid(), by: SELF, name: "", hue: 200, at: now, text, ...(picked ? { image: picked } : {}), ...(target ? { quote: quoteOf(target) } : {}) };
   topic.posts.push(post);
   topic.lastAt = now;
   topic.unread = false;
@@ -1209,6 +1355,8 @@ export function handleRoute(req, host) {
   if (path === "/forum/boards" && method === "POST") return boardsRoute(req, host);
   if (path === "/forum/topic" && method === "POST") return newTopicRoute(req, host);
   if (path === "/forum/reply" && method === "POST") return replyRoute(req, host);
+  if (path === "/forum/images" && method === "GET") return imagesRoute(host);
+  if (path === "/forum/image" && method === "POST") return imageRoute(req, host);
   if (path === "/forum/read" && method === "POST") return readRoute(req, host);
   if (path === "/forum/lock" && method === "POST") return lockRoute(req, host);
   if (path === "/forum/remove-post" && method === "POST") return removePostRoute(req, host);

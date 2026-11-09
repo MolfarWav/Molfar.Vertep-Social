@@ -399,6 +399,7 @@ test("avatar: a persona brings its avatar, else the portrait of its name; an own
     "litopys/portraits.json": { нема: { name: "Нема", url: WEBP } },
   };
   const { host } = makeHost(rp);
+  host.llm.results = { persona: { text: JSON.stringify({ about: "Коротко про персону." }) } };
   for (const id of ["w", "n"]) route(host, "POST", "/you/import", { id });
   expect(route(host, "POST", "/profiles/avatar", { personaId: "pe-w" }).json.avatar).toEqual({ url: PNG, from: "persona" });
   expect(route(host, "POST", "/profiles/avatar", { personaId: "pe-n" }).json.avatar).toEqual({ url: WEBP, from: "soul" });
@@ -422,4 +423,58 @@ test("avatar: closed Roleplay, a missing portraits file or a refused read is a q
   };
   profileFrom(host, "rp-a", "A", { kind: "card", id: "a" });
   expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-a" }).json).toEqual({ ok: true, avatar: null });
+});
+
+test("the Soul line carries spectra, what the character prizes and what hurts them more", () => {
+  const line = plugin.soulLine({
+    pronouns: "she",
+    spectra: { introvert_extrovert: 10, cautious_reckless: 35, reserved_emotional: 50, lawful_rebellious: 90, suspicious_trusting: 65, pessimist_optimist: "x" },
+    values: [{ cue: "a kept word", event: "kept_promise", stat: "trust", x: 1.5 }, { cue: " ", event: "e", stat: "trust", x: 1.5 }],
+    triggers: [{ cue: "shouting", event: "raised_voice", stat: "comfort", x: 1.5 }],
+  });
+  expect(line).toContain("leanings: introverted, rather cautious, rebellious, rather trusting");
+  expect(line).not.toContain("reserved");
+  expect(line).toContain("prizes: a kept word");
+  expect(line).toContain("hurt more by: shouting");
+  // a Soul without them gives the same line as before
+  expect(plugin.soulLine({ pronouns: "he", coping: "goes quiet" })).toBe("pronouns he/him; under strain: goes quiet");
+  // several values and triggers stay short
+  const many = Array.from({ length: 12 }, (_, i) => ({ cue: "v" + i }));
+  expect(plugin.soulLine({ values: many }).split(", ").length).toBe(5);
+});
+
+test("check: a card that changed since the profile was made is told without a model; no hash counts as changed once", () => {
+  const h = makeHost(ROLEPLAY);
+  // an import carries the fingerprint of the text the model read (the first pass puts it in the stash)
+  route(h.host, "POST", "/profiles/import", { kind: "card", id: "mavka" });
+  const hash = plugin.hashText(plugin.buildMaterial({ kind: "card", id: "mavka" }, ROLEPLAY["characters/mavka/card.json"]).text);
+  expect(hash).toMatch(/^[0-9a-f]{8}-\d+$/);
+  h.host.llm.results = { digest: { text: GOOD } };
+  const made = route(h.host, "POST", "/profiles/import", { kind: "card", id: "mavka" }, { stash: { name: "Мавка", title: "Мавка з озера v3", hash } });
+  expect(made.json.profile.cardHash).toBe(hash);
+  const checked = (host: any) => route(host, "POST", "/profiles/check").json;
+  expect(checked(h.host).items).toEqual([{ id: made.json.profile.id, name: "Мавка", state: "same" }]);
+  expect(h.requests.length).toBe(1); // only the first pass of the import asked a model; the check asked none
+  // the card text changes in Roleplay: changed, still no model
+  (ROLEPLAY["characters/mavka/card.json"] as any).description += " Тепер ще й співає.";
+  const changed = checked(h.host).items[0];
+  expect(changed.state).toBe("changed");
+  expect(changed.first).toBeUndefined();
+  (ROLEPLAY["characters/mavka/card.json"] as any).description = (ROLEPLAY["characters/mavka/card.json"] as any).description.replace(" Тепер ще й співає.", "");
+  expect(checked(h.host).items[0].state).toBe("same");
+  // a profile made before the fingerprint existed counts as changed once
+  const old = makeHost(ROLEPLAY);
+  route(old.host, "PUT", "/profiles/rp-mavka", { name: "Мавка", source: "roleplay", card: "x", from: { kind: "card", id: "mavka" } });
+  expect(checked(old.host).items[0]).toMatchObject({ id: "rp-mavka", state: "changed", first: true });
+  // a refresh hands the fingerprint back with the proposal; an own profile is not checked; a save keeps the stored hash
+  old.host.llm.results = { digest: { text: GOOD } };
+  const r = route(old.host, "POST", "/profiles/refresh", { profileId: "rp-mavka" }, { stash: { name: "Мавка", title: "x", hash } });
+  expect(r.json.cardHash).toBe(hash);
+  route(old.host, "PUT", "/profiles/rp-mavka", { name: "Мавка", source: "roleplay", from: { kind: "card", id: "mavka" }, cardHash: hash });
+  route(old.host, "PUT", "/profiles/rp-mavka", { name: "Мавка 2", source: "roleplay", from: { kind: "card", id: "mavka" } });
+  expect(JSON.parse(old.files.get("profiles/rp-mavka.json")!).cardHash).toBe(hash);
+  route(old.host, "PUT", "/profiles/own-1", { name: "Own", source: "own" });
+  expect(checked(old.host).items.map((i: any) => i.id)).toEqual(["rp-mavka"]);
+  // no access: closed
+  expect(checked(makeHost(null).host).code).toBe("no-access");
 });

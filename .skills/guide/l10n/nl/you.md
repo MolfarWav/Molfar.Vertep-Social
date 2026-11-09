@@ -1,4 +1,4 @@
-<!-- source: cd4e3559d8ec -->
+<!-- source: e909c932db8f -->
 # Social: Your profile
 
 Je profiel zegt wie je bent voor de personages. Het is geen personage: het heeft geen chat, geen schema en verschijnt nooit in de contactenlijst of op het forum. Open het met je naam rechtsboven (op een telefoon: Settings, de eerste rij).
@@ -14,4 +14,4 @@ Je kunt een paar persona's bewaren, bijvoorbeeld één voor elke manier waarop j
 
 ## Een toevoegen
 
-"Add" biedt twee manieren. **Write a new one** opent een lege persona; er is een naam voor nodig voordat hij kan worden opgeslagen. **Import from Roleplay** toont de persona's die Roleplay heeft; druk naast er één op "Add". Social kopieert de naam, de beschrijving en de afbeelding één keer (de avatar van de persona, anders het portret dat je voor die naam hebt ingesteld in het tabblad Soul van Roleplay), zonder model, en latere wijzigingen in Roleplay worden niet gevolgd. Een persona die al is binnengehaald, is gemarkeerd als "Already here". Lezen van Roleplay heeft je toestemming nodig, die je één keer geeft op Start (zie [[settings]]); zonder die toestemming zegt het dialoog dat en vertelt waar je die kunt geven.
+"Add" biedt twee manieren. **Write a new one** opent een lege persona; er is een naam voor nodig voordat hij kan worden opgeslagen. **Import from Roleplay** toont de persona's die Roleplay heeft; druk naast er één op "Add". Social neemt de naam en de afbeelding (de avatar van de persona, anders het portret dat je voor die naam hebt ingesteld in het tabblad Soul van Roleplay), en het importmodel (Settings, Models) schrijft een korte About op basis van de beschrijving, titel, voornaamwoorden en het profiel van de persona, zoals het dat voor personages doet: derde persoon, een paar zinnen, geen {{user}}-macro's, geen seksuele details of geheimen. Dit is één modelaanroep, en het gebeurt één keer: latere wijzigingen in Roleplay worden niet gevolgd. Als het model faalt, wordt er niets toegevoegd en zegt het dialoog waarom, zodat je het opnieuw kunt proberen. Een persona die al is binnengehaald, is gemarkeerd als "Already here". Lezen van Roleplay heeft je toestemming nodig, die je één keer geeft op Start (zie [[settings]]); zonder die toestemming zegt het dialoog dat en vertelt waar je die kunt geven.

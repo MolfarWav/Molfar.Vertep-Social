@@ -1,4 +1,4 @@
-<!-- source: cd4e3559d8ec -->
+<!-- source: e909c932db8f -->
 # Social: Your profile
 
 Tu perfil dice quién eres para los personajes. No es un personaje: no tiene chat ni horario, y nunca aparece en la lista de contactos ni en el foro. Ábrelo con tu nombre arriba a la derecha (en el teléfono: Settings, la primera fila).
@@ -14,4 +14,4 @@ Puedes guardar varias personas, por ejemplo una para cada forma en que te gusta 
 
 ## Añadir una
 
-«Add» ofrece dos maneras. **Write a new one** abre una persona en blanco; necesita un nombre antes de poder guardarse. **Import from Roleplay** lista las personas que tiene Roleplay; pulsa «Add» junto a una. Social copia su nombre, su descripción y su imagen una sola vez (el avatar de la persona o, si no lo tiene, el retrato que fijaste para ese nombre en la pestaña Soul de Roleplay), sin modelo, y las ediciones posteriores en Roleplay no se reflejan. Una persona ya importada aparece marcada como «Already here». Leer Roleplay necesita tu permiso, que das una vez en Inicio (ver [[settings]]); sin él, el diálogo lo indica y dice dónde permitirlo.
+«Add» ofrece dos maneras. **Write a new one** abre una persona en blanco; necesita un nombre antes de poder guardarse. **Import from Roleplay** lista las personas que tiene Roleplay; pulsa «Add» junto a una. Social toma su nombre y su imagen (el avatar de la persona o, si no lo tiene, el retrato que fijaste para ese nombre en la pestaña Soul de Roleplay), y el modelo de importación (Settings, Models) escribe un About breve a partir de la descripción, el título, los pronombres y el perfil de la persona, igual que con los personajes: en tercera persona, unas pocas frases, sin macros {{user}}, sin detalles sexuales ni secretos. Es una sola llamada al modelo, y ocurre una vez: las ediciones posteriores en Roleplay no se reflejan. Si el modelo falla, no se añade nada y el diálogo dice por qué, para que puedas intentarlo de nuevo. Una persona ya importada aparece marcada como «Already here». Leer Roleplay necesita tu permiso, que das una vez en Inicio (ver [[settings]]); sin él, el diálogo lo indica y dice dónde permitirlo.

@@ -136,6 +136,7 @@
 /* life: switches, categories of the world feed, the weather place, the feed status */
 .s-settings .life-world { display: flex; flex-direction: column; gap: 12px; }
 .s-settings .life-world.is-off { opacity: 0.55; }
+.s-settings .pictures-more.is-off { opacity: 0.55; }
 .s-settings .cats { display: flex; flex-wrap: wrap; gap: 6px; }
 .s-settings .cat { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--muted); font: 600 13px Inter, "Inter Variable", system-ui, sans-serif; cursor: pointer; }
 .s-settings .cat.on::before { content: "✓ "; }

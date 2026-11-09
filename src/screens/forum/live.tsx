@@ -1,5 +1,6 @@
 // The real forum: the boards, a board's topics, a topic, a new topic. Data comes from the forum plugin
 // (plugins/forum/plugin.js) through the app's routes; the pages are the same components the design preview uses.
+import { refreshImages } from "@/pictures/worker";
 import { useCallback, useEffect, useMemo } from "react";
 import "./forum.css";
 import { currentLang, useT } from "@/i18n/index";
@@ -85,6 +86,12 @@ export function ForumLive() {
     if (unread !== undefined) nav.setBadges({ forum: unread });
   }, [unread, nav]);
 
+  // a picture a character asked for waits for the page to draw it: wake the worker
+  const waiting = topic.data?.topic.posts.some((x) => x.image?.state === "pending") ?? false;
+  useEffect(() => {
+    if (waiting) refreshImages();
+  }, [waiting]);
+
   // opening a topic with new posts marks it read
   const opened = topic.data?.topic;
   const reloadHome = home.reload;
@@ -130,9 +137,10 @@ export function ForumLive() {
         boards={boards}
         boardId={route.board}
         onCancel={() => go(route.board ? { view: "board", id: route.board } : { view: "home" })}
-        onSubmit={async (boardId, title, text) => {
+        pictures
+        onSubmit={async (boardId, title, text, image) => {
           try {
-            const r = await call<{ topic: string }>("POST", "/forum/topic", { board: boardId, title, text });
+            const r = await call<{ topic: string }>("POST", "/forum/topic", { board: boardId, title, text, ...(image ? { image: { url: image.url, alt: image.alt, gen: image.gen } } : {}) });
             void home.reload();
             go({ view: "topic", id: r.topic, page: 1 }, { replace: true });
             return null;
@@ -226,9 +234,9 @@ export function ForumLive() {
         onPage={(pg) => go({ view: "topic", id: route.id, page: pg })}
         focusPost={route.post}
         onSearch={() => openSearch("")}
-        onSend={async (text, quoteOf) => {
+        onSend={async (text, quoteOf, image) => {
           try {
-            await call("POST", "/forum/reply", { topic: route.id, text, ...(quoteOf ? { quoteOf } : {}) });
+            await call("POST", "/forum/reply", { topic: route.id, text, ...(quoteOf ? { quoteOf } : {}), ...(image ? { image: { url: image.url, alt: image.alt, gen: image.gen } } : {}) });
             // the answer is at the end: show the last page, and keep following it
             if (route.page === "last") await topic.reload();
             else go({ view: "topic", id: route.id, page: "last" }, { replace: true });

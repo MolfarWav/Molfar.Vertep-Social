@@ -127,10 +127,10 @@ test("settings: defaults, a partial patch, bad values dropped, models kept per t
   expect(s.postsPerDay).toBe(200);
   expect(s.quietFrom).toBe("01:00");
   expect(s.activity).toBe("moderate");
-  expect(s.models).toEqual({ messenger: "", forum: "", import: "prov/some-model" });
+  expect(s.models).toEqual({ messenger: "", forum: "", import: "prov/some-model", image: "" });
   expect("extra" in s).toBe(false);
   const next = route(host, "PUT", "/settings", { models: { messenger: "default" } }).json.settings;
-  expect(next.models).toEqual({ messenger: "", forum: "", import: "prov/some-model" });
+  expect(next.models).toEqual({ messenger: "", forum: "", import: "prov/some-model", image: "" });
   expect(route(host, "GET", "/settings").json.settings.models.import).toBe("prov/some-model");
 });
 
