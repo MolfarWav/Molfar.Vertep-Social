@@ -12,7 +12,10 @@
  * Routes (relative to /v1/apps/social):
  *   GET  /forum/home                  boards with counts, the autonomy strip, who is online, statistics
  *   GET  /forum/board?id=             the board's topics, ordered by the last post (a new post bumps a topic to the top)
- *   GET  /forum/topic?id=             the topic with its posts and the authors' facts
+ *   GET  /forum/topic?id=&page=       one page of the topic (PAGE_SIZE posts) with the authors' facts of that page;
+ *          page is a number or "last"; the answer says which page it is, how many there are and the number of the first post
+ *   GET  /forum/search?q=             topics whose title or posts hold every word of q (at most SEARCH_MAX, titles first):
+ *          the first matching post, a snippet around the match and the page that post is on
  *   GET  /forum/unread                {unread}: the number of topics with posts the user has not seen (the tab badge)
  *   POST /forum/boards {categories}   adds categories and boards (merged by name)
  *   POST /forum/topic {board, title, text}    the user opens a topic
@@ -42,6 +45,11 @@ export const CAP_COUNT = 3;
 const FAIL_WAIT_MS = 10 * 60 * 1000;
 const ACTIVITY_SCALE = { quiet: 2, moderate: 1, lively: 0.5, chaotic: 0.25 };
 const MAX_POSTS_PER_TOPIC = 500;
+/** Posts on one page of a topic. */
+export const PAGE_SIZE = 25;
+const SEARCH_MAX = 50;
+const SEARCH_MIN_CHARS = 2;
+const SNIPPET_CHARS = 140;
 const MAX_TOPICS = 1000;
 const CONTEXT_POSTS = 8;
 const LIVE_MS = 7 * 24 * 3600 * 1000;
@@ -726,8 +734,14 @@ function topicRoute(req, host) {
   const now = Date.now();
   const tz = readSettings(fsx).tzOffset;
   const counts = countByAuthor(loadTopics(fsx));
+  const total = topic.posts.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const asked = isObj(req.query) ? req.query.page : undefined;
+  const page = asked === "last" ? pages : Math.min(pages, Math.max(1, Math.floor(Number(asked)) || 1));
+  const from = (page - 1) * PAGE_SIZE;
+  const shown = topic.posts.slice(from, from + PAGE_SIZE);
   const authors = {};
-  for (const p of topic.posts) {
+  for (const p of shown) {
     if (authors[p.by]) continue;
     const prof = p.by === SELF ? null : readProfile(fsx, p.by);
     authors[p.by] = {
@@ -750,10 +764,72 @@ function topicRoute(req, host) {
       lastAt: topic.lastAt,
       locked: topic.locked,
       unread: topic.unread,
-      posts: topic.posts,
+      posts: shown,
     },
+    paging: { page, pages, size: PAGE_SIZE, total, from },
     authors,
   });
+}
+
+/** The words of a search: lower case, split on spaces, at most six. */
+export function searchWords(q) {
+  return oneLine(typeof q === "string" ? q : "", 80).toLowerCase().split(" ").filter(Boolean).slice(0, 6);
+}
+
+const hasAll = (text, words) => {
+  const low = String(text).toLowerCase();
+  return words.every((w) => low.includes(w));
+};
+
+/** About SNIPPET_CHARS of the text, starting a little before the first word found. */
+export function snippetOf(text, words) {
+  const flat = oneLine(text, 4000);
+  const low = flat.toLowerCase();
+  let at = -1;
+  for (const w of words) {
+    const i = low.indexOf(w);
+    if (i >= 0 && (at < 0 || i < at)) at = i;
+  }
+  const start = Math.max(0, at - 40);
+  const end = start + SNIPPET_CHARS;
+  return (start > 0 ? "…" : "") + flat.slice(start, end).trim() + (end < flat.length ? "…" : "");
+}
+
+function searchRoute(req, host) {
+  const q = oneLine(isObj(req.query) && typeof req.query.q === "string" ? req.query.q : "", 80);
+  const words = searchWords(q);
+  if (q.length < SEARCH_MIN_CHARS) return ok({ q, words, topics: [], tooShort: true, truncated: false });
+  const boards = boardMap(readBoards(host.fs));
+  const rows = [];
+  for (const t of loadTopics(host.fs)) {
+    const titleHit = hasAll(t.title, words);
+    const hits = [];
+    t.posts.forEach((p, i) => {
+      if (hasAll(p.text, words)) hits.push(i);
+    });
+    if (!titleHit && !hits.length) continue;
+    const i = hits.length ? hits[0] : 0;
+    const post = t.posts[i];
+    const b = boards.get(t.board);
+    rows.push({
+      id: t.id,
+      title: t.title,
+      board: { id: t.board, name: b ? b.board.name : "" },
+      category: b ? b.category.name : "",
+      by: post.by,
+      name: post.name,
+      hue: post.hue,
+      at: post.at,
+      n: i + 1,
+      page: Math.floor(i / PAGE_SIZE) + 1,
+      matches: hits.length,
+      titleHit,
+      snippet: snippetOf(post.text, words),
+      lastAt: t.lastAt,
+    });
+  }
+  rows.sort((a, b) => (a.titleHit === b.titleHit ? b.lastAt - a.lastAt : a.titleHit ? -1 : 1));
+  return ok({ q, words, topics: rows.slice(0, SEARCH_MAX), tooShort: false, truncated: rows.length > SEARCH_MAX });
 }
 
 /** The topics with posts the user has not seen, and the newest of those posts (for the shell's message). */
@@ -941,6 +1017,7 @@ export function handleRoute(req, host) {
   if (path === "/forum/home" && method === "GET") return homeRoute(host);
   if (path === "/forum/board" && method === "GET") return boardRoute(req, host);
   if (path === "/forum/topic" && method === "GET") return topicRoute(req, host);
+  if (path === "/forum/search" && method === "GET") return searchRoute(req, host);
   if (path === "/forum/unread" && method === "GET") return unreadRoute(host);
   if (path === "/forum/boards" && method === "POST") return boardsRoute(req, host);
   if (path === "/forum/topic" && method === "POST") return newTopicRoute(req, host);

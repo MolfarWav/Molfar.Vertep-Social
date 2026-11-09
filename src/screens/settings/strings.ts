@@ -85,6 +85,7 @@ export const strings: Bundle = {
 
     "settings.access.on": "Reading cards allowed",
     "settings.access.off": "Reading cards off",
+    "settings.access.openHome": "Open Home",
     "settings.access.revoke": "Revoke",
     "settings.access.grant": "Grant access",
     "settings.access.note": "Social reads cards only during import and profile update. Names come from the Soul.",
@@ -177,6 +178,7 @@ export const strings: Bundle = {
 
     "settings.access.on": "Читання карток дозволено",
     "settings.access.off": "Читання карток вимкнено",
+    "settings.access.openHome": "Відкрити «Головна»",
     "settings.access.revoke": "Відкликати",
     "settings.access.grant": "Надати доступ",
     "settings.access.note": "Social читає картки лише під час імпорту й оновлення профілю. Імена беруться з Soul.",

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useT, currentLang } from "@/i18n/index";
 import { Avatar } from "@/components/Avatar";
 import type { ModelChoice } from "@/lib/api";
+import { canOpenHome, openHome } from "@/lib/shell-home";
 import type { ImportEntry } from "@/mock/profiles-import";
 import { Dialog } from "./dialog";
 import type { HiddenCounts, ImportRunner, RunStatus } from "./import-api";
@@ -72,9 +73,12 @@ export function ImportDialog(props: PickProps) {
   return (
     <Dialog title={t("profiles.import.title")} width={560} onClose={onClose}>
       <div className="pf-body" aria-busy={source.phase === "loading"}>{body}</div>
-      <div className="pf-foot">
+      <div className={source.phase === "closed" ? "pf-foot stack" : "pf-foot"}>
+        {source.phase === "closed" && canOpenHome() && (
+          <button type="button" className="btn home" onClick={() => { onClose(); openHome(); }}>{t("profiles.import.openHome")}</button>
+        )}
         <span className="grow" />
-        <button type="button" className="btn" onClick={onClose}>{t("profiles.import.cancel")}</button>
+        <button type="button" className="btn cancel" onClick={onClose}>{t("profiles.import.cancel")}</button>
         {source.phase !== "loading" && (
           <button type="button" className="btn cta" onClick={onRetry}>{t(source.phase === "closed" ? "profiles.import.check" : "profiles.retry")}</button>
         )}

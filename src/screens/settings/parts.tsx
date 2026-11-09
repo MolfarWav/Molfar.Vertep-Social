@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { useT, currentLang } from "@/i18n/index";
 import { PREVIEW, type ModelChoice } from "@/lib/api";
+import { canOpenHome, openHome } from "@/lib/shell-home";
 import { MODEL_IDS, type SettingsMock } from "@/mock/settings";
 import { Pick, Row, Switch } from "./controls";
 import { ModelPick } from "./model-pick";
@@ -138,6 +139,12 @@ export function AccessControl({ granted, onToggle }: { granted: boolean; onToggl
             <button type="button" className="btn rev" onClick={onToggle}>
               {t(on ? "settings.access.revoke" : "settings.access.grant")}
             </button>
+          </>
+        )}
+        {!PREVIEW && live !== null && canOpenHome() && (
+          <>
+            <span className="grow" />
+            <button type="button" className="btn" onClick={openHome}>{t("settings.access.openHome")}</button>
           </>
         )}
       </div>

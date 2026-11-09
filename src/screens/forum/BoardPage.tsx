@@ -3,7 +3,7 @@
 import { useT } from "@/i18n/index";
 import { hueOf } from "@/mock/forum";
 import { Ava, bgOf, initial, MY_BG } from "./Ava";
-import { BackIcon, LockIcon, PlusIcon } from "./Icons";
+import { BackIcon, LockIcon, PlusIcon, SearchIcon } from "./Icons";
 import { countLabel } from "./labels";
 import type { TopicRow, WriteNotice } from "./model";
 import { NoticeLine, WriteNowButton } from "./Strip";
@@ -26,8 +26,11 @@ export interface BoardPageProps {
   onCloseNotice: () => void;
   onWriteNow: () => void;
   onHome: () => void;
-  onTopic: (id: string) => void;
+  /** A topic was picked; `unread` says it has posts the user has not seen (the live forum opens such a topic on its last page). */
+  onTopic: (id: string, unread: boolean) => void;
   onNew: () => void;
+  /** Opens the forum search (real forum only). */
+  onSearch?: () => void;
   onRetry: () => void;
 }
 
@@ -52,6 +55,11 @@ export function BoardPage(p: BoardPageProps) {
   const tools = (
     <>
       <WriteNowButton busy={p.writing} onClick={p.onWriteNow} />
+      {p.onSearch && (
+        <button type="button" className="btn icon-btn" onClick={p.onSearch} aria-label={t("forum.search")} title={t("forum.search")}>
+          <SearchIcon size={18} />
+        </button>
+      )}
       <button type="button" className="btn cta" onClick={p.onNew}>
         <PlusIcon />
         {t("forum.newTopic")}
@@ -92,7 +100,7 @@ export function BoardPage(p: BoardPageProps) {
             <div className="pcat">
               {rows.map((r) => (
                 <div className="pcard" key={r.id}>
-                  <button type="button" className="linkbtn ft trow-name" onClick={() => p.onTopic(r.id)}>
+                  <button type="button" className="linkbtn ft trow-name" onClick={() => p.onTopic(r.id, r.unread)}>
                     <Name r={r} />
                   </button>
                   <div className="pcnt">
@@ -141,7 +149,7 @@ export function BoardPage(p: BoardPageProps) {
               {rows.map((r) => (
                 <div className="frow trow" key={r.id}>
                   <div style={{ minWidth: 0 }}>
-                    <button type="button" className="linkbtn ft trow-name" onClick={() => p.onTopic(r.id)}>
+                    <button type="button" className="linkbtn ft trow-name" onClick={() => p.onTopic(r.id, r.unread)}>
                       <Name r={r} />
                     </button>
                     <div className="fd">{t("forum.board.by", { who: r.who })}</div>
