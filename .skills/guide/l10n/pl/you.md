@@ -1,4 +1,4 @@
-<!-- source: 08891c3a7dcc -->
+<!-- source: cd4e3559d8ec -->
 # Social: Your profile
 
 Twój profil mówi postaciom, kim jesteś. Nie jest postacią: nie ma czatu, harmonogramu i nigdy nie pojawia się na liście kontaktów ani na forum. Otwórz go, klikając swoje imię w prawym górnym rogu (na telefonie: Settings, pierwszy wiersz).
@@ -14,4 +14,4 @@ Możesz mieć kilka person, na przykład jedną na każdy sposób, w jaki wolisz
 
 ## Dodawanie persony
 
-"Add" oferuje dwa sposoby. **Write a new one** otwiera pustą personę; przed zapisaniem potrzebuje imienia. **Import from Roleplay** wypisuje persony, które ma Roleplay; naciśnij "Add" obok jednej. Social kopiuje jej imię i opis jeden raz, bez modelu, a późniejsze zmiany w Roleplay za nim nie idą. Persona już wniesiona jest oznaczona "Already here". Odczyt Roleplay wymaga Twojej zgody, którą wydajesz raz na stronie głównej (zobacz [[settings]]); bez niej okno to mówi i wskazuje, gdzie ją dać.
+"Add" oferuje dwa sposoby. **Write a new one** otwiera pustą personę; przed zapisaniem potrzebuje imienia. **Import from Roleplay** wypisuje persony, które ma Roleplay; naciśnij "Add" obok jednej. Social kopiuje jej imię, opis i obrazek jeden raz (awatar persony, a jeśli go nie ma, portret, który ustawiłeś dla tego imienia w zakładce Soul w Roleplay), bez modelu, a późniejsze zmiany w Roleplay za nim nie idą. Persona już wniesiona jest oznaczona "Already here". Odczyt Roleplay wymaga Twojej zgody, którą wydajesz raz na stronie głównej (zobacz [[settings]]); bez niej okno to mówi i wskazuje, gdzie ją dać.

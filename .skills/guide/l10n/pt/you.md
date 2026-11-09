@@ -1,4 +1,4 @@
-<!-- source: 08891c3a7dcc -->
+<!-- source: cd4e3559d8ec -->
 # Social: Your profile
 
 Your profile diz quem você é para os personagens. Ele não é um personagem: não tem chat, nem agenda, e nunca aparece na lista de contatos ou no fórum. Abra-o com o seu nome no canto superior direito (em um celular: Settings, a primeira linha).
@@ -14,4 +14,4 @@ Você pode manter algumas personas, por exemplo uma para cada forma como gosta d
 
 ## Adicionar uma
 
-"Add" oferece duas formas. **Write a new one** abre uma persona em branco; ela precisa de um nome antes de poder ser salva. **Import from Roleplay** lista as personas que o Roleplay tem; pressione "Add" ao lado de uma delas. O Social copia o nome e a descrição dela uma única vez, sem modelo, e edições posteriores no Roleplay não são seguidas. Uma persona já trazida é marcada como "Already here". A leitura do Roleplay precisa da sua permissão, que você dá uma vez no Início (veja [[settings]]); sem ela, o diálogo avisa e diz onde permitir.
+"Add" oferece duas formas. **Write a new one** abre uma persona em branco; ela precisa de um nome antes de poder ser salva. **Import from Roleplay** lista as personas que o Roleplay tem; pressione "Add" ao lado de uma delas. O Social copia o nome, a descrição e a imagem dela uma única vez (o avatar da persona, senão o retrato que você definiu para esse nome na aba Soul do Roleplay), sem modelo, e edições posteriores no Roleplay não são seguidas. Uma persona já trazida é marcada como "Already here". A leitura do Roleplay precisa da sua permissão, que você dá uma vez no Início (veja [[settings]]); sem ela, o diálogo avisa e diz onde permitir.

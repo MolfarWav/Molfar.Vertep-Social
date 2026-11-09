@@ -1,4 +1,4 @@
-<!-- source: 08891c3a7dcc -->
+<!-- source: cd4e3559d8ec -->
 # Social: Your profile
 
 Your profile dice chi sei per i personaggi. Non è un personaggio: non ha chat, non ha un programma e non compare mai nell’elenco dei contatti o nel forum. Aprilo con il tuo nome in alto a destra (su un telefono: Settings, la prima riga).
@@ -14,4 +14,4 @@ Puoi tenere alcune persone, per esempio una per ogni modo in cui ti piace essere
 
 ## Aggiungerne una
 
-«Add» offre due modi. **Write a new one** apre una persona vuota; serve un nome prima di poterla salvare. **Import from Roleplay** elenca le persone che Roleplay contiene; premi «Add» accanto a una. Social copia il suo nome e la sua descrizione una sola volta, senza modello, e le modifiche successive in Roleplay non vengono riportate. Una persona già importata è contrassegnata «Already here». Leggere Roleplay richiede il tuo permesso, che dai una volta sola in Home (vedi [[settings]]); senza di esso la finestra lo dice e indica dove consentirlo.
+«Add» offre due modi. **Write a new one** apre una persona vuota; serve un nome prima di poterla salvare. **Import from Roleplay** elenca le persone che Roleplay contiene; premi «Add» accanto a una. Social copia il suo nome, la sua descrizione e la sua immagine una sola volta (l’avatar della persona, altrimenti il ritratto che hai impostato per quel nome nella scheda Soul di Roleplay), senza modello, e le modifiche successive in Roleplay non vengono riportate. Una persona già importata è contrassegnata «Already here». Leggere Roleplay richiede il tuo permesso, che dai una volta sola in Home (vedi [[settings]]); senza di esso la finestra lo dice e indica dove consentirlo.

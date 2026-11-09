@@ -1,4 +1,4 @@
-<!-- source: 9395092dd87a -->
+<!-- source: 6e5965d0bc48 -->
 # Social: Messenger
 
 Der Messenger ist ein Chat mit den Charakteren, die in Social leben. Sie sehen eine Kontaktliste, die Unterhaltung mit dem ausgewählten Kontakt und eine Karte mit seinen Details. Wer einen Charakter unter vier Augen ansprechen möchte, beginnt hier.
@@ -15,7 +15,13 @@ Wählen Sie einen Kontakt, um den Chat zu öffnen. Ihre Nachrichten und die der 
 
 Der Status verändert das Verhalten eines Charakters. Ein Charakter, der online ist, antwortet innerhalb von Sekunden. Ein Charakter, der away ist, antwortet in ein paar Minuten. Ein offline Charakter erhält die Nachricht und antwortet, sobald er zurück ist; der Chat sagt, dass die Nachricht dann beantwortet wird. Während eine Antwort unterwegs ist, sehen Sie „<name> is typing…“. Kommt keine Antwort, sagt der Chat, was schiefgelaufen ist, und bietet „Try again“ an. Ist für den Messenger kein Modell gewählt, sagt der Chat das und verweist auf die Einstellungen.
 
-Auf dem Desktop zeigt die Karte rechts den Zeitplan (wann der Charakter als Nächstes online ist) und wie schnell der Charakter antwortet. Ob ein Charakter von sich aus zuerst schreibt, wird noch nicht angezeigt. „Open profile“ führt zu seinem Profil. Auf dem Telefon nimmt ein Chat den ganzen Bildschirm ein; der Pfeil oben führt zurück zur Liste.
+### Emoji
+
+Die Smiley-Schaltfläche neben dem Nachrichtenfeld („Emoji“) öffnet eine Auswahl mit einem Suchfeld, den Gruppen (Smileys, Menschen, Tiere, Essen, Reisen, Aktivitäten, Objekte, Symbole, Flaggen) und den Emoji, die Sie zuletzt benutzt haben. Klicken Sie auf ein Emoji, um es an die Schreibmarke oder über den markierten Text zu setzen; die Auswahl schließt sich, und Sie schreiben weiter. Halten Sie beim Klicken Shift gedrückt, um die Auswahl offen zu lassen und mehrere hinzuzufügen. Tippen Sie in „Search emoji“, um ein Emoji nach seinem Namen auf Englisch oder Ukrainisch zu finden; Enter wählt den ersten Treffer. Die sechs Punkte unten („Skin tone“) ändern den Hautton der Emoji, die einen haben; die Wahl wird wie die zuletzt benutzten gespeichert. Auf dem Telefon öffnet sich die Auswahl unter dem Nachrichtenfeld statt darüber und bleibt offen, bis Sie das Kreuz oder die Smiley-Schaltfläche erneut drücken. Mit den Pfeiltasten bewegen Sie sich zwischen den Emoji, Escape schließt die Auswahl.
+
+Social hat eine eigene Emoji-Schrift, daher sehen Emoji unter Windows, Android und Linux gleich aus; Safari zeichnet sie selbst. Auch Charaktere schreiben Emoji: wie oft, legt jedes Profil fest, siehe „Writing manner“ in [[profiles]].
+
+Auf dem Desktop zeigt die Karte rechts den Zeitplan (wann der Charakter als Nächstes online ist) und wie schnell der Charakter antwortet. Ein Charakter kann auch von sich aus zuerst schreiben: Ein Charakter, der online ist und etwas aus seinen eigenen Tagen oder aus der äußeren Welt hat, eröffnet damit den Chat (siehe [[life]]), innerhalb des Tageslimits in den Einstellungen. Diese Nachricht bleibt ungelesen, bis Sie den Chat öffnen. Ob ein Charakter zuerst schreibt, wird auf der Karte nicht angezeigt. „Open profile“ führt zu seinem Profil. Auf dem Telefon nimmt ein Chat den ganzen Bildschirm ein; der Pfeil oben führt zurück zur Liste.
 
 ## Wenn die Liste leer ist
 
