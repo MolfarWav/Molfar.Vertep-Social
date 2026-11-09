@@ -5,6 +5,26 @@ export type Writers = "profile" | "equal";
 export type ChatHours = "same" | "own";
 export type ModelId = "default" | "fast" | "large" | "local";
 
+/** Categories of the world feed (plugins/life); the labels are in the Settings strings. */
+export const LIFE_CATS = ["news", "politics", "games", "film", "anime", "science", "culture", "weather", "reddit"] as const;
+export type LifeCat = (typeof LIFE_CATS)[number];
+
+/** Life (issue #311): characters keep a diary, and may follow the outside world through one shared daily feed. */
+export interface LifeSettings {
+  on: boolean;
+  world: boolean;
+  cats: Record<LifeCat, boolean>;
+  /** The place the user typed for the weather ("" = no weather). */
+  place: string;
+}
+
+export const LIFE_DEFAULTS: LifeSettings = {
+  on: true,
+  world: true,
+  cats: { news: true, politics: true, games: true, film: true, anime: true, science: true, culture: true, weather: true, reddit: true },
+  place: "",
+};
+
 export interface SettingsMock {
   autonomous: boolean;
   activity: Activity;
@@ -21,6 +41,7 @@ export interface SettingsMock {
   models: { messenger: string; forum: string; import: string };
   notify: { tab: boolean; system: boolean; sound: boolean };
   roleplayAccess: boolean;
+  life: LifeSettings;
   /** Forum model requests already made today (a count from the server in the real app). */
   usedToday: number;
 }
@@ -40,6 +61,7 @@ export const SETTINGS_MOCK: SettingsMock = {
   models: { messenger: "default", forum: "default", import: "default" },
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: true,
+  life: { ...LIFE_DEFAULTS, place: "Kyiv, Ukraine" },
   usedToday: 12,
 };
 

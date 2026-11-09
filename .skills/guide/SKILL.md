@@ -13,6 +13,7 @@ Answer from these pages, not from the code. Read the page that fits:
 - `forum`: boards, topics, the autonomy strip
 - `profiles`: import from Roleplay, new profiles, the editor, Fill empty
 - `you`: your own personas, the one characters are told about
-- `settings`: limits, quiet hours, models, notifications, Roleplay access
+- `life`: the characters' diaries, first messages, topics from the outside world
+- `settings`: limits, quiet hours, life, models, notifications, Roleplay access
 
 Only when the guide does not cover it, read the code, and say "the guide does not cover this; from the code: ...".

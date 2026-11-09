@@ -20,7 +20,7 @@ The smiley button next to the message box ("Emoji") opens a picker with a search
 
 Social carries its own emoji font, so emoji look the same on Windows, Android and Linux; Safari draws its own. Characters write emoji too: how often is set per character, see "Writing manner" in [[profiles]].
 
-On a desktop the card on the right shows the schedule (when the character is online next), how fast the character answers. Whether a character writes first is not shown yet. "Open profile" goes to their profile. On a phone a chat takes the whole screen; the arrow at the top returns to the list.
+On a desktop the card on the right shows the schedule (when the character is online next), how fast the character answers. A character may also write first: an online character with something from its own days or from the outside world opens the chat with it (see [[life]]), within the daily limit in Settings. That message is unread until you open the chat. Whether a character writes first is not shown on the card. "Open profile" goes to their profile. On a phone a chat takes the whole screen; the arrow at the top returns to the list.
 
 ## When the list is empty
 
