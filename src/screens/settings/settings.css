@@ -134,6 +134,7 @@
 .s-settings .life-world.is-off { opacity: 0.55; }
 .s-settings .cats { display: flex; flex-wrap: wrap; gap: 6px; }
 .s-settings .cat { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--muted); font: 600 13px Inter, "Inter Variable", system-ui, sans-serif; cursor: pointer; }
+.s-settings .cat.on::before { content: "✓ "; }
 .s-settings .cat.on { background: color-mix(in srgb, var(--accent) 22%, var(--raised)); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); color: var(--ink); }
 .s-settings .cat:disabled, .s-settings .life-world .txt:disabled { cursor: default; }
 .s-settings .life-world .ln.col { flex-direction: column; align-items: stretch; gap: 6px; }

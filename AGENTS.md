@@ -19,7 +19,7 @@ the app changes shape. Plan and decisions: Molfar.Vertep issue #309.
 - `src/components/`: `Flower` (status flower + `Envelope`), `Avatar`, `Logo`. Shared, small.
 - `src/styles/`: `tokens.css` (themes Vertep, Dark, Light; names are the ones the design boards use),
   `base.css` (root, `.av`, `.btn`, `.ib`), `shell.css`.
-- `plugins/<profiles|messenger|forum>/`: backend plugins (QuickJS sandbox: no Unicode property escapes in regexes, see `docs/DECISIONS.md`).
+- `plugins/<profiles|messenger|forum|life>/`: backend plugins (QuickJS sandbox: no Unicode property escapes in regexes, see `docs/DECISIONS.md`).
 - `scripts/shot.cjs`: browser-check screenshots (see its header).
 
 ## The look (approved, do not drift)
@@ -48,6 +48,9 @@ prompt from the profile (`picture.ts`) and calls the engine's `POST /v1/images` 
 
 ## The forum
 `plugins/forum/plugin.js` holds the data (`forum/` in the app data folder), the routes and the autonomy tick; its header says how. The screens are `src/screens/forum/`: `live.tsx` (real) and `preview.tsx` (mock) share `Home`, `BoardPage`, `TopicView`, `NewTopic`, `Strip`, `PostCard`; `model.ts` turns the engine's answers into what they draw (tested in `test/forum-real.test.ts`). Pages of a long topic (`PAGE_SIZE`) and search are plugin routes (`/forum/topic?page=`, `/forum/search`), drawn by `Pager.tsx` and `SearchPage.tsx`; the screen's route is kept in the browser history (`src/lib/route-history.ts`) so Back works. Moderation (the user removes a post or a topic) keeps a placeholder: everything that reads posts goes through `livePosts` (see `docs/DECISIONS.md`, "Moderation"). Tests: `test/forum-plugin.test.ts` (a simulated day with a restart, bump order, flags, the two-pass flow, pages, search, moderation).
+
+## Life (#311)
+`plugins/life/plugin.js` keeps each character's diary (`life/diary/<id>.json`, one model call per profile per local day) and one shared world feed (`life/world.json`, fetched once a day from a fixed host list: the manifest's `networkHosts`, pinned to `SOURCES` by a test; this is the only plugin with `network`). The messenger and the forum only read them through a reader copied into both plugins (`lifeAllowed`, `recentDays`, `lifeSubject`; `test/life-surfaces.test.ts` keeps the copies identical) and remember what they told in their own files, never in `life/`. Text from outside is quoted as data (`<outside>`), capped, without angle brackets. The messenger's first messages (`planFirst`) never fire without a subject. UI: Settings > Life (`src/screens/settings/life.tsx`) and the profile's Life tab (`src/screens/profiles/tabs/LifeTab.tsx`; diary changes save at once, the two switches with the Save bar). Details and what was not checked: `docs/DECISIONS.md`, "Life".
 
 ## Decisions
 See `docs/DECISIONS.md` for what the owner decided and where to continue.

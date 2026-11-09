@@ -349,3 +349,14 @@ test("a diary of a deleted profile is swept", () => {
   expect(h.files.has("life/diary/gone.json")).toBe(false);
   expect(h.files.has("life/diary/a.json")).toBe(true);
 });
+
+test("an entry or a feed item without a string id is dropped, and an entry has no item unless it names one", () => {
+  const h = makeHost();
+  put(h, "life/diary/a.json", { entries: [{ at: 1, text: "No id." }, { id: "e1", at: 2, text: "Has id." }, { id: "e2", at: 3, text: "With item.", item: "w1" }] });
+  const d = life.readDiary(h.host.fs, "a");
+  expect(d.entries.map((e: any) => e.id)).toEqual(["e1", "e2"]);
+  expect(d.entries[0].item).toBeUndefined();
+  expect(d.entries[1].item).toBe("w1");
+  put(h, "life/world.json", { items: [{ cat: "news", title: "No id" }, { id: "w1", cat: "news", title: "Has id" }] });
+  expect(life.readWorld(h.host.fs).items.map((i: any) => i.id)).toEqual(["w1"]);
+});

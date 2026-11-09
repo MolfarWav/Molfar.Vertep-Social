@@ -73,7 +73,7 @@ export function LifeWorld({ s, set }: { s: SettingsMock; set: Patch }) {
   };
 
   const failed = status ? Object.keys(status.errors).length : 0;
-  const when = status && status.fetchedAt ? new Date(status.fetchedAt).toLocaleString(currentLang()) : "";
+  const when = status && status.fetchedAt ? new Date(status.fetchedAt).toLocaleString(currentLang(), { dateStyle: "medium", timeStyle: "short" }) : "";
   return (
     <div className={`life-world${off ? " is-off" : ""}`} aria-disabled={off || undefined}>
       <div className="blk">

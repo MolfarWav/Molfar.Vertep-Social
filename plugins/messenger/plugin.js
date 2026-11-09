@@ -164,7 +164,7 @@ export function lifeAllowed(fsx, p) {
 function lifeEntries(fsx, id) {
   const d = readJson(fsx, "life/diary/" + id + ".json", null);
   const list = isObj(d) && Array.isArray(d.entries) ? d.entries : [];
-  return list.filter((e) => isObj(e) && ID.test(String(e.id)) && typeof e.text === "string" && str(e.text) && Number.isFinite(e.at));
+  return list.filter((e) => isObj(e) && typeof e.id === "string" && ID.test(e.id) && typeof e.text === "string" && str(e.text) && Number.isFinite(e.at));
 }
 
 /** The "recent days" block of a prompt: the last diary entries as true facts, or "". */
@@ -182,7 +182,7 @@ const lifeWords = (s) => String(s).toLowerCase().split(/[\s.,!?;:'"«»“”()[
 /** A world item for a profile: interest matches first, otherwise a random one half of the time. `skip` holds ids already told. */
 function lifeWorldItem(fsx, p, a, skip, rand) {
   const w = readJson(fsx, "life/world.json", null);
-  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && ID.test(String(i.id)) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id));
+  const items = (isObj(w) && Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && str(i.title) && a.cats[i.cat] !== false && !skip.has(i.id));
   if (!items.length) return null;
   const mine = new Set((Array.isArray(p.interests) ? p.interests : []).filter((x) => typeof x === "string").flatMap(lifeWords));
   const hits = mine.size ? items.filter((i) => lifeWords(str(i.title) + " " + str(i.text)).some((x) => mine.has(x))) : [];

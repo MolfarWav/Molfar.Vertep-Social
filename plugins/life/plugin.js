@@ -163,7 +163,7 @@ function profileIds(fsx) {
 // ---------- the diary ----------
 
 function cleanEntry(e) {
-  if (!isObj(e) || !ID.test(String(e.id))) return null;
+  if (!isObj(e) || !(typeof e.id === "string" && ID.test(e.id))) return null;
   const text = cut(str(e.text), ENTRY_MAX);
   if (!text || !Number.isFinite(e.at)) return null;
   return {
@@ -173,7 +173,7 @@ function cleanEntry(e) {
     text,
     kind: str(e.kind).slice(0, 20),
     by: e.by === "you" ? "you" : "model",
-    ...(ID.test(String(e.item)) ? { item: String(e.item) } : {}),
+    ...(typeof e.item === "string" && ID.test(e.item) ? { item: e.item } : {}),
   };
 }
 
@@ -253,7 +253,7 @@ export function readWorld(fsx) {
     fetchedAt: num(w.fetchedAt),
     cats: (Array.isArray(w.cats) ? w.cats : []).filter((c) => CATS.includes(c)),
     place: str(w.place),
-    items: (Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && ID.test(String(i.id)) && CATS.includes(i.cat) && str(i.title)).map((i) => ({ id: String(i.id), cat: i.cat, src: str(i.src), title: str(i.title), text: str(i.text) })),
+    items: (Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && CATS.includes(i.cat) && str(i.title)).map((i) => ({ id: String(i.id), cat: i.cat, src: str(i.src), title: str(i.title), text: str(i.text) })),
     errors: isObj(w.errors) ? w.errors : {},
     failedAt: num(w.failedAt),
   };

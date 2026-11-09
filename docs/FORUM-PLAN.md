@@ -78,5 +78,5 @@ one topic page) and a "not built yet" page in the installed app (`src/shell/foru
 3. Engine: app notifications (tab count + bottom-right popup, per-app switch, 14 locales). Owner's permission given 2026-11-08.
 4. First messages from characters with a daily limit and quiet hours (messenger), topic source shared with the forum.
 5. Shell theme (an app cannot read the shell's colour scheme yet), "My status" in the contact list footer is fixed, guide translations (`l10n/`).
-6. Life diary and world feed (#311), close topics (#312).
+6. Life diary and world feed (#311, built: see `docs/DECISIONS.md`), close topics (#312, built).
 7. Emoji picker in the messenger and the forum composer, characters' emoji, extra packs (#316; owner: very important, do it right after the forum composer exists, or earlier in the messenger).
