@@ -173,6 +173,41 @@ test("a failed reply keeps the message and the reason; retry asks again; a tick 
   expect(route(h.host, "POST", "/messenger/retry", { id: "nobody" }).status).toBe(404);
 });
 
+test("a tick does not ask for a second reply while the send route is still waiting for the model (#343)", () => {
+  const h = makeHost();
+  seed(h, "mavka", "online");
+  const pending = route(h.host, "POST", "/messenger/send", { id: "mavka", text: "Привіт!" });
+  expect(pending.__llmPending).toBe(true);
+  expect(h.requests).toHaveLength(1);
+  // the one-minute tick fires while the model is still thinking
+  expect(plugin.dueChats(h.host.fs, Date.now())).toHaveLength(0);
+  plugin.onTick({}, h.host);
+  expect(h.requests.filter((r) => r.key.startsWith("rep:"))).toHaveLength(0);
+  // a call that never came back is asked again after a while
+  expect(plugin.dueChats(h.host.fs, Date.now() + 6 * 60 * 1000)).toHaveLength(1);
+  // the answer arrives: one reply, and the chat is free again
+  const second = makeHost({ reply: { text: "Привіт." } });
+  for (const k of ["read", "write", "list"]) (second.host.fs as any)[k] = (h.host.fs as any)[k];
+  const done = route(second.host, "POST", "/messenger/send", { id: "mavka", text: "Привіт!" }, { stash: pending.stash }).json;
+  expect(done.chat.messages.map((m: any) => m.who)).toEqual(["me", "them"]);
+  expect(done.chat.pending).toBeNull();
+});
+
+test("a second answer to a message that was already answered is dropped (#343)", () => {
+  const h = makeHost();
+  seed(h, "mavka", "online");
+  const pending = route(h.host, "POST", "/messenger/send", { id: "mavka", text: "Привіт!" });
+  const answer = (text: string) => {
+    const x = makeHost({ reply: { text } });
+    for (const k of ["read", "write", "list"]) (x.host.fs as any)[k] = (h.host.fs as any)[k];
+    return route(x.host, "POST", "/messenger/send", { id: "mavka", text: "Привіт!" }, { stash: pending.stash }).json;
+  };
+  answer("Перша відповідь.");
+  const again = answer("Друга відповідь.");
+  expect(again.ok).toBe(true);
+  expect(again.chat.messages.map((m: any) => [m.who, m.text])).toEqual([["me", "Привіт!"], ["them", "Перша відповідь."]]);
+});
+
 test("input checks: unknown profile, empty text, ids that are not ids, foreign paths", () => {
   const h = makeHost();
   seed(h, "mavka", "online");

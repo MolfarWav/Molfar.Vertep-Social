@@ -15,8 +15,28 @@
   grid-auto-rows: max-content;
 }
 .s-settings .sec { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
-.s-settings .sec.tall { grid-row: span 2; }
-.s-settings .sh { display: flex; align-items: center; gap: 10px; height: 46px; margin: 0; padding: 0 14px; font-weight: 600; font-size: 15px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.s-settings .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.s-settings .sh { display: flex; align-items: center; gap: 10px; height: 46px; margin: 0; padding: 0 14px; font-weight: 600; font-size: 15px; color: var(--tt, var(--ink)); background: color-mix(in srgb, var(--tn, var(--accent)) 14%, var(--panel)); border-bottom: 1px solid color-mix(in srgb, var(--tn, var(--accent)) 38%, var(--line)); }
+.s-settings .sh .bi, .s-settings .gl .bi { flex: none; }
+
+/* One hue per block, like the tinted title bars of Roleplay's settings: --tn is the hue, --tt the text colour on the tint
+ * (light shades on the dark themes, dark shades on Light). The title and the icon always name the block, the colour only helps. */
+.s-settings [data-tone="cyan"] { --tn: #06b6d4; --tt: #67e8f9; }
+.s-settings [data-tone="rose"] { --tn: #f43f5e; --tt: #fda4af; }
+.s-settings [data-tone="emerald"] { --tn: #10b981; --tt: #6ee7b7; }
+.s-settings [data-tone="amber"] { --tn: #f59e0b; --tt: #fcd34d; }
+.s-settings [data-tone="violet"] { --tn: #8b5cf6; --tt: #c4b5fd; }
+.s-settings [data-tone="teal"] { --tn: #14b8a6; --tt: #5eead4; }
+.s-settings [data-tone="sky"] { --tn: #0ea5e9; --tt: #7dd3fc; }
+.s-settings [data-tone="orange"] { --tn: #f97316; --tt: #fdba74; }
+[data-theme="light"] .s-settings [data-tone="cyan"] { --tt: #0e7490; }
+[data-theme="light"] .s-settings [data-tone="rose"] { --tt: #be123c; }
+[data-theme="light"] .s-settings [data-tone="emerald"] { --tt: #047857; }
+[data-theme="light"] .s-settings [data-tone="amber"] { --tt: #b45309; }
+[data-theme="light"] .s-settings [data-tone="violet"] { --tt: #6d28d9; }
+[data-theme="light"] .s-settings [data-tone="teal"] { --tt: #0f766e; }
+[data-theme="light"] .s-settings [data-tone="sky"] { --tt: #0369a1; }
+[data-theme="light"] .s-settings [data-tone="orange"] { --tt: #c2410c; }
 .s-settings .sb { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
 .s-settings .ln { display: flex; align-items: center; gap: 12px; min-height: 40px; }
 .s-settings .ln .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -99,7 +119,9 @@
 .s-settings.is-phone .hd-back { width: 44px; height: 44px; border-radius: 8px; border: 0; background: transparent; color: var(--ink); display: flex; align-items: center; justify-content: center; flex: none; padding: 0; }
 .s-settings.is-phone .hd-title { flex: 1; margin: 0; font: 400 20px/1.2 Kurale, Georgia, serif; }
 .s-settings.is-phone .pg { flex: 1; min-height: 0; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
-.s-settings.is-phone .gl { margin: 0; padding: 4px 4px 0; font-weight: 700; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+/* the group heading is the tinted title bar of the section under it (the 12 px gap of the page is taken back) */
+.s-settings.is-phone .gl { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0 0 -12px; padding: 0 12px; font-weight: 600; font-size: 15px; color: var(--tt, var(--ink)); background: color-mix(in srgb, var(--tn, var(--accent)) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--tn, var(--accent)) 38%, var(--line)); border-bottom: 0; border-radius: 10px 10px 0 0; }
+.s-settings.is-phone .gl + .sec { border-top-left-radius: 0; border-top-right-radius: 0; }
 .s-settings.is-phone .sec { overflow: visible; min-width: 0; border-radius: 10px; }
 .s-settings.is-phone .sum-line { padding: 0 4px; }
 .s-settings.is-phone .ln { min-height: 52px; padding: 6px 12px; border-top: 1px solid var(--line); gap: 12px; }
@@ -136,6 +158,7 @@
 /* life: switches, categories of the world feed, the weather place, the feed status */
 .s-settings .life-world { display: flex; flex-direction: column; gap: 12px; }
 .s-settings .life-world.is-off { opacity: 0.55; }
+.s-settings .pictures-more { display: flex; flex-direction: column; gap: 12px; }
 .s-settings .pictures-more.is-off { opacity: 0.55; }
 .s-settings .cats { display: flex; flex-wrap: wrap; gap: 6px; }
 .s-settings .cat { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--muted); font: 600 13px Inter, "Inter Variable", system-ui, sans-serif; cursor: pointer; }

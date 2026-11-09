@@ -142,7 +142,7 @@ function readChat(fsx, id) {
   const messages = (Array.isArray(c.messages) ? c.messages : [])
     .filter((m) => isObj(m) && (m.who === SELF || m.who === "them") && typeof m.text === "string" && Number.isFinite(m.at))
     .map((m) => ({ id: String(m.id), who: m.who, at: m.at, text: m.text, ...(m.first === true ? { first: true } : {}), ...(cleanImage(m.image) ? { image: cleanImage(m.image) } : {}) }));
-  const pending = isObj(c.pending) && Number.isFinite(c.pending.at) ? { at: c.pending.at, dueAt: Number.isFinite(c.pending.dueAt) ? c.pending.dueAt : null } : null;
+  const pending = isObj(c.pending) && Number.isFinite(c.pending.at) ? { at: c.pending.at, dueAt: Number.isFinite(c.pending.dueAt) ? c.pending.dueAt : null, ...(Number.isFinite(c.pending.asking) ? { asking: c.pending.asking } : {}) } : null;
   const failed = isObj(c.failed) ? { error: str(c.failed.error), ...(c.failed.code === "no-model" ? { code: "no-model" } : {}) } : null;
   const shared = (Array.isArray(c.shared) ? c.shared : []).filter((x) => typeof x === "string" && ID.test(x)).slice(-60);
   const breaks = (Array.isArray(c.breaks) ? c.breaks : []).filter((x) => Number.isFinite(x)).slice(-BREAKS_KEEP);
@@ -511,8 +511,19 @@ const messengerModel = (fsx, profile) => {
   return modelRef(isObj(s) && isObj(s.models) ? s.models.messenger : "");
 };
 
+/** How long a reply that was asked for counts as "being written". Past this a lost call is asked again. */
+const ASKING_MS = 5 * 60 * 1000;
+
+/** Is a model call for this chat's reply in flight (asked for, not filed or failed yet)? The tick must not ask a second time. */
+export const isAsking = (chat, now) => !!chat.pending && Number.isFinite(chat.pending.asking) && now - chat.pending.asking < ASKING_MS;
+
 /** Asks the model for the reply to the chat's last user message. */
 function requestReply(host, key, profile, chat) {
+  // marked on disk before the call: a route waits for the model while the one-minute tick keeps running, and the tick would ask again
+  if (chat.pending) {
+    chat.pending.asking = Date.now();
+    writeChat(host.fs, chat);
+  }
   const model = messengerModel(host.fs, profile);
   const length = isObj(profile.voice) && [0, 1, 2].includes(profile.voice.length) ? profile.voice.length : 1;
   const ctx = contextOf(host.fs, chat);
@@ -544,7 +555,11 @@ function fileReply(chat, profile, result, now, fsx) {
   const taken = r.error ? { text: "", prompt: "" } : takeImageMarker(r.text);
   const text = r.error ? "" : cleanReply(taken.text, profile.name);
   const draw = fsx && taken.prompt && mayImage(fsx, chat, now) ? { state: "pending", prompt: taken.prompt, gen: true } : null;
+  const last = chat.messages[chat.messages.length - 1];
+  // the user's message was answered while this call was in flight (another call filed a reply and cleared `pending`): drop this one
+  if (!chat.pending && last && last.who === "them") return null;
   if (!text && !draw) {
+    if (chat.pending) delete chat.pending.asking;
     chat.failed = failure(r.error || "the model returned nothing");
     return chat.failed;
   }
@@ -766,7 +781,7 @@ export function dueChats(fsx, now) {
   const out = [];
   for (const id of allProfileIds(fsx)) {
     const chat = readChat(fsx, id);
-    if (!chat.pending) continue;
+    if (!chat.pending || isAsking(chat, now)) continue;
     const p = readProfile(fsx, id);
     if (!p) continue;
     const status = statusAt(p.schedule, new Date(now), tz);

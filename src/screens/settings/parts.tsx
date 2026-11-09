@@ -7,20 +7,32 @@ import { Pick, Row, Segmented, Switch, type Opt } from "./controls";
 import { ModelPick } from "./model-pick";
 import { modelOptions } from "./real";
 import { roleplayState } from "@/screens/profiles/import-api";
+import { BlockIcon, LOOK, type Glyph } from "./tone";
 import { reqForm, requestsPerDay, type SettingsError } from "./state";
 
 export type Patch = (p: Partial<SettingsMock>) => void;
 
-/** Desktop card: a title bar over a body. The title is the card's accessible name. */
-export function Card({ title, className = "", children }: { title: string; className?: string; children: ReactNode }) {
+/** Desktop card: a title bar (tinted in the block's tone, with its icon) over a body. The title is the card's accessible name. */
+export function Card({ title, glyph, children }: { title: string; glyph: Glyph; children: ReactNode }) {
   const id = useId();
   return (
-    <section className={`sec ${className}`.trim()} aria-labelledby={id}>
+    <section className="sec" data-tone={LOOK[glyph]} aria-labelledby={id}>
       <h2 className="sh" id={id}>
-        {title}
+        <BlockIcon glyph={glyph} />
+        <span>{title}</span>
       </h2>
       <div className="sb">{children}</div>
     </section>
+  );
+}
+
+/** Phone group heading: the same tinted bar as a desktop card's title, sitting on top of the section that follows. */
+export function GroupHead({ title, glyph }: { title: string; glyph: Glyph }) {
+  return (
+    <h2 className="gl" data-tone={LOOK[glyph]}>
+      <BlockIcon glyph={glyph} />
+      <span>{title}</span>
+    </h2>
   );
 }
 
