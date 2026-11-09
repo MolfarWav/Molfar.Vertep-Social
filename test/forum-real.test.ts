@@ -2,14 +2,17 @@ import { expect, test } from "bun:test";
 import {
   categoriesFromEngine,
   defaultBoards,
+  highlightParts,
   noticeFromForce,
   onlineNames,
   postsFromEngine,
   rowsFromEngine,
+  searchRowsFromEngine,
   stripFromEngine,
   whenLabel,
   whenShort,
   type EngineBoardPage,
+  type EngineSearch,
   type EngineHome,
   type EngineTopicPage,
 } from "../src/screens/forum/model";
@@ -128,4 +131,45 @@ test("default boards are neutral: sections and boards with names and description
   expect(boards).toHaveLength(2);
   expect(boards.flatMap((c) => c.boards)).toHaveLength(5);
   expect(boards[0].name).toBe("forum.defaults.general"); // the key itself here: the real strings are checked by skeleton.test.ts
+});
+
+test("the posts of a later page are numbered from their place in the topic", () => {
+  const page: EngineTopicPage = {
+    topic: { id: "t", title: "T", board: { id: "b", name: "B", category: "C" }, createdAt: 1, lastAt: 2, locked: false, unread: false, posts: [{ id: "p26", by: "me", name: "", hue: 1, at: 1, text: "x" }, { id: "p27", by: "me", name: "", hue: 1, at: 2, text: "y" }] },
+    paging: { page: 2, pages: 2, size: 25, total: 27, from: 25 },
+    authors: {},
+  };
+  const shown = postsFromEngine(page, 2, "en", t);
+  expect(shown.map((p) => p.n)).toEqual([26, 27]);
+  expect(shown.map((p) => p.subject)).toEqual(["Re: T", "Re: T"]); // only the very first post carries the title
+  const first = postsFromEngine({ ...page, paging: { page: 1, pages: 2, size: 25, total: 27, from: 0 } }, 2, "en", t);
+  expect(first.map((p) => p.subject)).toEqual(["T", "Re: T"]);
+  // an engine that does not page counts from 1
+  expect(postsFromEngine({ ...page, paging: undefined }, 2, "en", t).map((p) => p.n)).toEqual([1, 2]);
+});
+
+test("search rows name the place, the author and the post; the user's own hit reads as 'Me'", () => {
+  const s: EngineSearch = {
+    q: "well",
+    words: ["well"],
+    tooShort: false,
+    truncated: false,
+    topics: [
+      { id: "a", title: "A", board: { id: "b1", name: "Guest" }, category: "General", by: "m1", name: "Мавка", hue: 150, at: 5, n: 34, page: 2, matches: 3, titleHit: false, snippet: "the well", lastAt: 9 },
+      { id: "b", title: "B", board: { id: "b2", name: "" }, category: "", by: "me", name: "", hue: 1, at: 6, n: 1, page: 1, matches: 0, titleHit: true, snippet: "x", lastAt: 9 },
+    ],
+  };
+  const rows = searchRowsFromEngine(s, 10, "en", t);
+  expect(rows[0]).toMatchObject({ id: "a", where: "General › Guest", who: "Мавка", me: false, n: 34, page: 2, matches: 3 });
+  expect(rows[1]).toMatchObject({ where: "", who: "Me", me: true, titleHit: true });
+});
+
+test("the searched words are marked in any case, and are never read as a pattern", () => {
+  const marks = (text: string, words: string[]) => highlightParts(text, words).map((p) => (p.hit ? `[${p.text}]` : p.text)).join("");
+  expect(marks("The old WELL behind the well-house", ["well"])).toBe("The old [WELL] behind the [well]-house");
+  expect(marks("Ліс ШУМИТЬ", ["шумить", "ліс"])).toBe("[Ліс] [ШУМИТЬ]");
+  expect(marks("a.b (c) [d]", ["(c)", ".", "[d]"])).toBe("a[.]b [(c)] [[d]]");
+  expect(marks("plain", [])).toBe("plain");
+  expect(marks("", ["x"])).toBe("");
+  expect(marks("longer words win: wellness", ["well", "wellness"])).toBe("longer words win: [wellness]");
 });

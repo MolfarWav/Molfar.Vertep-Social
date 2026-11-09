@@ -35,6 +35,8 @@ export interface HomeProps {
   onDefaults: () => void;
   /** Adds a board; resolves to an error text, or null when it worked. */
   onAddBoard: (category: string, name: string, desc: string) => Promise<string | null>;
+  /** Opens the search page with the words typed in the field (real forum only; the preview's search is mock). */
+  onSearch?: (q: string) => void;
 }
 
 export function Home(p: HomeProps) {
@@ -60,9 +62,9 @@ export function Home(p: HomeProps) {
   if (p.phone) {
     return (
       <div className="s-forum is-phone">
-        {!p.live && (
+        {(!p.live || p.onSearch) && (
           <BarActions>
-            <button type="button" className="ib" style={{ width: 44, height: 44 }} aria-label={t("forum.search")}>
+            <button type="button" className="ib" style={{ width: 44, height: 44 }} aria-label={t("forum.search")} onClick={() => p.onSearch?.("")}>
               <SearchIcon size={20} />
             </button>
           </BarActions>
@@ -91,6 +93,7 @@ export function Home(p: HomeProps) {
               <div className="mut">{t("forum.intro")}</div>
             </div>
             {!p.live && <input className="search" aria-label={t("forum.search")} placeholder={t("forum.search.placeholder")} />}
+            {p.live && p.onSearch && <HomeSearch onSearch={p.onSearch} />}
             {newTopic}
           </div>
           {strip}
@@ -221,5 +224,26 @@ function Empty({ live, onDefaults, onAdd }: { live: boolean; onDefaults: () => v
         </div>
       )}
     </div>
+  );
+}
+
+/** The banner's search field: Enter (or the icon) opens the search page with the words. */
+function HomeSearch({ onSearch }: { onSearch: (q: string) => void }) {
+  const t = useT();
+  const [q, setQ] = useState("");
+  return (
+    <form
+      className="home-search"
+      role="search"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSearch(q.trim());
+      }}
+    >
+      <input className="search" type="search" enterKeyHint="search" maxLength={80} aria-label={t("forum.search")} placeholder={t("forum.search.placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
+      <button type="submit" className="ib" aria-label={t("forum.search.go")} title={t("forum.search.go")}>
+        <SearchIcon size={20} />
+      </button>
+    </form>
   );
 }

@@ -174,7 +174,41 @@ export interface EngineTopicPage {
     unread: boolean;
     posts: EnginePost[];
   };
+  /** Which page of the topic this is; absent from an engine that does not page. */
+  paging?: EnginePaging;
   authors: Record<string, EngineAuthor>;
+}
+/** One page of a topic: `from` is the index (0-based) of its first post in the whole topic. */
+export interface EnginePaging {
+  page: number;
+  pages: number;
+  size: number;
+  total: number;
+  from: number;
+}
+/** One topic that matched a search: the first matching post, a snippet around the match and the page that post is on. */
+export interface EngineSearchHit {
+  id: string;
+  title: string;
+  board: { id: string; name: string };
+  category: string;
+  by: string;
+  name: string;
+  hue: number;
+  at: number;
+  n: number;
+  page: number;
+  matches: number;
+  titleHit: boolean;
+  snippet: string;
+  lastAt: number;
+}
+export interface EngineSearch {
+  q: string;
+  words: string[];
+  topics: EngineSearchHit[];
+  tooShort: boolean;
+  truncated: boolean;
 }
 /** The answer of POST /forum/force. */
 export interface ForceAnswer {
@@ -286,12 +320,13 @@ export function rowsFromEngine(page: EngineBoardPage, now: number, lang: string,
 
 export function postsFromEngine(page: EngineTopicPage, now: number, lang: string, t: Translate): ShownPost[] {
   const title = page.topic.title;
+  const from = page.paging?.from ?? 0;
   return page.topic.posts.map((p, i) => {
     const a = page.authors[p.by];
     const me = p.by === "me";
     return {
       id: p.id,
-      n: i + 1,
+      n: from + i + 1,
       who: me ? t("shell.me") : (a?.name ?? p.name),
       me,
       hue: me ? undefined : (a?.hue ?? p.hue),
@@ -299,7 +334,7 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
       role: me ? t("forum.role.owner") : (a?.rank ?? ""),
       count: a?.count ?? 0,
       joined: a ? joinedLabel(a.joined) : "",
-      subject: i === 0 ? title : `Re: ${title}`,
+      subject: from + i === 0 ? title : `Re: ${title}`,
       clock: clock(p.at),
       when: whenLabel(p.at, now, lang, t).replace(/^./, (c) => c.toUpperCase()),
       text: p.text,
@@ -308,6 +343,61 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
       online: a?.online ?? false,
     };
   });
+}
+
+/** One line of the search results. */
+export interface SearchRow {
+  id: string;
+  title: string;
+  where: string;
+  who: string;
+  hue?: number;
+  me: boolean;
+  when: string;
+  /** The number of the first matching post, and the page it is on. */
+  n: number;
+  page: number;
+  matches: number;
+  titleHit: boolean;
+  snippet: string;
+}
+
+export function searchRowsFromEngine(s: EngineSearch, now: number, lang: string, t: Translate): SearchRow[] {
+  return s.topics.map((h) => {
+    const me = h.by === "me";
+    return {
+      id: h.id,
+      title: h.title,
+      where: [h.category, h.board.name].filter(Boolean).join(" › "),
+      who: me ? t("shell.me") : h.name,
+      hue: me ? undefined : h.hue,
+      me,
+      when: whenLabel(h.at, now, lang, t),
+      n: h.n,
+      page: h.page,
+      matches: h.matches,
+      titleHit: h.titleHit,
+      snippet: h.snippet,
+    };
+  });
+}
+
+/** `text` cut into pieces, the ones that hold a searched word marked `hit` (any case; the words are plain text, not patterns). */
+export function highlightParts(text: string, words: string[]): { text: string; hit: boolean }[] {
+  const list = words.filter(Boolean).sort((a, b) => b.length - a.length);
+  if (!list.length || !text) return [{ text, hit: false }];
+  const re = new RegExp(list.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "giu");
+  const out: { text: string; hit: boolean }[] = [];
+  let last = 0;
+  for (const m of text.matchAll(re)) {
+    if (m[0] === "") continue;
+    const i = m.index ?? 0;
+    if (i > last) out.push({ text: text.slice(last, i), hit: false });
+    out.push({ text: m[0], hit: true });
+    last = i + m[0].length;
+  }
+  if (last < text.length) out.push({ text: text.slice(last), hit: false });
+  return out;
 }
 
 /** The line under the strip after "Write now": what came of it. `kind` picks the style. */

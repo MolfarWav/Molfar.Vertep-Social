@@ -615,3 +615,94 @@ test("the unread route counts topics and names the newest unread post", () => {
   expect(r.unread).toBe(2);
   expect(r.latest).toEqual({ title: "Topic b", who: "Ярина", at: 2000 });
 });
+
+// ---------- paging and search (#320) ----------
+
+const manyPosts = (n: number, by = "m1", name = "Мавка") => Array.from({ length: n }, (_, i) => ({ id: "p" + (i + 1), by, name, hue: 150, at: 1000 + i, text: `Post number ${i + 1}` }));
+
+test("a long topic comes in pages: the page, the count, the first post, and only that page's authors", () => {
+  const h = makeHost();
+  seedBoards(h);
+  seedProfile(h, "m1", "Мавка");
+  seedProfile(h, "y1", "Ярина");
+  const posts = [...manyPosts(30), ...manyPosts(30, "y1", "Ярина").map((p, i) => ({ ...p, id: "q" + i, text: "Late " + i, at: 5000 + i }))];
+  seedTopic(h, "t1", "b1", 6000, posts);
+  const size = plugin.PAGE_SIZE;
+  const first = route(h, "GET", "/forum/topic", undefined, { id: "t1" }).json;
+  expect(first.paging).toEqual({ page: 1, pages: Math.ceil(60 / size), size, total: 60, from: 0 });
+  expect(first.topic.posts).toHaveLength(size);
+  expect(first.topic.posts[0].id).toBe("p1");
+  expect(Object.keys(first.authors)).toEqual(["m1"]);
+  const last = route(h, "GET", "/forum/topic", undefined, { id: "t1", page: "last" }).json;
+  expect(last.paging.page).toBe(last.paging.pages);
+  expect(last.topic.posts.at(-1).id).toBe("q29");
+  expect(last.paging.from + last.topic.posts.length).toBe(60);
+  expect(Object.keys(last.authors)).toEqual(["y1"]);
+  // a page past the end or a bad page falls back to the nearest real one
+  expect(route(h, "GET", "/forum/topic", undefined, { id: "t1", page: "99" }).json.paging.page).toBe(last.paging.pages);
+  expect(route(h, "GET", "/forum/topic", undefined, { id: "t1", page: "0" }).json.paging.page).toBe(1);
+  expect(route(h, "GET", "/forum/topic", undefined, { id: "t1", page: "x" }).json.paging.page).toBe(1);
+});
+
+test("a short topic is one page and pages do not drop posts", () => {
+  const h = makeHost();
+  seedBoards(h);
+  seedTopic(h, "t1", "b1", 1000, manyPosts(plugin.PAGE_SIZE));
+  seedTopic(h, "t2", "b1", 1000, manyPosts(plugin.PAGE_SIZE + 1));
+  expect(route(h, "GET", "/forum/topic", undefined, { id: "t1", page: "last" }).json.paging).toMatchObject({ page: 1, pages: 1, total: plugin.PAGE_SIZE });
+  const seen: string[] = [];
+  for (const page of [1, 2]) seen.push(...route(h, "GET", "/forum/topic", undefined, { id: "t2", page }).json.topic.posts.map((p: any) => p.id));
+  expect(seen).toEqual(manyPosts(plugin.PAGE_SIZE + 1).map((p) => p.id));
+});
+
+test("a reply lands on the last page", () => {
+  const h = makeHost();
+  seedBoards(h);
+  seedTopic(h, "t1", "b1", 1000, manyPosts(plugin.PAGE_SIZE));
+  expect(route(h, "POST", "/forum/reply", { topic: "t1", text: "My answer" }).status).toBe(200);
+  const r = route(h, "GET", "/forum/topic", undefined, { id: "t1", page: "last" }).json;
+  expect(r.paging.pages).toBe(2);
+  expect(r.topic.posts.map((p: any) => p.text)).toEqual(["My answer"]);
+});
+
+test("search finds every word in a title or a post, titles first, with a snippet and the page of the post", () => {
+  const h = makeHost();
+  seedBoards(h);
+  const body = Array.from({ length: 40 }, (_, i) => ({ id: "p" + i, by: "m1", name: "Мавка", hue: 150, at: 1000 + i, text: i === 33 ? "The old WELL behind the mill is dry again" : "filler " + i }));
+  seedTopic(h, "a", "b1", 3000, body, {});
+  seedTopic(h, "b", "b2", 2000, [{ id: "pb", by: "y1", name: "Ярина", hue: 3, at: 2000, text: "Nothing here" }], { title: "The well of wishes" });
+  seedTopic(h, "c", "b1", 4000, [{ id: "pc", by: "me", name: "", hue: 3, at: 4000, text: "Something else" }]);
+  const r = route(h, "GET", "/forum/search", undefined, { q: "  well  " }).json;
+  expect(r.tooShort).toBe(false);
+  expect(r.topics.map((t: any) => t.id)).toEqual(["b", "a"]); // the title hit first
+  const a = r.topics[1];
+  expect(a).toMatchObject({ n: 34, matches: 1, titleHit: false, board: { id: "b1", name: "Guest" }, category: "General", by: "m1" });
+  expect(a.page).toBe(Math.floor(33 / plugin.PAGE_SIZE) + 1);
+  expect(a.snippet).toContain("WELL behind the mill");
+  // every word must be there, in the same post or in the title
+  expect(route(h, "GET", "/forum/search", undefined, { q: "well mill" }).json.topics.map((t: any) => t.id)).toEqual(["a"]);
+  expect(route(h, "GET", "/forum/search", undefined, { q: "well zebra" }).json.topics).toEqual([]);
+});
+
+test("search ignores case in Cyrillic, is safe with odd input and refuses a single character", () => {
+  const h = makeHost();
+  seedBoards(h);
+  seedTopic(h, "a", "b1", 1000, [{ id: "p1", by: "m1", name: "Мавка", hue: 1, at: 1000, text: "Ліс ШУМИТЬ уночі <b>дуже</b>" }]);
+  expect(route(h, "GET", "/forum/search", undefined, { q: "шумить" }).json.topics).toHaveLength(1);
+  expect(route(h, "GET", "/forum/search", undefined, { q: "ЛІС" }).json.topics).toHaveLength(1);
+  expect(route(h, "GET", "/forum/search", undefined, { q: "ш" }).json).toMatchObject({ tooShort: true, topics: [] });
+  expect(route(h, "GET", "/forum/search", undefined, {}).json.tooShort).toBe(true);
+  expect(route(h, "GET", "/forum/search", undefined, { q: "(a|b)[" }).json.topics).toEqual([]); // not a pattern
+  expect(route(h, "GET", "/forum/search", undefined, { q: ["x", "y"] as any }).json.tooShort).toBe(true);
+  expect(plugin.searchWords("  A  b\tc d e f g h ")).toEqual(["a", "b", "c", "d", "e", "f"]);
+});
+
+test("search keeps to the cap and says it was cut", () => {
+  const h = makeHost();
+  seedBoards(h);
+  for (let i = 0; i < 60; i++) seedTopic(h, "t" + i, "b1", 1000 + i, [{ id: "p" + i, by: "m1", name: "Мавка", hue: 1, at: 1000 + i, text: "needle " + i }]);
+  const r = route(h, "GET", "/forum/search", undefined, { q: "needle" }).json;
+  expect(r.topics).toHaveLength(50);
+  expect(r.truncated).toBe(true);
+  expect(r.topics[0].id).toBe("t59"); // newest first among the same kind of hit
+});

@@ -1,10 +1,11 @@
 // One topic: the posts and the reply box. Shared by the design preview and the real forum.
 // "Quote" picks a post and a chip above the box says whose post it is; the server writes the quote.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useT } from "@/i18n/index";
-import { BackIcon, DotsIcon, LockIcon } from "./Icons";
+import { BackIcon, DotsIcon, LockIcon, SearchIcon } from "./Icons";
 import { countLabel } from "./labels";
 import type { ShownPost, WriteNotice } from "./model";
+import { Pager, type PageTarget } from "./Pager";
 import { PostCard } from "./PostCard";
 import { NoticeLine, WriteNowButton } from "./Strip";
 
@@ -29,6 +30,13 @@ export interface TopicViewProps {
   onRetry: () => void;
   /** Closes (true) or reopens (false) the topic; resolves to an error text, or null when it worked. Real forum only. */
   onSetLocked?: (locked: boolean) => Promise<string | null>;
+  /** The page shown and how many there are; absent in the design preview and from an engine that does not page. */
+  paging?: { page: number; pages: number; total: number };
+  onPage?: (page: PageTarget) => void;
+  /** The number of a post to scroll to once the page is drawn (a search result). */
+  focusPost?: number;
+  /** Opens the forum search (real forum only). */
+  onSearch?: () => void;
 }
 
 export function TopicView(p: TopicViewProps) {
@@ -39,7 +47,30 @@ export function TopicView(p: TopicViewProps) {
   const [error, setError] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
   const posts = p.posts ?? [];
-  const postsLabel = countLabel(t, "posts", posts.length);
+  const postsLabel = countLabel(t, "posts", p.paging?.total ?? posts.length);
+  const pager = p.paging && p.onPage ? <Pager page={p.paging.page} pages={p.paging.pages} onPage={p.onPage} /> : null;
+  const searchButton = p.onSearch && (
+    <button type="button" className="btn icon-btn" onClick={p.onSearch} aria-label={t("forum.search")} title={t("forum.search")}>
+      <SearchIcon size={18} />
+    </button>
+  );
+
+  // a search result opens on its page: bring the post into view once, and mark it for a moment
+  const root = useRef<HTMLDivElement>(null);
+  const focused = useRef("");
+  const wanted = p.focusPost;
+  const drawn = p.posts !== null;
+  useEffect(() => {
+    if (!wanted || !drawn) return;
+    const el = root.current?.querySelector<HTMLElement>(`[data-n="${wanted}"]`);
+    const mark = `${p.title}#${wanted}`;
+    if (!el || focused.current === mark) return;
+    focused.current = mark;
+    el.scrollIntoView({ block: "start" });
+    el.classList.add("flash");
+    const timer = setTimeout(() => el.classList.remove("flash"), 2400);
+    return () => clearTimeout(timer);
+  }, [wanted, drawn, p.title]);
 
   const [locking, setLocking] = useState(false);
   const [lockError, setLockError] = useState("");
@@ -120,7 +151,7 @@ export function TopicView(p: TopicViewProps) {
 
   if (p.phone) {
     return (
-      <div className="s-forum is-phone is-topic">
+      <div className="s-forum is-phone is-topic" ref={root}>
         <header className="hd">
           <button type="button" className="hd-btn" aria-label={t("forum.topic.back")} onClick={p.onBoard}>
             <BackIcon />
@@ -137,20 +168,23 @@ export function TopicView(p: TopicViewProps) {
             </button>
           )}
         </header>
-        <div key="topic" className="fscroll pg">
+        <div key={`topic-${p.paging?.page ?? 1}`} className="fscroll pg">
           {crumbs}
           {(p.live || p.onSetLocked) && (
             <div className="tools">
               {p.live && !p.locked && <WriteNowButton busy={p.writing} onClick={p.onWriteNow} />}
               {lockButton}
+              {searchButton}
             </div>
           )}
           {lockErrLine}
           <NoticeLine notice={p.notice} onClose={p.onCloseNotice} />
+          {pager}
           {state}
           {posts.map((post) => (
             <PostCard key={post.id} post={post} phone locked={p.locked} onQuote={pick} onReply={focusReply} />
           ))}
+          {posts.length > 0 && pager}
         </div>
         {p.locked ? (
           <div className="rep lock-rep">
@@ -181,25 +215,28 @@ export function TopicView(p: TopicViewProps) {
   }
 
   return (
-    <div className="s-forum">
-      <div key="topic" className="fscroll">
+    <div className="s-forum" ref={root}>
+      <div key={`topic-${p.paging?.page ?? 1}`} className="fscroll">
         <div className="wrap tpage">
           {crumbs}
           <div className="ttl">
             <div className="ttl-title">{p.title}</div>
             <span className="ttl-meta">
-              {t("forum.topic.page", { page: 1, pages: 1 })} · {postsLabel}
+              {t("forum.topic.page", { page: p.paging?.page ?? 1, pages: p.paging?.pages ?? 1 })} · {postsLabel}
             </span>
             {p.live && !p.locked && <WriteNowButton busy={p.writing} onClick={p.onWriteNow} />}
             {lockButton}
+            {searchButton}
             {!p.locked && <button type="button" className="btn cta" onClick={focusReply}>{t("forum.topic.reply")}</button>}
           </div>
           {lockErrLine}
           <NoticeLine notice={p.notice} onClose={p.onCloseNotice} />
+          {pager}
           {state}
           {posts.map((post) => (
             <PostCard key={post.id} post={post} phone={false} locked={p.locked} onQuote={pick} onReply={focusReply} />
           ))}
+          {posts.length > 0 && pager}
           {p.locked ? (
             <div className="lockbox">
               <LockIcon />
