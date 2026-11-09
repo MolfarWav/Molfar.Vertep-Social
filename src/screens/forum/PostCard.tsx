@@ -5,6 +5,7 @@ import { themColor } from "@/components/Avatar";
 import { Flower } from "@/components/Flower";
 import { useT } from "@/i18n/index";
 import { MsgPicture } from "@/pictures/MsgPicture";
+import { RichText } from "@/stickers/Render";
 import { hueOf } from "@/mock/forum";
 import { Ava, bgOf, initial, MY_BG } from "./Ava";
 import type { ShownPost } from "./model";
@@ -61,7 +62,7 @@ export function PostCard({
   ) : (
     <>
       {post.quote && <QuoteBlock who={post.quote.who} text={post.quote.text} />}
-      {post.text && <div className="post-text">{post.text}</div>}
+      {post.text && <div className="post-text"><RichText text={post.text} /></div>}
       {post.image && <MsgPicture image={post.image} />}
       {post.sig && <div className="post-sig">{post.sig}</div>}
     </>

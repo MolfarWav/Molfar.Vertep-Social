@@ -7,7 +7,7 @@ import { PREVIEW } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
 import { CONTACTS, LOGS, type Contact, type LogItem } from "@/mock/messenger";
 import type { Status } from "@/mock/status";
-import { imageShown, usePicture } from "@/pictures/use-picture";
+import { imageShown, usePicture, type Attached } from "@/pictures/use-picture";
 import { useNav } from "@/shell/nav";
 import { useLiveMessenger } from "./live";
 import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
@@ -110,6 +110,13 @@ export function Messenger() {
     setDraft("");
     pic.clear();
   };
+  const sendSticker = (sticker: Attached) => {
+    if (!cur) return;
+    if (real) {
+      if (busy) return; // a sticker is a message of its own: one at a time, like text
+      live.send(cur.id, "", sticker);
+    } else setLogs((l) => ({ ...l, [cur.id]: [...(l[cur.id] ?? []), { kind: "msg", who: "me", time: hhmm(), text: "", image: imageShown(sticker) }] }));
+  };
   const clear = () => setDraft("");
   const retry = () => {
     if (real) live.retry(curId);
@@ -157,6 +164,7 @@ export function Messenger() {
             busy={busy}
             onDraft={setDraft}
             onSend={send}
+            onSticker={sendSticker}
             onClear={clear}
             pic={pic}
             onBack={() => setOpen(false)}
@@ -265,7 +273,7 @@ export function Messenger() {
                 onRetry={retry}
                 onSettings={toSettings}
               />
-              <Composer c={cur} value={draft} phone={false} real={real} busy={busy} onChange={setDraft} onSend={send} onClear={clear} pic={pic} />
+              <Composer c={cur} value={draft} phone={false} real={real} busy={busy} onChange={setDraft} onSend={send} onClear={clear} pic={pic} onSticker={sendSticker} />
             </section>
 
             <aside className="col info">

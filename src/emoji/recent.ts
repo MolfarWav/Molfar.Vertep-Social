@@ -20,7 +20,7 @@ export function pushRecent(list: string[], ch: string): string[] {
 export function loadRecent(s: Store | null = store()): string[] {
   try {
     const v = JSON.parse(s?.getItem(RECENT_KEY) ?? "[]");
-    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.length > 0 && x.length <= 32).slice(0, RECENT_MAX) : [];
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.length > 0 && x.length <= 90).slice(0, RECENT_MAX) : [];
   } catch {
     return [];
   }

@@ -5,7 +5,8 @@ import { Avatar, themColor } from "@/components/Avatar";
 import { Envelope, Flower } from "@/components/Flower";
 import { useEmoji } from "@/emoji/use-emoji";
 import { MsgPicture } from "@/pictures/MsgPicture";
-import type { usePicture } from "@/pictures/use-picture";
+import { RichText } from "@/stickers/Render";
+import type { Attached, usePicture } from "@/pictures/use-picture";
 import { currentLang, useT } from "@/i18n/index";
 import { CONTACTS, type Contact, type LogItem } from "@/mock/messenger";
 import { STATUS_ORDER, type Status } from "@/mock/status";
@@ -142,7 +143,7 @@ export function ChatLog({
               {who}
               <span className="time">{m.time}</span>
             </div>
-            {m.text && <div>{m.text}</div>}
+            {m.text && <div><RichText text={m.text} /></div>}
             {m.image && <MsgPicture image={m.image} />}
           </div>
         );
@@ -180,6 +181,7 @@ export function Composer({
   onSend,
   onClear,
   pic,
+  onSticker,
 }: {
   c: Contact;
   value: string;
@@ -191,10 +193,12 @@ export function Composer({
   onChange: (v: string) => void;
   onSend: () => void;
   onClear: () => void;
+  /** A sticker was tapped in the picker (real mode only): it is sent at once. */
+  onSticker?: (sticker: Attached) => void;
 }) {
   const t = useT();
   const box = useRef<HTMLTextAreaElement>(null);
-  const emoji = useEmoji({ target: box, value, onChange, phone });
+  const emoji = useEmoji({ target: box, value, onChange, phone, onSticker });
   // The real-mode strings use the plain name: the Ukrainian ones of the preview decline it.
   const label = real ? t("messenger.composer.labelPlain", { name: c.name }) : t("messenger.composer.label", { of: c.of, name: c.name });
   const placeholder = real ? t("messenger.composer.placeholderPlain", { name: c.name }) : t("messenger.composer.placeholder", { to: c.to, name: c.name });

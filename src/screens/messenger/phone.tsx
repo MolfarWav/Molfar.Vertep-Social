@@ -7,7 +7,7 @@ import { BarActions, useChrome } from "@/shell/nav";
 import { useT } from "@/i18n/index";
 import type { Contact, LogItem } from "@/mock/messenger";
 import type { Status } from "@/mock/status";
-import type { usePicture } from "@/pictures/use-picture";
+import type { Attached, usePicture } from "@/pictures/use-picture";
 import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
 
 export interface PhoneListProps {
@@ -103,6 +103,8 @@ export interface PhoneChatProps {
   onDraft: (v: string) => void;
   onSend: () => void;
   onClear: () => void;
+  /** A sticker tapped in the picker: sent at once (real mode). */
+  onSticker?: (sticker: Attached) => void;
   /** The attach control of the message box. */
   pic: ReturnType<typeof usePicture>;
   onBack: () => void;
@@ -171,7 +173,7 @@ export function PhoneChat(p: PhoneChatProps) {
         onRetry={p.onRetry}
         onSettings={p.onSettings}
       />
-      <Composer c={c} value={p.draft} phone real={p.real} busy={p.busy} onChange={p.onDraft} onSend={p.onSend} onClear={p.onClear} pic={p.pic} />
+      <Composer c={c} value={p.draft} phone real={p.real} busy={p.busy} onChange={p.onDraft} onSend={p.onSend} onClear={p.onClear} pic={p.pic} onSticker={p.onSticker} />
     </div>
   );
 }

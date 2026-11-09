@@ -11,6 +11,9 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, ty
 import { createPortal } from "react-dom";
 import { useT } from "@/i18n/index";
 import { insertAt } from "./insert";
+import type { Attached } from "@/pictures/use-picture";
+import { Manager } from "@/stickers/Manager";
+import { refOf } from "@/stickers/model";
 import { Panel } from "./Panel";
 
 export interface EmojiOptions {
@@ -18,6 +21,8 @@ export interface EmojiOptions {
   value: string;
   onChange: (next: string) => void;
   phone: boolean;
+  /** Gives the picker the sticker packs: a tap on a sticker sends it at once. Without it only custom emoji are offered. */
+  onSticker?: (sticker: Attached) => void;
 }
 
 const WIDTH = 352;
@@ -35,9 +40,10 @@ function SmileIcon() {
   );
 }
 
-export function useEmoji({ target, value, onChange, phone }: EmojiOptions): { button: ReactNode; tray: ReactNode; open: boolean } {
+export function useEmoji({ target, value, onChange, phone, onSticker }: EmojiOptions): { button: ReactNode; tray: ReactNode; open: boolean } {
   const t = useT();
   const [open, setOpen] = useState(false);
+  const [managing, setManaging] = useState(false);
   const [box, setBox] = useState<{ left: number; width: number; top?: number; bottom?: number; maxH: number } | null>(null);
   const anchor = useRef<HTMLButtonElement>(null);
   const pop = useRef<HTMLDivElement>(null);
@@ -74,6 +80,17 @@ export function useEmoji({ target, value, onChange, phone }: EmojiOptions): { bu
       setOpen(false);
       el.focus();
     }
+  };
+
+  const sendSticker = onSticker
+    ? (pack: { id: string }, item: { id: string; name: string; url: string }) => {
+        onSticker({ url: item.url, alt: item.name, gen: false, sticker: refOf(pack.id, item.id) });
+        setOpen(false);
+      }
+    : undefined;
+  const manage = () => {
+    setOpen(false);
+    setManaging(true);
   };
 
   // desktop popover: above the button when there is more room there (the message bars sit at the bottom)
@@ -140,17 +157,18 @@ export function useEmoji({ target, value, onChange, phone }: EmojiOptions): { bu
       {open && !phone && box
         ? createPortal(
             <div ref={pop} id={panelId} className="emo-pop" style={{ left: box.left, width: box.width, top: box.top, bottom: box.bottom, maxHeight: box.maxH }}>
-              <Panel mode="popover" onPick={pick} onClose={() => close(true)} />
+              <Panel mode="popover" onPick={pick} onSticker={sendSticker} onManage={manage} onClose={() => close(true)} />
             </div>,
             document.querySelector(".soc") ?? document.body,
           )
         : null}
+      {managing && <Manager phone={phone} onClose={() => setManaging(false)} />}
     </>
   );
   const tray =
     open && phone ? (
       <div id={panelId} className="emo-tray">
-        <Panel mode="tray" onPick={pick} onClose={() => close()} />
+        <Panel mode="tray" onPick={pick} onSticker={sendSticker} onManage={manage} onClose={() => close()} />
       </div>
     ) : null;
   return { button, tray, open };

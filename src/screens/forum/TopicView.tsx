@@ -51,7 +51,7 @@ export function TopicView(p: TopicViewProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
-  const emoji = useEmoji({ target: ref, value: draft, onChange: setDraft, phone: p.phone });
+  const emoji = useEmoji({ target: ref, value: draft, onChange: setDraft, phone: p.phone, onSticker: p.live ? (s) => void sendSticker(s) : undefined });
   const pic = usePicture({ phone: p.phone });
   const posts = p.posts ?? [];
   const postsLabel = countLabel(t, "posts", p.paging?.total ?? posts.length);
@@ -126,6 +126,16 @@ export function TopicView(p: TopicViewProps) {
     setDraft("");
     setQuote(null);
     pic.clear();
+  };
+  // a sticker is a reply of its own (the draft stays), like a picture with no text
+  const sendSticker = async (sticker: Attached) => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    const err = await p.onSend("", quote?.id ?? null, sticker);
+    setBusy(false);
+    if (err) setError(err);
+    else setQuote(null);
   };
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) void send();
