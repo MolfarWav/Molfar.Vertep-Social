@@ -1,6 +1,7 @@
 // Mock profiles for the Profiles screen. In the real app a name comes from the
 // character's Soul, not from the card; `hue` is the avatar colour. Only Мавка has
 // the full data the boards show; the others get a short About and a default week.
+import { scheduleFor } from "@/mock/schedule";
 import type { Status } from "@/mock/status";
 import type { ImportRef } from "@/mock/profiles-import";
 
@@ -84,7 +85,6 @@ function week(weekday: Status[], sat: Status[], sun: Status[]): Status[][] {
 const MAVKA_WEEKDAY: Status[] = ["off", "off", "off", "na", "na", "away", "online", "online"];
 const MAVKA_SAT: Status[] = ["off", "off", "off", "away", "online", "online", "online", "dnd"];
 const MAVKA_SUN: Status[] = ["off", "off", "off", "away", "away", "online", "online", "online"];
-const DEFAULT_DAY: Status[] = ["off", "off", "off", "na", "online", "online", "online", "online"];
 
 const DEFAULT_VOICE: VoiceForm = { text: "", length: 1, emoji: 0, formality: 30, never: [] };
 const DEFAULT_FORUM: ForumForm = {
@@ -116,7 +116,8 @@ export function plain(id: string, name: string, hue: number, source: ProfileSour
     tags: [],
     voice: { ...DEFAULT_VOICE, never: [] },
     forum: { ...DEFAULT_FORUM, favourites: [] },
-    schedule: week(DEFAULT_DAY, DEFAULT_DAY, DEFAULT_DAY),
+    // a week of its own, from the text and the id (the same code the engine runs for imports)
+    schedule: scheduleFor(id, about),
   };
 }
 

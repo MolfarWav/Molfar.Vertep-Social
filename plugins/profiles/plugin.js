@@ -73,20 +73,135 @@ export function hueOf(name) {
   return h;
 }
 
-/** The default week: awake in the daytime and evening, away at night (the screen edits it). */
+/** The old default week, the same for everyone: awake in the daytime and evening, away at night. Kept to recognise it. */
 export function defaultSchedule() {
   const day = ["off", "off", "off", "na", "online", "online", "online", "online"];
   return Array.from({ length: BANDS }, (_, r) => Array.from({ length: DAYS }, () => day[r]));
 }
 
-function cleanSchedule(v) {
-  const dflt = defaultSchedule();
-  if (!Array.isArray(v) || v.length !== BANDS) return dflt;
+const isFlatDefault = (v) => {
+  const d = defaultSchedule();
+  return Array.isArray(v) && v.length === BANDS && v.every((row, r) => Array.isArray(row) && row.length === DAYS && row.every((s, i) => s === d[r][i]));
+};
+
+// ---------- a week for each character (the screen edits it afterwards) ----------
+// A new profile used to get one fixed week, so every character was online at the same hours. Now the week comes from the profile:
+// hints in the text (About, interests, tags, habits) pick a kind of day, and a seed (the profile id) decides the rest, so the same
+// profile always gets the same week and two profiles with nothing to go on still differ. Same code in src/mock/schedule.ts
+// (the client builds the week of a new profile); test/profile-schedule.test.ts pins that both give the same result.
+
+/** Day patterns by band (00-03 .. 21-24): wd = Monday to Friday, we = Saturday and Sunday. hints: word starts, lower case. */
+const DAY_KINDS = {
+  office: {
+    weight: 3,
+    wd: ["off", "off", "away", "na", "away", "online", "online", "away"],
+    we: ["off", "off", "off", "away", "online", "online", "online", "away"],
+    hints: [" office", " employee", " clerk", " accountant", " manager", " teacher", " doctor", " nurse", " engineer", " cashier", " salesperson", " nine to five", " офіс", " служб", " бухгалтер", " менеджер", " вчител", " лікар", " медсестр", " інженер", " продав", " касир", " робоч"],
+  },
+  early: {
+    weight: 1,
+    wd: ["off", "away", "online", "online", "online", "away", "online", "off"],
+    we: ["off", "away", "online", "online", "online", "online", "away", "off"],
+    hints: [" early bird", " early riser", " dawn", " sunrise", " farmer", " baker", " rooster", " ранк", " ранн", " рано ", " світан", " жайворон", " фермер", " пекар"],
+  },
+  owl: {
+    weight: 2,
+    wd: ["online", "away", "off", "off", "na", "away", "online", "online"],
+    we: ["online", "online", "away", "off", "off", "away", "online", "online"],
+    hints: [" night ", " nights ", " nighttime", " nocturnal", " insomni", " vampire", " нічн", " ніч ", " ночн", " ноч ", " ночі ", " сова ", " совою", " безсон", " вампір"],
+  },
+  evening: {
+    weight: 3,
+    wd: ["off", "off", "off", "off", "away", "away", "online", "online"],
+    we: ["off", "off", "off", "away", "online", "online", "online", "online"],
+    hints: [" student", " gamer", " streamer", " hacker", " programmer", " coder", " anime", " школяр", " студент", " геймер", " стрім", " хакер", " програміст", " аніме"],
+  },
+  home: {
+    weight: 2,
+    wd: ["off", "off", "away", "online", "online", "online", "online", "away"],
+    we: ["off", "off", "off", "away", "online", "online", "online", "away"],
+    hints: [" homebody", " hermit", " recluse", " writer", " author ", " freelanc", " remote work", " painter", " artist", " bookworm", " introvert", " затвор", " відлюд", " письменник", " фрілан", " художник", " домосід", " інтроверт", " книголюб"],
+  },
+  busy: {
+    weight: 1,
+    wd: ["off", "off", "na", "dnd", "dnd", "away", "online", "away"],
+    we: ["off", "off", "off", "away", "away", "online", "online", "away"],
+    hints: [" busy", " workaholic", " captain", " commander", " king ", " queen", " boss ", " ruler", " soldier", " warrior", " guard ", " guards ", " leader", " зайнят", " капітан", " командир", " король", " королев", " правител", " воїн", " солдат", " вартов", " лідер"],
+  },
+};
+
+/** The text a profile's week is read from: what the character is like, not what it said. */
+export function scheduleText(p) {
+  const habits = Array.isArray(p.habits) ? p.habits.map((h) => (isObj(h) ? h.text : "")) : [];
+  return [p.about, ...(Array.isArray(p.interests) ? p.interests : []), ...(Array.isArray(p.tags) ? p.tags : []), ...habits].filter((x) => typeof x === "string" && x).join(" ");
+}
+
+function seededRand(seed) {
+  let h = 2166136261;
+  for (const ch of String(seed)) {
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 16777619);
+  }
+  let a = h >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** The kind of day the text points to (most hints win; a tie or no hint is decided by the seed, no hint also by the weights). */
+function dayKindFor(text, rand) {
+  const t = " " + String(text).toLowerCase().replace(/[^a-zа-яіїєґё0-9]+/g, " ") + " ";
+  const keys = Object.keys(DAY_KINDS);
+  const hits = keys.map((k) => DAY_KINDS[k].hints.filter((h) => t.includes(h)).length);
+  const best = Math.max(...hits);
+  if (best > 0) {
+    const ties = keys.filter((_, i) => hits[i] === best);
+    return ties[Math.floor(rand() * ties.length)];
+  }
+  const total = keys.reduce((n, k) => n + DAY_KINDS[k].weight, 0);
+  let x = rand() * total;
+  for (const k of keys) {
+    x -= DAY_KINDS[k].weight;
+    if (x < 0) return k;
+  }
+  return keys[0];
+}
+
+/** A week (schedule[band][day]) for a profile: its kind of day from the text, then its own timing, a few odd days and small swaps. */
+export function scheduleFor(seed, text) {
+  const rand = seededRand(seed);
+  const kind = DAY_KINDS[dayKindFor(text, rand)];
+  const base = Math.floor(rand() * 3) - 1; // this character wakes up to three hours earlier or later than the pattern
+  const cols = [];
+  for (let d = 0; d < DAYS; d++) {
+    const pattern = d < 5 && rand() >= 0.12 ? kind.wd : kind.we; // one weekday in eight is a day off
+    const shift = base + (rand() < 0.18 ? (rand() < 0.5 ? -1 : 1) : 0); // some days start or end later
+    const col = Array.from({ length: BANDS }, (_, r) => pattern[(((r - shift) % BANDS) + BANDS) % BANDS]);
+    for (let r = 0; r < BANDS; r++) {
+      const x = rand();
+      if (x < 0.08 && col[r] === "online") col[r] = "away";
+      else if (x < 0.08 && col[r] === "away") col[r] = "online";
+    }
+    if (!col.includes("online")) col[col.includes("away") ? col.indexOf("away") : 6] = "online";
+    cols.push(col);
+  }
+  const out = Array.from({ length: BANDS }, (_, r) => cols.map((c) => c[r]));
+  if (isFlatDefault(out)) out[7][6] = "away"; // never the old shared week: that is how it is recognised
+  return out;
+}
+
+function cleanSchedule(v, seed, text) {
+  let made = null;
+  const dflt = () => made || (made = scheduleFor(seed, text));
+  if (!Array.isArray(v) || v.length !== BANDS) return dflt();
   const out = [];
   for (let r = 0; r < BANDS; r++) {
     const row = v[r];
-    if (!Array.isArray(row) || row.length !== DAYS) return dflt;
-    out.push(row.map((s, d) => (STATUSES.includes(s) ? s : dflt[r][d])));
+    if (!Array.isArray(row) || row.length !== DAYS) return dflt();
+    out.push(row.map((s, d) => (STATUSES.includes(s) ? s : dflt()[r][d])));
   }
   return out;
 }
@@ -135,7 +250,7 @@ export function cleanProfile(raw, id, now, prev) {
   // "provider/model" for this profile alone; "" = the app's model for the task (Settings > Models)
   const model = typeof raw.model === "string" && raw.model !== "default" && MODEL_REF.test(raw.model.trim()) ? raw.model.trim() : "";
   const from = cleanFrom(raw.from);
-  return {
+  const out = {
     id: String(id),
     name,
     hue: clampInt(raw.hue, 0, 359, hueOf(name)),
@@ -169,10 +284,12 @@ export function cleanProfile(raw, id, now, prev) {
     },
     /** Life (issue #311): does the character keep a diary, and does it follow the outside world. */
     life: { on: lf.on !== false, world: lf.world !== false },
-    schedule: cleanSchedule(raw.schedule),
+    schedule: [],
     createdAt: prev && Number.isFinite(prev.createdAt) ? prev.createdAt : now,
     updatedAt: now,
   };
+  out.schedule = cleanSchedule(raw.schedule, out.id, scheduleText(out));
+  return out;
 }
 
 const profilePath = (id) => "profiles/" + id + ".json";
@@ -194,6 +311,35 @@ function listProfiles(fsx) {
     if (p) out.push(p);
   }
   return out.sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+}
+
+/**
+ * Profiles saved before the weekly schedule was made per character still hold the old shared week. A profile whose week is exactly that
+ * gets its own (from its text and id) the next time the list is read; a week the user edited is never touched. Returns how many changed.
+ */
+export function migrateSchedules(fsx) {
+  let names = [];
+  try {
+    names = fsx.list("profiles");
+  } catch {
+    return 0;
+  }
+  let n = 0;
+  for (const name of names) {
+    const m = /^([A-Za-z0-9_-]{1,60})\.json$/.exec(name);
+    if (!m) continue;
+    const raw = readJson(fsx, profilePath(m[1]), null);
+    if (!isObj(raw) || raw.source === "persona" || !isFlatDefault(raw.schedule)) continue;
+    const p = cleanProfile({ ...raw, schedule: null }, m[1], Number.isFinite(raw.updatedAt) ? raw.updatedAt : 0, raw);
+    if (!p) continue;
+    try {
+      fsx.write(profilePath(m[1]), JSON.stringify(p, null, 2));
+      n++;
+    } catch {
+      // the list still works; the next read tries again
+    }
+  }
+  return n;
 }
 
 const MAX_PROFILES = 300;
@@ -1116,7 +1262,10 @@ export function handleRoute(req, host) {
   if (path === "/settings") return settingsRoute(req, host);
   if (path === "/you" || path.startsWith("/you/")) return youRoute(req, host, path);
   if (path !== "/profiles" && !path.startsWith("/profiles/")) return null;
-  if (path === "/profiles" && method === "GET") return ok({ profiles: listProfiles(host.fs) });
+  if (path === "/profiles" && method === "GET") {
+    migrateSchedules(host.fs);
+    return ok({ profiles: listProfiles(host.fs) });
+  }
   if (path === "/profiles/suggest" && method === "POST") return suggestRoute(req, host);
   if (path === "/profiles/fill" && method === "POST") return fillRoute(req, host);
   if (path === "/profiles/import" && method === "POST") return importRoute(req, host);
