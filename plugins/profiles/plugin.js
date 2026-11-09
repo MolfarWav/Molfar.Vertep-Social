@@ -46,7 +46,15 @@ const DAYS = 7;
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v) => (typeof v === "string" ? v.trim() : "");
-const cut = (s, n) => (s.length > n ? s.slice(0, n) : s);
+// Cuts to at most n UTF-16 units without tearing an emoji: a surrogate pair is never split, and a joiner or a variation
+// selector never ends the text (a half-cut family or flag would show as a different emoji).
+const cut = (s, n) => {
+  if (s.length <= n) return s;
+  let out = s.slice(0, n);
+  const last = out.charCodeAt(out.length - 1);
+  if (last >= 0xd800 && last <= 0xdbff) out = out.slice(0, -1);
+  return out.replace(/[\u200d\ufe0f]+$/, "");
+};
 const ok = (json, status) => ({ status: status || 200, json });
 const noControls = (s) => Array.from(s, (ch) => (ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127 ? " " : ch)).join("");
 /** One line of plain text from a model string or a client value: no HTML, no control characters, capped. */
@@ -155,7 +163,7 @@ export function cleanProfile(raw, id, now, prev) {
     voice: {
       text: multi(v.text, 1500),
       length: clampInt(v.length, 0, 2, 1),
-      emoji: clampInt(v.emoji, 0, 2, 0),
+      emoji: clampInt(v.emoji, 0, 2, 1),
       formality: clampInt(v.formality, 0, 100, 30),
       never: list(v.never, 12, 60),
     },
@@ -856,7 +864,7 @@ export function profileFromDigest(ref, material, digest, now) {
       about: digest.about,
       interests: digest.interests,
       habits: digest.habits.map((text, i) => ({ id: "h" + i + "-" + now, text, by: "self" })),
-      voice: { text: digest.voiceText, length: digest.length, emoji: 0, formality: digest.formality, never: digest.never },
+      voice: { text: digest.voiceText, length: digest.length, emoji: 1, formality: digest.formality, never: digest.never },
       forum: { rank: digest.rank, signature: digest.signature },
     },
     id,

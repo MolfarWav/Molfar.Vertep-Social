@@ -63,7 +63,15 @@ const FORCE_MAX = 3;
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v) => (typeof v === "string" ? v.trim() : "");
-const cut = (s, n) => (s.length > n ? s.slice(0, n) : s);
+// Cuts to at most n UTF-16 units without tearing an emoji: a surrogate pair is never split, and a joiner or a variation
+// selector never ends the text (a half-cut family or flag would show as a different emoji).
+const cut = (s, n) => {
+  if (s.length <= n) return s;
+  let out = s.slice(0, n);
+  const last = out.charCodeAt(out.length - 1);
+  if (last >= 0xd800 && last <= 0xdbff) out = out.slice(0, -1);
+  return out.replace(/[\u200d\ufe0f]+$/, "");
+};
 const ok = (json, status) => ({ status: status || 200, json });
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
 const noControls = (s) => Array.from(s, (ch) => (ch.charCodeAt(0) < 32 && ch !== "\n" ? " " : ch)).join("");
@@ -379,14 +387,19 @@ const countByAuthor = (topics) => {
 // ---------- the prompt ----------
 
 const LENGTH_WORDS = ["Short: one or two sentences.", "Medium: two to four sentences.", "Long: a short paragraph when the topic asks for it."];
-const EMOJI_WORDS = ["Never use emoji.", "Use an emoji only now and then.", "Use emoji often."];
+// Real Unicode emoji only: the app draws them with its own emoji font, and ":smile:" codes or text faces would show as plain text.
+const EMOJI_WORDS = [
+  "Never use emoji.",
+  "Use an emoji now and then (in about one message of three), as the character would, written as the emoji character itself.",
+  "Use emoji often, one to three in most messages, as the character would, written as the emoji characters themselves, never as :codes:.",
+];
 const MAX_TOKENS = [250, 450, 800];
 
 /** The system prompt that makes the model write forum posts as this profile (the card is never in it). */
 export function systemPromptFor(p) {
   const v = isObj(p.voice) ? p.voice : {};
   const length = [0, 1, 2].includes(v.length) ? v.length : 1;
-  const emoji = [0, 1, 2].includes(v.emoji) ? v.emoji : 0;
+  const emoji = [0, 1, 2].includes(v.emoji) ? v.emoji : 1;
   const formality = Number.isFinite(v.formality) ? v.formality : 30;
   const lines = ["You are " + p.name + ", a character who posts on a forum where other characters and a human user also write. Stay in character at all times."];
   if (p.about) lines.push("Who you are: " + cut(p.about, 1500));
@@ -805,7 +818,11 @@ export function snippetOf(text, words) {
   }
   const start = Math.max(0, at - 40);
   const end = start + SNIPPET_CHARS;
-  return (start > 0 ? "…" : "") + flat.slice(start, end).trim() + (end < flat.length ? "…" : "");
+  // the edges of the window may fall inside an emoji's surrogate pair: step off the middle of one
+  const safe = (i) => (i > 0 && i < flat.length && flat.charCodeAt(i) >= 0xdc00 && flat.charCodeAt(i) <= 0xdfff ? i + 1 : i);
+  const from = safe(start);
+  const to = safe(end);
+  return (from > 0 ? "…" : "") + flat.slice(from, to).trim() + (to < flat.length ? "…" : "");
 }
 
 function searchRoute(req, host) {

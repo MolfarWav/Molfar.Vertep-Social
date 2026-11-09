@@ -59,7 +59,7 @@
 .s-forum .crumbs .linkbtn { color: var(--acct); font-weight: 600; }
 .s-forum .crumbs .here { color: var(--muted); }
 .s-forum .ttl { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, var(--raised)), color-mix(in srgb, var(--accent) 12%, var(--panel))); }
-.s-forum .ttl-title { flex: 1; min-width: 0; font: 22px/1.3 Kurale, Georgia, serif; }
+.s-forum .ttl-title { flex: 1; min-width: 0; font: 22px/1.3 Kurale, "Social Emoji", Georgia, serif; }
 .s-forum .ttl-meta { color: var(--muted); font-size: 13px; }
 
 /* Posts (shared parts) */
@@ -176,6 +176,7 @@
 /* Forms: new topic, new board */
 .s-forum .field { display: flex; flex-direction: column; gap: 6px; }
 .s-forum .field label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.s-forum .field-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .s-forum .line { height: 40px; width: 100%; border: 1px solid var(--line); background: var(--base); color: var(--ink); border-radius: 8px; padding: 0 12px; font: inherit; }
 .s-forum .line:focus-visible, .s-forum .inp:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .s-forum .inp.tall { min-height: 220px; resize: vertical; }

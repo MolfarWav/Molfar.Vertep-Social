@@ -5,6 +5,8 @@ import "@fontsource/kurale";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/shell.css";
+import "./emoji/font.css";
+import "./emoji/emoji.css";
 import { AppShell } from "@/shell/app-shell";
 import { applyTheme, followShell, initialTheme } from "@/lib/theme";
 import { currentLang, followShellLanguage } from "@/i18n/index";

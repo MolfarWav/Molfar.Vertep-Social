@@ -84,7 +84,7 @@ const MAVKA_SAT: Status[] = ["off", "off", "off", "away", "online", "online", "o
 const MAVKA_SUN: Status[] = ["off", "off", "off", "away", "away", "online", "online", "online"];
 const DEFAULT_DAY: Status[] = ["off", "off", "off", "na", "online", "online", "online", "online"];
 
-const DEFAULT_VOICE: VoiceForm = { text: "", length: 1, emoji: 0, formality: 30, never: [] };
+const DEFAULT_VOICE: VoiceForm = { text: "", length: 1, emoji: 1, formality: 30, never: [] };
 const DEFAULT_FORUM: ForumForm = {
   rank: "",
   signature: "",

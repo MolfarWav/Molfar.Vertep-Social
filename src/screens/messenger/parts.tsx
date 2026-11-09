@@ -3,6 +3,7 @@
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { Avatar, themColor } from "@/components/Avatar";
 import { Envelope, Flower } from "@/components/Flower";
+import { useEmoji } from "@/emoji/use-emoji";
 import { useT } from "@/i18n/index";
 import { CONTACTS, type Contact, type LogItem } from "@/mock/messenger";
 import { STATUS_ORDER, type Status } from "@/mock/status";
@@ -184,6 +185,8 @@ export function Composer({
   onClear: () => void;
 }) {
   const t = useT();
+  const box = useRef<HTMLTextAreaElement>(null);
+  const emoji = useEmoji({ target: box, value, onChange, phone });
   // The real-mode strings use the plain name: the Ukrainian ones of the preview decline it.
   const label = real ? t("messenger.composer.labelPlain", { name: c.name }) : t("messenger.composer.label", { of: c.of, name: c.name });
   const placeholder = real ? t("messenger.composer.placeholderPlain", { name: c.name }) : t("messenger.composer.placeholder", { to: c.to, name: c.name });
@@ -195,16 +198,21 @@ export function Composer({
   };
   if (phone) {
     return (
-      <div className="comp p">
-        <textarea className="inp p" rows={1} aria-label={label} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKey} />
-        <button type="button" className="btn cta" disabled={busy} onClick={onSend}>{t("messenger.composer.send")}</button>
-      </div>
+      <>
+        <div className="comp p">
+          {emoji.button}
+          <textarea ref={box} className="inp p" rows={1} aria-label={label} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKey} />
+          <button type="button" className="btn cta" disabled={busy} onClick={onSend}>{t("messenger.composer.send")}</button>
+        </div>
+        {emoji.tray}
+      </>
     );
   }
   return (
     <div className="comp">
-      <textarea className="inp" aria-label={label} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKey} />
+      <textarea ref={box} className="inp" aria-label={label} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKey} />
       <div className="comp-row">
+        {emoji.button}
         <span className="hint">{t("messenger.composer.hint")}</span>
         <button type="button" className="btn" onClick={onClear}>{t("messenger.composer.clear")}</button>
         <button type="button" className="btn cta" disabled={busy} onClick={onSend}>{t("messenger.composer.send")}</button>

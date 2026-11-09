@@ -225,7 +225,8 @@ test("import: pass A asks the model with the card text in the user message, pass
   expect(p.about).toContain("Мешканка озера");
   expect(p.interests).toEqual(["вода", "очерет", "чутки"]);
   expect(p.habits.map((h: any) => [h.text, h.by])).toEqual([["Пише вечорами", "self"], ["Мовчить, коли її перебивають", "self"]]);
-  expect(p.voice).toMatchObject({ length: 0, formality: 55, emoji: 0, never: ["капслок"] });
+  // an imported profile starts at "now and then" for emoji (#316); the user can change it on the Writing manner tab
+  expect(p.voice).toMatchObject({ length: 0, formality: 55, emoji: 1, never: ["капслок"] });
   expect(p.forum).toMatchObject({ rank: "Мешканка озера", frequency: 35, opensOwn: true });
   expect(p.schedule).toHaveLength(8);
   // filed, and the list shows it
