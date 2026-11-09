@@ -3,6 +3,11 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+- **Your posts on the forum are shown as your persona.** A post by you showed "You" with a letter, even with an active persona in Your profile. It now shows the persona's name and picture; a post keeps the persona it was written as, older posts show the active one, and a quote of your post names the persona.
+- **The messenger's memory is yours to set.** Settings > Messenger > "Messages a character remembers" (4 to 500, 24 by default) is how many of the latest messages of a chat go to the model with each reply. More is a longer memory but a bigger, slower, costlier request; older messages stay in the chat.
+
 ## 0.4.1 (2026-11-09)
 
 - **Dialogs scroll.** A dialog whose content was taller than the window ("Update from card" with a long About and many interests) cut off its lower part and its buttons, and could not be scrolled, so there was no way to accept or close it with the mouse. The body of every dialog now scrolls, with the title and the buttons always in view. The Social plugins are unchanged (0.4.0).

@@ -327,9 +327,16 @@ export function systemPromptFor(p, you, recent, opts) {
   return lines.join("\n");
 }
 
-/** The model's history: the last messages, in order, the user's as "user" and the profile's as "assistant". */
-export function historyFor(messages) {
-  const tail = messages.slice(-HISTORY);
+/** How many of the latest messages go to the model: Settings > Messenger (4 to 500), 24 when it was never set. */
+export function historyLimit(fsx) {
+  const s = readJson(fsx, "settings.json", null);
+  const n = isObj(s) ? s.messengerContext : undefined;
+  return Number.isInteger(n) && n >= 4 && n <= KEEP ? n : HISTORY;
+}
+
+/** The model's history: the last `limit` messages (24 by default), in order, the user's as "user" and the profile's as "assistant". */
+export function historyFor(messages, limit) {
+  const tail = messages.slice(-(Number.isInteger(limit) && limit > 0 ? limit : HISTORY));
   return tail.map((m) => ({ role: m.who === SELF ? "user" : "assistant", content: [m.text, imageLine(m.image)].filter(Boolean).join(" ") }));
 }
 
@@ -378,7 +385,7 @@ function requestReply(host, key, profile, chat) {
   host.llm.request(key, {
     ...(model ? { model } : {}),
     systemPrompt: systemPromptFor(profile, youOf(host.fs), recentDays(host.fs, profile, Date.now()), { images: mayImage(host.fs, chat, Date.now()) }),
-    messages: historyFor(chat.messages),
+    messages: historyFor(chat.messages, historyLimit(host.fs)),
     presetParams: { temperature: 0.85, max_tokens: MAX_TOKENS[length] },
   });
 }

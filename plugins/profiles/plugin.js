@@ -402,6 +402,8 @@ export const DEFAULT_SETTINGS = {
   messengerFirst: true,
   messengerPerDay: 5,
   messengerQuiet: "same",
+  /** How many of the latest messages of a chat go to the model with each reply (the chat keeps 500). */
+  messengerContext: 24,
   models: { messenger: "", forum: "", import: "", image: "" },
   /** Pictures in messages (issue #331): characters may send generated pictures (off by default: each is an image call), at most `perDay` each, in the messenger and on the forum separately. */
   images: { on: false, perDay: 2 },
@@ -458,6 +460,7 @@ export function mergeSettings(base, patch) {
     messengerFirst: bool(p.messengerFirst, b.messengerFirst),
     messengerPerDay: clampInt(p.messengerPerDay, 0, 50, b.messengerPerDay),
     messengerQuiet: oneOf(p.messengerQuiet, ["same", "own"], b.messengerQuiet),
+    messengerContext: clampInt(p.messengerContext, 4, 500, Number.isInteger(b.messengerContext) ? b.messengerContext : 24),
     models: {
       messenger: "messenger" in m ? modelRef(m.messenger) : b.models.messenger,
       forum: "forum" in m ? modelRef(m.forum) : b.models.forum,

@@ -155,6 +155,8 @@ export interface EnginePost {
   at: number;
   text: string;
   quote?: { by: string; name: string; text: string };
+  /** A post by the user: the persona it is shown as (null: "You"). */
+  as?: { name: string; hue: number; picture: string } | null;
   /** A picture the user attached or a character sent (drawn, or waiting to be). */
   image?: MsgImage;
   /** The user removed it: the text is gone, the place stays. */
@@ -280,7 +282,7 @@ export function categoriesFromEngine(home: EngineHome, lang: string, t: Translat
         ? {
             topicId: b.last.topicId,
             title: b.last.title,
-            who: b.last.by === "me" ? t("shell.me") : b.last.name,
+            who: b.last.name || (b.last.by === "me" ? t("shell.me") : ""),
             hue: b.last.by === "me" ? undefined : b.last.hue,
             when: whenLabel(b.last.at, home.now, lang, t),
             whenShort: whenShort(b.last.at, home.now, lang, t),
@@ -312,12 +314,12 @@ export function rowsFromEngine(page: EngineBoardPage, now: number, lang: string,
   return page.topics.map((r) => ({
     id: r.id,
     title: r.title,
-    who: r.by === "me" ? t("shell.me") : r.name,
+    who: r.by === "me" ? r.name || t("shell.me") : r.name,
     hue: r.by === "me" ? undefined : r.hue,
     me: r.by === "me",
     replies: r.replies,
     last: {
-      who: r.lastBy === "me" ? t("shell.me") : r.lastName,
+      who: r.lastBy === "me" ? r.lastName || t("shell.me") : r.lastName,
       hue: r.lastBy === "me" ? undefined : r.lastHue,
       when: whenLabel(r.lastAt, now, lang, t),
       whenShort: whenShort(r.lastAt, now, lang, t),
@@ -336,10 +338,10 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
     return {
       id: p.id,
       n: from + i + 1,
-      who: me ? t("shell.me") : (a?.name ?? p.name),
+      who: me ? p.as?.name || p.name || t("shell.me") : (a?.name ?? p.name),
       me,
       hue: me ? undefined : (a?.hue ?? p.hue),
-      picture: me ? undefined : (a?.picture || undefined),
+      picture: me ? p.as?.picture || undefined : (a?.picture || undefined),
       role: me ? t("forum.role.owner") : (a?.rank ?? ""),
       count: a?.count ?? 0,
       joined: a ? joinedLabel(a.joined) : "",
@@ -349,7 +351,7 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
       text: p.text,
       ...(p.image && !p.removed ? { image: p.image } : {}),
       ...(p.removed ? { removed: true } : {}),
-      ...(p.quote ? { quote: { who: p.quote.by === "me" ? t("shell.me") : p.quote.name, text: p.quote.text } } : {}),
+      ...(p.quote ? { quote: { who: p.quote.by === "me" ? p.quote.name || t("shell.me") : p.quote.name, text: p.quote.text } } : {}),
       ...(a?.signature ? { sig: a.signature } : {}),
       online: a?.online ?? false,
     };
@@ -380,7 +382,7 @@ export function searchRowsFromEngine(s: EngineSearch, now: number, lang: string,
       id: h.id,
       title: h.title,
       where: [h.category, h.board.name].filter(Boolean).join(" › "),
-      who: me ? t("shell.me") : h.name,
+      who: me ? h.name || t("shell.me") : h.name,
       hue: me ? undefined : h.hue,
       me,
       when: whenLabel(h.at, now, lang, t),

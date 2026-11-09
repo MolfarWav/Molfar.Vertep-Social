@@ -39,7 +39,8 @@ const route = (mod: any, h: H, method: string, p: string, body?: unknown, extra:
 const GOOD = "/v1/assets/abc123";
 
 test("the messenger and the forum carry the same pictures block", () => {
-  const block = (f: string) => /\/\/ <images-shared>[\s\S]*?\/\/ <\/images-shared>/.exec(fs.readFileSync(path.join(root, f), "utf8"))?.[0];
+  // CRLF checkouts (Windows) read the same as LF ones
+  const block = (f: string) => /\/\/ <images-shared>[\s\S]*?\/\/ <\/images-shared>/.exec(fs.readFileSync(path.join(root, f), "utf8").replaceAll("\r\n", "\n"))?.[0];
   expect(block("plugins/messenger/plugin.js")).toBeTruthy();
   expect(block("plugins/forum/plugin.js")).toBe(block("plugins/messenger/plugin.js"));
 });

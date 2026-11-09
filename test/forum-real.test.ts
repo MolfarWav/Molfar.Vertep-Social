@@ -116,6 +116,28 @@ test("a topic becomes posts: numbers, the Re: subject, ranks, quotes with names,
   expect(posts[2]).toMatchObject({ who: "Старий", hue: 40, online: false, count: 0 }); // an author whose profile is gone still reads
 });
 
+test("a post by the user shows the persona it was written as, with its picture; without one it says Me", () => {
+  const base = { id: "t1", title: "Fence", board: { id: "b1", name: "Guest", category: "General" }, createdAt: 1, lastAt: 2, locked: false, unread: false };
+  const me = { name: "", hue: 200, rank: "", signature: "", count: 2, joined: 0, online: true };
+  const page: EngineTopicPage = {
+    topic: {
+      ...base,
+      posts: [
+        { id: "p1", by: "me", name: "Vladyslav", hue: 30, at: 1, text: "Hi", as: { name: "Vladyslav", hue: 30, picture: "/v1/assets/vlad1" } },
+        { id: "p2", by: "me", name: "", hue: 200, at: 2, text: "Old", as: null },
+        { id: "p3", by: "me", name: "Mira", hue: 200, at: 3, text: "Quoting", quote: { by: "me", name: "Vladyslav", text: "Hi" }, as: { name: "Mira", hue: 200, picture: "" } },
+      ],
+    },
+    authors: { me },
+  };
+  const posts = postsFromEngine(page, NOW, "en", t);
+  expect(posts[0]).toMatchObject({ who: "Vladyslav", me: true, picture: "/v1/assets/vlad1" });
+  expect(posts[1]).toMatchObject({ who: "Me", me: true });
+  expect(posts[1].picture).toBeUndefined();
+  expect(posts[2]).toMatchObject({ who: "Mira", quote: { who: "Vladyslav" } });
+  expect(posts[2].picture).toBeUndefined();
+});
+
 test("the Write now answer becomes the line under the strip", () => {
   const plural = (n: number) => `${n} posts`;
   expect(noticeFromForce({ ok: true, written: 2 }, plural, t)).toEqual({ kind: "ok", text: "Written: 2 posts." });

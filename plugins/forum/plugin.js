@@ -301,14 +301,54 @@ function readProfile(fsx, id) {
 
 export const loadProfiles = (fsx) => names(fsx, "profiles", "json").map((id) => readProfile(fsx, id)).filter(Boolean);
 
+// ---------- the user's persona on their posts ----------
+// A post by the user carries the persona it was written as (`persona`: the id in you.json) and its name and hue at that time.
+// The view adds `as` ({name, hue, picture}): the persona by that id, or the active one for a post written before this existed
+// (and the stored name when the persona has since been deleted); null when there is no persona at all, and the screen says "You".
+
+/** The personas of Your profile and the active one: {active, personas: [{id, name, hue, picture}]}. */
+function youPersonas(fsx) {
+  const y = readJson(fsx, "you.json", null);
+  const list = (isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && ID.test(String(x.id)) && str(x.name));
+  return {
+    active: isObj(y) && list.some((x) => x.id === y.active) ? y.active : list.length ? list[0].id : "",
+    personas: list.map((x) => ({
+      id: String(x.id),
+      name: oneLine(x.name, 80),
+      hue: Number.isFinite(x.hue) ? x.hue : 200,
+      picture: typeof x.picture === "string" && /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/.test(x.picture) ? x.picture : "",
+    })),
+  };
+}
+
+/** The persona a new post of the user is written as: {id, name, hue} or null. */
+function meNow(fsx) {
+  const y = youPersonas(fsx);
+  const p = y.personas.find((x) => x.id === y.active);
+  return p ? { id: p.id, name: p.name, hue: p.hue } : null;
+}
+
+/** The fields of a new post by the user: author, name and hue of the persona, and which persona. */
+const meFields = (me) => ({ by: SELF, name: me ? me.name : "", hue: me ? me.hue : 200, ...(me ? { persona: me.id } : {}) });
+
+/** How a post by the user is shown: {name, hue, picture} or null. */
+function personaFor(you, post) {
+  const own = post.persona ? you.personas.find((x) => x.id === post.persona) : null;
+  if (own) return { name: own.name, hue: own.hue, picture: own.picture };
+  if (post.persona) return post.name ? { name: post.name, hue: post.hue, picture: "" } : null;
+  const active = you.personas.find((x) => x.id === you.active);
+  return active ? { name: active.name, hue: active.hue, picture: active.picture } : null;
+}
+
 function cleanPost(p) {
   if (!isObj(p) || typeof p.text !== "string" || !Number.isFinite(p.at)) return null;
   const by = String(p.by);
   if (by !== SELF && !ID.test(by)) return null;
   const q = isObj(p.quote) && str(p.quote.text) ? { by: String(p.quote.by), name: oneLine(p.quote.name, 80), text: cut(String(p.quote.text), 300) } : null;
+  const persona = by === SELF && typeof p.persona === "string" && ID.test(p.persona) ? p.persona : "";
   if (p.removed === true) return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: "", removed: true };
   const image = cleanImage(p.image);
-  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(q ? { quote: q } : {}), ...(image ? { image } : {}) };
+  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(persona ? { persona } : {}), ...(q ? { quote: q } : {}), ...(image ? { image } : {}) };
 }
 
 export function readTopic(fsx, id) {
@@ -849,7 +889,7 @@ export function parseTickKey(key) {
   return m[1] === "r" ? { kind: "reply", author: m[2], topic: m[3], quote: m[4] && m[4] !== "-" ? m[4] : "" } : { kind: "topic", author: m[2], board: m[3], ref: m[4] || "" };
 }
 
-const quoteOf = (p) => ({ by: p.by, name: p.by === SELF ? "" : p.name, text: cut(p.text.replace(/\s+/g, " "), 160) });
+const quoteOf = (p) => ({ by: p.by, name: p.name, text: cut(p.text.replace(/\s+/g, " "), 160) });
 
 /** Whether this author may send a picture now: the switch is on and today's cap (counted from the stored posts) is not used up. */
 function mayImage(fsx, author, topics, now) {
@@ -1000,6 +1040,7 @@ function topicRoute(req, host) {
   const page = asked === "last" ? pages : Math.min(pages, Math.max(1, Math.floor(Number(asked)) || 1));
   const from = (page - 1) * PAGE_SIZE;
   const shown = topic.posts.slice(from, from + PAGE_SIZE);
+  const you = youPersonas(fsx);
   const authors = {};
   for (const p of shown) {
     if (authors[p.by]) continue;
@@ -1024,7 +1065,7 @@ function topicRoute(req, host) {
       lastAt: topic.lastAt,
       locked: topic.locked,
       unread: topic.unread,
-      posts: shown,
+      posts: shown.map((p) => (p.by === SELF ? { ...p, as: personaFor(you, p) } : p)),
     },
     paging: { page, pages, size: PAGE_SIZE, total, from, live: livePosts(topic).length },
     authors,
@@ -1165,8 +1206,9 @@ function newTopicRoute(req, host) {
   if (!text && !picked) return ok({ error: "a topic needs text" }, 400);
   if (loadTopics(fsx).length >= MAX_TOPICS) return ok({ error: "too many topics (" + MAX_TOPICS + ")" }, 400);
   const now = Date.now();
-  const post = { id: "p-" + now + "-" + rid(), by: SELF, name: "", hue: 200, at: now, text, ...(picked ? { image: picked } : {}) };
-  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: hit.board.id, title, by: SELF, name: "", hue: 200, createdAt: now, lastAt: now, locked: false, unread: false, owe: 1 + Math.floor(Math.random() * 3), posts: [post] };
+  const me = meNow(fsx);
+  const post = { id: "p-" + now + "-" + rid(), ...meFields(me), at: now, text, ...(picked ? { image: picked } : {}) };
+  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: hit.board.id, title, by: SELF, name: me ? me.name : "", hue: me ? me.hue : 200, createdAt: now, lastAt: now, locked: false, unread: false, owe: 1 + Math.floor(Math.random() * 3), posts: [post] };
   writeTopic(fsx, topic);
   userPosted(fsx, now);
   return ok({ ok: true, topic: topic.id });
@@ -1183,7 +1225,7 @@ function replyRoute(req, host) {
   if (!text && !picked) return ok({ error: "a reply needs text" }, 400);
   const now = Date.now();
   const target = typeof b.quoteOf === "string" ? topic.posts.find((p) => p.id === b.quoteOf && !p.removed) : null;
-  const post = { id: "p-" + now + "-" + rid(), by: SELF, name: "", hue: 200, at: now, text, ...(picked ? { image: picked } : {}), ...(target ? { quote: quoteOf(target) } : {}) };
+  const post = { id: "p-" + now + "-" + rid(), ...meFields(meNow(fsx)), at: now, text, ...(picked ? { image: picked } : {}), ...(target ? { quote: quoteOf(target) } : {}) };
   topic.posts.push(post);
   topic.lastAt = now;
   topic.unread = false;
