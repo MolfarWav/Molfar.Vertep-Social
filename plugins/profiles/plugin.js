@@ -882,6 +882,15 @@ export function partFor(text, key) {
 }
 
 const TRAIT_WORDS = { dominance: ["yielding", "dominant"], confidence: ["unsure", "confident"], shyness: ["bold", "shy"], patience: ["impatient", "patient"], curiosity: ["incurious", "curious"] };
+// The six spectra of the Soul tab: 0 = the first word, 100 = the second, 50 = no lean (Roleplay's docs/SOUL.md).
+const SPECTRA_WORDS = {
+  introvert_extrovert: ["introverted", "extroverted"],
+  cautious_reckless: ["cautious", "reckless"],
+  reserved_emotional: ["reserved", "emotional"],
+  lawful_rebellious: ["law-abiding", "rebellious"],
+  suspicious_trusting: ["suspicious", "trusting"],
+  pessimist_optimist: ["pessimistic", "optimistic"],
+};
 const CLASS_WORDS = { romantic: "romantic", ally: "an ally", neutral: "neutral", hostile: "hostile" };
 const PRONOUN_WORDS = { she: "she/her", he: "he/him", they: "they/them" };
 
@@ -901,6 +910,25 @@ export function soulLine(soul) {
     }
     if (words.length) bits.push("temperament: " + words.join(", "));
   }
+  // Spectra: the word where the character leans clearly (25 or less, 75 or more), "rather ..." for a milder lean (up to 40, from 60).
+  if (isObj(s.spectra)) {
+    const words = [];
+    for (const k of Object.keys(SPECTRA_WORDS)) {
+      const v = s.spectra[k];
+      if (typeof v !== "number" || !Number.isFinite(v)) continue;
+      if (v <= 25) words.push(SPECTRA_WORDS[k][0]);
+      else if (v >= 75) words.push(SPECTRA_WORDS[k][1]);
+      else if (v <= 40) words.push("rather " + SPECTRA_WORDS[k][0]);
+      else if (v >= 60) words.push("rather " + SPECTRA_WORDS[k][1]);
+    }
+    if (words.length) bits.push("leanings: " + words.join(", "));
+  }
+  // What they prize and what hurts them more, in the card's own words (cues are plain text, a few each).
+  const cues = (list) => (Array.isArray(list) ? list : []).map((x) => (isObj(x) ? plain(x.cue, 80) : "")).filter(Boolean).slice(0, 5);
+  const prizes = cues(s.values);
+  if (prizes.length) bits.push("prizes: " + prizes.join(", "));
+  const hurts = cues(s.triggers);
+  if (hurts.length) bits.push("hurt more by: " + hurts.join(", "));
   const coping = plain(s.coping, 300);
   if (coping) bits.push("under strain: " + coping);
   return bits.join("; ");

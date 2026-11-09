@@ -423,3 +423,21 @@ test("avatar: closed Roleplay, a missing portraits file or a refused read is a q
   profileFrom(host, "rp-a", "A", { kind: "card", id: "a" });
   expect(route(host, "POST", "/profiles/avatar", { profileId: "rp-a" }).json).toEqual({ ok: true, avatar: null });
 });
+
+test("the Soul line carries spectra, what the character prizes and what hurts them more", () => {
+  const line = plugin.soulLine({
+    pronouns: "she",
+    spectra: { introvert_extrovert: 10, cautious_reckless: 35, reserved_emotional: 50, lawful_rebellious: 90, suspicious_trusting: 65, pessimist_optimist: "x" },
+    values: [{ cue: "a kept word", event: "kept_promise", stat: "trust", x: 1.5 }, { cue: " ", event: "e", stat: "trust", x: 1.5 }],
+    triggers: [{ cue: "shouting", event: "raised_voice", stat: "comfort", x: 1.5 }],
+  });
+  expect(line).toContain("leanings: introverted, rather cautious, rebellious, rather trusting");
+  expect(line).not.toContain("reserved");
+  expect(line).toContain("prizes: a kept word");
+  expect(line).toContain("hurt more by: shouting");
+  // a Soul without them gives the same line as before
+  expect(plugin.soulLine({ pronouns: "he", coping: "goes quiet" })).toBe("pronouns he/him; under strain: goes quiet");
+  // several values and triggers stay short
+  const many = Array.from({ length: 12 }, (_, i) => ({ cue: "v" + i }));
+  expect(plugin.soulLine({ values: many }).split(", ").length).toBe(5);
+});

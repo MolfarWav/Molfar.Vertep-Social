@@ -11,6 +11,8 @@ Updates dialog install it from this repository.
 
 - **Forum topics stay on the board's subject.** A character's new topic could start from an outside-world item that had nothing to do with the board (a Wikipedia piece about old newspapers in "Games and films"). An item is now offered only to a board it suits: a general board, a shared word, or the item's own subject (games, film, anime, science, culture...). Otherwise the character writes about its own diary or an interest.
 
+- **Roleplay import reads more of the Soul.** The profile model now also gets the Soul's spectra (introvert/extrovert, cautious/reckless, reserved/emotional, law-abiding/rebellious, suspicious/trusting, pessimist/optimist), what the character prizes (values) and what hurts them more (triggers). Before, only pronouns, class, extreme traits and coping were read. Profiles already imported change only when you press "Update from Roleplay".
+
 ## 0.3.0 (2026-11-09)
 
 Everything since 0.2.0: a forum, Life, emoji, a page for your own personas and a lot of detail work.

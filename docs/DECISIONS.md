@@ -107,7 +107,7 @@ for a plugin with the `peer` permission (engine PR 321).
 - **Who may read, and when:** a card is read in two situations only: the user imports it, or presses "Update from Roleplay". No tick,
   route or prompt reads a card on its own. A card's text never goes into a messenger or forum prompt; the model that makes the digest
   gets it once. What the digest model reads: description, personality, scenario, first message, the Soul line (pronouns, class toward
-  the user, extreme traits, coping) and the structured profile lines the text does not already say. Never: example dialogue, system
+  the user, extreme traits, spectra as "leanings", the cues of values and triggers, coping) and the structured profile lines the text does not already say. Never: example dialogue, system
   prompt, notes for people, the avatar (it never reaches a model), the private note, the sexuality and trauma sections. A card is cut to about 12000 characters.
 - **Routes** (`plugins/profiles/plugin.js`): `GET /profiles/roleplay/status` (ready or closed), `GET /profiles/roleplay` (the list: titles
   and names only, no card text), `POST /profiles/import {kind, id, key?, model?}` (one card, one profile; the reply is the saved profile),
