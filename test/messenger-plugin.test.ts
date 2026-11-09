@@ -264,3 +264,15 @@ test("a message cut at the limit never tears an emoji", () => {
   expect(stored).toBe("a".repeat(max - 1));
   expect(hasLoneSurrogate(stored)).toBe(false);
 });
+
+test("contacts: an unread chat first, then the newest conversation, then the name", () => {
+  const sorted = (xs: any[]) => xs.slice().sort(plugin.contactOrder).map((c) => c.name);
+  const cs = [
+    { name: "Ada", lastAt: 0, unread: false },
+    { name: "Bo", lastAt: 100, unread: false },
+    { name: "Cy", lastAt: 50, unread: true },
+    { name: "Di", lastAt: 300, unread: false },
+    { name: "Ed", lastAt: 0, unread: false },
+  ];
+  expect(sorted(cs)).toEqual(["Cy", "Di", "Bo", "Ada", "Ed"]);
+});

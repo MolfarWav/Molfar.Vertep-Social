@@ -3,6 +3,10 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+- **New messages come first in the contact list.** Inside each status group the contacts with an unread message are now on top, then the one you talked to last, then the rest by name (they were all by name, so a new message hid among thirty contacts). The order is decided by the messenger plugin, so the phone list follows it too.
+
 ## 0.6.0 (2026-11-09)
 
 Sticker and custom emoji packs, with the animated Molfar pack, and characters that use them. The messenger and Profiles plugins are 0.6.0, the forum 0.5.0, the new stickers plugin 0.1.0 (Life stays 0.1.0).

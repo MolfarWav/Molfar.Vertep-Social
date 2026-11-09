@@ -3,7 +3,7 @@
  * (from the weekly schedule) that decides when a reply comes.
  *
  * Routes (relative to /v1/apps/social):
- *   GET  /messenger/contacts            {contacts: [{id, name, hue, picture, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
+ *   GET  /messenger/contacts            (unread first, then the newest chat, then the name) {contacts: [{id, name, hue, picture, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
  *   GET  /messenger/chat?id=<profile>   {chat: {id, status, nextOnline, messages, pending, failed}}
  *   POST /messenger/send {id, text}     adds the user's message; when the profile is online the reply is written now
  *          ({ok, queued, chat} or {ok: false, error, code?, chat}); otherwise the reply is queued (see below)
@@ -668,6 +668,11 @@ function lineOf(chat) {
   return last ? cut((last.text || (last.image ? "\ud83d\uddbc" : "")).replace(/\s+/g, " "), 80) : "";
 }
 
+/** The contact list order: an unread chat first, then the newest conversation, then the name (a chat never started sorts by name). */
+export function contactOrder(a, b) {
+  return Number(!!b.unread) - Number(!!a.unread) || (b.lastAt || 0) - (a.lastAt || 0) || a.name.localeCompare(b.name);
+}
+
 function contactsRoute(host) {
   const fsx = host.fs;
   const now = Date.now();
@@ -692,7 +697,7 @@ function contactsRoute(host) {
       pending: !!chat.pending,
     });
   }
-  contacts.sort((a, b) => a.name.localeCompare(b.name));
+  contacts.sort(contactOrder);
   return ok({ contacts, now });
 }
 
