@@ -286,6 +286,7 @@ function readProfile(fsx, id) {
     picture: typeof p.picture === "string" && /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/.test(p.picture) ? p.picture : "",
     schedule: p.schedule,
     life: isObj(p.life) ? p.life : {},
+    knows: KNOWS.includes(p.knows) ? p.knows : "",
     createdAt: num(p.createdAt),
     forum: {
       rank: str(f.rank),
@@ -572,6 +573,59 @@ export function lifeSubject(fsx, p, now, shared, rand, fits) {
   return r() < LIFE_WORLD_SHARE ? cand[1] : cand[0];
 }
 
+// ---------- what a character knows of the human user (issue #336) ----------
+// The messenger decides how well a character knows the user (`knows` on the profile, else Settings > Messenger, else "knows") and keeps a
+// memory note per chat (`chats/<id>.json` `summary`). The forum reads both, never writes them. Plugins cannot import each other, so
+// `youOf` and `knowsOf` are copies of the messenger's (test/forum-user.test.ts pins that they agree).
+
+const KNOWS = ["knows", "name", "stranger"];
+const NOTE_FOR_FORUM = 800;
+
+/** The active persona of Your profile ({name, about}), or null. */
+export function youOf(fsx) {
+  const y = readJson(fsx, "you.json", null);
+  if (!isObj(y) || !Array.isArray(y.personas)) return null;
+  const p = y.personas.find((x) => isObj(x) && x.id === y.active) || y.personas.find((x) => isObj(x) && str(x.name));
+  return isObj(p) && str(p.name) ? { name: cut(str(p.name), 80), about: cut(str(p.about), 600) } : null;
+}
+
+/** How well the profile knows the user: its own choice, else Settings > Messenger, else "knows". */
+export function knowsOf(fsx, profile) {
+  if (isObj(profile) && KNOWS.includes(profile.knows)) return profile.knows;
+  const s = readJson(fsx, "settings.json", null);
+  return isObj(s) && KNOWS.includes(s.messengerKnows) ? s.messengerKnows : "knows";
+}
+
+/** The memory note of this profile's chat with the user, as the messenger keeps it; "" when there is none or the messenger's note switch is off. */
+export function chatNote(fsx, profile) {
+  const s = readJson(fsx, "settings.json", null);
+  if (isObj(s) && s.messengerSummary === false) return "";
+  const chat = readJson(fsx, "chats/" + profile.id + ".json", null);
+  const sum = isObj(chat) && isObj(chat.summary) ? chat.summary : null;
+  return sum ? cut(noControls(str(sum.text)).replace(/<[^>]*>/g, " ").replace(/[ \t]{2,}/g, " ").trim(), NOTE_FOR_FORUM) : "";
+}
+
+/**
+ * What an author may know of the human user while writing a reply: {label, name, about, note} or null when the user is not in this
+ * conversation (none of the recent posts is the user's). `label` is how the user's posts are named
+ * in the prompt (the persona name on the post; "" for a stranger, whose prompt keeps "User"). `name` and `about` follow `knows` ("knows": both, "name":
+ * the name, "stranger": neither). The chat's memory note is added only when the reply goes to the user (their post is the target, or the
+ * last post of the topic) and the character is not a stranger: it is private, so a character that answers another character does not
+ * bring it up, and a stranger has no memories of the user to bring (the note would also give the name away).
+ */
+export function userKnownTo(fsx, author, topic, target) {
+  const recent = livePosts(topic).slice(-CONTEXT_POSTS);
+  const mine = recent.filter((x) => x.by === SELF);
+  // without a target the reply goes to the topic: it is to the user when the user wrote the last post
+  const toUser = target ? target.by === SELF : recent.length > 0 && recent[recent.length - 1].by === SELF;
+  if (!mine.length && !toUser) return null;
+  const knows = knowsOf(fsx, author);
+  const you = youOf(fsx);
+  const posted = (target && target.by === SELF ? target : mine[mine.length - 1] || {}).name;
+  const name = knows === "stranger" ? "" : str(posted) || (you ? you.name : "");
+  return { label: name, name, about: knows === "knows" && you ? you.about : "", note: toUser && knows !== "stranger" ? chatNote(fsx, author) : "" };
+}
+
 const LENGTH_WORDS = ["Short: one or two sentences.", "Medium: two to four sentences.", "Long: a short paragraph when the topic asks for it."];
 // Real Unicode emoji only: the app draws them with its own emoji font, and ":smile:" codes or text faces would show as plain text.
 const EMOJI_WORDS = [
@@ -594,6 +648,10 @@ export function systemPromptFor(p, recent, opts) {
   if (habits.length) lines.push("Your habits: " + habits.join("; ") + ".");
   if (str(v.text)) lines.push("How you write: " + cut(str(v.text), 800));
   if (str(recent)) lines.push(recent);
+  const user = isObj(opts) && isObj(opts.user) ? opts.user : null;
+  if (user && user.name) lines.push("The human user writes on this forum as " + user.name + ". You know them: they are the person you chat with in the messenger." + (user.about ? " About them (what they told you): " + cut(user.about, 600) : ""));
+  else if (user) lines.push("You do not know who the human user is beyond what they write here; do not guess their name.");
+  if (user && user.note) lines.push("What you remember from your private chats with them (your own notes): " + cut(user.note, NOTE_FOR_FORUM) + "\nThat stays between the two of you: do not quote it or reveal it on the forum, let it only shape how you speak to them.");
   lines.push(LENGTH_WORDS[length] + " " + EMOJI_WORDS[emoji] + " " + (formality >= 66 ? "Formal, polite address." : formality <= 33 ? "Informal, on first-name terms." : "Neutral tone."));
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
   lines.push("Write plain forum text: no quotation marks around the whole post, no stage directions or narration, no name label, no signature.");
@@ -664,19 +722,19 @@ function markLifeUsed(fsx, authorId, ref) {
   fsx.write(LIFE_USED, JSON.stringify(u, null, 2));
 }
 
-const postLine = (p) => (p.by === SELF ? "User" : p.name) + ": " + cut([p.text, imageLine(p.image)].filter(Boolean).join(" ").replace(/\s+/g, " "), 600);
+const postLine = (p, userLabel) => (p.by === SELF ? userLabel || "User" : p.name) + ": " + cut([p.text, imageLine(p.image)].filter(Boolean).join(" ").replace(/\s+/g, " "), 600);
 
 /** The user message of a reply: where we are, the last posts, who is being answered. */
-export function replyContext(board, topic, target) {
+export function replyContext(board, topic, target, userLabel) {
   const lines = [];
   if (board) lines.push("Board: " + board.name + (board.desc ? " (" + board.desc + ")" : ""));
   lines.push('Topic: "' + topic.title + '"');
   lines.push("Recent posts, oldest first:");
-  for (const p of livePosts(topic).slice(-CONTEXT_POSTS)) lines.push(postLine(p));
+  for (const p of livePosts(topic).slice(-CONTEXT_POSTS)) lines.push(postLine(p, userLabel));
   lines.push("");
   lines.push(
     target
-      ? "Write your next post in this topic. You are answering " + (target.by === SELF ? "the user" : target.name) + "'s post: " + cut(target.text.replace(/\s+/g, " "), 200)
+      ? "Write your next post in this topic. You are answering " + (target.by === SELF ? userLabel || "the user" : target.name) + "'s post: " + cut(target.text.replace(/\s+/g, " "), 200)
       : "Write your next post in this topic.",
   );
   lines.push("Write only the text of the post.");
@@ -848,12 +906,12 @@ export function planAction(c, rand) {
 
 // ---------- requests and filing ----------
 
-function requestPost(host, key, settings, author, userMessage, maxTokens, images) {
+function requestPost(host, key, settings, author, userMessage, maxTokens, images, user) {
   // the author's own model (Profiles > Model) wins over the forum's model in Settings
   const model = author.model || settings.model;
   host.llm.request(key, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(author, recentDays(host.fs, author, Date.now()), { images: images === true }),
+    systemPrompt: systemPromptFor(author, recentDays(host.fs, author, Date.now()), { images: images === true, ...(user ? { user } : {}) }),
     messages: [{ role: "user", content: userMessage }],
     presetParams: { temperature: 0.9, max_tokens: maxTokens },
   });
@@ -865,7 +923,8 @@ const lengthIndex = (p) => (isObj(p.voice) && [0, 1, 2].includes(p.voice.length)
 function requestPlan(host, key, settings, plan, boards, topics, rand) {
   if (plan.kind === "reply") {
     const b = boardMap(boards).get(plan.topic.board);
-    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()));
+    const user = userKnownTo(host.fs, plan.author, plan.topic, plan.target);
+    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target, user ? user.label : ""), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()), user);
   } else {
     const titles = topics.filter((t) => t.board === plan.board.id).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
     const subject = plan.subject || pickSubject(plan.author, { board: plan.board, titles }, rand);

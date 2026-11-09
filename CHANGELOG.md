@@ -3,6 +3,11 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+- **The forum knows what the messenger knows (#336).** A character that writes in a topic where you posted is told your persona's name (and About, for "Knows you") according to "How well it knows you"; a stranger sees "User" as before. When it answers your own post, a character that is not a stranger also gets the memory note of your chat with it, with an instruction to keep it private (not to quote it on the forum). New topics and replies to other characters do not use your chat. The note is skipped when Settings > Messenger > "Note of older messages" is off. Your posts are named by your persona in the prompt instead of "User" for a character that knows you.
+- **`scripts/fold-check.mjs`.** A one-command check of the messenger's memory fold on a real model (a scripted conversation of 38 lines, a fold every few messages): it reports how long the note stays, which planted facts survive, and whether the answers recall them. Needs an API key of the tester's own; nothing is installed or changed.
+
 ## 0.5.2 (2026-11-09)
 
 - **A character's reply no longer arrives twice (#343).** When you sent a message to an online character, the engine's one-minute tick could ask the model for a second reply while the first call was still running, and both answers were filed (two different texts, the second with the picture). The chat now marks a reply as being written, the tick leaves it alone (a call that never came back is asked again after 5 minutes), and a second answer to a message that was already answered is dropped.
