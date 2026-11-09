@@ -1,4 +1,4 @@
-<!-- source: b52f839cace6 -->
+<!-- source: 9838f3720b06 -->
 # Social: Messenger
 
 De Messenger is een chat met de personages die in Social wonen. Je ziet een contactenlijst, het gesprek met het geselecteerde contact en een kaart met hun gegevens. Wie één-op-één met een personage wil praten, begint hier.
@@ -15,9 +15,15 @@ Selecteer een contact om de chat te openen. Jouw berichten en die van hen zijn r
 
 De status verandert hoe een personage zich gedraagt. Een online personage antwoordt binnen seconden. Een away personage antwoordt binnen een paar minuten. Een offline personage krijgt het bericht en antwoordt als het terug is; de chat zegt dat het bericht dan wordt beantwoord. Terwijl een antwoord onderweg is zie je "<name> is typing…". Komt er geen antwoord, dan vertelt de chat wat er misging en biedt hij "Try again" aan. Als er geen model is gekozen voor de Messenger, zegt de chat dat en linkt hij naar de instellingen.
 
-### Emoji
+### Geheugen en een nieuw gesprek
 
-Een personage ziet bij elk antwoord de laatste 24 berichten van de chat, dus een lange chat wordt maar zover terug onthouden. Het aantal kun je wijzigen in Settings, Messenger, "Messages a character remembers" (4 tot 500; zie [[settings]]).
+Een personage ziet bij elk antwoord de laatste 24 berichten van de chat (4 tot 500 in Settings, Messenger, "Messages a character remembers"; zie [[settings]]). Oudere berichten gaan niet verloren: wanneer ze uit beeld raken, vouwt een modelaanroep ze af en toe samen tot een korte **notitie** die met de laatste berichten naar het model gaat. De notitie staat onder "Memory" in de infokaart op een computer; de knop "Memory and conversation…" daar, of de boekknop in de bovenbalk van de chat op een telefoon, opent haar. Je kunt de notitie lezen, bewerken en op "Save note" drukken: wat je schrijft vervangt haar, en het model vult haar later aan. "Note of older messages" in Settings schakelt het samenvouwen uit.
+
+In hetzelfde venster zet **New conversation…** een scheidslijn in het logboek. Het personage ziet niets van voor die lijn. "Keep the note and start" vouwt eerst de berichten die nog niet in de notitie staan samen (één modelaanroep), zodat het personage de kern nog onthoudt; "Start without the note" begint met niets. De oude berichten blijven boven de scheidslijn in de chat. **Clear chat…** verwijdert na een vraag de hele geschiedenis en de notitie; dat kan niet ongedaan worden gemaakt.
+
+Hoeveel een personage je kent is ook een keuze: "Characters know you" in Settings (de standaard), of "How well it knows you" op het tabblad Voice van een profiel. **Knows you** vertelt het model de naam en "About" van je actieve persona; **Name only** alleen de naam; **Stranger** niets, en het personage leert over jou alleen wat je zelf schrijft. Een bericht tussen dubbele haakjes, zoals ((dit)), of een bericht dat met OOC begint, is jij die buiten de rol spreekt: het personage antwoordt kort en duidelijk en gaat dan verder.
+
+### Emoji
 
 De smiley-knop naast het berichtvak ("Emoji") opent een kiezer met een zoekveld, de groepen (smileys, mensen, dieren, eten, reizen, activiteiten, voorwerpen, symbolen, vlaggen) en de emoji die je het laatst gebruikte. Klik op een emoji om hem bij de cursor te zetten, of over de tekst die je hebt geselecteerd; de kiezer sluit en je typt verder. Houd Shift ingedrukt terwijl je klikt om hem open te houden en er meer toe te voegen. Typ in "Search emoji" om er één op naam te vinden, in het Engels of Oekraïens; Enter kiest de eerste treffer. De zes puntjes onderaan ("Skin tone") wijzigen de huidtint van de emoji die er een hebben, en je keuze wordt onthouden, net als de recente. Op een telefoon opent de kiezer onder het berichtvak in plaats van erover heen, en blijft hij open tot je op het kruisje of de smileyknop drukt. Pijltjestoetsen bewegen tussen de emoji en Escape sluit de kiezer.
 
