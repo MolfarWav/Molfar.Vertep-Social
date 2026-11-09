@@ -172,3 +172,9 @@ for a plugin with the `peer` permission (engine PR 321).
 - **What characters see:** nothing. `livePosts(topic)` (posts without placeholders) feeds the prompts, the author counts, the board and home counts, the choice of whom to answer (an owed reply to a removed user post is dropped; with no live user post left `owe` is 0), the repeat check and quoting; search skips them. `GET /forum/topic` says `paging.live` so the header counts only existing posts.
 - **UI:** a red "Remove" button after Quote and Reply (it stays when the topic is closed, the others go), turning into an inline question "Remove this post for good?" with Remove and Keep; 44 px buttons on a phone. Real forum only; the design preview still has its mock placeholder (`state=moderated`).
 - **Not done:** removing several posts at once, undo, removing a character's post from the character's profile counters beyond the live count, a moderation log.
+
+## Language (2026-11-09)
+- **Bug:** Social showed Ukrainian while the whole app was English, and had no language switch at all. Cause: `pickLang` fell back to `navigator.language` (the phone's language), the engine's `molfarShell.locale()` was never asked, and `setLang` was not wired to any control.
+- **Now:** Auto (follow the app's language, any non-Ukrainian shell locale reads as English) / English / Ukrainian in Settings (a card on desktop, the first row under "Other" on a phone). Proposed here, not asked: a shell locale other than uk or en (for example Russian) gives English.
+- **Not done:** an engine event for a language change (today Social re-asks when its tab comes back into view).
+
