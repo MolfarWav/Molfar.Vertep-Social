@@ -29,6 +29,8 @@
  *   (topic and reply also take {image: {url, alt?, gen?}}: a picture the user attached, with or without text)
  *   GET  /forum/images                the pictures characters asked for that nobody has drawn yet: {items: [{topic, post, prompt, model}]}
  *   POST /forum/image {topic, post, url? | error?}   the page files a drawn picture (or says it failed)
+ *   GET  /forum/notices               {items, unread, seenAt}: who answered the user or reacted to their post (newest 30; `new` = not seen yet)
+ *   POST /forum/notices-read          the user opened the list: everything so far counts as seen
  *   POST /forum/read {topic}          clears the topic's unread mark
  *   POST /forum/lock {topic, locked}  the user closes (locked: true) or reopens a topic; a closed topic takes no
  *          new posts (the user's or the characters'), keeps its place by its last post and shows a lock
@@ -1557,13 +1559,14 @@ function reactRoute(req, host) {
 }
 
 /** One chance per tick that a character reacts to a post; true when the log changed. */
-function reactTick(fsx, s, log, now, tz, rand) {
+export function reactTick(fsx, s, log, now, tz, rand) {
   if (!s.autonomous || !s.reactions || rand() >= REACT_CHANCE || inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
   const profiles = loadProfiles(fsx);
   if (!profiles.length) return false;
   const topics = loadTopics(fsx);
   const pick = pickReaction({ profiles, topics, settings: s, log, now, tz, feels: feelsOf(fsx, profiles), rel: s.jealousy ? relationsOf(fsx, profiles, topics, now, s) : null }, rand);
   if (!pick || !putReaction(fsx, pick.topic.id, pick.post.id, pick.emoji, pick.author.id, true)) return false;
+  if (pick.post.by === SELF) addNotice(fsx, { kind: "react", by: pick.author.id, name: pick.author.name, hue: pick.author.hue, topic: pick.topic.id, post: pick.post.id, emoji: pick.emoji }, now);
   log.reacts[pick.author.id] = (log.reacts[pick.author.id] || 0) + 1;
   return true;
 }
@@ -1962,6 +1965,68 @@ export function fileChronicle(fsx, result, boards, now, rand, tz) {
   return { topicId: topic.id };
 }
 
+// ---------- notices (#367): who answered you or reacted to your post ----------
+// A short list for the user, written when it happens (a reaction has no time of its own, so it cannot be found afterwards): forum/notices.json
+// {items: [{id, kind: "reply"|"react"|"repost", by, name, hue, topic, post, at, emoji?, excerpt?}], seenAt}. At most NOTICES_KEEP, two weeks.
+// The page opens the list and says it was seen (`POST /forum/notices-read`); the number that has not been seen rides on `/forum/home`.
+
+const NOTICES_FILE = "forum/notices.json";
+const NOTICES_KEEP = 60;
+const NOTICES_LIVE_MS = 14 * 24 * 3600 * 1000;
+const NOTICE_KINDS = ["reply", "react", "repost"];
+
+function readNotices(fsx, now) {
+  const d = readJson(fsx, NOTICES_FILE, null);
+  const r = isObj(d) ? d : {};
+  const items = (Array.isArray(r.items) ? r.items : [])
+    .filter((i) => isObj(i) && NOTICE_KINDS.includes(i.kind) && typeof i.id === "string" && typeof i.by === "string" && ID.test(i.by) && typeof i.topic === "string" && ID.test(i.topic) && typeof i.post === "string" && Number.isFinite(i.at) && now - i.at < NOTICES_LIVE_MS)
+    .map((i) => ({ id: i.id, kind: i.kind, by: i.by, name: oneLine(i.name, 80), hue: Number.isFinite(i.hue) ? i.hue : 200, topic: i.topic, post: i.post, at: i.at, ...(typeof i.emoji === "string" && REACTIONS.includes(i.emoji) ? { emoji: i.emoji } : {}), ...(typeof i.excerpt === "string" && i.excerpt ? { excerpt: cut(i.excerpt, 140) } : {}) }));
+  return { items, seenAt: num(r.seenAt) };
+}
+
+/** One notice about a post of the user's; a character's repeat of the same thing on the same post is not told twice. */
+function addNotice(fsx, n, now) {
+  const d = readNotices(fsx, now);
+  if (d.items.some((i) => i.kind === n.kind && i.by === n.by && i.post === n.post && i.emoji === n.emoji && n.kind !== "reply")) return;
+  d.items.push({ id: "n-" + now.toString(36) + "-" + rid(), at: now, ...n });
+  fsx.write(NOTICES_FILE, JSON.stringify({ items: d.items.slice(-NOTICES_KEEP), seenAt: d.seenAt }));
+}
+
+function noticesRoute(host) {
+  const fsx = host.fs;
+  const now = Date.now();
+  const d = readNotices(fsx, now);
+  const items = [];
+  for (const i of d.items.slice().sort((a, b) => b.at - a.at)) {
+    const topic = readTopic(fsx, i.topic);
+    const post = topic ? topic.posts.find((p) => p.id === i.post && !p.removed) : null;
+    if (!topic || !post) continue;
+    const prof = readProfile(fsx, i.by);
+    items.push({ ...i, name: prof ? prof.name : i.name, hue: prof ? prof.hue : i.hue, picture: prof ? prof.picture : "", title: topic.title, new: i.at > d.seenAt });
+    if (items.length >= 30) break;
+  }
+  return ok({ items, unread: items.filter((i) => i.new).length, seenAt: d.seenAt });
+}
+
+function noticesReadRoute(host) {
+  const now = Date.now();
+  const d = readNotices(host.fs, now);
+  host.fs.write(NOTICES_FILE, JSON.stringify({ items: d.items, seenAt: now }));
+  return ok({ ok: true });
+}
+
+/** How many notices the user has not seen, counting only those whose post still exists. */
+function noticesUnread(fsx, now) {
+  const d = readNotices(fsx, now);
+  let n = 0;
+  for (const i of d.items) {
+    if (i.at <= d.seenAt) continue;
+    const topic = readTopic(fsx, i.topic);
+    if (topic && topic.posts.some((p) => p.id === i.post && !p.removed)) n++;
+  }
+  return n;
+}
+
 // ---------- requests and filing ----------
 
 function requestPost(host, key, settings, author, userMessage, maxTokens, images, user, topics, met) {
@@ -2067,6 +2132,10 @@ export function fileResult(fsx, f, result, now, boards) {
     topic.unread = true;
     if (target && target.by === SELF) topic.owe = Math.max(0, topic.owe - 1);
     writeTopic(fsx, topic);
+    if (toUser) {
+      const own = target && target.by === SELF ? target : lastPost && lastPost.by === SELF ? lastPost : null;
+      if (own) addNotice(fsx, { kind: "reply", by: author.id, name: author.name, hue: author.hue, topic: topic.id, post: post.id, excerpt: oneLine(text, 140) }, now);
+    }
     return { topicId: topic.id, post };
   }
   const hit = boardMap(boards).get(f.board);
@@ -2151,6 +2220,7 @@ function homeRoute(host) {
     },
     online: profiles.filter((p) => ["online", "away"].includes(statusAt(p.schedule, new Date(now), tz))).map((p) => ({ id: p.id, name: p.name })),
     unread: topics.filter((t) => t.unread).length,
+    notices: noticesUnread(fsx, now),
     stats: { posts: topics.reduce((n, t) => n + livePosts(t).length, 0), topics: topics.length, members: profiles.length + 1, newest: newest ? newest.name : "" },
     now,
   });
@@ -2591,6 +2661,8 @@ export function handleRoute(req, host) {
   if (path === "/forum/topic" && method === "GET") return topicRoute(req, host);
   if (path === "/forum/search" && method === "GET") return searchRoute(req, host);
   if (path === "/forum/unread" && method === "GET") return unreadRoute(host);
+  if (path === "/forum/notices" && method === "GET") return noticesRoute(host);
+  if (path === "/forum/notices-read" && method === "POST") return noticesReadRoute(host);
   if (path === "/forum/boards" && method === "GET") return boardNamesRoute(host);
   if (path === "/forum/boards" && method === "POST") return boardsRoute(req, host);
   if (path === "/forum/topic" && method === "POST") return newTopicRoute(req, host);

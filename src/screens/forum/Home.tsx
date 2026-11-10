@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useT } from "@/i18n/index";
 import { BarActions } from "@/shell/nav";
 import { BoardCards, BoardTable } from "./Boards";
-import { PlusIcon, SearchIcon } from "./Icons";
+import { BellIcon, PlusIcon, SearchIcon } from "./Icons";
 import type { ForumCategory, StripData, WriteNotice } from "./model";
 import { NoticeLine, Strip } from "./Strip";
 
@@ -37,6 +37,9 @@ export interface HomeProps {
   onAddBoard: (category: string, name: string, desc: string) => Promise<string | null>;
   /** Opens the search page with the words typed in the field (real forum only; the preview's search is mock). */
   onSearch?: (q: string) => void;
+  /** Replies and reactions to the user's posts that have not been seen, and the button that opens the list (real forum only). */
+  notices?: number;
+  onNotices?: () => void;
 }
 
 export function Home(p: HomeProps) {
@@ -52,6 +55,14 @@ export function Home(p: HomeProps) {
   ) : (
     <Empty live={p.live} onDefaults={p.onDefaults} onAdd={p.onAddBoard} />
   );
+  const count = p.notices ?? 0;
+  const bell = p.onNotices && (
+    <button type="button" className="btn nbell" onClick={p.onNotices} aria-label={count > 0 ? t("forum.notices.open.new", { n: count }) : t("forum.notices.open")}>
+      <BellIcon size={18} />
+      {t("forum.notices.open")}
+      {count > 0 && <span className="nbadge">{count}</span>}
+    </button>
+  );
   const newTopic = (has || !p.live) && (
     <button type="button" className="btn cta" onClick={p.onNewTopic}>
       <PlusIcon />
@@ -62,8 +73,14 @@ export function Home(p: HomeProps) {
   if (p.phone) {
     return (
       <div className="s-forum is-phone">
-        {(!p.live || p.onSearch) && (
+        {(!p.live || p.onSearch || p.onNotices) && (
           <BarActions>
+            {p.onNotices && (
+              <button type="button" className="ib nbell-ib" style={{ width: 44, height: 44 }} aria-label={count > 0 ? t("forum.notices.open.new", { n: count }) : t("forum.notices.open")} onClick={p.onNotices}>
+                <BellIcon size={20} />
+                {count > 0 && <span className="nbadge" aria-hidden="true">{count}</span>}
+              </button>
+            )}
             <button type="button" className="ib" style={{ width: 44, height: 44 }} aria-label={t("forum.search")} onClick={() => p.onSearch?.("")}>
               <SearchIcon size={20} />
             </button>
@@ -94,6 +111,7 @@ export function Home(p: HomeProps) {
             </div>
             {!p.live && <input className="search" aria-label={t("forum.search")} placeholder={t("forum.search.placeholder")} />}
             {p.live && p.onSearch && <HomeSearch onSearch={p.onSearch} />}
+            {bell}
             {newTopic}
           </div>
           {strip}

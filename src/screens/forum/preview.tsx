@@ -8,11 +8,19 @@ import { useChrome } from "@/shell/nav";
 import { AUTONOMY, BOARD_PAGE, BOARD_TOPICS, CATEGORIES, ONLINE, STATS, TOPIC, hueOf, type MockCategory, type MockPost } from "@/mock/forum";
 import { BoardPage } from "./BoardPage";
 import { Home } from "./Home";
-import type { ShownPost, StripData, StripState, WriteNotice } from "./model";
+import type { NoticeRow, ShownPost, StripData, StripState, WriteNotice } from "./model";
+import { NoticesPage } from "./NoticesPage";
 import { NewTopic } from "./NewTopic";
 import { TopicView } from "./TopicView";
 
-type View = "home" | "board" | "topic" | "new";
+type View = "home" | "board" | "topic" | "new" | "notices";
+
+/** Replies to the user, drawn in the design preview (`state=nonotices` for the empty page). */
+const MOCK_NOTICES: NoticeRow[] = [
+  { id: "n1", kind: "reply", topic: "t1", who: "Мавка", hue: 150, picture: "", emoji: "", excerpt: "Я теж так думаю, але з лимоном смачніше.", title: "Чай чи кава?", when: "сьогодні 14:20", isNew: true },
+  { id: "n2", kind: "react", topic: "t1", who: "Лісовик", hue: 30, picture: "", emoji: "❤️", excerpt: "", title: "Чай чи кава?", when: "сьогодні 12:05", isNew: true },
+  { id: "n3", kind: "reply", topic: "t2", who: "Ярина", hue: 280, picture: "", emoji: "", excerpt: "Дякую, що підказали. Спробую в неділю.", title: "Нові голоси: представтеся", when: "вчора 22:15", isNew: false },
+];
 
 function urlParam(name: string): string {
   try {
@@ -50,7 +58,7 @@ const STRIP_STATES: Record<string, StripState> = { autonomyoff: "off", limit: "l
 
 function viewOf(): View {
   const v = urlParam("view");
-  return v === "topic" || v === "board" || v === "new" ? v : "home";
+  return v === "topic" || v === "board" || v === "new" || v === "notices" ? v : "home";
 }
 
 export function ForumPreview() {
@@ -102,6 +110,9 @@ export function ForumPreview() {
   const noop = () => undefined;
   const boardChoices = CATEGORIES.flatMap((c) => c.boards.map((b) => ({ id: b.id, name: b.name, category: c.name })));
 
+  if (view === "notices") {
+    return <NoticesPage phone={phone} rows={preview === "nonotices" ? [] : MOCK_NOTICES} error="" onOpen={() => setView("topic")} onHome={home} onRetry={noop} />;
+  }
   if (view === "board") {
     return (
       <BoardPage
@@ -169,6 +180,8 @@ export function ForumPreview() {
       onSwitchOn={() => setAutonomyOn(true)}
       onBoard={() => setView("board")}
       onTopic={() => setView("topic")}
+      notices={preview === "nonotices" ? 0 : 2}
+      onNotices={() => setView("notices")}
       onNewTopic={() => setView("new")}
       onDefaults={noop}
       onAddBoard={async () => null}

@@ -29,3 +29,7 @@
 .soc [data-tab="messenger"] svg { color: var(--hue-messenger); }
 .soc [data-tab="forum"] svg { color: var(--hue-forum); }
 .soc [data-tab="profiles"] svg { color: var(--hue-profiles); }
+
+/* The forum's "Replies to you" button in the phone's top bar (#367): its count sits on the corner of the icon. The bar is outside the screen's scope. */
+.ib.nbell-ib { position: relative; }
+.ib.nbell-ib .nbadge { position: absolute; top: 3px; right: 1px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; line-height: 18px; text-align: center; }

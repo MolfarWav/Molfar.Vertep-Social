@@ -128,6 +128,8 @@ export interface EngineHome {
     boards: number;
   };
   online: { id: string; name: string }[];
+  /** Replies and reactions to the user's posts not seen yet. */
+  notices?: number;
   stats: { posts: number; topics: number; members: number; newest: string };
   unread: number;
   now: number;
@@ -238,6 +240,46 @@ export interface ForceAnswer {
   error?: string;
   code?: string;
   errors?: { error: string; code?: string }[];
+}
+
+// ---------- notices: who answered you or reacted to your post (#367) ----------
+
+export interface EngineNotice {
+  id: string;
+  kind: "reply" | "react" | "repost";
+  by: string;
+  name: string;
+  hue: number;
+  picture?: string;
+  topic: string;
+  post: string;
+  at: number;
+  emoji?: string;
+  excerpt?: string;
+  title: string;
+  new: boolean;
+}
+export interface EngineNotices {
+  items: EngineNotice[];
+  unread: number;
+  seenAt: number;
+}
+export interface NoticeRow {
+  id: string;
+  kind: EngineNotice["kind"];
+  topic: string;
+  who: string;
+  hue: number;
+  picture: string;
+  emoji: string;
+  excerpt: string;
+  title: string;
+  when: string;
+  isNew: boolean;
+}
+
+export function noticeRowsFromEngine(n: EngineNotices, now: number, lang: string, t: Translate): NoticeRow[] {
+  return n.items.map((i) => ({ id: i.id, kind: i.kind, topic: i.topic, who: i.name, hue: i.hue, picture: i.picture ?? "", emoji: i.emoji ?? "", excerpt: i.excerpt ?? "", title: i.title, when: whenLabel(i.at, now, lang, t), isNew: i.new }));
 }
 
 // ---------- times ----------

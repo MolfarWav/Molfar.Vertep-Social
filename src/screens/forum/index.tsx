@@ -7,6 +7,7 @@
  *   view=board          a board's page: its topics, latest activity first
  *   view=topic          the topic page
  *   view=new            the new topic form
+ *   view=notices        "Replies to you" (state=nonotices: the empty page and no number on the bell)
  *   state=noboards      home without boards: the empty state
  *   state=notopics      home where the first board has no topics (the board page is empty too)
  *   state=autonomyoff   the strip says autonomy is off, with a switch (the switch turns it on)
