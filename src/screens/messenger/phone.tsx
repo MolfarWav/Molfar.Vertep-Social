@@ -95,6 +95,8 @@ export function PhoneList(p: PhoneListProps) {
 
 export interface PhoneChatProps {
   c: Contact;
+  /** The active persona's name when there is more than one: whose chat this is. */
+  asName?: string;
   contacts: Contact[];
   items: LogItem[];
   dayLine: string;
@@ -142,6 +144,7 @@ export function PhoneChat(p: PhoneChatProps) {
             <Flower status={c.status} size={14} />
             {statusWord}
             {c.note && <> · {c.note}</>}
+            {p.asName && <> · {t("messenger.head.as", { name: p.asName })}</>}
           </span>
         </div>
         {p.onMemory && (

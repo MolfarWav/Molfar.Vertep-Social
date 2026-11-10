@@ -18,6 +18,8 @@ export function refreshImages(): void {
 
 interface MessengerItem {
   id: string;
+  /** The persona whose chat holds the message (absent for a chat made before personas had their own). */
+  persona?: string;
   messageId: string;
   prompt: string;
   model: string;
@@ -72,7 +74,7 @@ export function useImageWorker(): void {
           if (!alive) break;
           if (!lock(`m:${it.id}:${it.messageId}`)) continue;
           const r = await draw(it.prompt, it.model);
-          await call("POST", "/messenger/image", { id: it.id, messageId: it.messageId, ...r }).catch(() => undefined);
+          await call("POST", "/messenger/image", { id: it.id, ...(it.persona ? { persona: it.persona } : {}), messageId: it.messageId, ...r }).catch(() => undefined);
         }
         for (const it of f.items) {
           if (!alive) break;
