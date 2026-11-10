@@ -9,10 +9,11 @@ import { Row, Segmented, Stepper, Switch, TimeRange, type Opt } from "./controls
 import { CommunityRows } from "./community";
 import { LifeMain, LifeWorld } from "./life";
 import { PicturesRows } from "./pictures";
+import { ResetRows } from "./reset";
 import { AccessControl, GroupHead, LanguageRows, languageHint, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
 import type { SettingsError } from "./state";
 
-type Open = "quiet" | "life" | "models" | "notify" | "access" | "language" | null;
+type Open = "quiet" | "life" | "models" | "notify" | "access" | "language" | "reset" | null;
 
 /** A row that opens a section underneath it. Only one is open at a time. */
 function Disclosure({ id, open, onToggle, title, hint, children }: { id: Exclude<Open, null>; open: Open; onToggle: (id: Open) => void; title: string; hint: string; children: ReactNode }) {
@@ -168,6 +169,9 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
             hint={t(PREVIEW && s.roleplayAccess ? "settings.access.on" : "settings.access.off")}
           >
             <AccessControl granted={s.roleplayAccess} onToggle={() => set({ roleplayAccess: !s.roleplayAccess })} />
+          </Disclosure>
+          <Disclosure id="reset" open={open} onToggle={toggle} title={t("settings.section.reset")} hint={t("settings.reset.phone.hint")}>
+            <ResetRows />
           </Disclosure>
         </section>
       </div>

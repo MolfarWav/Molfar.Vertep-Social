@@ -3,6 +3,10 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+- **Start over (#366).** Settings has a new card (on a phone, a row under "Other") that clears what Social kept: the forum (boards too), chats, diaries and people, your personas, the characters, the settings. Tick the parts, press "Clear…", confirm; the characters take their chats and diaries with them. Sticker packs, the outside-news feed and the Roleplay access stay. New routes `GET`/`POST /settings/reset` in the profiles plugin.
+
 ## 0.9.0 (2026-11-10)
 
 Ideas from #358. Forum 0.7.0, Life 0.3.0, messenger 0.7.1, Profiles 0.8.0; two new plugins, stories and chatter (both 0.1.0). Needs the same engine as 0.8.0.

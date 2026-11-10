@@ -5,6 +5,7 @@ import { Row, Segmented, Slider, Stepper, Switch, TimeRange, type Opt } from "./
 import { CommunityRows } from "./community";
 import { LifeMain, LifeWorld } from "./life";
 import { PicturesRows } from "./pictures";
+import { ResetRows } from "./reset";
 import { AccessControl, Card, LanguageRows, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
 import type { SettingsError } from "./state";
 
@@ -146,6 +147,10 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
 
         <Card title={t("settings.section.access")} glyph="access">
           <AccessControl granted={s.roleplayAccess} onToggle={() => set({ roleplayAccess: !s.roleplayAccess })} />
+        </Card>
+
+        <Card title={t("settings.section.reset")} glyph="reset">
+          <ResetRows />
         </Card>
       </div>
     </div>

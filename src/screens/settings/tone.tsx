@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 // The colour never names a block alone: the title and the icon always do. The CSS for the tones is in settings.css.
 
 export type Tone = "cyan" | "rose" | "emerald" | "amber" | "violet" | "teal" | "sky" | "orange";
-export type Glyph = "forum" | "messenger" | "life" | "community" | "pictures" | "models" | "notify" | "language" | "access" | "other";
+export type Glyph = "forum" | "messenger" | "life" | "community" | "pictures" | "models" | "notify" | "language" | "access" | "reset" | "other";
 
 /** What each block looks like: its tone and icon, by the name the screens use. */
 export const LOOK: Record<Glyph, Tone> = {
@@ -17,6 +17,7 @@ export const LOOK: Record<Glyph, Tone> = {
   notify: "teal",
   language: "sky",
   access: "orange",
+  reset: "rose",
   other: "violet",
 };
 
@@ -86,6 +87,13 @@ const PATHS: Record<Glyph, ReactNode> = {
     <>
       <circle cx="8" cy="15" r="4" />
       <path d="M11 12l9-9M16 7l3 3M14 9l2 2" />
+    </>
+  ),
+  // a circular arrow
+  reset: (
+    <>
+      <path d="M4 12a8 8 0 108-8 8 8 0 00-6 2.7" />
+      <path d="M4 4v4h4" />
     </>
   ),
   // sliders
