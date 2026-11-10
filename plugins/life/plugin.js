@@ -1015,7 +1015,9 @@ const keyOfUser = (post) => (typeof post.persona === "string" && ID.test(post.pe
 //   auto    the level the meetings reached (an index into LEVELS; it only grows, except that a quarrel caps it at "acquaintance")
 //   lvl     the level that counts now (the higher of the two, or the pinned one); the forum and the messenger read this
 //   ties    what the person is to the character: family and work ties are mirrored onto the other side, romantic ones are one way
-//   marks   the last milestones: {at, k: "level"|"feel"|"tie", v, up?}
+//   marks   the last milestones: {at, k: "level"|"feel"|"tie"|"follow", v, up?}
+//   follow  (#368) the user's say on "does this character follow this person": "" (the rule decides), "yes" or "no"
+//   fol     derived in `settle`, like `lvl`: does the character follow them now. Other plugins read `fol` and never work it out again.
 // Romance is a separate axis, not a higher level, and only between adults: a profile's `adult` flag (a hard rule, see `romanceFor`).
 
 export const LEVELS = ["stranger", "slight", "acquaintance", "penfriend", "friend", "close", "confidant"];
@@ -1039,7 +1041,10 @@ export const TIE_TYPES = {
 const TIES_MAX = 4;
 const TIE_LABEL_CHARS = 40;
 const MARKS_KEEP = 8;
-const MARK_KINDS = ["level", "feel", "tie"];
+const MARK_KINDS = ["level", "feel", "tie", "follow"];
+const FOLLOW_FROM = LEVELS.indexOf("penfriend");
+const FOLLOW_COLD = -3;
+const FOLLOW_VALUES = ["", "yes", "no"];
 const DAY_MS = 86400000;
 
 /** A tie list as it may be stored: known types, `other` with a label, no repeats, at most TIES_MAX. */
@@ -1062,8 +1067,8 @@ const cleanMarks = (raw) =>
     .map((m) => ({ at: m.at, k: m.k, v: m.v, ...(m.up === true ? { up: true } : {}) }))
     .slice(-MARKS_KEEP);
 
-/** Did the user set a level or a tie: such a person stays in the list even with no meetings. */
-export const isHand = (p) => p.tier !== "" || p.ties.length > 0;
+/** Did the user set a level, a tie or a follow: such a person stays in the list even with no meetings. */
+export const isHand = (p) => p.tier !== "" || p.ties.length > 0 || p.follow !== "";
 const rankOf = (p) => (isHand(p) ? 1e15 : 0) + p.last;
 
 /** The level the meetings reached, as an index into LEVELS; `prev` (the old value) is kept unless a quarrel caps it. */
@@ -1080,9 +1085,13 @@ export function autoIndex(p, prev) {
   return i;
 }
 
+/** (#368) Does the character follow this person now: the user's yes or no, else a pen friend or closer it does not feel cold to. */
+export const followNow = (p) => p.follow === "yes" || (p.follow !== "no" && Math.max(0, LEVELS.indexOf(p.lvl)) >= FOLLOW_FROM && p.feel > FOLLOW_COLD);
+
 /** Brings `auto`, `lvl` and the milestones up to date after the meetings or the hand settings changed (mutates `p`). */
-export function settle(p, now) {
+export function settle(p, now, quiet) {
   const first = p.lvl === undefined;
+  const wasFol = p.fol;
   const wasIdx = Math.max(0, LEVELS.indexOf(p.lvl || ""));
   const wasBand = p.band;
   p.auto = autoIndex(p, p.auto);
@@ -1090,6 +1099,9 @@ export function settle(p, now) {
   const eff = m >= 0 && p.pinned ? m : Math.max(m, p.auto);
   p.lvl = eff >= 1 || m >= 0 ? LEVELS[eff] : "";
   p.band = feelWord(p.feel);
+  // (#368) a character follows someone it has got to know as a pen friend or closer and does not feel cold to; the user's yes or no wins.
+  // A level held down by a quarrel or a cold feeling therefore ends an automatic follow; a follow set by hand stays.
+  p.fol = followNow(p);
   if (first) return;
   const mark = (k, v, up) => {
     if (p.marks.some((x) => x.k === k && x.v === v && now - x.at < DAY_MS)) return;
@@ -1099,6 +1111,8 @@ export function settle(p, now) {
   // the first steps (stranger to "met in passing") are not a milestone; acquaintance and up are
   if (idx !== wasIdx && Math.max(idx, wasIdx) >= 2) mark("level", LEVELS[idx], idx > wasIdx);
   if (wasBand !== undefined && p.band !== wasBand) mark("feel", p.band || "even", false);
+  // the character started following by the rule (not by hand, and not because the user's own edit moved the level): a milestone, and a notice for a persona
+  if (wasFol === false && p.fol && p.follow === "" && !quiet) mark("follow", "follows", true);
 }
 
 /** Does the profile `p` (with `adult`) and the other side allow a romantic tie: both adults, or the user's persona (only `p` counts). */
@@ -1126,6 +1140,8 @@ function cleanPerson(x) {
     feel: Math.round(Math.max(-FEEL_MAX, Math.min(FEEL_MAX, num(x.feel))) * 10) / 10,
     tier: LEVELS.includes(x.tier) ? x.tier : "",
     pinned: x.pinned === true && LEVELS.includes(x.tier),
+    follow: FOLLOW_VALUES.includes(x.follow) ? x.follow : "",
+    fol: typeof x.fol === "boolean" ? x.fol : undefined,
     auto: Math.max(0, Math.min(5, Math.floor(num(x.auto)))),
     lvl: typeof x.lvl === "string" && (x.lvl === "" || LEVELS.includes(x.lvl)) ? x.lvl : undefined,
     band: typeof x.band === "string" ? x.band : undefined,
@@ -1134,7 +1150,7 @@ function cleanPerson(x) {
   };
 }
 
-const newPerson = (key, name, at) => ({ key, name: cut(str(name), 80), kind: key.startsWith("c:") ? "character" : "user", first: at, last: at, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", noteAt: 0, fresh: 0, feel: 0, tier: "", pinned: false, auto: 0, lvl: undefined, band: undefined, ties: [], marks: [] });
+const newPerson = (key, name, at) => ({ key, name: cut(str(name), 80), kind: key.startsWith("c:") ? "character" : "user", first: at, last: at, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", noteAt: 0, fresh: 0, feel: 0, tier: "", pinned: false, follow: "", fol: undefined, auto: 0, lvl: undefined, band: undefined, ties: [], marks: [] });
 
 export const emptyPeople = () => ({ scanned: 0, noteDay: "", failedAt: 0, people: [] });
 
@@ -1144,6 +1160,8 @@ export function readPeople(fsx, id) {
   const people = (Array.isArray(d.people) ? d.people : []).map(cleanPerson).filter(Boolean).slice(0, PEOPLE_KEEP);
   // a list written before levels existed: work the level out once, with no milestone for it
   for (const p of people) if (p.lvl === undefined) settle(p, 0);
+  // a list written before follows existed: work `fol` out once, with no milestone for it
+  for (const p of people) if (p.fol === undefined) p.fol = followNow(p);
   return {
     scanned: num(d.scanned),
     noteDay: typeof d.noteDay === "string" ? d.noteDay : "",
@@ -1165,8 +1183,9 @@ export const peopleView = (pf, canRomance) => ({
   people: pf.people
     .slice()
     .sort((a, b) => rankOf(b) - rankOf(a))
-    .map(({ fresh: _f, auto, lvl, band: _b, ...p }) => ({
+    .map(({ fresh: _f, auto, lvl, band: _b, fol, ...p }) => ({
       ...p,
+      fol: fol === true,
       level: { id: lvl || "stranger", auto: LEVELS[auto], manual: p.tier, pinned: p.pinned, seen: p.seen, talks: p.toMe + p.fromMe },
       ...(typeof canRomance === "function" ? { romance: canRomance(p.key) } : {}),
     })),
@@ -1435,7 +1454,7 @@ function candidates(fsx, id, pf) {
 /** The ties `other` sees when `mine` is the list of ties on this side: the mirrored ones only. */
 export const mirrorTies = (mine) => mine.filter((t) => TIE_TYPES[t.type].inverse).map((t) => ({ type: TIE_TYPES[t.type].inverse }));
 
-/** What the user set for one person: `{level, pinned, ties, mirror}`; returns {error, status} or {ok}. Writes this list and, for a character, the other one. */
+/** What the user set for one person: `{level, pinned, ties, mirror, follow}`; returns {error, status} or {ok}. Writes this list and, for a character, the other one. */
 export function setRelation(fsx, id, key, b, now) {
   const me = readProfile(fsx, id);
   const other = personOf(fsx, key);
@@ -1443,7 +1462,8 @@ export function setRelation(fsx, id, key, b, now) {
   const ties = cleanTies(b.ties);
   if (ties.some((t) => TIE_TYPES[t.type].romance) && !romanceFor(me, key, other)) return { error: "a romantic tie needs adult characters", status: 409 };
   const level = b.level === "" || LEVELS.includes(b.level) ? b.level : undefined;
-  if (level === undefined && !Array.isArray(b.ties)) return { error: "nothing to set", status: 400 };
+  const follow = FOLLOW_VALUES.includes(b.follow) ? b.follow : undefined;
+  if (level === undefined && !Array.isArray(b.ties) && follow === undefined) return { error: "nothing to set", status: 400 };
   const pf = readPeople(fsx, id);
   let x = pf.people.find((q) => q.key === key);
   if (!x) {
@@ -1459,8 +1479,11 @@ export function setRelation(fsx, id, key, b, now) {
     x.ties = ties;
     for (const t of ties) if (!before.includes(t.type + ":" + (t.label || ""))) x.marks = [...x.marks, { at: now, k: "tie", v: t.type }].slice(-MARKS_KEEP);
   }
+  // (#368) the follow is this character's own say about them: it is never copied to the other side
+  if (follow !== undefined) x.follow = follow;
   x.name = other.name;
-  settle(x, now);
+  // quiet: what the user sets by hand makes no "started following" milestone
+  settle(x, now, true);
   writePeople(fsx, id, pf);
   if (key.startsWith("c:")) {
     // the other side: family and work ties mirror; the level is copied only when it has none and the user asked for it
@@ -1483,7 +1506,7 @@ export function setRelation(fsx, id, key, b, now) {
       touched = true;
     }
     if (touched) {
-      settle(y, now);
+      settle(y, now, true);
       if (!isHand(y) && !y.seen && !y.toMe && !y.fromMe) of.people = of.people.filter((q) => q !== y);
       writePeople(fsx, oid, of);
     }
@@ -1497,7 +1520,7 @@ export function setRelation(fsx, id, key, b, now) {
 
 /** Forgets the meetings with a person: a level or a tie the user set stays, the counts, the impression and the milestones go. */
 function forgetCounts(p, now) {
-  Object.assign(p, { first: 0, last: 0, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", noteAt: 0, fresh: 0, feel: 0, auto: 0, lvl: undefined, band: undefined, marks: [] });
+  Object.assign(p, { first: 0, last: 0, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", noteAt: 0, fresh: 0, feel: 0, auto: 0, lvl: undefined, band: undefined, fol: undefined, marks: [] });
   settle(p, now);
 }
 
@@ -1521,12 +1544,12 @@ function peopleRoute(req, host, parts) {
     const b = isObj(req.body) ? req.body : {};
     const now = Date.now();
     // levels and ties: set by hand, for someone met or not yet
-    if ("level" in b || "ties" in b) {
+    if ("level" in b || "ties" in b || "follow" in b) {
       const r = setRelation(fsx, id, key, b, now);
       if (r.error) return ok({ error: r.error }, r.status);
     }
     // the user's own wording of the impression; the model's next one replaces it only after three new meetings
-    if ("note" in b || !("level" in b || "ties" in b)) {
+    if ("note" in b || !("level" in b || "ties" in b || "follow" in b)) {
       const pf = readPeople(fsx, id);
       const x = pf.people.find((q) => q.key === key);
       if (!x) return ok({ error: "no such person" }, 404);
@@ -1583,8 +1606,8 @@ export function graphView(fsx) {
       if (x.key.startsWith("c:") ? !other || other.id === me.id : !persona.has(x.key.slice(2))) continue;
       const ok = romanceFor(me, x.key, other ? { adult: other.adult } : null);
       const ties = x.ties.filter((t) => !TIE_TYPES[t.type].romance || ok).map((t) => ({ type: t.type, ...(t.label ? { label: t.label } : {}) }));
-      if (!(x.seen > 0 || x.toMe > 0 || x.fromMe > 0 || x.tier !== "" || ties.length)) continue;
-      links.push({ from: "c:" + me.id, to: x.key, level: x.lvl || "stranger", band: x.band || feelWord(x.feel), talks: x.toMe + x.fromMe, ties });
+      if (!(x.seen > 0 || x.toMe > 0 || x.fromMe > 0 || x.tier !== "" || ties.length || x.follow === "yes")) continue;
+      links.push({ from: "c:" + me.id, to: x.key, level: x.lvl || "stranger", band: x.band || feelWord(x.feel), talks: x.toMe + x.fromMe, ties, follow: x.fol === true });
       if (x.key.startsWith("u:")) usedPersonas.add(x.key.slice(2));
     }
   }

@@ -26,7 +26,9 @@ Each person on the list has a **level**: how well the character knows them. Ther
 
 **Romantic ties** (crush, dating, partner, ex) are a separate axis, not a higher level, and they are one-way: what she is to him can differ from what he is to her. They are offered only to adults: switch on **Adult (18+)** in the character's About tab (an import sets it when the card gives an age of 18 or more); between two characters both must be marked, with your persona only the character. Between characters the prompt asks for as much as "Settings" > "Community" > "Romantic tone" allows (none, warm, or hints and light teasing) and never anything explicit. Jealousy and gossip on the forum read these ties too (see [[forum]]). A romantic tie is never started toward your persona unless you set it.
 
-Under each person the list shows up to three **milestones** with their date: a level reached or lost, a feeling that crossed a line ("Fell out", "Grew close") and a tie you set.
+**Follows.** A character can follow a person, one way (another character, or a persona of yours): by default it starts once the level reaches pen friend and the feeling is not cold, and stops again if a quarrel or a cold feeling pulls the level down. In the **Relationship** editor the **Follows** switch overrides that either way, and **Back to automatic** returns to the rule. Following does only one thing: on the forum the character notices posts of the people it follows first (their topics and posts draw its reply and its reaction more often). It changes nothing in what the character is told, and it is not a request the other side accepts. The map shows it as an arrowhead.
+
+Under each person the list shows up to three **milestones** with their date: a level reached or lost, a feeling that crossed a line ("Fell out", "Grew close"), a tie you set, and "Started following them" when the rule made the character follow.
 
 ## How they feel about each other
 

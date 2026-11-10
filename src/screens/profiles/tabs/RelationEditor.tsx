@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useT } from "@/i18n/index";
 import { Chip, Switch } from "../ui";
-import { LEVELS, TIE_GROUPS, type Level, type RelationEdit, type Tie, type TieType } from "../people-api";
+import { LEVELS, TIE_GROUPS, type Follow, type Level, type RelationEdit, type Tie, type TieType } from "../people-api";
 
 export interface EditTarget {
   key: string;
@@ -17,6 +17,9 @@ export interface EditTarget {
   ties: Tie[];
   /** What the meetings reached, shown beside "Automatic". */
   auto?: Level;
+  /** (#368) The user's say on "follows them" ("" = the rule decides) and what it comes to now. */
+  follow?: Follow;
+  fol?: boolean;
 }
 
 const TIES_MAX = 4;
@@ -34,6 +37,7 @@ export function RelationEditor({ target, busy, onSave, onCancel }: { target: Edi
   const [level, setLevel] = useState<Level | "">(target.level);
   const [pinned, setPinned] = useState(target.pinned);
   const [mirror, setMirror] = useState(false);
+  const [follow, setFollow] = useState<Follow>(target.follow ?? "");
   const [ties, setTies] = useState<Tie[]>(target.ties);
   const [pick, setPick] = useState<TieType | "">("");
   const [label, setLabel] = useState("");
@@ -60,6 +64,19 @@ export function RelationEditor({ target, busy, onSave, onCancel }: { target: Edi
         <p className="k">{level === "" ? t("profiles.people.level.autoHint") : t("profiles.people.level.floorHint")}</p>
         {level !== "" && <Switch on={pinned} onChange={setPinned}>{t("profiles.people.pin")}</Switch>}
         {level !== "" && character && <Switch on={mirror} onChange={setMirror}>{t("profiles.people.mirror", { name: target.name })}</Switch>}
+      </div>
+
+      <div className="rel-field">
+        <Switch on={follow === "yes" ? true : follow === "no" ? false : target.fol === true} onChange={(v) => setFollow(v ? "yes" : "no")}>{t("profiles.people.follows", { name: target.name })}</Switch>
+        <p className="k">
+          {follow === "" ? t("profiles.people.follows.auto") : t("profiles.people.follows.byYou")}
+          {follow !== "" && (
+            <>
+              {" "}
+              <button type="button" className="linkbtn rel-auto" onClick={() => setFollow("")}>{t("profiles.people.follows.back")}</button>
+            </>
+          )}
+        </p>
       </div>
 
       <div className="rel-field">
@@ -98,7 +115,7 @@ export function RelationEditor({ target, busy, onSave, onCancel }: { target: Edi
       </div>
 
       <div className="life-actions">
-        <button type="button" className="btn cta" disabled={busy} onClick={() => onSave({ level, pinned: level !== "" && pinned, ties, mirror: level !== "" && character && mirror })}>
+        <button type="button" className="btn cta" disabled={busy} onClick={() => onSave({ level, pinned: level !== "" && pinned, ties, mirror: level !== "" && character && mirror, follow })}>
           {t("profiles.life.save")}
         </button>
         <button type="button" className="btn" disabled={busy} onClick={onCancel}>{t("profiles.life.cancel")}</button>

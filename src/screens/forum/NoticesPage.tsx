@@ -1,4 +1,5 @@
 // "Replies to you": who answered your posts or reacted to them, newest first. A row opens the topic on its last page.
+// A "follow" row (a character started following one of your personas, #368) is a plain row with no topic behind it.
 // Opening the page counts everything so far as seen (the live route does that). Real forum only; the design preview draws it on mock rows.
 import { useT } from "@/i18n/index";
 import { Ava, bgOf, initial } from "./Ava";
@@ -17,21 +18,22 @@ export interface NoticesPageProps {
 
 function Row({ r, onOpen }: { r: NoticeRow; onOpen: (r: NoticeRow) => void }) {
   const t = useT();
+  // a follow (#368) is news about a person, not about a post: nothing to open, so it is not a button
+  const follow = r.kind === "follow";
+  const Tag = follow ? "div" : "button";
   return (
-    <button type="button" className={`nrow${r.isNew ? " is-new" : ""}`} onClick={() => onOpen(r)}>
+    <Tag className={`nrow${r.isNew ? " is-new" : ""}${follow ? " is-static" : ""}`} {...(follow ? {} : { type: "button" as const, onClick: () => onOpen(r) })}>
       <Ava text={initial(r.who)} bg={bgOf(r.hue)} size={36} font={16} radius={8} picture={r.picture || undefined} />
       <span className="nrow-body">
         <span className="nrow-line">
-          <b>{r.who}</b> {t(`forum.notices.${r.kind}` as never)}
+          <b>{r.who}</b> {t(`forum.notices.${r.kind}` as never, { persona: r.persona ?? "" })}
           {r.emoji && <span className="nrow-emoji" aria-hidden="true"> {r.emoji}</span>}
           {r.isNew && <span className="nrow-new"> {t("forum.notices.new")}</span>}
         </span>
         {r.excerpt && <span className="nrow-excerpt">{r.excerpt}</span>}
-        <span className="nrow-meta">
-          {t("forum.notices.in", { title: r.title })} · {r.when}
-        </span>
+        <span className="nrow-meta">{follow ? r.when : t("forum.notices.in", { title: r.title }) + " · " + r.when}</span>
       </span>
-    </button>
+    </Tag>
   );
 }
 

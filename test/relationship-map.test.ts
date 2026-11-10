@@ -66,7 +66,7 @@ test("graph carries nothing private and drops a romantic tie that is not allowed
   expect(l.ties).toEqual([{ type: "colleague" }, { type: "other", label: "old neighbour" }]);
   const raw = JSON.stringify(g);
   expect(raw).not.toContain("private");
-  expect(Object.keys(l).sort()).toEqual(["band", "from", "level", "talks", "ties", "to"]);
+  expect(Object.keys(l).sort()).toEqual(["band", "follow", "from", "level", "talks", "ties", "to"]);
 });
 
 test("graph with no lists is the characters alone; a person that is gone or the character itself is skipped; a set level counts without meetings", () => {

@@ -19,6 +19,7 @@ type View = "home" | "board" | "topic" | "new" | "notices";
 const MOCK_NOTICES: NoticeRow[] = [
   { id: "n1", kind: "reply", topic: "t1", who: "Мавка", hue: 150, picture: "", emoji: "", excerpt: "Я теж так думаю, але з лимоном смачніше.", title: "Чай чи кава?", when: "сьогодні 14:20", isNew: true },
   { id: "n2", kind: "react", topic: "t1", who: "Лісовик", hue: 30, picture: "", emoji: "❤️", excerpt: "", title: "Чай чи кава?", when: "сьогодні 12:05", isNew: true },
+  { id: "n4", kind: "follow", topic: "", who: "Мавка", hue: 150, picture: "", emoji: "", excerpt: "", persona: "Ярослав", title: "", when: "сьогодні 11:40", isNew: true },
   { id: "n3", kind: "reply", topic: "t2", who: "Ярина", hue: 280, picture: "", emoji: "", excerpt: "Дякую, що підказали. Спробую в неділю.", title: "Нові голоси: представтеся", when: "вчора 22:15", isNew: false },
 ];
 
@@ -208,7 +209,7 @@ export function ForumPreview() {
       onSwitchOn={() => setAutonomyOn(true)}
       onBoard={() => setView("board")}
       onTopic={() => setView("topic")}
-      notices={preview === "nonotices" ? 0 : 2}
+      notices={preview === "nonotices" ? 0 : 3}
       onNotices={() => setView("notices")}
       onNewTopic={() => setView("new")}
       onDefaults={noop}

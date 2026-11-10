@@ -3,6 +3,8 @@
 // into the prompt. The user may reword an impression, forget a person or everyone. Below: the other characters that remember her.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useT, currentLang } from "@/i18n/index";
+import { loadGraph } from "../map-api";
+import { followersOf } from "../map-model";
 import { forgetPeople, loadPeople, saveNote, saveRelation, type Candidate, type KnownBy, type Mark, type Person, type RelationEdit } from "../people-api";
 import { RelationEditor, useTieWord, type EditTarget } from "./RelationEditor";
 
@@ -23,6 +25,8 @@ export function PeopleSection({ profileId }: { profileId: string }) {
   const [edit, setEdit] = useState<{ key: string; text: string } | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [rel, setRel] = useState<EditTarget | null>(null);
+  // (#368) how many people follow this character, from the map's data; null until it is known (the line then shows only who she follows)
+  const [followers, setFollowers] = useState<number | null>(null);
   const tieWord = useTieWord();
   const alive = useRef(true);
 
@@ -40,6 +44,10 @@ export function PeopleSection({ profileId }: { profileId: string }) {
         setCandidates(v.candidates ?? []);
       })
       .catch((e: unknown) => alive.current && setFailed(e instanceof Error ? e.message : String(e)));
+    setFollowers(null);
+    loadGraph()
+      .then((g) => alive.current && setFollowers(followersOf("c:" + profileId, g.links)))
+      .catch(() => undefined);
     return () => {
       alive.current = false;
     };
@@ -70,14 +78,22 @@ export function PeopleSection({ profileId }: { profileId: string }) {
       ? t(m.up ? "profiles.people.mark.up" : "profiles.people.mark.down", { level: levelName(m.v) })
       : m.k === "feel"
         ? t(("profiles.people.mark.feel." + m.v) as never)
-        : t("profiles.people.mark.tie", { tie: tieWord({ type: m.v as never }) });
-  const relOf = (p: Person): EditTarget => ({ key: p.key, name: p.name, kind: p.kind, romance: p.romance === true, level: p.tier ?? "", pinned: p.pinned === true, ties: p.ties ?? [], auto: p.level?.auto });
+        : m.k === "follow"
+          ? t("profiles.people.mark.follow")
+          : t("profiles.people.mark.tie", { tie: tieWord({ type: m.v as never }) });
+  const relOf = (p: Person): EditTarget => ({ key: p.key, name: p.name, kind: p.kind, romance: p.romance === true, level: p.tier ?? "", pinned: p.pinned === true, ties: p.ties ?? [], auto: p.level?.auto, follow: p.follow ?? "", fol: p.fol === true });
   const save = (target: EditTarget, e: RelationEdit) => run(() => saveRelation(profileId, target.key, e, target.name));
 
   return (
     <section className="people" aria-label={t("profiles.people.title")}>
       <h3 className="people-h">{t("profiles.people.title")}</h3>
       <p className="k">{t("profiles.people.note")}</p>
+      {people && people.length > 0 && (
+        <p className="k people-follows">
+          {t("profiles.people.followCounts", { follows: String(people.filter((p) => p.fol).length) })}
+          {followers !== null && " · " + t("profiles.people.followedBy", { n: String(followers) })}
+        </p>
+      )}
       {failed && <div className="k life-bad" role="alert">{failed}</div>}
       {candidates.length > 0 && !rel && (
         <div className="rel-addperson">
@@ -122,11 +138,16 @@ export function PeopleSection({ profileId }: { profileId: string }) {
               )}
               <span>{t("profiles.people.counts", { seen: String(p.seen), last: day(p.last) })}</span>
             </div>
-            {(p.level || (p.ties ?? []).length > 0) && (
+            {(p.level || (p.ties ?? []).length > 0 || p.fol) && (
               <div className="chips">
                 {p.level && (
                   <span className="chip on" title={t("profiles.people.levelTip")}>
                     {t("profiles.people.levelChip", { level: levelName(p.level.id) })}
+                  </span>
+                )}
+                {p.fol && (
+                  <span className="chip" title={p.follow === "yes" ? t("profiles.people.follows.byYou") : t("profiles.people.follows.auto")}>
+                    {t("profiles.people.followsChip")}
                   </span>
                 )}
                 {(p.ties ?? []).map((x) => (

@@ -1,10 +1,11 @@
 // The relationship map's picture: people on a ring, one line per pair (see map-model.ts for what a line means). A line's look carries the
 // meaning twice, not by colour alone: romance is pink with a heart, rivalry or being at odds is red and dashed, family is a double line.
 // Pick a person and their lines light up while the rest fade. Every person is a button (Enter or Space picks, arrows walk the ring, Escape
-// puts the choice down); the list view is the text version of the same thing.
+// puts the choice down); the list view is the text version of the same thing. A follow (#368) is a small arrowhead on the line, at the end of the
+// followed person (both ends for a mutual follow); it takes the line's colour.
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useT } from "@/i18n/index";
-import { crowd, neighboursOf, ringPoints, type Edge, type GNode } from "./map-model";
+import { arrowPath, crowd, neighboursOf, ringPoints, type Edge, type GNode } from "./map-model";
 
 export interface MapPerson extends GNode {
   hue: number;
@@ -83,6 +84,8 @@ export function RelationMap({ people, edges, order, selected, onSelect, phone }:
                 <line x1={p.x} y1={p.y} x2={q.x} y2={q.y} strokeWidth={w} />
               )}
               {e.kind === "romance" && <path className="pm-heart" d={heart(mid.x, mid.y)} />}
+              {e.fa && <path className="pm-arrow" d={arrowPath(p, q, c.size / 2 + 8)} />}
+              {e.fb && <path className="pm-arrow" d={arrowPath(q, p, c.size / 2 + 8)} />}
             </g>
           );
         })}

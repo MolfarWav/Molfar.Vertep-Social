@@ -3,6 +3,16 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+Follows (#368, item 4). Life plugin, forum plugin, Profiles screen, forum screen. Nothing to migrate: lists written before get the new field when they are read, without announcing anything.
+
+- **Follows.** A character can follow another character or one of your personas, one way. It changes only whose posts the character notices first on the forum (a followed author's topics and posts draw its reply about 1.6 times as often, its reactions and reposts about twice as often); it adds nothing to what the character is told.
+- **Automatic or by hand.** The character starts following a person once their level reaches pen friend and the feeling is not cold, and stops if a quarrel or a cold feeling pulls the level down. In a person's Relationship editor the **Follows** switch decides it yourself, and **Back to automatic** hands it back. A "Follows" mark shows on the person in the Relationships tab, with the counts "Follows N · Followed by M".
+- **On the map.** A small arrowhead on a line points at the person followed (both ends for a mutual follow), the panel and the list say who follows whom, and the legend has one more entry.
+- **Replies to you.** "Mavka started following your persona ..." appears in the list and in its count.
+- **Not checked:** a real engine with real data, a real phone, the share in real play (whether followed authors are noticed too often or too little).
+
 ## 0.12.0 (2026-11-10)
 
 The community's own life, continued (#367, #366): chronicle, replies to you, reputation, polls, reposts, and the chats. Forum 0.9.0, chatter 0.3.0, messenger 0.9.0, Profiles 0.11.0, Life 0.6.0. Needs the same engine as 0.11.0; nothing to migrate.

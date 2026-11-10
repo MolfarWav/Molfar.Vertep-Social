@@ -21,10 +21,10 @@ export interface Tie {
   label?: string;
 }
 
-/** A milestone in the list: a level reached, a feeling that crossed a band, a tie set. */
+/** A milestone in the list: a level reached, a feeling that crossed a band, a tie set, a follow started by the rule (#368). */
 export interface Mark {
   at: number;
-  k: "level" | "feel" | "tie";
+  k: "level" | "feel" | "tie" | "follow";
   v: string;
   up?: boolean;
 }
@@ -50,6 +50,10 @@ export interface Person {
   /** The level the user set ("" = automatic) and whether it is held exactly (else it is a floor). */
   tier?: Level | "";
   pinned?: boolean;
+  /** (#368) The user's say on "follows them": "" = the rule decides, "yes" or "no". */
+  follow?: Follow;
+  /** (#368) Does the character follow them now (the result of the setting and the rule). */
+  fol?: boolean;
   /** What counts now, and what it came from: `auto` is what the meetings reached, `talks` and `seen` are the numbers behind it. */
   level?: { id: Level; auto: Level; manual: Level | ""; pinned: boolean; seen: number; talks: number };
   ties?: Tie[];
@@ -57,6 +61,12 @@ export interface Person {
   /** May a romantic tie be offered for this person (both are adults, or this is the user's persona and the character is an adult). */
   romance?: boolean;
 }
+
+export type Follow = "" | "yes" | "no";
+
+/** The rule behind an automatic follow, as the Life plugin has it: from this level up, unless the feeling is cold (-3 or less). */
+export const FOLLOW_FROM: Level = "penfriend";
+export const followByRule = (level: Level, feel = 0): boolean => LEVELS.indexOf(level) >= LEVELS.indexOf(FOLLOW_FROM) && feel > -3;
 
 /** A person who is not in the list yet but may be added by hand. */
 export interface Candidate {
@@ -89,6 +99,8 @@ export interface RelationEdit {
   pinned: boolean;
   ties: Tie[];
   mirror?: boolean;
+  /** (#368) Only this character's own follow: never copied to the other side. */
+  follow?: Follow;
 }
 
 const now = Date.now();
@@ -99,12 +111,12 @@ const fakePeople = (): Person[] =>
     {
       key: "u:you", name: "Сергій", kind: "user", first: now - 6 * 864e5, last: now - 3600e3, seen: 14, toMe: 6, fromMe: 5,
       said: [{ at: now - 3600e3, where: "forum", text: "А ти бачила туман над озером сьогодні вранці?" }],
-      note: "Тихий, уважний, пише рідко, але до діла.", feel: 8, tier: "", pinned: false, level: lvl("friend", "friend", "", false, 14, 11), ties: [{ type: "dating" }],
+      note: "Тихий, уважний, пише рідко, але до діла.", feel: 8, tier: "", pinned: false, follow: "", fol: true, level: lvl("friend", "friend", "", false, 14, 11), ties: [{ type: "dating" }],
       marks: [{ at: now - 2 * 864e5, k: "level", v: "friend", up: true }, { at: now - 864e5, k: "feel", v: "close" }, { at: now - 3 * 864e5, k: "tie", v: "dating" }], romance: true,
     },
     {
       key: "c:rp-kolya", name: "Коля", kind: "character", first: now - 3 * 864e5, last: now - 2 * 864e5, seen: 4, toMe: 1, fromMe: 0, said: [], note: "", feel: -8,
-      tier: "", pinned: false, level: lvl("acquaintance", "acquaintance", "", false, 4, 1), ties: [{ type: "rival" }], marks: [{ at: now - 2 * 864e5, k: "feel", v: "hostile" }], romance: false,
+      tier: "", pinned: false, follow: "yes", fol: true, level: lvl("acquaintance", "acquaintance", "", false, 4, 1), ties: [{ type: "rival" }], marks: [{ at: now - 2 * 864e5, k: "feel", v: "hostile" }], romance: false,
     },
   ]);
 const fakeCandidates = (): Candidate[] =>
@@ -124,7 +136,7 @@ export async function loadPeople(id: string): Promise<People> {
 /** Forgets one person (`key`) or, with no key, everyone. */
 export async function forgetPeople(id: string, key?: string): Promise<People> {
   if (PREVIEW) {
-    const keep = (p: Person) => p.tier || (p.ties?.length ?? 0) > 0;
+    const keep = (p: Person) => p.tier || (p.ties?.length ?? 0) > 0 || p.follow;
     fake = key ? fakePeople().flatMap((p) => (p.key !== key ? [p] : keep(p) ? [{ ...p, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", feel: 0, marks: [] }] : [])) : fakePeople().filter(keep);
     return { people: [...fake], candidates: fakeCandidates() };
   }
@@ -148,9 +160,11 @@ export async function saveRelation(id: string, key: string, edit: RelationEdit, 
     const eff = (level && (edit.pinned || LEVELS.indexOf(level) >= LEVELS.indexOf(auto)) ? level : auto) as Level;
     const rest = fakePeople().find((p) => p.key === key);
     const known = rest ?? { key, name, kind: key.startsWith("c:") ? ("character" as const) : ("user" as const), first: 0, last: 0, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", marks: [] as Mark[] };
-    const next: Person = { ...known, tier: level, pinned: edit.pinned, ties: edit.ties, level: lvl(eff, auto, level, edit.pinned, known.seen, known.toMe + known.fromMe), romance: true };
-    fake = [...fakePeople().filter((p) => p.key !== key), ...(level || edit.ties.length || known.seen ? [next] : [])];
+    const follow = edit.follow ?? known.follow ?? "";
+    const fol = follow === "yes" || (follow !== "no" && followByRule(eff, known.feel ?? 0));
+    const next: Person = { ...known, tier: level, pinned: edit.pinned, ties: edit.ties, follow, fol, level: lvl(eff, auto, level, edit.pinned, known.seen, known.toMe + known.fromMe), romance: true };
+    fake = [...fakePeople().filter((p) => p.key !== key), ...(level || edit.ties.length || follow || known.seen ? [next] : [])];
     return { people: [...fake], candidates: fakeCandidates() };
   }
-  return call<People>("PUT", `${base(id)}/${encodeURIComponent(key)}`, { level: edit.level, pinned: edit.pinned, ties: edit.ties, ...(edit.mirror ? { mirror: true } : {}) });
+  return call<People>("PUT", `${base(id)}/${encodeURIComponent(key)}`, { level: edit.level, pinned: edit.pinned, ties: edit.ties, ...(edit.mirror ? { mirror: true } : {}), ...(edit.follow !== undefined ? { follow: edit.follow } : {}) });
 }

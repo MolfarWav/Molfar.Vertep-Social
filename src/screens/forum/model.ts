@@ -257,7 +257,7 @@ export interface ForceAnswer {
 
 export interface EngineNotice {
   id: string;
-  kind: "reply" | "react" | "repost";
+  kind: "reply" | "react" | "repost" | "follow";
   by: string;
   name: string;
   hue: number;
@@ -267,6 +267,8 @@ export interface EngineNotice {
   at: number;
   emoji?: string;
   excerpt?: string;
+  /** Only for "follow" (#368): the user's persona the character started following. */
+  persona?: string;
   title: string;
   new: boolean;
 }
@@ -284,13 +286,15 @@ export interface NoticeRow {
   picture: string;
   emoji: string;
   excerpt: string;
+  /** Only for "follow": the persona that was followed; such a row opens nothing. */
+  persona?: string;
   title: string;
   when: string;
   isNew: boolean;
 }
 
 export function noticeRowsFromEngine(n: EngineNotices, now: number, lang: string, t: Translate): NoticeRow[] {
-  return n.items.map((i) => ({ id: i.id, kind: i.kind, topic: i.topic, who: i.name, hue: i.hue, picture: i.picture ?? "", emoji: i.emoji ?? "", excerpt: i.excerpt ?? "", title: i.title, when: whenLabel(i.at, now, lang, t), isNew: i.new }));
+  return n.items.map((i) => ({ id: i.id, kind: i.kind, topic: i.topic, who: i.name, hue: i.hue, picture: i.picture ?? "", emoji: i.emoji ?? "", excerpt: i.excerpt ?? "", persona: i.persona ?? "", title: i.title, when: whenLabel(i.at, now, lang, t), isNew: i.new }));
 }
 
 // ---------- times ----------
