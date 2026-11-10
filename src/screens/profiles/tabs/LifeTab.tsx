@@ -5,6 +5,7 @@ import { useT, currentLang } from "@/i18n/index";
 import { ApiError } from "@/lib/api";
 import { Switch } from "../ui";
 import { deleteEntry, forgetDiary, loadDiary, saveEntry, saveState, writeDay, type DiaryEntry, type DiaryView } from "../life-api";
+import { PeopleSection } from "./PeopleSection";
 import type { TabProps } from "./types";
 
 type Ask = { kind: "edit"; id: string; text: string } | { kind: "new"; text: string } | { kind: "delete"; id: string } | { kind: "forget" } | null;
@@ -197,6 +198,8 @@ export function LifeTab({ form, set, profileId }: TabProps) {
           )}
         </>
       )}
+
+      {profileId && <PeopleSection profileId={profileId} />}
     </div>
   );
 }

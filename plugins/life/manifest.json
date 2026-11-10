@@ -1,6 +1,6 @@
 {
   "name": "Social life",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Life: each character keeps a short diary (written once a day by rules and a model, editable in the profile) and, when allowed, reads one shared daily feed of outside news from a fixed list of sites. The messenger and the forum take their topics from these two. Files live in the app's data folder (life/).",
   "origin": "local",
   "permissions": ["routes", "fs", "llm", "schedule", "network"],

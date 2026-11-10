@@ -11,6 +11,8 @@
  *       `networkHosts`). No model call per fetch. Text from outside is untrusted: it is capped, stripped of angle
  *       brackets and only ever quoted to a model as data. It sits in `.cache` (derived, left out of sync and backups).
  *   life/place.json              {name, lat, lon}  the weather place, looked up once when the user types it.
+ *   life/people/<profileId>.json the people the character has met on the forum and in the messenger (see "people" below): counted by
+ *       rules from what those plugins store, with a model-worded impression once a day. Read by the forum and the messenger.
  *
  * Routes (relative to /v1/apps/social):
  *   GET    /life/diary/<profile>                    {diary, flags}
@@ -19,6 +21,10 @@
  *   PUT    /life/diary/<profile>/state              {mood, plan} -> {ok, diary}
  *   POST   /life/diary/<profile>/write              write a day now (testing); {ok, diary} or {ok: false, error, code?}
  *   DELETE /life/diary/<profile>                    forget the whole diary
+ *   GET    /life/people/<profile>                   {people: [{key, name, kind, first, last, seen, toMe, fromMe, said, note, noteAt}]}
+ *       plus `knownBy`: [{id, name, seen, note}], the other characters whose lists hold this one
+ *   PUT    /life/people/<profile>/<key>             {note} the user words the impression of one person
+ *   DELETE /life/people/<profile>[/<key>]           forget one person, or everyone (the count restarts from now)
  *   GET    /life/world                              {status}
  *   POST   /life/world/refresh                      fetch the feed now; {ok, status}
  *   PUT    /life/place                              {name} look the place up; {ok, place} or {ok: false, error}
@@ -796,10 +802,313 @@ function placeRoute(req, host) {
   return ok({ ok: true, place: place.name });
 }
 
+// ---------- people: who a character has met on the forum and in the messenger ----------
+// `life/people/<profileId>.json` {scanned, noteDay, failedAt, people: [{key, name, kind, first, last, seen, toMe, fromMe, said, note, noteAt, fresh}]}.
+// A person is a character ("c:<profile id>") or the user as a persona ("u:<persona id>"; "n:<name>" for an old post that has none). The
+// rules count the meetings from what the forum and the messenger already store (they are only read here), so no other plugin writes this
+// file; once a day a model words a short impression of the people met since the last one. The forum and the messenger read the file into a prompt.
+
+const PEOPLE_KEEP = 40;
+const SAID_KEEP = 3;
+const SAID_CHARS = 160;
+const NOTE_CHARS = 160;
+const NOTE_AFTER = 3;
+const NOTE_PEOPLE = 5;
+const SCAN_EVERY_MS = 5 * 60 * 1000;
+const SEEN_WINDOW = 8;
+const PERSON_KEY = /^[cun]:[^\s]{1,80}$/;
+const SELF = "me";
+const peoplePath = (id) => "life/people/" + id + ".json";
+const PEOPLE_META = "life/people-meta.json";
+
+const keyOfUser = (post) => (typeof post.persona === "string" && ID.test(post.persona) ? "u:" + post.persona : "n:" + (str(post.name).toLowerCase().replace(/\s+/g, "_").slice(0, 60) || "you"));
+
+function cleanPerson(x) {
+  if (!isObj(x) || !PERSON_KEY.test(String(x.key)) || !str(x.name)) return null;
+  const said = (Array.isArray(x.said) ? x.said : [])
+    .filter((s) => isObj(s) && typeof s.text === "string" && str(s.text) && Number.isFinite(s.at))
+    .map((s) => ({ at: s.at, where: s.where === "messenger" ? "messenger" : "forum", text: cut(str(s.text), SAID_CHARS) }))
+    .slice(-SAID_KEEP);
+  return {
+    key: String(x.key),
+    name: cut(str(x.name), 80),
+    kind: String(x.key).startsWith("c:") ? "character" : "user",
+    first: num(x.first),
+    last: num(x.last),
+    seen: Math.max(0, Math.floor(num(x.seen))),
+    toMe: Math.max(0, Math.floor(num(x.toMe))),
+    fromMe: Math.max(0, Math.floor(num(x.fromMe))),
+    said,
+    note: cut(str(x.note), NOTE_CHARS),
+    noteAt: num(x.noteAt),
+    fresh: Math.max(0, Math.floor(num(x.fresh))),
+  };
+}
+
+export const emptyPeople = () => ({ scanned: 0, noteDay: "", failedAt: 0, people: [] });
+
+export function readPeople(fsx, id) {
+  const d = readJson(fsx, peoplePath(id), null);
+  if (!isObj(d)) return emptyPeople();
+  return {
+    scanned: num(d.scanned),
+    noteDay: typeof d.noteDay === "string" ? d.noteDay : "",
+    failedAt: num(d.failedAt),
+    people: (Array.isArray(d.people) ? d.people : []).map(cleanPerson).filter(Boolean).slice(0, PEOPLE_KEEP),
+  };
+}
+
+function writePeople(fsx, id, pf) {
+  const people = pf.people.slice().sort((a, b) => b.last - a.last).slice(0, PEOPLE_KEEP);
+  fsx.write(peoplePath(id), JSON.stringify({ ...pf, people }));
+}
+
+/** The list as the screen shows it: the latest meeting first, no bookkeeping. */
+export const peopleView = (pf) => ({ people: pf.people.slice().sort((a, b) => b.last - a.last).map(({ fresh: _f, ...p }) => p) });
+
+const noMark = (s) => cut(noControls(String(s)).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(), SAID_CHARS);
+
+/**
+ * What the character `id` met in this topic's posts after `since`: [{key, name, at, where, seen, toMe, fromMe, said}]. Posts of others in a
+ * topic the character wrote in are "seen" (when it first wrote, the posts of its prompt window count); a post that quotes the character is
+ * "toMe" and what was said is kept; the character's own reply to a quoted post, or to the user's post just above it, is "fromMe".
+ */
+export function topicEvents(id, topic, since) {
+  const posts = (Array.isArray(topic.posts) ? topic.posts : []).filter((p) => isObj(p) && p.removed !== true && typeof p.text === "string" && Number.isFinite(p.at));
+  const first = posts.findIndex((p) => p.by === id);
+  if (first < 0) return [];
+  const out = [];
+  const who = (p) => ({ key: p.by === SELF ? keyOfUser(p) : "c:" + p.by, name: str(p.name) });
+  posts.forEach((x, i) => {
+    if (x.by === id) {
+      if (x.at <= since) return;
+      let q = null;
+      if (isObj(x.quote) && x.quote.by !== id) {
+        q = { key: x.quote.by === SELF ? keyOfUser({ name: x.quote.name, persona: posts.find((p) => p.by === SELF && p.name === x.quote.name && p.persona)?.persona }) : "c:" + x.quote.by, name: str(x.quote.name), text: str(x.quote.text) };
+      } else if (!x.quote && i > 0 && posts[i - 1].by === SELF) q = { ...who(posts[i - 1]), text: posts[i - 1].text };
+      if (q && q.name && PERSON_KEY.test(q.key)) out.push({ key: q.key, name: q.name, at: x.at, where: "forum", seen: 0, toMe: 0, fromMe: 1, said: noMark(q.text) });
+      return;
+    }
+    const seesIt = i < first ? posts[first].at > since && first - i <= SEEN_WINDOW : x.at > since;
+    if (!seesIt) return;
+    const w = who(x);
+    if (!w.name || !PERSON_KEY.test(w.key)) return;
+    const toMe = isObj(x.quote) && x.quote.by === id;
+    out.push({ ...w, at: x.at, where: "forum", seen: 1, toMe: toMe ? 1 : 0, fromMe: 0, said: toMe ? noMark(x.text) : "" });
+  });
+  return out;
+}
+
+/** What the character met in its messenger chat with the user after `since`; `me` is the active persona ({key, name}). */
+export function chatEvents(chat, me, since) {
+  if (!me || !isObj(chat) || !Array.isArray(chat.messages)) return [];
+  const out = [];
+  for (const m of chat.messages) {
+    if (!isObj(m) || !Number.isFinite(m.at) || m.at <= since || typeof m.who !== "string") continue;
+    if (m.who === SELF) out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 1, toMe: 1, fromMe: 0, said: noMark(typeof m.text === "string" ? m.text : "") });
+    else out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 0, toMe: 0, fromMe: 1, said: "" });
+  }
+  return out;
+}
+
+/** Adds events to a character's people (mutates `pf`). */
+export function mergeEvents(pf, events) {
+  for (const e of events) {
+    let p = pf.people.find((x) => x.key === e.key);
+    if (!p) {
+      p = { key: e.key, name: e.name, kind: e.key.startsWith("c:") ? "character" : "user", first: e.at, last: e.at, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", noteAt: 0, fresh: 0 };
+      pf.people.push(p);
+    }
+    p.name = e.name || p.name;
+    p.first = Math.min(p.first || e.at, e.at);
+    p.last = Math.max(p.last, e.at);
+    p.seen += e.seen;
+    p.toMe += e.toMe;
+    p.fromMe += e.fromMe;
+    p.fresh += 1;
+    if (e.said && !p.said.some((s) => s.text === e.said)) p.said = [...p.said, { at: e.at, where: e.where, text: e.said }].slice(-SAID_KEEP);
+  }
+  pf.people = pf.people.sort((a, b) => b.last - a.last).slice(0, PEOPLE_KEEP);
+}
+
+/** The active persona as {key, name}, or null. */
+function activeMe(fsx) {
+  const y = readJson(fsx, "you.json", null);
+  const list = (isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && ID.test(String(x.id)) && str(x.name));
+  const p = list.find((x) => x.id === y.active) || list[0];
+  return p ? { key: "u:" + p.id, name: cut(str(p.name), 80) } : null;
+}
+
+/** One pass over the forum and the chats for every character whose diary is on. Returns how many people entries changed. */
+function scanPeople(fsx, now) {
+  const ids = profileIds(fsx).filter((id) => {
+    const p = readProfile(fsx, id);
+    return p && p.life.on;
+  });
+  if (!ids.length) return 0;
+  const files = {};
+  for (const id of ids) files[id] = readPeople(fsx, id);
+  const oldest = Math.min(...ids.map((id) => files[id].scanned));
+  let topics = [];
+  try {
+    topics = fsx.list("forum/topics").filter((n) => /^[A-Za-z0-9_-]{1,60}\.json$/.test(n)).map((n) => readJson(fsx, "forum/topics/" + n, null)).filter((t) => isObj(t) && Array.isArray(t.posts) && num(t.lastAt) > oldest);
+  } catch {
+    topics = [];
+  }
+  const me = activeMe(fsx);
+  let changed = 0;
+  for (const id of ids) {
+    const pf = files[id];
+    const events = [];
+    for (const t of topics) events.push(...topicEvents(id, t, pf.scanned));
+    events.push(...chatEvents(readJson(fsx, "chats/" + id + ".json", null), me, pf.scanned));
+    pf.scanned = now;
+    if (events.length) {
+      mergeEvents(pf, events);
+      changed++;
+    }
+    writePeople(fsx, id, pf);
+  }
+  return changed;
+}
+
+/** Is it time for a scan: not more often than every SCAN_EVERY_MS. */
+function scanDue(fsx, now) {
+  const m = readJson(fsx, PEOPLE_META, null);
+  return !isObj(m) || now - num(m.at) >= SCAN_EVERY_MS;
+}
+
+// the impression a model words of the people met since the last one
+
+export const NOTE_RULE = "Write only from the lines given, never invent what someone did or said. Each impression is one short sentence in your own voice, at most 25 words.";
+
+/** The people to write about now: those with enough new meetings, the busiest first. */
+export const notePeople = (pf) => pf.people.filter((p) => p.fresh >= NOTE_AFTER).sort((a, b) => b.fresh - a.fresh).slice(0, NOTE_PEOPLE);
+
+/** Is an impression call due for this character: a new day, enough new meetings, not right after a failure. */
+export function noteDue(settings, profile, pf, now, tz) {
+  if (!settings.on || !profile.life.on) return false;
+  if (pf.noteDay === localDay(now, tz) || now - pf.failedAt < FAIL_WAIT_MS) return false;
+  return notePeople(pf).length > 0;
+}
+
+export function noteUser(pf, now, tz) {
+  const lines = ["Today is " + dateWords(now, tz) + ". These are people you met on the forum and in the messenger. Write your impression of each one.", ""];
+  for (const p of notePeople(pf)) {
+    const day = new Date(p.last).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+    lines.push("- " + p.name + (p.kind === "user" ? " (the human user)" : " (another character)") + ": seen " + p.seen + " times, last on " + day + "; spoke to you " + p.toMe + " times; you answered them " + p.fromMe + " times." + (p.note ? ' Your earlier impression: "' + p.note + '".' : ""));
+    for (const s of p.said) lines.push('  they said: "' + s.text + '"');
+  }
+  lines.push("");
+  lines.push(NOTE_RULE);
+  lines.push('Answer with JSON only: {"notes": [{"name": "the name as written above", "note": "the impression"}]}');
+  return lines.join("\n");
+}
+
+/** Files an impression result: {ok} or {error}. Names are matched without regard to case. */
+export function fileNotes(pf, text, now, tz) {
+  const j = parseJsonReply(text);
+  const notes = j && Array.isArray(j.notes) ? j.notes : [];
+  let n = 0;
+  for (const x of notes) {
+    if (!isObj(x)) continue;
+    const name = str(x.name).toLowerCase();
+    const note = oneLine(x.note, NOTE_CHARS);
+    const p = note && name ? pf.people.find((q) => q.name.toLowerCase() === name) : null;
+    if (p) {
+      p.note = note;
+      p.noteAt = now;
+      p.fresh = 0;
+      n++;
+    }
+  }
+  if (!n) return { error: "the model's answer held no impression" };
+  pf.noteDay = localDay(now, tz);
+  pf.failedAt = 0;
+  return { ok: true };
+}
+
+export function noteSystem(p) {
+  const lines = ["You are " + p.name + ", a character. You are thinking privately about the people you have met, in your own voice."];
+  if (p.about) lines.push("Who you are: " + cut(p.about, 800));
+  if (str(p.voice.text)) lines.push("How you write: " + cut(str(p.voice.text), 400));
+  lines.push("Write in the language of your description above.", NOTE_RULE);
+  return lines.join("\n");
+}
+
+function requestNotes(host, settings, profile, pf, now) {
+  const model = profile.model || settings.model;
+  host.llm.request("pn:" + profile.id, {
+    ...(model ? { model } : {}),
+    systemPrompt: noteSystem(profile),
+    messages: [{ role: "user", content: noteUser(pf, now, settings.tz) }],
+    presetParams: { temperature: 0.8, max_tokens: 450 },
+  });
+}
+
+function fileNotesResult(fsx, id, result, now, tz) {
+  const pf = readPeople(fsx, id);
+  const r = isObj(result) ? result : {};
+  const res = r.error ? { error: r.error } : fileNotes(pf, r.text, now, tz);
+  if (res.error) pf.failedAt = now;
+  writePeople(fsx, id, pf);
+}
+
+/** The other characters that remember this one: [{id, name, seen, note}], the most seen first. Read from their lists; nothing is written. */
+export function knownBy(fsx, id) {
+  const out = [];
+  for (const other of profileIds(fsx)) {
+    if (other === id) continue;
+    const p = readProfile(fsx, other);
+    const x = p ? readPeople(fsx, other).people.find((q) => q.key === "c:" + id) : null;
+    if (x) out.push({ id: other, name: p.name, seen: x.seen, note: x.note });
+  }
+  return out.sort((a, b) => b.seen - a.seen).slice(0, 20);
+}
+
+function peopleRoute(req, host, parts) {
+  const fsx = host.fs;
+  const id = idOf(parts[2]);
+  const p = id ? readProfile(fsx, id) : null;
+  if (!p) return ok({ error: "no such profile" }, 404);
+  let key = parts[3] || "";
+  try {
+    key = decodeURIComponent(key);
+  } catch {
+    // keep it as it came
+  }
+  if (!key && req.method === "GET") return ok({ ...peopleView(readPeople(fsx, id)), knownBy: knownBy(fsx, id) });
+  if (key && req.method === "PUT") {
+    // the user's own wording of the impression; the model's next one replaces it only after three new meetings
+    const b = isObj(req.body) ? req.body : {};
+    const pf = readPeople(fsx, id);
+    const x = pf.people.find((q) => q.key === key);
+    if (!x) return ok({ error: "no such person" }, 404);
+    x.note = oneLine(b.note, NOTE_CHARS);
+    x.noteAt = Date.now();
+    x.fresh = 0;
+    writePeople(fsx, id, pf);
+    return ok({ ok: true, ...peopleView(pf) });
+  }
+  if (!key && req.method === "DELETE") {
+    // forget everyone; the scan restarts from now, so the old meetings are not counted again
+    writePeople(fsx, id, { ...emptyPeople(), scanned: Date.now() });
+    return ok({ ok: true, ...peopleView(emptyPeople()) });
+  }
+  if (key && req.method === "DELETE") {
+    const pf = readPeople(fsx, id);
+    pf.people = pf.people.filter((x) => x.key !== key);
+    writePeople(fsx, id, pf);
+    return ok({ ok: true, ...peopleView(pf) });
+  }
+  return ok({ error: "not found" }, 404);
+}
+
 export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   if (!path.startsWith("/life/") && path !== "/life") return null;
   const parts = path.split("/").filter(Boolean); // ["life", "diary", id, "entry", eid]
+  if (parts[1] === "people") return peopleRoute(req, host, parts);
   if (parts[1] === "diary") return diaryRoute(req, host, parts);
   if (parts[1] === "world") return worldRoute(req, host, parts);
   if (parts[1] === "place" && req.method === "PUT") return placeRoute(req, host);
@@ -808,22 +1117,24 @@ export function handleRoute(req, host) {
 
 // ---------- onTick: the days are written, the world is fetched ----------
 
-/** Diaries of profiles that no longer exist are removed. */
+/** Diaries and people lists of profiles that no longer exist are removed. */
 function sweep(fsx) {
-  let names = [];
-  try {
-    names = fsx.list("life/diary");
-  } catch {
-    return;
-  }
   const alive = new Set(profileIds(fsx));
-  for (const n of names) {
-    const m = /^([A-Za-z0-9_-]{1,60})\.json$/.exec(n);
-    if (m && !alive.has(m[1]) && !readProfile(fsx, m[1])) {
-      try {
-        fsx.remove(diaryPath(m[1]));
-      } catch {
-        // already gone
+  for (const [dir, pathOf] of [["life/diary", diaryPath], ["life/people", peoplePath]]) {
+    let names = [];
+    try {
+      names = fsx.list(dir);
+    } catch {
+      continue;
+    }
+    for (const n of names) {
+      const m = /^([A-Za-z0-9_-]{1,60})\.json$/.exec(n);
+      if (m && !alive.has(m[1]) && !readProfile(fsx, m[1])) {
+        try {
+          fsx.remove(pathOf(m[1]));
+        } catch {
+          // already gone
+        }
       }
     }
   }
@@ -851,9 +1162,21 @@ export function onTick(_ctx, host) {
     }
     return;
   }
+  const noteKeys = Object.keys(llm).filter((k) => k.startsWith("pn:"));
+  if (noteKeys.length) {
+    for (const key of noteKeys) {
+      const id = key.slice(3);
+      if (ID.test(id) && readProfile(fsx, id)) fileNotesResult(fsx, id, llm[key], now, settings.tz);
+    }
+    return;
+  }
 
   // pass A: ask
   if (!settings.on) return;
+  if (scanDue(fsx, now)) {
+    scanPeople(fsx, now);
+    fsx.write(PEOPLE_META, JSON.stringify({ at: now }));
+  }
   const world = readWorld(fsx);
   const place = readPlace(fsx);
   if (host.net && worldDue(settings, world, place, now, settings.tz)) {
@@ -870,6 +1193,18 @@ export function onTick(_ctx, host) {
     const shape = shapeOf(settings, p, d, items, Math.random);
     requestDay(host, dayKey(id, shape), settings, p, d, shape, now);
     if (++asked >= TICK_DAYS) break;
+  }
+  if (!asked) {
+    // one impression of the people met per tick, after the diaries
+    for (const id of profileIds(fsx)) {
+      const p = readProfile(fsx, id);
+      const pf = p ? readPeople(fsx, id) : null;
+      if (p && pf && noteDue(settings, p, pf, now, settings.tz)) {
+        requestNotes(host, settings, p, pf, now);
+        asked++;
+        break;
+      }
+    }
   }
   if (!asked && Math.floor(now / 60000) % 60 === 0) sweep(fsx);
 }

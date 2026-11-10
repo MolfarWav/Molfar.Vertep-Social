@@ -22,6 +22,7 @@
  *   GET  /forum/search?q=             topics whose title or posts hold every word of q (at most SEARCH_MAX, titles first):
  *          the first matching post, a snippet around the match and the page that post is on
  *   GET  /forum/unread                {unread}: the number of topics with posts the user has not seen (the tab badge)
+ *   GET  /forum/boards                the boards as names only: {categories: [{id, name, boards: [{id, name}]}]} (the profile editor's picker)
  *   POST /forum/boards {categories}   adds categories and boards (merged by name)
  *   POST /forum/topic {board, title, text}    the user opens a topic
  *   POST /forum/reply {topic, text, quoteOf?} the user replies
@@ -372,6 +373,8 @@ export function readTopic(fsx, id) {
     locked: t.locked === true,
     unread: t.unread === true,
     owe: clampInt(t.owe, 0, 3, 0),
+    // the character the user's last post was aimed at (it quoted that character, or named them): answers first
+    addressed: typeof t.addressed === "string" && ID.test(t.addressed) ? t.addressed : "",
     posts,
   };
 }
@@ -680,6 +683,13 @@ export function youOf(fsx) {
   return isObj(p) && str(p.name) ? { name: cut(str(p.name), 80), about: cut(str(p.about), 600) } : null;
 }
 
+/** The persona with this id ({name, about}), or null: the one a post of the user was written as (forum only; the messenger always uses the active one). */
+export function personaOf(fsx, id) {
+  const y = readJson(fsx, "you.json", null);
+  const p = isObj(y) && Array.isArray(y.personas) ? y.personas.find((x) => isObj(x) && x.id === id) : null;
+  return isObj(p) && str(p.name) ? { name: cut(str(p.name), 80), about: cut(str(p.about), 600) } : null;
+}
+
 /** How well the profile knows the user: its own choice, else Settings > Messenger, else "knows". */
 export function knowsOf(fsx, profile) {
   if (isObj(profile) && KNOWS.includes(profile.knows)) return profile.knows;
@@ -696,6 +706,22 @@ export function chatNote(fsx, profile) {
   return sum ? cut(noControls(str(sum.text)).replace(/<[^>]*>/g, " ").replace(/[ \t]{2,}/g, " ").trim(), NOTE_FOR_FORUM) : "";
 }
 
+/** What the character remembers of one person it has met (the Life plugin's list, life/people/<id>.json): a line for the prompt, or "". `key` is "c:<profile>" or "u:<persona>". Copied into the messenger. */
+export function metLine(fsx, p, key) {
+  if (!lifeAllowed(fsx, p).diary) return "";
+  const d = readJson(fsx, "life/people/" + p.id + ".json", null);
+  const x = isObj(d) && Array.isArray(d.people) ? d.people.find((q) => isObj(q) && q.key === key) : null;
+  if (!x || !(x.seen > 0 || x.toMe > 0 || x.fromMe > 0)) return "";
+  const said = Array.isArray(x.said) && x.said.length ? x.said[x.said.length - 1] : null;
+  const bits = ["You have met " + cut(str(x.name), 80) + " before" + (x.seen > 0 ? " (you have seen them " + Math.floor(x.seen) + " times)" : "") + "."];
+  if (said && typeof said.text === "string" && str(said.text)) bits.push('They once told you: "' + cut(str(said.text), 160) + '".');
+  if (typeof x.note === "string" && str(x.note)) bits.push("Your impression of them: " + cut(str(x.note), 160));
+  return bits.join(" ");
+}
+
+/** The key of the user's persona on a post, as the Life plugin lists people: "u:<persona id>", else "n:<name>". */
+const userKeyOf = (post) => (typeof post.persona === "string" && ID.test(post.persona) ? "u:" + post.persona : "n:" + (str(post.name).toLowerCase().replace(/\s+/g, "_").slice(0, 60) || "you"));
+
 /**
  * What an author may know of the human user while writing a reply: {label, name, about, note} or null when the user is not in this
  * conversation (none of the recent posts is the user's). `label` is how the user's posts are named
@@ -711,10 +737,13 @@ export function userKnownTo(fsx, author, topic, target) {
   const toUser = target ? target.by === SELF : recent.length > 0 && recent[recent.length - 1].by === SELF;
   if (!mine.length && !toUser) return null;
   const knows = knowsOf(fsx, author);
-  const you = youOf(fsx);
-  const posted = (target && target.by === SELF ? target : mine[mine.length - 1] || {}).name;
-  const name = knows === "stranger" ? "" : str(posted) || (you ? you.name : "");
-  return { label: name, name, about: knows === "knows" && you ? you.about : "", note: toUser && knows !== "stranger" ? chatNote(fsx, author) : "" };
+  // the persona the post in question was written as: switching personas changes who writes, not who wrote before
+  const post = target && target.by === SELF ? target : mine[mine.length - 1] || {};
+  // a persona that has since been deleted gives its name (copied into the post) and no About
+  const you = post.persona ? personaOf(fsx, post.persona) : youOf(fsx);
+  const name = knows === "stranger" ? "" : str(post.name) || (you ? you.name : "");
+  const met = knows !== "stranger" && str(post.name) ? metLine(fsx, author, userKeyOf(post)) : "";
+  return { label: name, name, about: knows === "knows" && you ? you.about : "", note: toUser && knows !== "stranger" ? chatNote(fsx, author) : "", ...(met ? { met } : {}) };
 }
 
 const LENGTH_WORDS = ["Short: one or two sentences.", "Medium: two to four sentences.", "Long: a short paragraph when the topic asks for it."];
@@ -742,6 +771,8 @@ export function systemPromptFor(p, recent, opts) {
   const user = isObj(opts) && isObj(opts.user) ? opts.user : null;
   if (user && user.name) lines.push("The human user writes on this forum as " + user.name + ". You know them: they are the person you chat with in the messenger." + (user.about ? " About them (what they told you): " + cut(user.about, 600) : ""));
   else if (user) lines.push("You do not know who the human user is beyond what they write here; do not guess their name.");
+  if (user && user.met) lines.push(user.met);
+  if (isObj(opts) && str(opts.met)) lines.push(opts.met);
   if (user && user.note) lines.push("What you remember from your private chats with them (your own notes): " + cut(user.note, NOTE_FOR_FORUM) + "\nThat stays between the two of you: do not quote it or reveal it on the forum, let it only shape how you speak to them.");
   lines.push(LENGTH_WORDS[length] + " " + EMOJI_WORDS[emoji] + " " + (formality >= 66 ? "Formal, polite address." : formality <= 33 ? "Informal, on first-name terms." : "Neutral tone."));
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
@@ -916,8 +947,10 @@ export function targetsFor(author, topics, now, scope) {
       }
     }
     const wroteSince = userIdx >= 0 && ps.slice(userIdx + 1).some((p) => p.by === author.id);
-    if (t.owe > 0 && userIdx >= 0 && !wroteSince && author.forum.repliesYou) {
-      out.owed.push({ topic: t, target: ps[userIdx] });
+    // the character the user's post was aimed at answers even when the owed count has run out, and before the others
+    const first = t.addressed === author.id;
+    if ((t.owe > 0 || first) && userIdx >= 0 && !wroteSince && author.forum.repliesYou) {
+      out.owed.push({ topic: t, target: ps[userIdx], first });
       continue;
     }
     const tail = ps.slice(-6);
@@ -960,6 +993,9 @@ export function planAction(c, rand) {
   };
   const oldest = (arr) => arr.slice().sort((a, b) => a.topic.lastAt - b.topic.lastAt)[0];
   // 1. a user's post still owed replies, 2. a mention of the author, then the rest by chance
+  // the character the user answered or named goes first (when they are free to write), then whoever is owed
+  const addressed = reply((t) => t.owed.filter((h) => h.first), oldest);
+  if (addressed) return addressed;
   const owed = reply((t) => t.owed, oldest);
   if (owed) return owed;
   const mention = reply((t) => t.mention, oldest);
@@ -998,12 +1034,12 @@ export function planAction(c, rand) {
 
 // ---------- requests and filing ----------
 
-function requestPost(host, key, settings, author, userMessage, maxTokens, images, user, topics) {
+function requestPost(host, key, settings, author, userMessage, maxTokens, images, user, topics, met) {
   // the author's own model (Profiles > Model) wins over the forum's model in Settings
   const model = author.model || settings.model;
   host.llm.request(key, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(author, recentDays(host.fs, author, Date.now()), { images: images === true, stickers: stickerHint(stickerPacksFor(host.fs, author), Array.isArray(topics) && stickersLeft(host.fs, author, topics, Date.now()) > 0), ...(user ? { user } : {}) }),
+    systemPrompt: systemPromptFor(author, recentDays(host.fs, author, Date.now()), { images: images === true, stickers: stickerHint(stickerPacksFor(host.fs, author), Array.isArray(topics) && stickersLeft(host.fs, author, topics, Date.now()) > 0), ...(user ? { user } : {}), ...(met ? { met } : {}) }),
     messages: [{ role: "user", content: userMessage }],
     presetParams: { temperature: 0.9, max_tokens: maxTokens },
   });
@@ -1016,7 +1052,7 @@ function requestPlan(host, key, settings, plan, boards, topics, rand) {
   if (plan.kind === "reply") {
     const b = boardMap(boards).get(plan.topic.board);
     const user = userKnownTo(host.fs, plan.author, plan.topic, plan.target);
-    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target, user ? user.label : ""), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()), user, topics);
+    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target, user ? user.label : ""), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()), user, topics, plan.target && plan.target.by !== SELF ? metLine(host.fs, plan.author, "c:" + plan.target.by) : "");
   } else {
     const titles = topics.filter((t) => t.board === plan.board.id).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
     const subject = plan.subject || pickSubject(plan.author, { board: plan.board, titles }, rand);
@@ -1338,11 +1374,28 @@ function imageRoute(req, host) {
   return ok({ ok: true, image: post.image });
 }
 
+/** The boards as plain names, without the counts of /forum/home: the profile editor offers them as favourites. */
+function boardNamesRoute(host) {
+  return ok({ categories: readBoards(host.fs).categories.map((c) => ({ id: c.id, name: c.name, boards: c.boards.map((b) => ({ id: b.id, name: b.name })) })) });
+}
+
 function boardsRoute(req, host) {
   const b = isObj(req.body) ? req.body : {};
   const next = mergeBoards(readBoards(host.fs), b.categories);
   host.fs.write("forum/boards.json", JSON.stringify(next));
   return ok({ ok: true, categories: next.categories });
+}
+
+/**
+ * The character the user's post is aimed at: the author of the post it quotes, else the first character whose name it mentions, else the
+ * author of the post right above it when that is a character (`above`); "" for nobody.
+ * That character answers before the others (`targetsFor`, `planAction`). `profiles` are the readable profiles.
+ */
+export function addresseeOf(profiles, target, text, above) {
+  if (target && target.by !== SELF && profiles.some((p) => p.id === target.by)) return target.by;
+  const hit = profiles.find((p) => mentions(String(text), p.name));
+  if (hit) return hit.id;
+  return !target && above && above.by !== SELF && profiles.some((p) => p.id === above.by) ? above.by : "";
 }
 
 /** The user posted: characters reply in a few minutes, within the safety net (the slot moves up, never past the hard gap). */
@@ -1373,7 +1426,7 @@ function newTopicRoute(req, host) {
   const now = Date.now();
   const me = meNow(fsx);
   const post = { id: "p-" + now + "-" + rid(), ...meFields(me), at: now, text, ...(picked ? { image: picked } : {}) };
-  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: hit.board.id, title, by: SELF, name: me ? me.name : "", hue: me ? me.hue : 200, createdAt: now, lastAt: now, locked: false, unread: false, owe: 1 + Math.floor(Math.random() * 3), posts: [post] };
+  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: hit.board.id, title, by: SELF, name: me ? me.name : "", hue: me ? me.hue : 200, createdAt: now, lastAt: now, locked: false, unread: false, owe: 1 + Math.floor(Math.random() * 3), addressed: addresseeOf(loadProfiles(fsx), null, text), posts: [post] };
   writeTopic(fsx, topic);
   userPosted(fsx, now);
   return ok({ ok: true, topic: topic.id });
@@ -1391,10 +1444,12 @@ function replyRoute(req, host) {
   const now = Date.now();
   const target = typeof b.quoteOf === "string" ? topic.posts.find((p) => p.id === b.quoteOf && !p.removed) : null;
   const post = { id: "p-" + now + "-" + rid(), ...meFields(meNow(fsx)), at: now, text, ...(picked ? { image: picked } : {}), ...(target ? { quote: quoteOf(target) } : {}) };
+  const above = livePosts(topic).slice(-1)[0];
   topic.posts.push(post);
   topic.lastAt = now;
   topic.unread = false;
   topic.owe = 1 + Math.floor(Math.random() * 3);
+  topic.addressed = addresseeOf(loadProfiles(fsx), target, text, above);
   writeTopic(fsx, topic);
   userPosted(fsx, now);
   return ok({ ok: true, post });
@@ -1559,6 +1614,7 @@ export function handleRoute(req, host) {
   if (path === "/forum/topic" && method === "GET") return topicRoute(req, host);
   if (path === "/forum/search" && method === "GET") return searchRoute(req, host);
   if (path === "/forum/unread" && method === "GET") return unreadRoute(host);
+  if (path === "/forum/boards" && method === "GET") return boardNamesRoute(host);
   if (path === "/forum/boards" && method === "POST") return boardsRoute(req, host);
   if (path === "/forum/topic" && method === "POST") return newTopicRoute(req, host);
   if (path === "/forum/reply" && method === "POST") return replyRoute(req, host);
