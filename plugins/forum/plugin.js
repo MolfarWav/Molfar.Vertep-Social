@@ -181,6 +181,9 @@ export function readSettings(fsx) {
     quietFrom: time(r.quietFrom, DEFAULTS.quietFrom),
     quietTo: time(r.quietTo, DEFAULTS.quietTo),
     writers: r.writers === "equal" ? "equal" : "profile",
+    // what the community around the posts does by itself (Settings > Community); reactions need no model
+    reactions: !isObj(r.community) || r.community.reactions !== false,
+    reactionsPerDay: clampInt(isObj(r.community) ? r.community.reactionsPerDay : undefined, 0, 50, 8),
     tzOffset: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
     model: modelRef(model),
   };
@@ -206,10 +209,13 @@ export function readLog(fsx, now, tz) {
   const byAuthor = {};
   if (same && isObj(l.byAuthor)) for (const [k, v] of Object.entries(l.byAuthor)) if (ID.test(k) && num(v) > 0) byAuthor[k] = Math.floor(num(v));
   const e = isObj(l.error) ? l.error : null;
+  const reacts = {};
+  if (same && isObj(l.reacts)) for (const [k, v] of Object.entries(l.reacts)) if (ID.test(k) && num(v) > 0) reacts[k] = Math.floor(num(v));
   return {
     day,
     posts: same ? Math.max(0, Math.floor(num(l.posts))) : 0,
     byAuthor,
+    reacts,
     lastAutoAt: num(l.lastAutoAt),
     nextAt: num(l.nextAt),
     lastAuthor: ID.test(String(l.lastAuthor)) ? String(l.lastAuthor) : "",
@@ -354,7 +360,8 @@ function cleanPost(p) {
   const persona = by === SELF && typeof p.persona === "string" && ID.test(p.persona) ? p.persona : "";
   if (p.removed === true) return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: "", removed: true };
   const image = cleanImage(p.image);
-  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(persona ? { persona } : {}), ...(q ? { quote: q } : {}), ...(image ? { image } : {}) };
+  const react = cleanReact(p.react);
+  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(persona ? { persona } : {}), ...(q ? { quote: q } : {}), ...(image ? { image } : {}), ...(react ? { react } : {}) };
 }
 
 export function readTopic(fsx, id) {
@@ -742,6 +749,11 @@ export function feelsOf(fsx, profiles) {
   return out;
 }
 
+/** How the author feels about whoever wrote the post (a character, or the user as a persona): -12 to 12, 0 when unknown. */
+function feelAbout(feels, author, post) {
+  return (post && isObj(feels[author.id]) && feels[author.id][post.by === SELF ? userKeyOf(post) : "c:" + post.by]) || 0;
+}
+
 /** The key of the user's persona on a post, as the Life plugin lists people: "u:<persona id>", else "n:<name>". */
 const userKeyOf = (post) => (typeof post.persona === "string" && ID.test(post.persona) ? "u:" + post.persona : "n:" + (str(post.name).toLowerCase().replace(/\s+/g, "_").slice(0, 60) || "you"));
 
@@ -995,8 +1007,7 @@ export function planAction(c, rand) {
   const { profiles, topics, boards, settings, log, now, tz, mode, scope } = c;
   const feels = isObj(c.feels) ? c.feels : {};
   const bmap = boardMap(boards);
-  // how the author feels about whoever wrote the post (a character, or the user as a persona): -12 to 12, 0 when unknown
-  const feelToward = (a, post) => (post && isObj(feels[a.id]) && feels[a.id][post.by === SELF ? userKeyOf(post) : "c:" + post.by]) || 0;
+  const feelToward = (a, post) => feelAbout(feels, a, post);
   // a liked person's post draws a reply up to twice as often, a disliked one's as little as a sixth
   const lean = (a, h) => {
     const ps = livePosts(h.topic);
@@ -1067,6 +1078,105 @@ export function planAction(c, rand) {
     true,
   );
   return live || newTopic();
+}
+
+// ---------- reactions (issue #358): a click on a post, from the user, or from a character by rules (no model call) ----------
+
+export const REACTIONS = ["\u{1F44D}", "❤️", "\u{1F602}", "\u{1F62E}", "\u{1F622}", "\u{1F525}"];
+const REACT_MAX = 30;
+const REACT_CHANCE = 0.3;
+const REACT_WINDOW_MS = 3 * 24 * 3600 * 1000;
+
+/** `{emoji: [who]}` with only the known emoji and valid ids (the user is "me"), or null when nobody reacted. */
+export function cleanReact(raw) {
+  if (!isObj(raw)) return null;
+  const out = {};
+  for (const e of REACTIONS) {
+    const list = Array.isArray(raw[e]) ? [...new Set(raw[e].filter((x) => x === SELF || (typeof x === "string" && ID.test(x))))].slice(0, REACT_MAX) : [];
+    if (list.length) out[e] = list;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+const hasAny = (t, list) => list.some((w) => t.includes(w));
+
+/** Which reaction a character gives a post: by what the text sounds like, a fire for what is among its interests, else a thumb. */
+export function reactionFor(text, author) {
+  const t = String(text).toLowerCase();
+  if (hasAny(t, ["haha", "lol", "хаха", "хах", "\u{1F602}", "\u{1F923}"])) return REACTIONS[2];
+  if (hasAny(t, ["sorry", "unfortunately", "шкода", "сумно", "на жаль", "\u{1F622}"])) return REACTIONS[4];
+  if (hasAny(t, ["love", "thank", "дякую", "люблю", "❤", "\u{1F970}"])) return REACTIONS[1];
+  if (hasAny(t, ["wow", "whoa", "нічого собі", "ого", "\u{1F62E}"])) return REACTIONS[3];
+  const mine = new Set((Array.isArray(author.interests) ? author.interests : []).flatMap((i) => lifeWords(i)));
+  if (lifeWords(t).some((w) => mine.has(w))) return REACTIONS[5];
+  return REACTIONS[0];
+}
+
+/**
+ * One reaction a character could give now: {author, topic, post, emoji} or null. An online or away character that has not used up its
+ * `reactionsPerDay` picks a recent post of someone else that it has not reacted to; people it likes and the user weigh more, a post of
+ * someone it is cold to (feeling -3 or less) is never picked, a post about its interests weighs more.
+ */
+export function pickReaction(c, rand) {
+  const { profiles, topics, settings, log, now, tz } = c;
+  const feels = isObj(c.feels) ? c.feels : {};
+  if (!settings.reactions || settings.reactionsPerDay <= 0) return null;
+  const free = profiles.filter((p) => ["online", "away"].includes(statusAt(p.schedule, new Date(now), tz)) && (log.reacts[p.id] || 0) < settings.reactionsPerDay);
+  if (!free.length) return null;
+  const author = free[Math.floor(rand() * free.length)];
+  const mine = new Set(author.interests.flatMap((i) => lifeWords(i)));
+  const cands = [];
+  for (const t of topics) {
+    if (t.locked || now - t.lastAt > REACT_WINDOW_MS) continue;
+    for (const p of livePosts(t).slice(-12)) {
+      if (p.by === author.id || now - p.at > REACT_WINDOW_MS) continue;
+      if (Object.values(p.react || {}).some((l) => l.includes(author.id))) continue;
+      const feel = feelAbout(feels, author, p);
+      if (feel <= -3) continue;
+      cands.push({ topic: t, post: p, w: 1 + Math.max(0, feel) / 4 + (p.by === SELF ? 1 : 0) + (lifeWords(p.text).some((w) => mine.has(w)) ? 2 : 0) });
+    }
+  }
+  const hit = weightedPick(cands, (x) => x.w, rand);
+  return hit ? { author, topic: hit.topic, post: hit.post, emoji: reactionFor(hit.post.text, author) } : null;
+}
+
+/** Writes a reaction (`who` is "me" for the user) into the topic file; a repeat is a no-op. Returns the post's new `react`, or null when the post is gone. */
+function putReaction(fsx, topicId, postId, emoji, who, on) {
+  const topic = readTopic(fsx, topicId);
+  const post = topic ? topic.posts.find((p) => p.id === postId && !p.removed) : null;
+  if (!post || !REACTIONS.includes(emoji)) return null;
+  const react = { ...(post.react || {}) };
+  const list = (react[emoji] || []).filter((x) => x !== who);
+  if (on) list.push(who);
+  if (list.length) react[emoji] = list;
+  else delete react[emoji];
+  post.react = react;
+  if (!Object.keys(react).length) delete post.react;
+  writeTopic(fsx, topic);
+  return post.react || {};
+}
+
+/** The user clicks a reaction on a post: `POST /forum/react {topic, post, emoji}` toggles it. */
+function reactRoute(req, host) {
+  const b = isObj(req.body) ? req.body : {};
+  const topic = readTopic(host.fs, String(b.topic || ""));
+  const post = topic ? topic.posts.find((p) => p.id === String(b.post || "") && !p.removed) : null;
+  if (!post) return ok({ error: "no such post" }, 404);
+  const emoji = String(b.emoji || "");
+  if (!REACTIONS.includes(emoji)) return ok({ error: "unknown reaction" }, 400);
+  const on = !(post.react && Array.isArray(post.react[emoji]) && post.react[emoji].includes(SELF));
+  return ok({ ok: true, react: putReaction(host.fs, topic.id, post.id, emoji, SELF, on) });
+}
+
+/** One chance per tick that a character reacts to a post; true when the log changed. */
+function reactTick(fsx, s, log, now, tz, rand) {
+  if (!s.autonomous || !s.reactions || rand() >= REACT_CHANCE || inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
+  const profiles = loadProfiles(fsx);
+  if (!profiles.length) return false;
+  const pick = pickReaction({ profiles, topics: loadTopics(fsx), settings: s, log, now, tz, feels: feelsOf(fsx, profiles) }, rand);
+  if (!pick || !putReaction(fsx, pick.topic.id, pick.post.id, pick.emoji, pick.author.id, true)) return false;
+  log.reacts[pick.author.id] = (log.reacts[pick.author.id] || 0) + 1;
+  return true;
 }
 
 // ---------- requests and filing ----------
@@ -1293,7 +1403,19 @@ function topicRoute(req, host) {
       online: prof ? ["online", "away"].includes(statusAt(prof.schedule, new Date(now), tz)) : p.by === SELF,
     };
   }
+  // who reacted, by name, for the tooltip of a reaction (the user is "me")
+  const reactors = {};
+  for (const p of shown) {
+    for (const list of Object.values(p.react || {})) {
+      for (const who of list) {
+        if (reactors[who] !== undefined) continue;
+        const prof = who === SELF ? null : readProfile(fsx, who);
+        reactors[who] = who === SELF ? "" : prof ? prof.name : "";
+      }
+    }
+  }
   return ok({
+    reactors,
     topic: {
       id: topic.id,
       title: topic.title,
@@ -1631,6 +1753,8 @@ export function onTick(_ctx, host) {
     return;
   }
 
+  // reactions are free (no model), so they do not wait for the post limits
+  if (reactTick(fsx, s, log, now, tz, Math.random)) writeLog(fsx, log);
   if (autoBlock(log, s, now, tz)) return;
   const profiles = loadProfiles(fsx);
   if (!profiles.length || !boards.categories.some((c) => c.boards.length)) return;
@@ -1659,6 +1783,7 @@ export function handleRoute(req, host) {
   if (path === "/forum/image" && method === "POST") return imageRoute(req, host);
   if (path === "/forum/read" && method === "POST") return readRoute(req, host);
   if (path === "/forum/lock" && method === "POST") return lockRoute(req, host);
+  if (path === "/forum/react" && method === "POST") return reactRoute(req, host);
   if (path === "/forum/remove-post" && method === "POST") return removePostRoute(req, host);
   if (path === "/forum/delete-topic" && method === "POST") return deleteTopicRoute(req, host);
   if (path === "/forum/force" && method === "POST") return forceRoute(req, host);

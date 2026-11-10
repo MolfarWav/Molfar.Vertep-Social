@@ -76,6 +76,8 @@ export interface ShownPost {
   /** false: the author is offline now (real mode). Undefined counts as online. */
   online?: boolean;
   removed?: boolean;
+  /** Reactions as drawn: emoji, how many, whether the user gave one, and who (names, for the tooltip). */
+  react?: { emoji: string; n: number; mine: boolean; who: string }[];
 }
 
 /** The autonomy strip: the engine's state and the numbers. */
@@ -161,6 +163,8 @@ export interface EnginePost {
   image?: MsgImage;
   /** The user removed it: the text is gone, the place stays. */
   removed?: boolean;
+  /** Reactions: emoji to who ("me" is the user; a character's profile id). */
+  react?: Record<string, string[]>;
 }
 export interface EngineAuthor {
   name: string;
@@ -186,6 +190,8 @@ export interface EngineTopicPage {
   /** Which page of the topic this is; absent from an engine that does not page. */
   paging?: EnginePaging;
   authors: Record<string, EngineAuthor>;
+  /** Names of those who reacted, by id ("" for the user). */
+  reactors?: Record<string, string>;
 }
 /** One page of a topic: `from` is the index (0-based) of its first post in the whole topic. */
 export interface EnginePaging {
@@ -329,6 +335,16 @@ export function rowsFromEngine(page: EngineBoardPage, now: number, lang: string,
   }));
 }
 
+/** The reactions of a post, as they came (the engine keeps them in the order of its fixed set). */
+export function reactionsOf(react: Record<string, string[]>, reactors: Record<string, string>, me: string): NonNullable<ShownPost["react"]> {
+  return Object.entries(react)
+    .filter(([, who]) => who.length > 0)
+    .map(([emoji, who]) => ({ emoji, n: who.length, mine: who.includes("me"), who: who.map((w) => (w === "me" ? me : reactors[w] || "")).filter(Boolean).join(", ") }));
+}
+
+/** The reactions a user may give: the engine's fixed set (plugins/forum, REACTIONS). */
+export const REACTION_SET = ["\u{1F44D}", "\u2764\uFE0F", "\u{1F602}", "\u{1F62E}", "\u{1F622}", "\u{1F525}"];
+
 export function postsFromEngine(page: EngineTopicPage, now: number, lang: string, t: Translate): ShownPost[] {
   const title = page.topic.title;
   const from = page.paging?.from ?? 0;
@@ -351,6 +367,7 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
       text: p.text,
       ...(p.image && !p.removed ? { image: p.image } : {}),
       ...(p.removed ? { removed: true } : {}),
+      ...(p.react && !p.removed ? { react: reactionsOf(p.react, page.reactors ?? {}, t("shell.me")) } : {}),
       ...(p.quote ? { quote: { who: p.quote.by === "me" ? p.quote.name || t("shell.me") : p.quote.name, text: p.quote.text } } : {}),
       ...(a?.signature ? { sig: a.signature } : {}),
       online: a?.online ?? false,

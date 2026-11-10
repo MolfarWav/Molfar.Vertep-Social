@@ -2,7 +2,7 @@
 // shape of a saved patch, adopting the engine's corrections, and the model picker options.
 // No React and no network here, so test/settings-state.test.ts can drive them directly.
 import type { ModelChoice } from "@/lib/api";
-import { LIFE_DEFAULTS, type SettingsMock } from "@/mock/settings";
+import { COMMUNITY_DEFAULTS, LIFE_DEFAULTS, type SettingsMock } from "@/mock/settings";
 import type { Opt } from "./controls";
 
 /** A partial settings object: what the screen sets and what the save sends. */
@@ -28,6 +28,7 @@ export const REAL_DEFAULTS: SettingsMock = {
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: false,
   life: LIFE_DEFAULTS,
+  community: COMMUNITY_DEFAULTS,
   images: { on: false, perDay: 2 },
   usedToday: 0,
 };
@@ -48,6 +49,7 @@ export function mergePatch(base: Patch | null, next: Patch | null): Patch {
   if (a.models || b.models) out.models = { ...a.models, ...b.models } as SettingsMock["models"];
   if (a.notify || b.notify) out.notify = { ...a.notify, ...b.notify } as SettingsMock["notify"];
   if (a.images || b.images) out.images = { ...a.images, ...b.images } as SettingsMock["images"];
+  if (a.community || b.community) out.community = { ...a.community, ...b.community } as SettingsMock["community"];
   if (a.life || b.life) out.life = { ...a.life, ...b.life, cats: { ...a.life?.cats, ...b.life?.cats } } as SettingsMock["life"];
   return out;
 }

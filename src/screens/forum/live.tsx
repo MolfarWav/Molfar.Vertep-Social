@@ -211,6 +211,14 @@ export function ForumLive() {
         onWriteNow={write.run}
         onHome={home_}
         onBoard={() => go(info ? { view: "board", id: info.board.id } : { view: "home" })}
+        onReact={async (post, emoji) => {
+          try {
+            await call("POST", "/forum/react", { topic: route.id, post: post.id, emoji });
+          } catch {
+            // the chips come back from the server on the reload; a failed click leaves them as they were
+          }
+          await topic.reload();
+        }}
         onRemovePost={async (post) => {
           try {
             await call("POST", "/forum/remove-post", { topic: route.id, post: post.id });

@@ -27,6 +27,25 @@ export const LIFE_DEFAULTS: LifeSettings = {
   place: "",
 };
 
+export type EventsRate = "off" | "daily" | "weekly";
+
+/** The community around the posts (issue #358). Every cap counts per character per day. */
+export interface CommunitySettings {
+  /** Characters react to posts by rules (no model call). */
+  reactions: boolean;
+  reactionsPerDay: number;
+  /** How often one event gets several characters talking on the forum. */
+  events: EventsRate;
+  /** A story: a short post with a picture that vanishes after a day. */
+  stories: boolean;
+  storiesPerDay: number;
+  /** Characters chat with each other in the messenger (about twice the tokens of a normal chat). */
+  chats: boolean;
+  chatsPerDay: number;
+}
+
+export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4 };
+
 export interface SettingsMock {
   autonomous: boolean;
   activity: Activity;
@@ -50,6 +69,7 @@ export interface SettingsMock {
   notify: { tab: boolean; system: boolean; sound: boolean };
   roleplayAccess: boolean;
   life: LifeSettings;
+  community: CommunitySettings;
   /** Pictures in messages: characters may send generated pictures, at most `perDay` each (messenger and forum separately). */
   images: { on: boolean; perDay: number };
   /** Forum model requests already made today (a count from the server in the real app). */
@@ -75,6 +95,7 @@ export const SETTINGS_MOCK: SettingsMock = {
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: true,
   life: { ...LIFE_DEFAULTS, place: "Kyiv, Ukraine" },
+  community: { ...COMMUNITY_DEFAULTS, stories: true, chats: true },
   images: { on: true, perDay: 2 },
   usedToday: 12,
 };
@@ -87,6 +108,9 @@ export const LIMITS = {
   postsPerAuthor: { min: 1, max: 50 },
   messengerPerDay: { min: 0, max: 50 },
   imagesPerDay: { min: 0, max: 20 },
+  reactionsPerDay: { min: 0, max: 50 },
+  storiesPerDay: { min: 0, max: 10 },
+  chatsPerDay: { min: 0, max: 30 },
   messengerContext: { min: 4, max: 500 },
 } as const;
 

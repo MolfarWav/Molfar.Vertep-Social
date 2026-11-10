@@ -42,6 +42,8 @@ export interface TopicViewProps {
   /** The user's moderation (real forum only); each resolves to an error text, or null when it worked. */
   onRemovePost?: (post: ShownPost) => Promise<string | null>;
   onDeleteTopic?: () => Promise<string | null>;
+  /** Gives or takes back a reaction on a post (real forum only). */
+  onReact?: (post: ShownPost, emoji: string) => Promise<void>;
 }
 
 export function TopicView(p: TopicViewProps) {
@@ -209,7 +211,7 @@ export function TopicView(p: TopicViewProps) {
           {pager}
           {state}
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} phone locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} />
+            <PostCard key={post.id} post={post} phone locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} onReact={p.onReact} />
           ))}
           {posts.length > 0 && pager}
         </div>
@@ -266,7 +268,7 @@ export function TopicView(p: TopicViewProps) {
           {pager}
           {state}
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} phone={false} locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} />
+            <PostCard key={post.id} post={post} phone={false} locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} onReact={p.onReact} />
           ))}
           {posts.length > 0 && pager}
           {p.locked ? (

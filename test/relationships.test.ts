@@ -137,3 +137,68 @@ test("planAction: a mention by someone in open conflict is often let go, a menti
   expect(run(enemy, { mavka: { "c:yaryna": -5 } })).toBe(100); // cold is not conflict
   expect(run(withMention("me", "Serhii"), { mavka: { "u:u1": -12 } })).toBe(100);
 });
+
+// ---------- reactions (idea 5) ----------
+
+
+test("cleanReact keeps only known emoji and valid ids, once each", () => {
+  const E = forum.REACTIONS;
+  expect(forum.cleanReact({ [E[0]]: ["me", "yaryna", "yaryna", "bad id!", 3], "x": ["me"], [E[1]]: [] })).toEqual({ [E[0]]: ["me", "yaryna"] });
+  expect(forum.cleanReact(null)).toBeNull();
+  expect(forum.cleanReact({})).toBeNull();
+});
+
+test("reactionFor: laughter, sorrow, thanks, wonder, an interest, else a thumb", () => {
+  const E = forum.REACTIONS;
+  const a = { interests: ["reeds", "weaving"] };
+  expect(forum.reactionFor("haha that is good", a)).toBe(E[2]);
+  expect(forum.reactionFor("Шкода, що так вийшло", a)).toBe(E[4]);
+  expect(forum.reactionFor("Thank you all", a)).toBe(E[1]);
+  expect(forum.reactionFor("Ого, нічого собі!", a)).toBe(E[3]);
+  expect(forum.reactionFor("The reeds are tall this year", a)).toBe(E[5]);
+  expect(forum.reactionFor("Tuesday again", a)).toBe(E[0]);
+});
+
+function reactSetup(extra: object = {}) {
+  const s = setup();
+  const settings = { ...s.settings, reactions: true, reactionsPerDay: 2 };
+  const log = { ...s.log, reacts: {} as Record<string, number> };
+  return { ...s, settings, log, c: { profiles: [s.mavka], topics: s.topics, settings, log, now: s.now, tz: 0, ...extra } };
+}
+
+test("pickReaction: skips what she already reacted to, her own posts, the cold, a spent day, and a switch that is off", () => {
+  const r = reactSetup();
+  const first = forum.pickReaction(r.c, () => 0);
+  expect(first).not.toBeNull();
+  expect(first!.author.id).toBe("mavka");
+  // already reacted: the other topic is picked, then nothing
+  const reacted = r.topics.map((t: any) => ({ ...t, posts: t.posts.map((p: any) => ({ ...p, react: { [forum.REACTIONS[0]]: ["mavka"] } })) }));
+  expect(forum.pickReaction({ ...r.c, topics: reacted }, () => 0)).toBeNull();
+  // her own posts
+  const own = r.topics.map((t: any) => ({ ...t, posts: t.posts.map((p: any) => ({ ...p, by: "mavka" })) }));
+  expect(forum.pickReaction({ ...r.c, topics: own }, () => 0)).toBeNull();
+  // cold to both authors
+  expect(forum.pickReaction({ ...r.c, feels: { mavka: { "c:yaryna": -3, "c:zorya": -8 } } }, () => 0)).toBeNull();
+  // the day is spent
+  expect(forum.pickReaction({ ...r.c, log: { ...r.log, reacts: { mavka: 2 } } }, () => 0)).toBeNull();
+  expect(forum.pickReaction({ ...r.c, settings: { ...r.settings, reactions: false } }, () => 0)).toBeNull();
+  expect(forum.pickReaction({ ...r.c, settings: { ...r.settings, reactionsPerDay: 0 } }, () => 0)).toBeNull();
+});
+
+test("POST /forum/react toggles the user's reaction, refuses unknown emoji and missing posts, and the topic keeps it", async () => {
+  const files = new Map<string, string>();
+  const fsx = { read: (p: string) => { if (!files.has(p)) throw new Error("ENOENT"); return files.get(p)!; }, write: (p: string, c: string) => void files.set(p, c), remove: (p: string) => void files.delete(p), list: (d: string) => { const o = [...files.keys()].filter((k) => k.startsWith(d + "/")).map((k) => k.slice(d.length + 1)); if (!o.length) throw new Error("ENOENT"); return o; } };
+  const t = { id: "t1", board: "b1", title: "Hello", by: "yaryna", name: "Yaryna", hue: 1, createdAt: 1, lastAt: 5, locked: false, owe: 0, posts: [post("p1", "yaryna", "Yaryna", "hi", 1)] };
+  files.set("forum/topics/t1.json", JSON.stringify(t));
+  const host = { fs: fsx } as any;
+  const send = (body: object) => forum.handleRoute({ path: "/forum/react", method: "POST", body }, host);
+  const E = forum.REACTIONS;
+  expect(send({ topic: "t1", post: "p1", emoji: E[0] }).json.react).toEqual({ [E[0]]: ["me"] });
+  expect(JSON.parse(files.get("forum/topics/t1.json")!).posts[0].react).toEqual({ [E[0]]: ["me"] });
+  expect(JSON.parse(files.get("forum/topics/t1.json")!).lastAt).toBe(5); // a reaction does not bump the topic
+  expect(send({ topic: "t1", post: "p1", emoji: E[0] }).json.react).toEqual({});
+  expect(JSON.parse(files.get("forum/topics/t1.json")!).posts[0].react).toBeUndefined();
+  expect(send({ topic: "t1", post: "p1", emoji: "x" }).status).toBe(400);
+  expect(send({ topic: "t1", post: "nope", emoji: E[0] }).status).toBe(404);
+  expect(send({ topic: "zz", post: "p1", emoji: E[0] }).status).toBe(404);
+});

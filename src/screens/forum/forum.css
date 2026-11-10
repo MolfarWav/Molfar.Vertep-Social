@@ -238,3 +238,15 @@
 .s-forum.is-phone .post-ask-btns .btn, .s-forum.is-phone .post-act .btn { height: 44px; }
 
 .s-forum .field-btns { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Reactions under a post (#358): chips with the emoji and a count, the user's own marked by a border and a fill, a button to add one */
+.s-forum .post-react { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.s-forum .rx { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.s-forum .rx:hover:not(:disabled) { border-color: var(--accent); }
+.s-forum .rx:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.s-forum .rx:disabled { cursor: default; }
+.s-forum .rx.mine { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--panel)); font-weight: 600; }
+.s-forum .rx.add { color: var(--muted); }
+.s-forum .rx-pick { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 18px; background: var(--base); }
+.s-forum .rx-pick .rx { border-color: transparent; font-size: 18px; padding: 0 8px; }
+.s-forum.is-phone .rx { min-height: 40px; }
