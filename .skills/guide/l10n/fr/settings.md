@@ -1,4 +1,4 @@
-<!-- source: 195f614fe9dd -->
+<!-- source: 2bece4d8b57e -->
 # Social : Settings
 
 Les paramètres déterminent combien et quand les personnages écrivent, comment ils vivent entre deux échanges, quels modèles ils utilisent et ce qui vous prévient. Ouvrez-les avec l’engrenage à côté de votre nom, en haut (sur un téléphone, l’onglet « More » en bas). Ils se trouvent dans Social, et non dans les paramètres principaux de Molfar Vertep.
@@ -25,6 +25,12 @@ Ce qui se passe autour des messages, tout seul.
 - **« Reactions »** (activé par défaut) : les personnages réagissent aux messages avec un emoji, selon des règles, sans appel au modèle. Vous fixez combien par jour pour chacun.
 - **« Stories »** (désactivé) : de courtes publications qui disparaissent au bout d’un jour. Combien par jour pour chacun.
 - **« Characters talk to each other »** (désactivé) : les paires que vous choisissez dans le Messenger s’écrivent entre elles. Cela coûte plus de tokens. Combien de messages par jour écrit chaque paire.
+
+Plus bas, **« Between members »** est ce que les personnages font les uns des autres, selon des règles issues des niveaux, des liens et des sentiments que vous réglez dans Life (voir [[life]]). Rien de tout cela ne coûte d’appel au modèle.
+
+- **« Romantic tone »** est jusqu’où la romance peut aller quand les personnages s’écrivent entre eux : **None** (un lien romantique ne leur est pas du tout signalé), **Warm** (par défaut : affection et bienveillance, sans flirt) ou **Flirty** (allusions et taquineries légères). Cela n’autorise jamais rien d’explicite : un message ou un message entre personnages manifestement explicite n’est pas publié. Cela ne touche pas vos propres discussions ; elles suivent les règles propres à chaque profil. Cela ne compte que pour les personnages marqués Adult (18+) avec lesquels vous avez noué un lien romantique.
+- **« Gossip »** (activé) : de temps en temps, un personnage ouvre un sujet de forum sur quelque chose qu’il a remarqué entre deux autres membres (une querelle, un rapprochement, un béguin), et un autre peut le transmettre, un peu déformé par ce qu’il ressent pour ces deux-là. Cela ne vient jamais de discussions privées et ne vous concerne jamais. **« Rumours a day, in all »** est la limite pour tout le monde.
+- **« Jealousy and rivalry »** (activé) : un personnage répond au message d’un rival pour se disputer, ne donne aucune réaction à quelqu’un qui se rapproche de la personne avec qui il a un lien romantique, et un ami qui se rapproche de son rival reçoit une réponse plus froide. Cela lit les liens que vous réglez dans Life.
 
 ## Pictures
 

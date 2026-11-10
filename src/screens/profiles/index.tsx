@@ -65,6 +65,7 @@ import { FAILING_IDS, IMPORT_ENTRIES, UPDATE_DIFF, profileFromEntry, type Import
 import { fillEmpty, mockScript, previewFile, previewInterview, previewProposal } from "./model-api";
 import { ProfileEditor, PhoneEditor, formOf } from "./editor";
 import { ProfileListDesktop, ProfileListPhone } from "./list";
+import { MapScreen, type ProfilesView } from "./MapScreen";
 import { ImportDialog, ImportRun, FirstRun, type ImportSource } from "./import";
 import { ImportRunner, importOne, makeDiff, refreshOne, scanRoleplay, type Exec, type RunStatus, type UpdateDiff } from "./import-api";
 import { DeleteDialog, DiffDialog, UnsavedDialog, type DiffView } from "./states";
@@ -97,6 +98,9 @@ interface Preview {
   state: string | null;
   /** Seeds the example ideas of the interview (preview only). */
   seed: number | undefined;
+  /** `view=map`: the relationship map, `view=family`: the family tree; `select` is a person picked on it (a key, "c:mavka"); `maplist=1` starts it as the list. */
+  select: string | null;
+  maplist: boolean;
 }
 
 /** "Fill empty" run: the profile it belongs to, its phase, and the proposals to review. */
@@ -119,9 +123,11 @@ function readPreview(): Preview {
       dirty: p.get("dirty") === "1",
       state: p.get("state"),
       seed: p.get("seed") === null || p.get("seed") === "" ? undefined : Number(p.get("seed")),
+      select: p.get("select"),
+      maplist: p.get("maplist") === "1",
     };
   } catch {
-    return { view: null, tab: null, q: "", source: null, dirty: false, state: null, seed: undefined };
+    return { view: null, tab: null, q: "", source: null, dirty: false, state: null, seed: undefined, select: null, maplist: false };
   }
 }
 
@@ -222,12 +228,29 @@ function previewDiff(id: string): UpdateDiff | null {
   };
 }
 
+const MODE_KEY = "social:profiles-view";
+const readMode = (): ProfilesView => {
+  try {
+    const v = localStorage.getItem(MODE_KEY);
+    return v === "map" || v === "family" ? v : "list";
+  } catch {
+    return "list";
+  }
+};
+const saveMode = (v: ProfilesView) => {
+  try {
+    localStorage.setItem(MODE_KEY, v);
+  } catch {
+    // not remembered
+  }
+};
+
 type ImportMode = "pick" | "run" | null;
 type Unsaved = { id: string; pending: (() => void) | null } | null;
 
 export function Profiles() {
   const phone = useIsPhone();
-  const { profileFocus, clearProfileFocus } = useNav();
+  const { profileFocus, clearProfileFocus, go } = useNav();
   const t = useT();
   const unnamed = t("profiles.new.unnamed");
   const [pv] = useState(() => {
@@ -236,6 +259,12 @@ export function Profiles() {
     return v;
   });
   const [store, setStore] = useState(() => makeStore(pv));
+  // The list or the relationship map (#366); the choice is kept in this browser, the design preview takes it from `view=map`.
+  const [mode, setMode] = useState<ProfilesView>(() => (PREVIEW ? (pv.view === "map" || pv.view === "family" ? pv.view : "list") : readMode()));
+  const changeMode = (v: ProfilesView) => {
+    setMode(v);
+    if (!PREVIEW) saveMode(v);
+  };
   const fillPreview = pv.state?.startsWith("fill") === true;
   const [query, setQuery] = useState(pv.q);
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>(isFilter(pv.source) ? pv.source : "all");
@@ -374,6 +403,7 @@ export function Profiles() {
     if (byId(profileFocus)) {
       setSelectedId(profileFocus);
       setOpenId(profileFocus);
+      setMode("list");
     }
     clearProfileFocus();
   }, [loaded, profileFocus]);
@@ -584,7 +614,7 @@ export function Profiles() {
     onStop: stopFill,
   });
 
-  const list = { profiles: store.all, query, onQuery: setQuery, source: sourceFilter, onSource: setSourceFilter, onImport: openImport, onNew: () => setNewMode({ start: { stage: "choose" } }), onUpdateAll: store.all.some((p) => p.source === "roleplay") ? () => setUpdateAll(true) : undefined };
+  const list = { profiles: store.all, query, onQuery: setQuery, source: sourceFilter, onSource: setSourceFilter, onImport: openImport, onNew: () => setNewMode({ start: { stage: "choose" } }), onView: changeMode, onUpdateAll: store.all.some((p) => p.source === "roleplay") ? () => setUpdateAll(true) : undefined };
 
   const editorFor = (p: MockProfile) => ({
     profile: p,
@@ -626,6 +656,25 @@ export function Profiles() {
     ) : null;
   } else if (store.all.length === 0) {
     body = PREVIEW ? <FirstRun phone={phone} onImport={openImport} /> : <FirstRun phone={phone} onImport={openImport} onNew={() => setNewMode({ start: { stage: "choose" } })} />;
+  } else if (mode !== "list") {
+    body = (
+      <MapScreen
+        mode={mode}
+        phone={phone}
+        profiles={store.all.map((p) => ({ id: p.id, name: p.name, hue: p.hue, picture: p.picture }))}
+        onView={changeMode}
+        onOpen={(id, to) => {
+          setSelectedId(id);
+          setOpenId(id);
+          setTab(to);
+          changeMode("list");
+        }}
+        onOpenYou={() => go("you")}
+        onNew={() => setNewMode({ start: { stage: "choose" } })}
+        initial={PREVIEW ? pv.select ?? undefined : undefined}
+        initialList={PREVIEW && pv.maplist}
+      />
+    );
   } else if (phone) {
     body = phoneProfile ? (
       <PhoneEditor key={phoneProfile.id} {...editorFor(phoneProfile)} phone onBack={() => leave(() => setOpenId(null))} />

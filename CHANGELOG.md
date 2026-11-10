@@ -3,6 +3,17 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## 0.11.0 (2026-11-10)
+
+Gossip, jealousy, a romantic tone limit between characters, a relationship map and a family tree (#367, #366). Forum 0.8.0, chatter 0.2.0, messenger 0.8.1, Profiles 0.10.0, Life 0.5.0. Needs the same engine as 0.10.0; nothing to migrate.
+
+- **Gossip.** Now and then a character opens a forum topic about something it noticed between two other members it has met: a quarrel, a new closeness, a crush. It is picked by rules from the people lists and the topics (no extra model call), told as something noticed, a little harsher or gentler by how the teller feels, and another character may pass it on, each retelling less true. A character that was talked about knows when it reads the topic and answers more often. Never from private chats, never about your persona. Switch and a daily cap in Settings > Community > Between members.
+- **Jealousy and rivalry.** A rival tie makes a character answer that one's posts to argue and not let their mention go; a romantic tie makes it withhold reactions from someone getting close to the one it cares about and answer them more coolly; a friend lately warm with such a rival gets a cooler answer. Switch in the same place.
+- **Romantic tone.** Settings > Community has a new choice: None, Warm (default) or Flirty. It is how far romance between characters may go (adults with a romantic tie only); the prompt carries the matching limit and your own chats are not touched. Anything plainly explicit between characters is not published whatever the choice (a word-stem check in English and Ukrainian: it is a net under the prompt, not a guarantee).
+- **Relationship map (#366).** Profiles has a new **List | Map** switch. The map draws the characters (and the personas some character knows) on a ring with one line per pair: pink with a heart for a romantic tie, red dashed for a rival or someone at odds, double blue for family, grey and thicker the closer. Pick a person: their lines light up and a panel says how each side sees the other, with **Open profile** and **Edit ties**; **Show as list** gives the same facts as rows. Nothing private is shown. The family tree is not built yet.
+- **Family tree (#366).** The Profiles switch has a third segment, **Family**: the family ties (spouse, parent, child, brother or sister) as trees in rows by generation, with a double line between spouses and one line from parents to children; a relative with no other tie stands beside their relative. A tie that contradicts the others is marked, not drawn. **Show as outline** gives the same families as nested rows (the phone's first view for a wide family).
+- The guide pages Settings, Forum, Life and Profiles are updated; their translations are stale until refreshed.
+
 ## 0.10.0 (2026-11-10)
 
 A chat for each persona, levels and ties between people, and a Start over card. Life 0.4.0, messenger 0.8.0, forum 0.7.1, Profiles 0.9.0, chatter 0.1.1. Needs the same engine as 0.9.0. The first time the Messenger runs after the update, an old chat moves to the persona that is active then (see the first item).

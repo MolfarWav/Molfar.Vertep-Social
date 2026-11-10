@@ -7,6 +7,7 @@ import { Avatar } from "@/components/Avatar";
 import { useChrome } from "@/shell/nav";
 import { SOURCE_KEY, type MockProfile } from "@/mock/profiles";
 import { FILTERS, countBySource, filterProfiles, splitMatch, type SourceFilter } from "./search";
+import { ViewSwitch, type ProfilesView } from "./MapScreen";
 import { SourceIcon } from "./source-icon";
 import { hueStyle } from "./ui";
 
@@ -26,6 +27,8 @@ export interface ListProps {
   onNew?: () => void;
   /** "Update all from Roleplay": only given when some profile came from a card. */
   onUpdateAll?: () => void;
+  /** The "List | Map" switch (#366): pressing "Map" shows the relationship map instead of the list. */
+  onView?: (v: ProfilesView) => void;
 }
 
 const FILTER_KEY: Record<SourceFilter, string> = {
@@ -148,7 +151,10 @@ export function ProfileListDesktop(props: ListProps) {
   const clear = () => props.onQuery("");
   return (
     <aside className="pl-desk">
-      <div className="tbar">{t("profiles.listTitle", { n: props.profiles.length })}</div>
+      <div className="tbar">
+        {t("profiles.listTitle", { n: props.profiles.length })}
+        {props.onView && <div className="pm-tbar-switch"><ViewSwitch value="list" onChange={props.onView} /></div>}
+      </div>
       <div className="desk-btns">
         <button type="button" className="btn cta" onClick={props.onNew}>{t("profiles.new")}</button>
         {props.onImport && <button type="button" className="btn" onClick={props.onImport}>{t("profiles.import")}</button>}
@@ -202,6 +208,11 @@ export function ProfileListPhone(props: ListProps) {
           </button>
         )}
       </header>
+      {props.onView && (
+        <div className="pm-phone-switch">
+          <ViewSwitch value="list" onChange={props.onView} />
+        </div>
+      )}
       <SearchBox value={props.query} onChange={props.onQuery} phone>
         {props.query !== "" && (
           <button type="button" className="hbtn x" aria-label={t("profiles.search.clear")} onClick={clear}>

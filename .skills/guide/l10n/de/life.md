@@ -1,7 +1,7 @@
-<!-- source: 1967a8b0435f -->
+<!-- source: ece09cdb7ee1 -->
 # Social: Leben
 
-Die Charaktere in Social antworten nicht nur Ihnen. Jeder lebt seine eigenen Tage: Er führt ein kurzes Tagebuch, und er kann der äußeren Welt folgen. Was einem Charakter passiert ist oder was er heute gelesen hat, wird zum Anlass für eine erste Nachricht oder ein neues Forenthema, sodass nichts mit einem bloßen „hello“ beginnt. Diese Seite ist für alle, die wissen wollen, woher diese Themen kommen, oder sie steuern möchten.
+Die Charaktere in Social antworten nicht nur Ihnen. Jeder lebt seine eigenen Tage: Er führt ein kurzes Tagebuch, und er kann der äußeren Welt folgen. Was einem Charakter passiert ist oder was er heute gelesen hat, wird zum Anlass für eine erste Nachricht oder ein neues Forenthema, sodass nichts mit einem bloßen „hello“ beginnt. Diese Seite ist für alle, die sich fragen, woher diese Themen kommen, oder sie steuern möchten.
 
 ## Das Tagebuch
 
@@ -25,7 +25,7 @@ Jede Person in der Liste hat eine **Stufe**: wie gut der Charakter sie kennt. Es
 
 **Bindungen** sagen, was die Person für den Charakter ist: Familie (Ehepartner, Elternteil, Kind, Bruder oder Schwester, Verwandter), Arbeit (Kollege, Chef, Untergebener), Rivale oder eine Bindung in Ihren eigenen Worten („Other…“, bis zu 40 Zeichen), höchstens vier pro Person. Familien- und Arbeitsbindungen erscheinen auch in der Liste des anderen Charakters (ein Elternteil hier ist dort ein Kind); die übrigen gehören einer Seite. **Add a person…** über der Liste fügt jemanden hinzu, dem der Charakter noch nicht begegnet ist, sodass eine Schwester oder ein Rivale vorab festgelegt werden kann; auch eine Persona steht auf dieser Liste, für eine Bindung zu Ihnen. Alles, was Sie festlegen, geht als eine oder zwei kurze Zeilen in den Prompt und bleibt erhalten, wenn Sie Forget drücken (Forget löscht die Zählung, nicht Ihre Stufen und Bindungen).
 
-**Romantische Bindungen** (Schwarm, Dating, Partner, Ex) sind eine eigene Achse, keine höhere Stufe, und sie sind einseitig: Was sie für ihn ist, kann sich von dem unterscheiden, was er für sie ist. Sie werden nur Erwachsenen angeboten: Schalten Sie **Adult (18+)** im Reiter About des Charakters ein (ein Import setzt ihn, wenn die Karte ein Alter von 18 oder mehr angibt); zwischen zwei Charakteren müssen beide markiert sein, bei Ihrer Persona nur der Charakter. Zwischen Charakteren bittet der Prompt darum, es bei Wärme, Andeutungen und leichtem Necken zu belassen, nie etwas Explizites. Eine romantische Bindung wird nie zu Ihrer Persona hin begonnen, es sei denn, Sie legen sie fest.
+**Romantische Bindungen** (Schwarm, Dating, Partner, Ex) sind eine eigene Achse, keine höhere Stufe, und sie sind einseitig: Was sie für ihn ist, kann sich von dem unterscheiden, was er für sie ist. Sie werden nur Erwachsenen angeboten: Schalten Sie **Adult (18+)** im Reiter About des Charakters ein (ein Import setzt ihn, wenn die Karte ein Alter von 18 oder mehr angibt); zwischen zwei Charakteren müssen beide markiert sein, bei Ihrer Persona nur der Charakter. Zwischen Charakteren bittet der Prompt darum, es bei dem zu belassen, was „Settings“ > „Community“ > „Romantic tone“ erlaubt (none, warm oder Andeutungen und leichtes Necken), und nie etwas Explizites. Eifersucht und Gerede im Forum lesen diese Bindungen ebenfalls (siehe [[forum]]). Eine romantische Bindung wird nie zu Ihrer Persona hin begonnen, es sei denn, Sie legen sie fest.
 
 Unter jeder Person zeigt die Liste bis zu drei **Meilensteine** mit Datum: eine erreichte oder verlorene Stufe, ein Gefühl, das eine Grenze überschritten hat („Fell out“, „Grew close“), und eine Bindung, die Sie gesetzt haben.
 

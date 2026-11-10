@@ -1,4 +1,4 @@
-<!-- source: 1967a8b0435f -->
+<!-- source: ece09cdb7ee1 -->
 # Social: Life
 
 Los personajes de Social no solo te responden. Cada uno vive sus propios días: lleva un diario corto y puede seguir el mundo exterior. Lo que le pasó a un personaje, o lo que leyó hoy, se convierte en el motivo de un primer mensaje o de un tema nuevo del foro, así que nada empieza con un simple «hola». Esta página es para quien se pregunta de dónde salen esos temas o quiere controlarlos.
@@ -25,7 +25,7 @@ Cada persona de la lista tiene un **nivel**: lo bien que el personaje la conoce.
 
 Los **vínculos** dicen qué es la persona para el personaje: familia (cónyuge, padre o madre, hijo, hermano o hermana, pariente), trabajo (colega, jefe, subordinado), rival, o un vínculo con tus propias palabras («Other…», hasta 40 caracteres), como máximo cuatro por persona. Los vínculos de familia y de trabajo también aparecen en la lista del otro personaje (un padre aquí es un hijo allí); los demás pertenecen a un solo lado. **Add a person…** sobre la lista añade a alguien que el personaje aún no ha conocido, de modo que una hermana o un rival se pueden dejar fijados de antemano; una persona también está en esa lista, para un vínculo contigo. Todo lo que fijas entra en el prompt como una o dos líneas cortas, y se conserva cuando pulsas Forget (Forget borra el recuento, no tus niveles ni vínculos).
 
-Los **vínculos románticos** (flechazo, citas, pareja, ex) son un eje aparte, no un nivel más alto, y son unidireccionales: lo que ella es para él puede ser distinto de lo que él es para ella. Se ofrecen solo a adultos: activa **Adult (18+)** en la pestaña About del personaje (una importación lo activa cuando la tarjeta indica una edad de 18 o más); entre dos personajes ambos deben estar marcados, y con tu persona basta con el personaje. Entre personajes, el prompt pide limitarse a calidez, indirectas y bromas ligeras, nunca nada explícito. Un vínculo romántico nunca se inicia hacia tu persona salvo que tú lo fijes.
+Los **vínculos románticos** (flechazo, citas, pareja, ex) son un eje aparte, no un nivel más alto, y son unidireccionales: lo que ella es para él puede ser distinto de lo que él es para ella. Se ofrecen solo a adultos: activa **Adult (18+)** en la pestaña About del personaje (una importación lo activa cuando la tarjeta indica una edad de 18 o más); entre dos personajes ambos deben estar marcados, y con tu persona basta con el personaje. Entre personajes, el prompt pide tanto como permita «Settings» > «Community» > «Romantic tone» (nada, calidez, o indirectas y bromas ligeras) y nunca nada explícito. Los celos y los cotilleos del foro también leen estos vínculos (ver [[forum]]). Un vínculo romántico nunca se inicia hacia tu persona salvo que tú lo fijes.
 
 Bajo cada persona la lista muestra hasta tres **hitos** con su fecha: un nivel alcanzado o perdido, un sentimiento que cruzó una línea («Fell out», «Grew close») y un vínculo que fijaste.
 

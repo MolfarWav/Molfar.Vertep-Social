@@ -1558,11 +1558,47 @@ function peopleRoute(req, host, parts) {
   return ok({ error: "not found" }, 404);
 }
 
+// ---------- the relationship map (#366) ----------
+
+/**
+ * The whole picture for the map on the Profiles screen: `nodes` (every character, and the user's personas that appear in some list) and
+ * `links`, one per character and person it has met or the user tied: {from, to, level, band, talks, ties}. It is built from the people
+ * lists as they are, so a link is how `from` sees `to`; the page draws one line per pair and the panel says both directions.
+ * Nothing private goes out: no impression, no quoted words; a romantic tie only where it is allowed (adults).
+ */
+export function graphView(fsx) {
+  const chars = [];
+  for (const id of profileIds(fsx)) {
+    const p = readProfile(fsx, id);
+    if (p) chars.push(p);
+  }
+  const byId = new Map(chars.map((p) => [p.id, p]));
+  const y = readJson(fsx, "you.json", null);
+  const persona = new Map((isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && ID.test(String(x.id)) && str(x.name)).map((x) => [String(x.id), cut(str(x.name), 80)]));
+  const links = [];
+  const usedPersonas = new Set();
+  for (const me of chars) {
+    for (const x of readPeople(fsx, me.id).people) {
+      const other = x.key.startsWith("c:") ? byId.get(x.key.slice(2)) : null;
+      if (x.key.startsWith("c:") ? !other || other.id === me.id : !persona.has(x.key.slice(2))) continue;
+      const ok = romanceFor(me, x.key, other ? { adult: other.adult } : null);
+      const ties = x.ties.filter((t) => !TIE_TYPES[t.type].romance || ok).map((t) => ({ type: t.type, ...(t.label ? { label: t.label } : {}) }));
+      if (!(x.seen > 0 || x.toMe > 0 || x.fromMe > 0 || x.tier !== "" || ties.length)) continue;
+      links.push({ from: "c:" + me.id, to: x.key, level: x.lvl || "stranger", band: x.band || feelWord(x.feel), talks: x.toMe + x.fromMe, ties });
+      if (x.key.startsWith("u:")) usedPersonas.add(x.key.slice(2));
+    }
+  }
+  const nodes = chars.map((p) => ({ key: "c:" + p.id, name: p.name, kind: "character" }));
+  for (const [id, name] of persona) if (usedPersonas.has(id)) nodes.push({ key: "u:" + id, name, kind: "user" });
+  return { nodes: nodes.slice(0, 80), links: links.slice(0, 2000) };
+}
+
 export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   if (!path.startsWith("/life/") && path !== "/life") return null;
   const parts = path.split("/").filter(Boolean); // ["life", "diary", id, "entry", eid]
   if (parts[1] === "topics" && req.method === "GET") return ok({ groups: TOPIC_GROUPS, topics: TOPICS.map(({ id, group, en, uk }) => ({ id, group, en, uk })), max: TOPICS_ON_MAX, customMax: CUSTOM_MAX, byTopic: readWorld(host.fs).byTopic });
+  if (parts[1] === "graph" && req.method === "GET") return ok(graphView(host.fs));
   if (parts[1] === "people") return peopleRoute(req, host, parts);
   if (parts[1] === "diary") return diaryRoute(req, host, parts);
   if (parts[1] === "world") return worldRoute(req, host, parts);

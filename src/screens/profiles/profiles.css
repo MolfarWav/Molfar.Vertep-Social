@@ -460,3 +460,101 @@
 .s-profiles .rel-addperson { display: flex; flex-direction: column; gap: 6px; }
 .s-profiles.is-phone .rel-add .btn { min-height: 44px; flex: 1 1 100%; }
 .s-profiles.is-phone .rel-edit .inp { min-height: 44px; }
+
+/* ---- the relationship map (#366) ---- */
+.s-profiles .pm-screen { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.s-profiles .pm-head { flex: none; display: flex; flex-direction: column; gap: 10px; background: var(--panel); border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.s-profiles .pm-screen.is-phone .pm-head { padding: 12px 12px 10px; }
+.s-profiles .pm-screen.is-phone .pm-head .title { margin: 0; font-size: 20px; }
+.s-profiles .pm-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; flex-wrap: wrap; }
+.s-profiles .pm-screen.is-phone .pm-bar { padding: 0; }
+.s-profiles .pm-bar .seg button { height: 40px; }
+.s-profiles .pm-toggle { height: 40px; }
+.s-profiles .pm-legend { list-style: none; margin: 0; padding: 0 12px; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.s-profiles .pm-screen.is-phone .pm-legend { padding: 0; }
+.s-profiles .pm-legend li { display: flex; align-items: center; gap: 6px; }
+.s-profiles .pm-lg { fill: none; stroke-linecap: round; }
+.s-profiles .pm-lg-romance { stroke: var(--rel-romance); }
+.s-profiles .pm-lg-rival { stroke: var(--bad); stroke-dasharray: 5 4; }
+.s-profiles .pm-lg-family { stroke: var(--rel-family); }
+.s-profiles .pm-lg-plain { stroke: var(--muted); }
+.s-profiles .pm-body { flex: 1; min-height: 0; display: flex; }
+.s-profiles .pm-main { flex: 1; min-width: 0; overflow: auto; padding: 12px; }
+.s-profiles .pm-screen.is-phone .pm-main { padding: 8px; }
+.s-profiles .pm-side { width: 320px; flex: none; min-height: 0; overflow: auto; background: var(--panel); border-left: 1px solid var(--line); padding: 14px; }
+.s-profiles .pm-pick { margin: 6px 0; }
+.s-profiles .pm-hint { margin: 0 0 8px; }
+.s-profiles .pm-note { max-width: 420px; margin: 40px auto; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.s-profiles .pm-wrap { width: 100%; }
+.s-profiles .pm { display: block; max-width: 100%; }
+.s-profiles .pm-e line { fill: none; stroke-linecap: round; transition: opacity 0.15s; }
+.s-profiles .pm-e-plain line { stroke: var(--muted); opacity: 0.45; }
+.s-profiles .pm-e-rival line { stroke: var(--bad); stroke-dasharray: 6 5; opacity: 0.75; }
+.s-profiles .pm-e-family line { stroke: var(--rel-family); opacity: 0.75; }
+.s-profiles .pm-e-romance line { stroke: var(--rel-romance); opacity: 0.85; }
+.s-profiles .pm-heart { fill: var(--rel-romance); }
+.s-profiles .pm-e.lit line { opacity: 1; }
+.s-profiles .pm-e.dim line, .s-profiles .pm-e.dim .pm-heart { opacity: 0.08; }
+.s-profiles .pm-n { cursor: pointer; outline: none; transition: opacity 0.15s; }
+.s-profiles .pm-n.dim { opacity: 0.4; }
+.s-profiles .pm-hit { fill: transparent; }
+.s-profiles .pm-ini { fill: #fff; font-weight: 600; pointer-events: none; }
+.s-profiles .pm-ring { fill: none; stroke: transparent; stroke-width: 2; }
+.s-profiles .pm-n.you .pm-ring { stroke: var(--muted); stroke-dasharray: 3 3; }
+.s-profiles .pm-n:hover .pm-ring { stroke: var(--muted); }
+.s-profiles .pm-n.sel .pm-ring, .s-profiles .pm-n:focus-visible .pm-ring { stroke: var(--accent); stroke-dasharray: none; stroke-width: 2.5; }
+.s-profiles .pm-name { fill: var(--ink); font-size: 12px; font-weight: 600; pointer-events: none; paint-order: stroke; stroke: var(--base); stroke-width: 3px; stroke-linejoin: round; }
+.s-profiles .pm-skel { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 40px 0; }
+.s-profiles .pm-skel-ring { position: relative; width: 200px; height: 200px; }
+.s-profiles .pm-skel-ring span { position: absolute; left: 88px; top: 88px; width: 24px; height: 24px; border-radius: 8px; background: var(--raised); transform: rotate(calc(var(--i) * 51.4deg)) translateY(-84px); animation: pm-pulse 1.4s ease-in-out infinite; }
+@keyframes pm-pulse { 50% { opacity: 0.4; } }
+@media (prefers-reduced-motion: reduce) { .s-profiles .pm-skel-ring span { animation: none; } }
+.s-profiles .pm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.s-profiles .pm-li { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+.s-profiles .pm-li.on { border-color: var(--accent); background: var(--raised); }
+.s-profiles .pm-li .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.s-profiles .pm-li .t .k { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-profiles .pm-li .fn { color: var(--muted); font-size: 12px; flex: none; }
+.s-profiles .pm-panel { display: flex; flex-direction: column; gap: 12px; }
+.s-profiles .pm-ph { display: flex; align-items: center; gap: 10px; }
+.s-profiles .pm-ph .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.s-profiles .pm-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.s-profiles .pm-row { border-left: 3px solid var(--line); padding-left: 10px; display: flex; flex-direction: column; gap: 2px; }
+.s-profiles .pm-row-romance { border-left-color: var(--rel-romance); }
+.s-profiles .pm-row-rival { border-left-color: var(--bad); border-left-style: dashed; }
+.s-profiles .pm-row-family { border-left-color: var(--rel-family); border-left-style: double; border-left-width: 4px; }
+.s-profiles .pm-who { display: flex; align-items: center; gap: 8px; min-height: 40px; background: none; border: 0; padding: 0; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.s-profiles .pm-who:hover b { text-decoration: underline; }
+.s-profiles .pm-dir { color: var(--ink); font-weight: 600; }
+.s-profiles .pm-act { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.s-profiles .pm-act .btn { min-height: 40px; }
+.s-profiles .pm-close { align-self: stretch; min-height: 44px; }
+.s-profiles .pm-empty { margin: 0; }
+.s-profiles .tbar .pm-tbar-switch { margin-left: auto; }
+.s-profiles.is-phone .pm-n { -webkit-tap-highlight-color: transparent; }
+.s-profiles .pm-phone-switch { padding: 0 12px 8px; }
+.s-profiles .pm-phone-switch .seg { width: 100%; }
+.s-profiles .pm-phone-switch .seg button { flex: 1; height: 40px; }
+.s-profiles .pf-dlg .pm-panel { padding: 14px 14px 18px; overflow-y: auto; }
+
+/* ---- the family tree (#366) ---- */
+.s-profiles .ft { display: flex; flex-direction: column; gap: 14px; }
+.s-profiles .ft-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 6px; max-width: 100%; }
+.s-profiles .ft-svg { display: block; margin: 0 auto; max-width: none; }
+.s-profiles .ft-l { stroke-linecap: round; stroke-linejoin: round; transition: opacity 0.15s; stroke-width: 1.8; }
+.s-profiles .ft-l-spouse { stroke: var(--rel-family); stroke-width: 1.8; }
+.s-profiles .ft-l-parent { stroke: var(--muted); }
+.s-profiles .ft-l-sibling, .s-profiles .ft-l-relative { stroke: var(--muted); stroke-dasharray: 3 4; }
+.s-profiles .ft-l.lit { stroke: var(--ink); }
+.s-profiles .ft-l-spouse.lit { stroke: var(--rel-family); stroke-width: 2.4; }
+.s-profiles .ft-l.dim { opacity: 0.12; }
+.s-profiles .ft-warn circle { fill: var(--warn); }
+.s-profiles .ft-warn text { fill: #000; font-size: 12px; font-weight: 700; }
+.s-profiles .ft-conflict { margin: 6px 8px 4px; color: var(--warn); }
+.s-profiles .ft-outline { display: flex; flex-direction: column; gap: 14px; }
+.s-profiles .ft-ol-group { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 10px; }
+.s-profiles .ft-ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.s-profiles .ft-ol .ft-ol { margin: 6px 0 0 14px; padding-left: 14px; border-left: 2px solid var(--line); }
+.s-profiles .ft-ol-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.s-profiles .ft-ol-p { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 10px 4px 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); color: var(--ink); font: inherit; cursor: pointer; }
+.s-profiles .ft-ol-p.on { border-color: var(--accent); }

@@ -142,7 +142,8 @@ function pairKeys(fsx) {
 // <relation-shared>
 // What the user set between two people: a level of familiarity and ties (the Life plugin writes them, "levels, ties and milestones" there).
 // Read only here: a few lines for the prompt. Romance is told only when the profile and the other character are marked adult (the user's
-// persona counts as the user's own choice), and between characters the prompt states the ceiling. A copy lives in each plugin that needs it.
+// persona counts as the user's own choice), and between characters the prompt states the ceiling of the level in Settings > Community (`tone`:
+// none = no romance told between characters, warm = affection only, flirty = hints and teasing; never anything explicit). A copy lives in each plugin that needs it.
 const LEVEL_LINE = {
   stranger: "You do not really know them.",
   slight: "You know them only in passing.",
@@ -164,7 +165,17 @@ const TIE_LINE = {
   rival: "is your rival.",
 };
 const ROMANCE_LINE = { crush: "You have a crush on NAME.", dating: "You are dating NAME.", partner: "NAME is your partner.", ex: "NAME is your ex." };
-const ROMANCE_CEILING = "Keep anything romantic between you light: warmth, hints and teasing are fine, never anything explicit.";
+const ROMANCE_CEILING = {
+  warm: "Keep anything romantic between you gentle: affection and warmth are fine, no flirting and no innuendo, nothing suggestive and never anything explicit.",
+  flirty: "Keep anything romantic between you light: warmth, hints and teasing are fine, never anything explicit.",
+};
+
+/** The tone between characters the user chose (Settings > Community): "none", "warm" (the default) or "flirty". */
+export function communityLevel(fsx) {
+  const s = readJson(fsx, "settings.json", null);
+  const c = isObj(s) && isObj(s.community) ? s.community : {};
+  return c.tone === "none" || c.tone === "flirty" ? c.tone : "warm";
+}
 
 /** The lines for one person of the character `p`'s list (`x`, key "c:<profile>" or "u:<persona>"): the level, the ties, and a romantic tie when it is allowed. */
 export function relationBits(fsx, p, key, x) {
@@ -173,7 +184,9 @@ export function relationBits(fsx, p, key, x) {
   if (typeof x.lvl === "string" && LEVEL_LINE[x.lvl]) bits.push(LEVEL_LINE[x.lvl]);
   const mine = readJson(fsx, "profiles/" + p.id + ".json", null);
   const theirs = key.startsWith("c:") ? readJson(fsx, "profiles/" + key.slice(2) + ".json", null) : null;
-  const may = isObj(mine) && mine.adult === true && (key.startsWith("u:") || (isObj(theirs) && theirs.adult === true));
+  // the level only limits what characters write to each other; toward the user's persona the profile's own rules stand
+  const level = key.startsWith("c:") ? communityLevel(fsx) : "flirty";
+  const may = level !== "none" && isObj(mine) && mine.adult === true && (key.startsWith("u:") || (isObj(theirs) && theirs.adult === true));
   let romance = false;
   for (const t of Array.isArray(x.ties) ? x.ties.slice(0, 4) : []) {
     if (!isObj(t)) continue;
@@ -184,10 +197,19 @@ export function relationBits(fsx, p, key, x) {
       romance = true;
     }
   }
-  if (romance && key.startsWith("c:")) bits.push(ROMANCE_CEILING);
+  if (romance && key.startsWith("c:")) bits.push(ROMANCE_CEILING[level]);
   return bits;
 }
 // </relation-shared>
+
+// <ceiling-shared>
+// Between characters the app asks for nothing explicit (Settings > Community, #366). A post that is plainly explicit is not filed: a check by
+// word stems in English and Ukrainian, like the OOC and sticker markers. The prompt line is the hint, this is the net; it does not catch
+// innuendo and a weak model may slip past it. The sandbox has no Unicode property escapes, so the Cyrillic stems carry no word boundary.
+const EXPLICIT_EN = /\b(blowjob|handjob|orgasm|masturbat\w*|cumshot|cum|cumming|clit|(?:had|having|have) sex|(?:fucking|fucked) (?:me|you|her|him|them)|penetrat\w* (?:her|him|me|you|them))\b/i;
+const EXPLICIT_UK = /(мінет|оргазм|орґазм|мастурб|сперм|статев[^\s]* акт|займа[^\s]* сексом|трахн|трахал|їбат|їбал|єбат|єбал)/i;
+export const overCeiling = (text) => EXPLICIT_EN.test(String(text)) || EXPLICIT_UK.test(String(text));
+// </ceiling-shared>
 
 // ---------- the prompt ----------
 
@@ -272,6 +294,8 @@ export function fileChatResult(fsx, key, result, now, tz) {
   if (me) text = text.replace(new RegExp("^\\s*" + me.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*[:\\-—]\\s*", "i"), "");
   text = cut(text, TEXT_MAX).trim();
   if (!text) return fail("the model returned nothing");
+  // between characters nothing explicit is filed (#367)
+  if (overCeiling(text)) return fail("the message went past the ceiling between characters and was not filed");
   if (!pair.on) {
     writePair(fsx, m[1], pair);
     return { error: "the pair was switched off" };

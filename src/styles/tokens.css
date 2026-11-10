@@ -22,6 +22,8 @@
   --ok: #7fd18b;
   --warn: #e3b341;
   --bad: #f2777a;
+  --rel-romance: #f06fa8;
+  --rel-family: #6fb1f0;
   --hover: rgba(240, 233, 220, 0.07);
   --them-l: 68%;
   --hue-messenger: #fb7185;
@@ -49,6 +51,8 @@
   --ok: #7fd18b;
   --warn: #e3b341;
   --bad: #f2777a;
+  --rel-romance: #f06fa8;
+  --rel-family: #6fb1f0;
   --hover: rgba(255, 255, 255, 0.07);
   --them-l: 68%;
   --hue-messenger: #fb7185;
@@ -76,6 +80,8 @@
   --ok: #2f7d3f;
   --warn: #9a6f0a;
   --bad: #c4373a;
+  --rel-romance: #c23d78;
+  --rel-family: #2d6cb8;
   --hover: rgba(0, 0, 0, 0.06);
   --them-l: 34%;
   --hue-messenger: #e11d48;

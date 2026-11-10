@@ -428,8 +428,11 @@ export const DEFAULT_SETTINGS = {
    * The community around the posts (issue #358): characters react to posts by rules (no model call), an event now and then gets several of
    * them talking (`events`: "off", "daily", "weekly"), a story is a short post with a picture that vanishes after a day, and characters may
    * chat with each other in the messenger (`chats`, off by default: about twice the tokens). Each cap counts per character per day.
+   * `tone` is the ceiling for what characters write to each other (#366): none (no romance between them), warm (affection only, the default),
+   * flirty (hints and teasing); never anything explicit. `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
+   * and a sharper answer from the characters' own ties (#367); neither costs a model call.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4 },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -500,6 +503,10 @@ export function mergeSettings(base, patch) {
       storiesPerDay: clampInt(cm.storiesPerDay, 0, 10, Number.isInteger(bcm.storiesPerDay) ? bcm.storiesPerDay : 1),
       chats: bool(cm.chats, bool(bcm.chats, false)),
       chatsPerDay: clampInt(cm.chatsPerDay, 0, 30, Number.isInteger(bcm.chatsPerDay) ? bcm.chatsPerDay : 4),
+      tone: oneOf(cm.tone, ["none", "warm", "flirty"], oneOf(bcm.tone, ["none", "warm", "flirty"], "warm")),
+      gossip: bool(cm.gossip, bool(bcm.gossip, true)),
+      gossipPerDay: clampInt(cm.gossipPerDay, 0, 20, Number.isInteger(bcm.gossipPerDay) ? bcm.gossipPerDay : 2),
+      jealousy: bool(cm.jealousy, bool(bcm.jealousy, true)),
     },
     autonomous: bool(p.autonomous, b.autonomous),
     activity: oneOf(p.activity, ["quiet", "moderate", "lively", "chaotic"], b.activity),
@@ -593,7 +600,7 @@ export function forgetPersona(fsx, id) {
  * by itself) and the Roleplay access grant (the engine's). A part that is not asked for stays exactly as it is.
  */
 export const RESET_PARTS = {
-  forum: ["forum/topics", "forum/boards.json", "forum/events.json", "forum/life-used.json", "forum/log.json"],
+  forum: ["forum/topics", "forum/boards.json", "forum/events.json", "forum/life-used.json", "forum/gossip.json", "forum/log.json"],
   chats: ["chats", "chatter", "firstlog.json"],
   diaries: ["life/diary", "life/people", "life/people-meta.json", "stories"],
   personas: ["you.json"],
