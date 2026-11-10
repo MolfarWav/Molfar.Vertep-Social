@@ -154,9 +154,10 @@ export function ForumLive() {
         boardId={route.board}
         onCancel={() => go(route.board ? { view: "board", id: route.board } : { view: "home" })}
         pictures
-        onSubmit={async (boardId, title, text, image) => {
+        polls
+        onSubmit={async (boardId, title, text, image, poll) => {
           try {
-            const r = await call<{ topic: string }>("POST", "/forum/topic", { board: boardId, title, text, ...(image ? { image: imageBody(image) } : {}) });
+            const r = await call<{ topic: string }>("POST", "/forum/topic", { board: boardId, title, text, ...(image ? { image: imageBody(image) } : {}), ...(poll && poll.length ? { poll } : {}) });
             void home.reload();
             go({ view: "topic", id: r.topic, page: 1 }, { replace: true });
             return null;
@@ -234,6 +235,15 @@ export function ForumLive() {
         error={topic.error}
         locked={info?.locked ?? false}
         event={info?.event}
+        poll={info?.poll}
+        onVote={async (option) => {
+          try {
+            await call("POST", "/forum/vote", { topic: route.id, option });
+          } catch {
+            // the counts come back from the server on the reload; a failed click leaves them as they were
+          }
+          await topic.reload();
+        }}
         writing={write.busy}
         notice={write.notice}
         onCloseNotice={write.dismiss}

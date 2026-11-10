@@ -136,7 +136,7 @@ export function PostCard({
 
   if (phone) {
     return (
-      <article className="post post-phone" data-n={post.n}>
+      <article className={`post post-phone${post.repost ? " is-repost" : ""}`} data-n={post.n}>
         <div className="post-a">
           <Ava text={initial(name)} bg={bg} size={40} font={17} picture={post.picture} />
           <div>
@@ -157,7 +157,7 @@ export function PostCard({
   }
 
   return (
-    <article className="post post-desk" data-n={post.n}>
+    <article className={`post post-desk${post.repost ? " is-repost" : ""}`} data-n={post.n}>
       <div className="post-a">
         <Ava text={initial(name)} bg={bg} size={96} font={40} radius={8} picture={post.picture} />
         <div className="nm" style={{ color }}>{name}</div>

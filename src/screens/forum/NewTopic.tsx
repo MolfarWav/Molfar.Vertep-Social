@@ -18,9 +18,11 @@ export interface NewTopicProps {
   boardId: string;
   onCancel: () => void;
   /** Resolves to an error text, or null when the topic was posted (the screen then opens it). */
-  onSubmit: (board: string, title: string, text: string, image?: Attached) => Promise<string | null>;
+  onSubmit: (board: string, title: string, text: string, image?: Attached, poll?: string[]) => Promise<string | null>;
   /** The real forum: the topic may carry a picture (attach button). */
   pictures?: boolean;
+  /** The topic may carry a poll of two to four options (issue #367). */
+  polls?: boolean;
 }
 
 export function NewTopic(p: NewTopicProps) {
@@ -30,17 +32,21 @@ export function NewTopic(p: NewTopicProps) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // null: no poll; else the option fields (two to four)
+  const [poll, setPoll] = useState<string[] | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const emoji = useEmoji({ target: box, value: text, onChange: setText, phone: p.phone });
   const pic = usePicture({ phone: p.phone });
   const image = p.pictures ? pic.attached : null;
-  const ready = title.trim().length >= 3 && (text.trim().length > 0 || !!image) && !!board;
+  const filled = (poll ?? []).map((o) => o.trim()).filter(Boolean);
+  const pollOk = !poll || (filled.length >= 2 && new Set(filled.map((o) => o.toLowerCase())).size === filled.length);
+  const ready = title.trim().length >= 3 && (text.trim().length > 0 || !!image) && !!board && pollOk;
 
   const submit = async () => {
     if (!ready || busy) return;
     setBusy(true);
     setError("");
-    const err = await p.onSubmit(board, title.trim(), text.trim(), image ?? undefined);
+    const err = await p.onSubmit(board, title.trim(), text.trim(), image ?? undefined, poll ? filled : undefined);
     setBusy(false);
     if (err) setError(err);
   };
@@ -81,6 +87,30 @@ export function NewTopic(p: NewTopicProps) {
           }}
         />
       </div>
+      {p.polls && (
+        <div className="field">
+          {poll ? (
+            <div className="npoll">
+              <div className="field-top">
+                <label htmlFor="nt-opt-0">{t("forum.new.poll.title")}</label>
+                <button type="button" className="btn sm" onClick={() => setPoll(null)}>{t("forum.new.poll.remove")}</button>
+              </div>
+              {poll.map((o, i) => (
+                <div key={i} className="npoll-row">
+                  <input id={`nt-opt-${i}`} className="line" value={o} maxLength={60} placeholder={t("forum.new.poll.option", { n: i + 1 })} aria-label={t("forum.new.poll.option", { n: i + 1 })} onChange={(e) => setPoll(poll.map((x, j) => (j === i ? e.target.value : x)))} />
+                  {poll.length > 2 && (
+                    <button type="button" className="btn sm" aria-label={t("forum.new.poll.drop", { n: i + 1 })} onClick={() => setPoll(poll.filter((_, j) => j !== i))}>×</button>
+                  )}
+                </div>
+              ))}
+              {poll.length < 4 && <button type="button" className="btn sm" onClick={() => setPoll([...poll, ""])}>{t("forum.new.poll.more")}</button>}
+              <div className="mut small">{filled.length < 2 ? t("forum.new.poll.need") : t("forum.new.poll.hint")}</div>
+            </div>
+          ) : (
+            <button type="button" className="btn sm" onClick={() => setPoll(["", ""])}>{t("forum.new.poll.add")}</button>
+          )}
+        </div>
+      )}
       <div className="mut small">{t("forum.new.note")}</div>
       {error && <div className="form-err" role="alert">{error}</div>}
       {p.pictures && pic.dialog}

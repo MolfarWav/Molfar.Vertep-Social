@@ -1,13 +1,14 @@
 // One topic: the posts and the reply box. Shared by the design preview and the real forum.
 // "Quote" picks a post and a chip above the box says whose post it is; the server writes the quote.
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useEmoji } from "@/emoji/use-emoji";
 import { usePicture, type Attached } from "@/pictures/use-picture";
 import { useT } from "@/i18n/index";
 import { BackIcon, DotsIcon, LockIcon, SearchIcon } from "./Icons";
 import { countLabel } from "./labels";
-import type { ShownPost, WriteNotice } from "./model";
+import type { PollData, ShownPost, WriteNotice } from "./model";
 import { Pager, type PageTarget } from "./Pager";
+import { PollCard } from "./PollCard";
 import { PostCard } from "./PostCard";
 import { NoticeLine, WriteNowButton } from "./Strip";
 
@@ -46,6 +47,9 @@ export interface TopicViewProps {
   onDeleteTopic?: () => Promise<string | null>;
   /** Gives or takes back a reaction on a post (real forum only). */
   onReact?: (post: ShownPost, emoji: string) => Promise<void>;
+  /** The topic's poll, drawn under its opening post, and the user's vote (issue #367). */
+  poll?: PollData;
+  onVote?: (optionId: string) => Promise<void>;
 }
 
 export function TopicView(p: TopicViewProps) {
@@ -215,7 +219,10 @@ export function TopicView(p: TopicViewProps) {
           {pager}
           {state}
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} phone locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} onReact={p.onReact} />
+            <Fragment key={post.id}>
+              <PostCard post={post} phone locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} onReact={p.onReact} />
+              {post.n === 1 && p.poll && <PollCard poll={p.poll} onVote={p.onVote} />}
+            </Fragment>
           ))}
           {posts.length > 0 && pager}
         </div>
@@ -272,7 +279,10 @@ export function TopicView(p: TopicViewProps) {
           {pager}
           {state}
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} phone={false} locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} onReact={p.onReact} />
+            <Fragment key={post.id}>
+              <PostCard post={post} phone={false} locked={p.locked} onQuote={pick} onReply={focusReply} remove={removal(post)} onReact={p.onReact} />
+              {post.n === 1 && p.poll && <PollCard poll={p.poll} onVote={p.onVote} />}
+            </Fragment>
           ))}
           {posts.length > 0 && pager}
           {p.locked ? (

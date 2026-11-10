@@ -80,6 +80,8 @@ export interface ShownPost {
   removed?: boolean;
   /** Reactions as drawn: emoji, how many, whether the user gave one, and who (names, for the tooltip). */
   react?: { emoji: string; n: number; mine: boolean; who: string }[];
+  /** A repost: drawn quieter (issue #367). */
+  repost?: boolean;
 }
 
 /** The autonomy strip: the engine's state and the numbers. */
@@ -170,6 +172,14 @@ export interface EnginePost {
   removed?: boolean;
   /** Reactions: emoji to who ("me" is the user; a character's profile id). */
   react?: Record<string, string[]>;
+  /** A character passed the quoted post on (issue #367). */
+  repost?: boolean;
+}
+/** A poll as the page draws it: each option with its count, whether the user chose it and who voted (names). */
+export interface PollData {
+  closed: boolean;
+  total: number;
+  options: { id: string; text: string; n: number; mine: boolean; who: string[] }[];
 }
 export interface EngineAuthor {
   name: string;
@@ -191,6 +201,7 @@ export interface EngineTopicPage {
     locked: boolean;
     unread: boolean;
     event?: string;
+    poll?: PollData;
     posts: EnginePost[];
   };
   /** Which page of the topic this is; absent from an engine that does not page. */
@@ -414,6 +425,7 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
       text: p.text,
       ...(p.image && !p.removed ? { image: p.image } : {}),
       ...(p.removed ? { removed: true } : {}),
+      ...(p.repost && !p.removed ? { repost: true } : {}),
       ...(p.react && !p.removed ? { react: reactionsOf(p.react, page.reactors ?? {}, t("shell.me")) } : {}),
       ...(p.quote ? { quote: { who: p.quote.by === "me" ? p.quote.name || t("shell.me") : p.quote.name, text: p.quote.text } } : {}),
       ...(a?.signature ? { sig: a.signature } : {}),

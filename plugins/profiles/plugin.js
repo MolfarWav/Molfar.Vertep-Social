@@ -432,7 +432,7 @@ export const DEFAULT_SETTINGS = {
    * flirty (hints and teasing); never anything explicit. `chronicle` is the Moderator's daily digest (one model request a day, only when there is something to tell). `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
    * and a sharper answer from the characters' own ties (#367); neither costs a model call.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -508,6 +508,8 @@ export function mergeSettings(base, patch) {
       gossip: bool(cm.gossip, bool(bcm.gossip, true)),
       gossipPerDay: clampInt(cm.gossipPerDay, 0, 20, Number.isInteger(bcm.gossipPerDay) ? bcm.gossipPerDay : 2),
       jealousy: bool(cm.jealousy, bool(bcm.jealousy, true)),
+      reposts: bool(cm.reposts, bool(bcm.reposts, true)),
+      repostsPerDay: clampInt(cm.repostsPerDay, 0, 20, Number.isInteger(bcm.repostsPerDay) ? bcm.repostsPerDay : 2),
     },
     autonomous: bool(p.autonomous, b.autonomous),
     activity: oneOf(p.activity, ["quiet", "moderate", "lively", "chaotic"], b.activity),

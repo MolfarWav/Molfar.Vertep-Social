@@ -101,6 +101,14 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
       <Row title={t("settings.community.jealousy")} hint={hint("settings.community.jealousy.hint", "settings.community.jealousy.phone.hint")}>
         {(id) => <Switch labelledBy={id} checked={c.jealousy} onChange={(v) => change({ jealousy: v })} />}
       </Row>
+      <Row title={t("settings.community.reposts")} hint={hint("settings.community.reposts.hint", "settings.community.reposts.phone.hint")}>
+        {(id) => <Switch labelledBy={id} checked={c.reposts} onChange={(v) => change({ reposts: v })} />}
+      </Row>
+      <div className={`pictures-more${c.reposts ? "" : " is-off"}`} aria-disabled={!c.reposts || undefined}>
+        <Row title={t("settings.community.reposts.limit")}>
+          {() => <Stepper name={t("settings.community.reposts.limit")} value={c.repostsPerDay} min={LIMITS.repostsPerDay.min} max={LIMITS.repostsPerDay.max} onChange={(v) => change({ repostsPerDay: v })} />}
+        </Row>
+      </div>
     </>
   );
 }
