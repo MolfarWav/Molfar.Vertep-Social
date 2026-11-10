@@ -20,6 +20,8 @@ A character sees the latest 24 messages of the chat with each reply (4 to 500 in
 
 In the same dialog, **New conversation…** puts a divider in the log. The character sees nothing from before it. "Keep the note and start" first folds the messages that are not in the note yet (one model call), so the character still remembers the gist; "Start without the note" starts from nothing. The old messages stay in the chat above the divider. **Clear chat…** deletes the whole history and the note, after a question; it cannot be undone.
 
+A chat belongs to a pair: the character and the persona that was active when it was written (see [[you]]). With one persona nothing changes. With several, each persona has a separate chat and memory note with every character, and the Messenger shows the chats of the active one; the header says "as <name>". Chats you made before personas had their own went to the persona that was active when you first opened the Messenger after the update. Deleting a persona deletes its chats.
+
 How well a character knows you is a choice too: "Characters know you" in Settings (the default), or "How well it knows you" in a profile's Voice tab. **Knows you** tells the model the name and "About" of your active persona; **Name only** tells just the name; **Stranger** tells nothing, and the character learns about you only from what you write. The Forum follows the same choice (see [[forum]]). A message in double parentheses, like ((this)), or one that starts with OOC is you speaking out of character: the character answers it briefly and plainly, then goes on.
 
 ### Emoji

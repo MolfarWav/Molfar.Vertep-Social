@@ -34,11 +34,12 @@ const msgs = (n: number, from = 0) => Array.from({ length: n }, (_, i) => ({ id:
 
 function seed(h: H, opts: { messages?: any[]; chat?: object; profile?: object; settings?: object; you?: object } = {}) {
   h.files.set("profiles/mavka.json", JSON.stringify({ id: "mavka", name: "Mavka", hue: 150, source: "own", about: "Lives by the lake.", schedule: always("off"), ...opts.profile }));
-  h.files.set("chats/mavka.json", JSON.stringify({ id: "mavka", messages: opts.messages ?? [], pending: null, failed: null, unread: false, shared: [], ...opts.chat }));
+  // with a persona the chat is the pair's, as the plugin stores it; without one it is the plain chat
+  h.files.set(opts.you ? "chats/mavka.u1.json" : "chats/mavka.json", JSON.stringify({ id: "mavka", messages: opts.messages ?? [], pending: null, failed: null, unread: false, shared: [], ...opts.chat }));
   if (opts.settings) h.files.set("settings.json", JSON.stringify(opts.settings));
   if (opts.you) h.files.set("you.json", JSON.stringify(opts.you));
 }
-const readChat = (h: H) => JSON.parse(h.files.get("chats/mavka.json")!);
+const readChat = (h: H) => JSON.parse(h.files.get(h.files.has("chats/mavka.u1.json") ? "chats/mavka.u1.json" : "chats/mavka.json")!);
 const route = (host: any, p: string, body?: unknown, extra: object = {}) => plugin.handleRoute({ method: "POST", path: p, body, ...extra }, host);
 const YOU = { active: "u1", personas: [{ id: "u1", name: "Serhii", about: "Writes songs." }] };
 
@@ -96,7 +97,7 @@ test("the tick folds old messages into the note, and the next reply carries the 
   expect(h.requests).toHaveLength(1);
   const { key, req } = h.requests[0];
   const upto = BASE + 17 * 60000; // 30 open, 12 kept: messages 0..17 go
-  expect(key).toBe("sum:mavka:" + upto);
+  expect(key).toBe("sum:mavka:" + upto + (h.files.has("chats/mavka.u1.json") ? ":u1" : ""));
   expect(req.systemPrompt).toContain("Mavka");
   expect(req.messages[0].content).toContain("(empty)");
   expect(req.messages[0].content).toContain("Serhii: line 0");
@@ -104,7 +105,7 @@ test("the tick folds old messages into the note, and the next reply carries the 
   expect(req.messages[0].content).not.toContain("line 18");
   // the answer arrives on the next pass
   h.requests.length = 0;
-  h.results["sum:mavka:" + upto] = { text: "<think>x</think>Serhii writes songs; Mavka promised to listen." };
+  h.results[key] = { text: "<think>x</think>Serhii writes songs; Mavka promised to listen." };
   plugin.onTick({}, h.host);
   const chat = readChat(h);
   expect(chat.summary).toMatchObject({ text: "Serhii writes songs; Mavka promised to listen.", upto });

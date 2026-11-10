@@ -1,6 +1,12 @@
 /**
- * Social messenger: one chat per profile, replies written by the profile's own voice, and a status
+ * Social messenger: one chat per character and persona (#366), replies written by the profile's own voice, and a status
  * (from the weekly schedule) that decides when a reply comes.
+ *
+ * A chat belongs to a pair: the character and the persona of Your profile that was active when it was written (`chats/<profile>.<persona>.json`).
+ * The routes still take the profile's id: they work on the chat of the ACTIVE persona, so switching persona switches every chat. While Your
+ * profile has no persona the chat is `chats/<profile>.json`; the first time a persona exists, such a chat goes to the persona that is active
+ * then (`adoptLegacy`). A character's reply is written into the chat it was asked in, whoever is active by then; first messages go only to
+ * the active persona.
  *
  * Routes (relative to /v1/apps/social):
  *   GET  /messenger/contacts            (unread first, then the newest chat, then the name) {contacts: [{id, name, hue, picture, source, status, nextOnline (ms or null), line, unread, lastAt, pending}], now}
@@ -73,7 +79,9 @@ const readJson = (fsx, path, dflt) => {
 };
 
 const profilePath = (id) => "profiles/" + id + ".json";
-const chatPath = (id) => "chats/" + id + ".json";
+/** The chat file of a pair; `persona` "" is the chat made while Your profile had no persona. */
+const chatPath = (id, persona) => "chats/" + id + (persona ? "." + persona : "") + ".json";
+const CHAT_FILE = /^([A-Za-z0-9_-]{1,60})(?:\.([A-Za-z0-9_-]{1,60}))?\.json$/;
 
 // ---------- status from the schedule ----------
 
@@ -118,16 +126,74 @@ function readProfile(fsx, id) {
   return p.id === id ? p : { ...p, id };
 }
 
-/** The active persona of Your profile ({name, about}), or null: what a character is told about the person writing. */
-export function youOf(fsx) {
+/** The persona `pid` of Your profile ({name, about}), or with none the active one: what a character is told about the person writing. Null when there is none. A copy lives in the forum. */
+export function youOf(fsx, pid) {
   const y = readJson(fsx, "you.json", null);
   if (!isObj(y) || !Array.isArray(y.personas)) return null;
-  const p = y.personas.find((x) => isObj(x) && x.id === y.active) || y.personas.find((x) => isObj(x) && str(x.name));
+  const p = pid ? y.personas.find((x) => isObj(x) && x.id === pid) : y.personas.find((x) => isObj(x) && x.id === y.active) || y.personas.find((x) => isObj(x) && str(x.name));
   return isObj(p) && str(p.name) ? { name: cut(str(p.name), 80), about: cut(str(p.about), 600) } : null;
 }
 
-function emptyChat(id) {
-  return { id, messages: [], pending: null, failed: null, unread: false, shared: [], summary: null, breaks: [], foldFailAt: 0 };
+/** The personas of Your profile that can write: [{id, name}]. */
+function personasOf(fsx) {
+  const y = readJson(fsx, "you.json", null);
+  return (isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && typeof x.id === "string" && ID.test(x.id) && str(x.name)).map((x) => ({ id: x.id, name: str(x.name) }));
+}
+
+/** The id of the active persona (else the first), "" when there is none: the chat of a pair is this persona's. A copy lives in the forum. */
+export function activePersonaId(fsx) {
+  const y = readJson(fsx, "you.json", null);
+  const list = (isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && typeof x.id === "string" && ID.test(x.id) && str(x.name));
+  const p = list.find((x) => isObj(y) && x.id === y.active) || list[0];
+  return p ? p.id : "";
+}
+
+/** A chat made while Your profile had no persona goes to the persona that is active now (the first one to exist). Idempotent; a pair that already has a chat is left alone. */
+export function adoptLegacy(fsx) {
+  const me = activePersonaId(fsx);
+  if (!me) return;
+  let names = [];
+  try {
+    names = fsx.list("chats");
+  } catch {
+    return;
+  }
+  for (const n of names) {
+    const m = CHAT_FILE.exec(n);
+    if (!m || m[2]) continue;
+    const old = readJson(fsx, chatPath(m[1], ""), null);
+    if (!isObj(old) || readJson(fsx, chatPath(m[1], me), null)) continue;
+    try {
+      fsx.write(chatPath(m[1], me), JSON.stringify({ ...old, id: m[1], persona: me }, null, 2));
+      fsx.remove(chatPath(m[1], ""));
+    } catch {
+      // left where it was; the next call tries again
+    }
+  }
+}
+
+/** Every chat on disk that can be written to: [{id, persona}]. Persona chats of a persona that no longer exists, and a no-persona chat once a persona exists, are not listed. */
+function listChats(fsx) {
+  let names = [];
+  try {
+    names = fsx.list("chats");
+  } catch {
+    return [];
+  }
+  const live = new Set(personasOf(fsx).map((x) => x.id));
+  const out = [];
+  for (const n of names) {
+    const m = CHAT_FILE.exec(n);
+    if (!m) continue;
+    const persona = m[2] || "";
+    if (persona ? !live.has(persona) : live.size > 0) continue;
+    out.push({ id: m[1], persona });
+  }
+  return out;
+}
+
+function emptyChat(id, persona) {
+  return { id, persona: persona || "", messages: [], pending: null, failed: null, unread: false, shared: [], summary: null, breaks: [], foldFailAt: 0 };
 }
 
 /** The memory note of a chat as stored: {text, upto, at, edited?} or null. */
@@ -136,9 +202,9 @@ function cleanSummary(raw) {
   return { text: cut(noControls(raw.text).trim(), SUMMARY_MAX), upto: Number.isFinite(raw.upto) ? raw.upto : 0, at: Number.isFinite(raw.at) ? raw.at : 0, ...(raw.edited === true ? { edited: true } : {}) };
 }
 
-function readChat(fsx, id) {
-  const c = readJson(fsx, chatPath(id), null);
-  if (!isObj(c)) return emptyChat(id);
+function readChat(fsx, id, persona) {
+  const c = readJson(fsx, chatPath(id, persona), null);
+  if (!isObj(c)) return emptyChat(id, persona);
   const messages = (Array.isArray(c.messages) ? c.messages : [])
     .filter((m) => isObj(m) && (m.who === SELF || m.who === "them") && typeof m.text === "string" && Number.isFinite(m.at))
     .map((m) => ({ id: String(m.id), who: m.who, at: m.at, text: m.text, ...(m.first === true ? { first: true } : {}), ...(cleanImage(m.image) ? { image: cleanImage(m.image) } : {}) }));
@@ -146,12 +212,12 @@ function readChat(fsx, id) {
   const failed = isObj(c.failed) ? { error: str(c.failed.error), ...(c.failed.code === "no-model" ? { code: "no-model" } : {}) } : null;
   const shared = (Array.isArray(c.shared) ? c.shared : []).filter((x) => typeof x === "string" && ID.test(x)).slice(-60);
   const breaks = (Array.isArray(c.breaks) ? c.breaks : []).filter((x) => Number.isFinite(x)).slice(-BREAKS_KEEP);
-  return { id, messages, pending, failed, unread: c.unread === true, shared, summary: cleanSummary(c.summary), breaks, foldFailAt: Number.isFinite(c.foldFailAt) ? c.foldFailAt : 0 };
+  return { id, persona: persona || "", messages, pending, failed, unread: c.unread === true, shared, summary: cleanSummary(c.summary), breaks, foldFailAt: Number.isFinite(c.foldFailAt) ? c.foldFailAt : 0 };
 }
 
 function writeChat(fsx, chat) {
   const messages = chat.messages.slice(-KEEP);
-  fsx.write(chatPath(chat.id), JSON.stringify({ ...chat, messages }, null, 2));
+  fsx.write(chatPath(chat.id, chat.persona), JSON.stringify({ ...chat, messages }, null, 2));
 }
 
 function newId(at, who) {
@@ -162,6 +228,7 @@ function newId(at, who) {
 function viewOf(chat, profile, now, tz) {
   return {
     id: chat.id,
+    persona: chat.persona || "",
     status: statusAt(profile.schedule, new Date(now), tz),
     nextOnline: nextOnline(profile.schedule, now, tz),
     messages: chat.messages,
@@ -480,9 +547,9 @@ export function knowsOf(fsx, profile) {
 }
 
 /** The person as this profile may know them: the whole persona, only its name, or nobody (a stranger). */
-export function youFor(fsx, profile) {
+export function youFor(fsx, profile, pid) {
   const k = knowsOf(fsx, profile);
-  const y = youOf(fsx);
+  const y = youOf(fsx, pid);
   if (k === "stranger") return null;
   if (k === "name") return y ? { name: y.name, about: "" } : null;
   return y;
@@ -559,13 +626,11 @@ export function metLine(fsx, p, key) {
   return bits.concat(rel).join(" ");
 }
 
-/** What the character remembers of the user (the active persona) from the forum and earlier chats, or "": a stranger remembers nothing. */
-export function metUser(fsx, profile) {
+/** What the character remembers of the user (this persona, else the active one) from the forum and earlier chats, or "": a stranger remembers nothing. */
+export function metUser(fsx, profile, pid) {
   if (knowsOf(fsx, profile) === "stranger") return "";
-  const y = readJson(fsx, "you.json", null);
-  const list = isObj(y) && Array.isArray(y.personas) ? y.personas.filter((x) => isObj(x) && typeof x.id === "string" && ID.test(x.id) && str(x.name)) : [];
-  const p = list.find((x) => x.id === y.active) || list[0];
-  return p ? metLine(fsx, profile, "u:" + p.id) : "";
+  const id = pid || activePersonaId(fsx);
+  return id ? metLine(fsx, profile, "u:" + id) : "";
 }
 
 /** The time of the last "new conversation" divider; 0 when there is none. */
@@ -618,7 +683,7 @@ export function cleanNote(text) {
 /** The model call that folds messages into the note. */
 function requestFold(host, key, profile, chat, plan) {
   const model = messengerModel(host.fs, profile);
-  const you = youFor(host.fs, profile);
+  const you = youFor(host.fs, profile, chat.persona);
   const who = you ? you.name : "the person";
   const lines = plan.messages.map((m) => (m.who === SELF ? who : str(profile.name)) + ": " + cut([m.text, imageLine(m.image)].filter(Boolean).join(" "), FOLD_MSG_MAX));
   host.llm.request(key, {
@@ -701,11 +766,11 @@ function requestReply(host, key, profile, chat) {
   const ctx = contextOf(host.fs, chat);
   host.llm.request(key, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(profile, youFor(host.fs, profile), recentDays(host.fs, profile, Date.now()), {
+    systemPrompt: systemPromptFor(profile, youFor(host.fs, profile, chat.persona), recentDays(host.fs, profile, Date.now()), {
       images: mayImage(host.fs, chat, Date.now()),
       stickers: stickerHint(stickerPacksFor(host.fs, profile), stickersLeft(host.fs, chat, Date.now()) > 0),
       summary: ctx.summary,
-      met: metUser(host.fs, profile),
+      met: metUser(host.fs, profile, chat.persona),
       stranger: knowsOf(host.fs, profile) === "stranger",
     }),
     messages: ctx.messages,
@@ -780,7 +845,7 @@ function contactsRoute(host) {
   for (const id of allProfileIds(fsx)) {
     const p = readProfile(fsx, id);
     if (!p) continue;
-    const chat = readChat(fsx, id);
+    const chat = readChat(fsx, id, activePersonaId(fsx));
     const last = chat.messages[chat.messages.length - 1];
     contacts.push({
       id,
@@ -804,7 +869,7 @@ function chatRoute(req, host) {
   const id = String((isObj(req.query) ? req.query.id : "") || "");
   const p = readProfile(host.fs, id);
   if (!p) return ok({ error: "no such profile" }, 404);
-  return ok({ chat: viewOf(readChat(host.fs, id), p, Date.now()) });
+  return ok({ chat: viewOf(readChat(host.fs, id, activePersonaId(host.fs)), p, Date.now()) });
 }
 
 function sendRoute(req, host) {
@@ -816,7 +881,7 @@ function sendRoute(req, host) {
   const stash = isObj(req.stash) ? req.stash : null;
   const result = host.llm.results.reply;
   const now = Date.now();
-  const chat = readChat(fsx, id);
+  const chat = readChat(fsx, id, stash && typeof stash.persona === "string" ? stash.persona : activePersonaId(fsx));
 
   if (!stash) {
     const text = cut(noControls(String(typeof b.text === "string" ? b.text : "")).trim(), TEXT_MAX);
@@ -830,7 +895,7 @@ function sendRoute(req, host) {
       chat.pending = { at: now, dueAt: now };
       writeChat(fsx, chat);
       requestReply(host, "reply", p, chat);
-      return { __llmPending: true, stash: { sent: true } };
+      return { __llmPending: true, stash: { sent: true, persona: chat.persona } };
     }
     chat.pending = { at: now, dueAt: status === "away" ? now + awayDelayMs(now) : null };
     writeChat(fsx, chat);
@@ -850,15 +915,15 @@ function retryRoute(req, host) {
   const id = String(b.id || "");
   const p = readProfile(fsx, id);
   if (!p) return ok({ error: "no such profile" }, 404);
-  const chat = readChat(fsx, id);
-  const now = Date.now();
   const stash = isObj(req.stash) ? req.stash : null;
+  const now = Date.now();
+  const chat = readChat(fsx, id, stash && typeof stash.persona === "string" ? stash.persona : activePersonaId(fsx));
   if (!stash) {
     const last = chat.messages[chat.messages.length - 1];
     if (!last || last.who !== SELF) return ok({ error: "nothing to reply to" }, 400);
     chat.pending = chat.pending || { at: last.at, dueAt: now };
     requestReply(host, "reply", p, chat);
-    return { __llmPending: true, stash: { retry: true } };
+    return { __llmPending: true, stash: { retry: true, persona: chat.persona } };
   }
   const err = fileReply(chat, p, host.llm.results.reply, now, fsx);
   writeChat(fsx, chat);
@@ -870,11 +935,11 @@ function retryRoute(req, host) {
 function imagesRoute(host) {
   const fsx = host.fs;
   const items = [];
-  for (const id of allProfileIds(fsx)) {
+  for (const { id, persona } of listChats(fsx)) {
     const p = readProfile(fsx, id);
     if (!p) continue;
-    for (const m of readChat(fsx, id).messages) {
-      if (m.image && m.image.state === "pending") items.push({ id, messageId: m.id, prompt: m.image.prompt, model: imageModelFor(fsx, p), at: m.at });
+    for (const m of readChat(fsx, id, persona).messages) {
+      if (m.image && m.image.state === "pending") items.push({ id, ...(persona ? { persona } : {}), messageId: m.id, prompt: m.image.prompt, model: imageModelFor(fsx, p), at: m.at });
     }
   }
   items.sort((a, b) => a.at - b.at);
@@ -887,7 +952,7 @@ function imageRoute(req, host) {
   const b = isObj(req.body) ? req.body : {};
   const id = String(b.id || "");
   if (!ID.test(id) || !readProfile(fsx, id)) return ok({ error: "no such profile" }, 404);
-  const chat = readChat(fsx, id);
+  const chat = readChat(fsx, id, typeof b.persona === "string" && ID.test(b.persona) ? b.persona : activePersonaId(fsx));
   const m = chat.messages.find((x) => x.id === String(b.messageId || "") && x.image && x.image.state === "pending");
   if (!m) return ok({ error: "no such picture to draw" }, 404);
   const done = typeof b.url === "string" ? cleanImage({ state: "ready", url: b.url, alt: m.image.prompt, gen: true }) : null;
@@ -901,7 +966,7 @@ function readRoute(req, host) {
   const b = isObj(req.body) ? req.body : {};
   const id = String(b.id || "");
   if (!readProfile(host.fs, id)) return ok({ error: "no such profile" }, 404);
-  const chat = readChat(host.fs, id);
+  const chat = readChat(host.fs, id, activePersonaId(host.fs));
   if (chat.unread) {
     chat.unread = false;
     writeChat(host.fs, chat);
@@ -917,7 +982,7 @@ function summaryRoute(req, host) {
   const p = readProfile(fsx, id);
   if (!p) return ok({ error: "no such profile" }, 404);
   if (typeof b.text !== "string") return ok({ error: "text is needed" }, 400);
-  const chat = readChat(fsx, id);
+  const chat = readChat(fsx, id, activePersonaId(fsx));
   const now = Date.now();
   chat.summary = { text: cleanNote(b.text), upto: chat.summary ? chat.summary.upto : 0, at: now, edited: true };
   writeChat(fsx, chat);
@@ -935,9 +1000,9 @@ function newRoute(req, host) {
   const id = String(b.id || "");
   const p = readProfile(fsx, id);
   if (!p) return ok({ error: "no such profile" }, 404);
-  const chat = readChat(fsx, id);
-  const now = Date.now();
   const stash = isObj(req.stash) ? req.stash : null;
+  const now = Date.now();
+  const chat = readChat(fsx, id, stash && typeof stash.persona === "string" ? stash.persona : activePersonaId(fsx));
   const keep = b.keepNote !== false;
   let warn = "";
   if (!stash) {
@@ -945,7 +1010,7 @@ function newRoute(req, host) {
     const plan = keep ? foldPlan(fsx, chat, true, now) : null;
     if (plan) {
       requestFold(host, "newsum", p, chat, plan);
-      return { __llmPending: true, stash: { upto: plan.upto } };
+      return { __llmPending: true, stash: { upto: plan.upto, persona: chat.persona } };
     }
   } else if (!fileFold(chat, Number(stash.upto), host.llm.results.newsum, now)) {
     warn = "note";
@@ -964,7 +1029,7 @@ function clearRoute(req, host) {
   const id = String(b.id || "");
   const p = readProfile(host.fs, id);
   if (!p) return ok({ error: "no such profile" }, 404);
-  const chat = emptyChat(id);
+  const chat = emptyChat(id, activePersonaId(host.fs));
   writeChat(host.fs, chat);
   return ok({ ok: true, chat: viewOf(chat, p, Date.now(), tzOf(host.fs)) });
 }
@@ -975,22 +1040,26 @@ function clearRoute(req, host) {
 export function dueChats(fsx, now) {
   const tz = tzOf(fsx);
   const out = [];
-  for (const id of allProfileIds(fsx)) {
-    const chat = readChat(fsx, id);
+  for (const { id, persona } of listChats(fsx)) {
+    const chat = readChat(fsx, id, persona);
     if (!chat.pending || isAsking(chat, now)) continue;
     const p = readProfile(fsx, id);
     if (!p) continue;
     const status = statusAt(p.schedule, new Date(now), tz);
     const dueAt = chat.pending.dueAt;
     const due = dueAt !== null ? now >= dueAt : status === "online";
-    if (due && (status === "online" || status === "away")) out.push({ id, chat, profile: p });
+    if (due && (status === "online" || status === "away")) out.push({ id, persona, chat, profile: p });
   }
   return out;
 }
 
+/** The id part of a request key: a pair is `<profile>` (no persona) or `<profile>:<persona>` after the other parts. */
+const tail = (persona) => (persona ? ":" + persona : "");
+
 export function onTick(_ctx, host) {
   const fsx = host && host.fs ? host.fs : null;
   if (!fsx || !host.llm) return;
+  adoptLegacy(fsx);
   const now = Date.now();
   const results = host.llm.results || {};
   const done = Object.keys(results).filter((k) => k.startsWith("rep:") || k.startsWith("fm:") || k.startsWith("sum:"));
@@ -1001,8 +1070,8 @@ export function onTick(_ctx, host) {
         continue;
       }
       if (key.startsWith("sum:")) {
-        const m = /^sum:([A-Za-z0-9_-]+):(\d+)$/.exec(key);
-        const chat = m && readProfile(fsx, m[1]) ? readChat(fsx, m[1]) : null;
+        const m = /^sum:([A-Za-z0-9_-]+):(\d+)(?::([A-Za-z0-9_-]+))?$/.exec(key);
+        const chat = m && readProfile(fsx, m[1]) ? readChat(fsx, m[1], m[3] || "") : null;
         // a fold that is no longer needed (the note moved on, or the chat was cleared) is dropped
         if (chat && (!chat.summary || chat.summary.upto < Number(m[2]))) {
           fileFold(chat, Number(m[2]), results[key], now);
@@ -1010,10 +1079,10 @@ export function onTick(_ctx, host) {
         }
         continue;
       }
-      const id = key.slice(4);
-      const p = readProfile(fsx, id);
-      if (!p) continue;
-      const chat = readChat(fsx, id);
+      const rep = /^rep:([A-Za-z0-9_-]+)(?::([A-Za-z0-9_-]+))?$/.exec(key);
+      const p = rep ? readProfile(fsx, rep[1]) : null;
+      if (!rep || !p) continue;
+      const chat = readChat(fsx, rep[1], rep[2] || "");
       if (!chat.pending) continue;
       const err = fileReply(chat, p, results[key], now, fsx);
       if (!err) chat.unread = true;
@@ -1025,24 +1094,24 @@ export function onTick(_ctx, host) {
   let asked = 0;
   for (const d of dueChats(fsx, now)) {
     if (d.chat.failed) continue;
-    requestReply(host, "rep:" + d.id, d.profile, d.chat);
+    requestReply(host, "rep:" + d.id + tail(d.persona), d.profile, d.chat);
     if (++asked >= TICK_BATCH) break;
   }
   if (asked) return;
   // one fold per tick: older messages leave the window into the chat's memory note
-  for (const id of allProfileIds(fsx)) {
+  for (const { id, persona } of listChats(fsx)) {
     const p = readProfile(fsx, id);
     if (!p) continue;
-    const chat = readChat(fsx, id);
+    const chat = readChat(fsx, id, persona);
     if (chat.pending) continue;
     const fold = foldPlan(fsx, chat, false, now);
     if (fold) {
-      requestFold(host, "sum:" + id + ":" + fold.upto, p, chat, fold);
+      requestFold(host, "sum:" + id + ":" + fold.upto + tail(persona), p, chat, fold);
       return;
     }
   }
   const plan = planFirst(fsx, now, Math.random);
-  if (plan) requestFirst(host, plan, readChat(fsx, plan.profile.id));
+  if (plan) requestFirst(host, plan, readChat(fsx, plan.profile.id, plan.persona));
 }
 
 // ---------- first messages: a character opens a conversation about its own life ----------
@@ -1126,16 +1195,18 @@ export function planFirst(fsx, now, rand) {
   const awake = s.quiet === "same" ? awakeMinutes(s.quietFrom, s.quietTo) : 1440;
   if (r() >= Math.min(1, 1 / Math.max(10, awake / s.perDay))) return null;
   const cands = [];
+  // a character opens a conversation only with the persona that is active now
+  const me = activePersonaId(fsx);
   for (const id of allProfileIds(fsx)) {
     if ((log.by[id] || 0) >= 1) continue;
     const p = readProfile(fsx, id);
     if (!p || statusAt(p.schedule, new Date(now), tz) !== "online") continue;
-    const chat = readChat(fsx, id);
+    const chat = readChat(fsx, id, me);
     if (chat.pending || chat.failed) continue;
     const last = chat.messages[chat.messages.length - 1];
     if (last && (last.first === true || now - last.at < FIRST_AFTER_TALK_MS)) continue;
     const subject = lifeSubject(fsx, p, now, new Set(chat.shared), r);
-    if (subject) cands.push({ profile: p, subject });
+    if (subject) cands.push({ profile: p, subject, persona: me });
   }
   return cands.length ? cands[Math.floor(r() * cands.length)] : null;
 }
@@ -1144,7 +1215,7 @@ export function planFirst(fsx, now, rand) {
 function requestFirst(host, plan, chat) {
   const p = plan.profile;
   const model = messengerModel(host.fs, p);
-  const you = youFor(host.fs, p);
+  const you = youFor(host.fs, p, chat.persona);
   const ctx = contextOf(host.fs, chat);
   const length = isObj(p.voice) && [0, 1, 2].includes(p.voice.length) ? p.voice.length : 1;
   const ask =
@@ -1152,9 +1223,9 @@ function requestFirst(host, plan, chat) {
     plan.subject.text +
     "\nWrite only your opening message, as one person would to a friend: " + ["one sentence", "one or two sentences", "two or three sentences"][length] +
     ", in your own voice, about this and nothing else. No generic greeting like \"how are you\", no stage directions. If the chat has no messages yet, write in the language of your description.";
-  host.llm.request("fm:" + p.id + ":" + plan.subject.ref, {
+  host.llm.request("fm:" + p.id + ":" + plan.subject.ref + tail(chat.persona), {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now()), { summary: ctx.summary, met: metUser(host.fs, p), stranger: knowsOf(host.fs, p) === "stranger" }),
+    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now()), { summary: ctx.summary, met: metUser(host.fs, p, chat.persona), stranger: knowsOf(host.fs, p) === "stranger" }),
     messages: [...ctx.messages.slice(-6), { role: "user", content: ask }],
     presetParams: { temperature: 0.9, max_tokens: MAX_TOKENS[length] },
   });
@@ -1162,7 +1233,7 @@ function requestFirst(host, plan, chat) {
 
 /** Files the model's first message; a failure is only remembered in the log (no retry storm). */
 function fileFirst(fsx, key, result, now) {
-  const m = /^fm:([A-Za-z0-9_-]+):([A-Za-z0-9_-]+)$/.exec(key);
+  const m = /^fm:([A-Za-z0-9_-]+):([A-Za-z0-9_-]+)(?::([A-Za-z0-9_-]+))?$/.exec(key);
   const tz = tzOf(fsx);
   const log = readFirstLog(fsx, now, tz);
   const p = m ? readProfile(fsx, m[1]) : null;
@@ -1173,7 +1244,7 @@ function fileFirst(fsx, key, result, now) {
     fsx.write(FIRST_LOG, JSON.stringify(log, null, 2));
     return;
   }
-  const chat = readChat(fsx, p.id);
+  const chat = readChat(fsx, p.id, m[3] || "");
   chat.messages.push({ id: newId(now, "them"), who: "them", at: now, text, first: true });
   chat.shared = [...chat.shared, m[2]].slice(-60);
   chat.unread = true;
@@ -1190,6 +1261,7 @@ export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   const method = req && req.method;
   if (!path.startsWith("/messenger/") && path !== "/messenger") return null;
+  adoptLegacy(host.fs);
   if (path === "/messenger/contacts" && method === "GET") return contactsRoute(host);
   if (path === "/messenger/chat" && method === "GET") return chatRoute(req, host);
   if (path === "/messenger/send" && method === "POST") return sendRoute(req, host);

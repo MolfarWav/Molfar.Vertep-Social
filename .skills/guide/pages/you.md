@@ -4,12 +4,12 @@ Your profile says who you are to the characters. It is not a character: it has n
 
 ## Personas
 
-You can keep a few personas, for example one for each way you like to be addressed. Each has a picture, a name and a short About. One persona is active (marked "Active"). In the messenger a character is told the active persona's name and its About, and nothing else about you. The forum does not read it. Without a persona, characters call you "the user".
+You can keep a few personas, for example one for each way you like to be addressed. Each has a picture, a name and a short About. One persona is active (marked "Active"). In the messenger a character is told the active persona's name and its About, and nothing else about you. Every persona has its own chat with each character, with its own history and memory note: when you switch the active persona, the Messenger shows that persona's chats (the chat header says "as <name>" once you have more than one). A character writes first only to the active persona, and answers a message you sent in any chat even after you switched. The forum does not read it. Without a persona, characters call you "the user".
 
 - Pick a persona in the row at the top to edit it. Change the name or the About, and press "Save"; "Cancel" drops the edit. An unsaved edit is kept while you look at another persona or another tab, but not after the app is closed.
 - "Make active" in the editor switches to the persona you are looking at.
 - The picture button draws a portrait with an image model, as for a profile (see [[profiles]]).
-- "Delete persona" removes it from Social. A persona in Roleplay is never touched. If the active one is deleted, the next one takes its place.
+- "Delete persona" removes it from Social together with its chats and what the characters remember of it. A persona in Roleplay is never touched. If the active one is deleted, the next one takes its place.
 
 ## Adding one
 

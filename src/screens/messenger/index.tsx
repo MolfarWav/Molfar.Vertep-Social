@@ -9,6 +9,7 @@ import { CONTACTS, LOGS, type Contact, type LogItem } from "@/mock/messenger";
 import type { Status } from "@/mock/status";
 import { imageShown, usePicture, type Attached } from "@/pictures/use-picture";
 import { useNav } from "@/shell/nav";
+import { useYou } from "@/screens/you/store";
 import { useLiveMessenger } from "./live";
 import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
 import { PhoneChat, PhoneList } from "./phone";
@@ -54,6 +55,9 @@ export function Messenger() {
   const { go, openProfile } = useNav();
   const [pv] = useState(readPreview);
   const real = !PREVIEW;
+  // with more than one persona every chat is one persona's: say whose
+  const you = useYou();
+  const asName = real && you && you.personas.length > 1 ? (you.personas.find((x) => x.id === you.active)?.name ?? "") : "";
 
   const [query, setQuery] = useState(pv.state === "nohits" ? NOHITS_QUERY : "");
   const [sel, setSel] = useState(() => (PREVIEW ? (pv.state === "offline" ? "horpyna" : pv.view === "chat" ? "pereles" : "mavka") : ""));
@@ -162,6 +166,7 @@ export function Messenger() {
             noModel={noModelNote}
             queued={queued}
             real={real}
+            asName={asName}
             busy={busy}
             onDraft={setDraft}
             onSend={send}
@@ -260,6 +265,7 @@ export function Messenger() {
                   <span className="hsub">
                     {t(STATUS_KEY[cur.status])}
                     {cur.note && <> · {cur.note}</>}
+                    {asName && <> · {t("messenger.head.as", { name: asName })}</>}
                   </span>
                 </div>
               </div>
