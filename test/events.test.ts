@@ -65,7 +65,7 @@ test("an event: the model's JSON becomes a topic by the moderator on a general b
   expect(topic.event.kind).toBe("contest");
   expect(topic.event.invited.length).toBe(4);
   expect(new Set(topic.event.invited).size).toBe(4);
-  expect(JSON.parse(files.get("forum/events.json")!)).toEqual({ last: noon + 1, kind: "contest", pendingAt: 0, failedAt: 0 });
+  expect(JSON.parse(files.get("forum/events.json")!)).toEqual({ last: noon + 1, kind: "contest", lastComment: 0, lastClose: 0, pendingAt: 0, failedAt: 0 });
   // the same title again is refused
   expect(forum.fileEventResult(fsx, { text: '{"title": "photo of the week!", "text": "x"}' }, evBoards, noon + 2, () => 0, "game").error).toContain("repeats");
   // a Ukrainian event is signed in Ukrainian

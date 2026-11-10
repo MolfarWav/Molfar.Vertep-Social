@@ -190,6 +190,8 @@ export function readSettings(fsx) {
     writers: r.writers === "equal" ? "equal" : "profile",
     // what the community around the posts does by itself (Settings > Community); reactions need no model
     events: isObj(r.community) && ["off", "daily", "weekly"].includes(r.community.events) ? r.community.events : "weekly",
+    modComments: isObj(r.community) && ["off", "rare", "often"].includes(r.community.modComments) ? r.community.modComments : "rare",
+    modCloses: !isObj(r.community) || r.community.modCloses !== false,
     reactions: !isObj(r.community) || r.community.reactions !== false,
     reactionsPerDay: clampInt(isObj(r.community) ? r.community.reactionsPerDay : undefined, 0, 50, 8),
     tzOffset: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
@@ -1196,11 +1198,21 @@ function reactTick(fsx, s, log, now, tz, rand) {
   return true;
 }
 
-// ---------- events (issue #358): now and then the moderator opens a topic, and several characters talk about it ----------
-// By rules: when (once a day or a week), which kind, which board (a general one), who is invited (up to four, by their frequency).
-// By the model: one request that words the title and the text. State in forum/events.json {last, kind, pendingAt, failedAt}.
+// ---------- the Moderator (issue #358): the forum's own voice ----------
+// Not a character: no profile, not in the contacts, nothing the user can edit; the author id is "_mod". It uses the forum's model
+// (Settings > Models). By rules it decides when and what: now and then an event (a contest, a rumour, an announcement, a question, a
+// game: several invited characters talk about it), a dry comment in a lively topic, and closing topics that went quiet or ran too long
+// (and the end of an event, with a verdict). The user may reopen what it closed and remove what it wrote, like any post. One model
+// request at a time, state in forum/events.json {last, kind, lastComment, lastClose, pendingAt, failedAt}.
 
 const EVENT_STATE = "forum/events.json";
+const MOD_PENDING_MS = 10 * 60 * 1000;
+const MOD_GAP_MS = { rare: 8 * 3600 * 1000, often: 2 * 3600 * 1000 };
+const MOD_COMMENT_CHANCE = 0.15;
+const MOD_CLOSE_GAP_MS = 20 * 3600 * 1000;
+const MOD_CLOSE_QUIET_MS = 14 * 24 * 3600 * 1000;
+const MOD_CLOSE_EVENT_MS = 3 * 24 * 3600 * 1000;
+const MOD_CLOSE_LONG = 400;
 
 export function cleanEvent(e) {
   if (!isObj(e) || !EVENT_KINDS.includes(e.kind) || !Number.isFinite(e.at)) return null;
@@ -1210,25 +1222,46 @@ export function cleanEvent(e) {
 function readEventState(fsx) {
   const d = readJson(fsx, EVENT_STATE, null);
   const r = isObj(d) ? d : {};
-  return { last: num(r.last), kind: EVENT_KINDS.includes(r.kind) ? r.kind : "", pendingAt: num(r.pendingAt), failedAt: num(r.failedAt) };
+  return { last: num(r.last), kind: EVENT_KINDS.includes(r.kind) ? r.kind : "", lastComment: num(r.lastComment), lastClose: num(r.lastClose), pendingAt: num(r.pendingAt), failedAt: num(r.failedAt) };
 }
 
 const writeEventState = (fsx, st) => fsx.write(EVENT_STATE, JSON.stringify(st));
 
+/** The tones the Moderator takes, weighed: mostly dry and sarcastic, now and then strictly official or absurdly formal. */
+export const MOD_TONES = [
+  { id: "sarcastic", weight: 6, line: "Your tone this time: dry and sarcastic, a little tired of everyone, but never cruel. Tease the topic or the situation, not anyone's looks, family, health or real life." },
+  { id: "serious", weight: 2, line: "Your tone this time: strictly official and very serious, like a notice from a ministry, even when the matter is small." },
+  { id: "deadpan", weight: 2, line: "Your tone this time: deadpan and absurdly formal about something trivial." },
+];
+
+export const modTone = (rand) => weightedPick(MOD_TONES, (t) => t.weight, rand);
+
+/** The Moderator's voice, the same in every request; `tone` is one of MOD_TONES. */
+export function modSystem(tone) {
+  return [
+    "You are the Moderator of a small online forum where the members are characters and one human. You are the forum's own voice: you are not a character of any story and you have no profile.",
+    "You are dry, quick and a little sarcastic, and you like order. You may tease, but never cruelly: no insults to the human user, no jokes about anyone's looks, family, health, religion or politics, nothing that would really hurt.",
+    tone.line,
+    "Write plain forum text: no markdown, no name label, no quotation marks around the whole post. Keep it short.",
+    "Write in the language of the forum's recent posts or topic titles given below; when there are none, in English.",
+    "Do not invent facts about the real world. Never mention that you are an AI or a model.",
+  ].join("\n");
+}
+
 const EVENT_BRIEF = {
-  contest: "a small friendly contest or challenge that members can join with one post each (for example: show your best find of the week)",
+  contest: "a small contest or challenge that members can join with one post each (for example: show your best find of the week)",
   rumour: "a rumour that has gone round the forum, which members can wonder about, doubt or add to",
-  announcement: "an announcement from the moderators: a small change or something to look forward to on the forum",
+  announcement: "an announcement from the moderators: a rule, a change or something to look forward to on the forum, as serious or as silly as your tone",
   question: "a question of the day that every member can answer from their own life",
   game: "a simple word game the members can play in turns (a chain of associations, finish the sentence)",
 };
 
-/** Is an event due, and which kind: {kind} or null. Never the same kind twice in a row; needs two characters, a board, and no event still pending. */
+/** Is an event due, and which kind: {kind} or null. Never the same kind twice in a row; needs two characters, a board, and no request still out. */
 export function eventDue(settings, st, profiles, boards, now, tz, rand) {
   if (!settings.autonomous || settings.events === "off" || profiles.length < 2) return null;
   if (!boards.categories.some((c) => c.boards.length)) return null;
   if (inQuiet(now, tz, settings.quietFrom, settings.quietTo)) return null;
-  if (now - st.last < EVENT_GAP_MS[settings.events] || now - st.pendingAt < 10 * 60 * 1000 || now - st.failedAt < EVENT_FAIL_WAIT_MS) return null;
+  if (now - st.last < EVENT_GAP_MS[settings.events] || now - st.pendingAt < MOD_PENDING_MS || now - st.failedAt < EVENT_FAIL_WAIT_MS) return null;
   const kinds = EVENT_KINDS.filter((k) => k !== st.kind);
   return { kind: kinds[Math.floor(rand() * kinds.length)] };
 }
@@ -1253,14 +1286,8 @@ export function eventGuests(profiles, rand) {
   return out;
 }
 
-export function eventSystem() {
-  return [
-    "You are the moderator of a small online forum where the members are characters and one human.",
-    "You open one topic to get members talking. Write it as a real forum moderator would: warm, short, plain text, no markdown.",
-    "Write in the language of the forum's recent topic titles given below. When there are none, write in English.",
-    "Do not invent facts about the real world. Do not mention that you are an AI.",
-    'Answer with JSON only: {"title": "the topic title, at most 80 characters", "text": "the opening post, one to four sentences"}',
-  ].join("\n");
+export function eventSystem(tone) {
+  return [modSystem(tone), "You open one topic to get members talking.", 'Answer with JSON only: {"title": "the topic title, at most 80 characters", "text": "the opening post, one to four sentences"}'].join("\n");
 }
 
 export function eventUser(kind, titles) {
@@ -1269,30 +1296,121 @@ export function eventUser(kind, titles) {
   return lines.join("\n");
 }
 
-/** Asks the model for an event when one is due; true when it asked (so the tick does nothing else). */
-function eventTick(host, s, boards, now, tz, rand) {
+/** The language of a few texts: Ukrainian (Cyrillic) or English; names the Moderator and its posts. */
+const modName = (...texts) => (/[Ѐ-ӿ]/.test(texts.join(" ")) ? "Модератор" : "Moderator");
+
+/** A lively topic the Moderator may comment on, or null: open, active in the last 12 hours, five posts or more, the last one not its own, none of its own in the last eight. */
+export function pickModComment(topics, st, settings, now, rand) {
+  if (!MOD_GAP_MS[settings.modComments] || now - st.lastComment < MOD_GAP_MS[settings.modComments]) return null;
+  const cands = [];
+  for (const t of topics) {
+    if (t.locked || now - t.lastAt > 12 * 3600 * 1000) continue;
+    const ps = livePosts(t);
+    if (ps.length < 5 || ps[ps.length - 1].by === MOD || ps.slice(-8).some((p) => p.by === MOD)) continue;
+    cands.push({ topic: t, w: 1 + ps.filter((p) => now - p.at < 6 * 3600 * 1000).length });
+  }
+  const hit = weightedPick(cands, (x) => x.w, rand);
+  return hit ? hit.topic : null;
+}
+
+/** What a topic may be closed for, or null: an event three days old ("event"), quiet for two weeks ("quiet"), or very long ("long"). The oldest first. */
+export function modCloseReason(t, now) {
+  if (t.locked) return null;
+  const n = livePosts(t).length;
+  if (t.event && now - t.event.at > MOD_CLOSE_EVENT_MS) return "event";
+  if (n >= 4 && now - t.lastAt > MOD_CLOSE_QUIET_MS) return "quiet";
+  if (n >= MOD_CLOSE_LONG) return "long";
+  return null;
+}
+
+export function pickModClose(topics, st, settings, now) {
+  if (!settings.modCloses || now - st.lastClose < MOD_CLOSE_GAP_MS) return null;
+  const list = topics.filter((t) => modCloseReason(t, now)).sort((a, b) => a.lastAt - b.lastAt);
+  return list.length ? { topic: list[0], reason: modCloseReason(list[0], now) } : null;
+}
+
+const CLOSE_LINE = {
+  event: "The event in this topic is over. Wrap it up: name a winner or a verdict only if the posts make one clear, otherwise hand one out jokingly (or say nobody earned it), then close the topic.",
+  quiet: "Nobody has written here for weeks. Close the topic, with a remark about the silence.",
+  long: "This topic has grown far too long. Close it and say so.",
+};
+
+const postsBlock = (t, n) => livePosts(t).slice(-n).map((p) => "- " + (p.by === SELF ? str(p.name) || "User" : str(p.name)) + ": " + cut(p.text.replace(/\s+/g, " "), 200)).join("\n");
+
+/** Asks the model for one Moderator thing when one is due: an event, a comment, or a closing. True when it asked (the tick does nothing else). */
+function modTick(host, s, boards, now, tz, rand) {
   const fsx = host.fs;
-  if (s.events === "off" || !s.autonomous) return false;
-  // the first event comes one period after the forum began to keep time, not on the first tick after an update
+  if (!s.autonomous) return false;
+  // the first one comes one period after the forum began to keep time, not on the first tick after an update
   if (readJson(fsx, EVENT_STATE, null) === null) {
-    writeEventState(fsx, { last: now, kind: "", pendingAt: 0, failedAt: 0 });
+    writeEventState(fsx, { last: now, kind: "", lastComment: now, lastClose: now, pendingAt: 0, failedAt: 0 });
     return false;
   }
   const st = readEventState(fsx);
+  if (now - st.pendingAt < MOD_PENDING_MS || now - st.failedAt < EVENT_FAIL_WAIT_MS) return false;
+  const ask = (key, tone, content, maxTokens, system) => {
+    st.pendingAt = now;
+    writeEventState(fsx, st);
+    host.llm.request(key, {
+      ...(s.model ? { model: s.model } : {}),
+      systemPrompt: system || modSystem(tone),
+      messages: [{ role: "user", content }],
+      presetParams: { temperature: 0.9, max_tokens: maxTokens },
+    });
+    return true;
+  };
   const profiles = loadProfiles(fsx);
   const due = eventDue(s, st, profiles, boards, now, tz, rand);
-  if (!due) return false;
-  const titles = loadTopics(fsx).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
-  st.pendingAt = now;
+  if (due) {
+    const tone = modTone(rand);
+    const titles = loadTopics(fsx).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
+    return ask("ev:" + due.kind, tone, eventUser(due.kind, titles), 400, eventSystem(tone));
+  }
+  if (inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
+  const wantsComment = s.modComments !== "off" && now - st.lastComment >= MOD_GAP_MS[s.modComments];
+  const wantsClose = s.modCloses && now - st.lastClose >= MOD_CLOSE_GAP_MS;
+  if (!(wantsComment || wantsClose) || rand() >= MOD_COMMENT_CHANCE) return false;
+  const topics = loadTopics(fsx);
+  const close = wantsClose ? pickModClose(topics, st, s, now) : null;
+  if (close) {
+    return ask("mx:" + close.topic.id, modTone(rand), 'Topic: "' + cut(close.topic.title, 100) + '"\nRecent posts:\n' + postsBlock(close.topic, 6) + "\n\n" + CLOSE_LINE[close.reason] + " Write the last post of the topic: one or two sentences.", 200);
+  }
+  const target = wantsComment ? pickModComment(topics, st, s, now, rand) : null;
+  if (target) {
+    return ask("mc:" + target.id, modTone(rand), 'Topic: "' + cut(target.title, 100) + '"\nRecent posts:\n' + postsBlock(target, 8) + "\n\nWrite one comment of your own on what is going on, one or two sentences. Address no one in particular unless it is obvious.", 200);
+  }
+  return false;
+}
+
+/** Files a Moderator comment ("mc") or closing ("mx") from a model answer: appends the post, and for a closing locks the topic. Returns {topicId} or {error}. */
+export function fileModPost(fsx, kind, topicId, result, now) {
+  const st = readEventState(fsx);
+  const fail = (error) => {
+    st.failedAt = now;
+    st.pendingAt = 0;
+    writeEventState(fsx, st);
+    return { error };
+  };
+  const r = isObj(result) ? result : {};
+  if (r.error || !str(r.text)) return fail(r.error || "the model returned nothing");
+  const topic = readTopic(fsx, topicId);
+  if (!topic || topic.locked) return fail("the topic is not open any more");
+  const text = cleanReply(r.text, "Moderator");
+  if (!text) return fail("the model returned nothing");
+  if (livePosts(topic).slice(-CONTEXT_POSTS).some((p) => normal(p.text) === normal(text))) return fail("the post repeats an earlier one");
+  const recent = livePosts(topic).slice(-6).map((p) => p.text).join(" ");
+  const name = modName(topic.title, recent);
+  topic.posts.push({ id: "p-" + now + "-" + rid(), by: MOD, name, hue: 45, at: now, text });
+  topic.lastAt = now;
+  topic.unread = true;
+  if (kind === "mx") topic.locked = true;
+  writeTopic(fsx, topic);
+  st.pendingAt = 0;
+  st.failedAt = 0;
+  if (kind === "mx") st.lastClose = now;
+  else st.lastComment = now;
   writeEventState(fsx, st);
-  const model = s.model;
-  host.llm.request("ev:" + due.kind, {
-    ...(model ? { model } : {}),
-    systemPrompt: eventSystem(),
-    messages: [{ role: "user", content: eventUser(due.kind, titles) }],
-    presetParams: { temperature: 0.9, max_tokens: 400 },
-  });
-  return true;
+  return { topicId: topic.id };
 }
 
 /** Files the model's event as a topic by the moderator, with its guests. Returns {topicId} or {error}. */
@@ -1317,11 +1435,11 @@ export function fileEventResult(fsx, result, boards, now, rand, kindKey) {
   if (topics.length >= MAX_TOPICS) return fail("too many topics");
   const profiles = loadProfiles(fsx);
   const kind = EVENT_KINDS.includes(kindKey) ? kindKey : "announcement";
-  const name = /[\u0400-\u04FF]/.test(title + text) ? "Модератор" : "Moderator";
+  const name = modName(title, text);
   const post = { id: "p-" + now + "-" + rid(), by: MOD, name, hue: 45, at: now, text };
   const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: board.id, title, by: MOD, name, hue: 45, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, event: { kind, at: now, invited: eventGuests(profiles, rand) }, posts: [post] };
   writeTopic(fsx, topic);
-  writeEventState(fsx, { last: now, kind: topic.event.kind, pendingAt: 0, failedAt: 0 });
+  writeEventState(fsx, { ...st, last: now, kind, pendingAt: 0, failedAt: 0 });
   return { topicId: topic.id };
 }
 
@@ -1884,7 +2002,7 @@ export function onTick(_ctx, host) {
   const s = readSettings(fsx);
   const tz = s.tzOffset;
   const results = host.llm.results || {};
-  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:") || k.startsWith("ev:"));
+  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:") || k.startsWith("ev:") || k.startsWith("mc:") || k.startsWith("mx:"));
   const boards = readBoards(fsx);
   const log = readLog(fsx, now, tz);
 
@@ -1892,6 +2010,10 @@ export function onTick(_ctx, host) {
     for (const key of done) {
       if (key.startsWith("ev:")) {
         fileEventResult(fsx, results[key], boards, now, Math.random, key.slice(3));
+        continue;
+      }
+      if (key.startsWith("mc:") || key.startsWith("mx:")) {
+        if (ID.test(key.slice(3))) fileModPost(fsx, key.slice(0, 2), key.slice(3), results[key], now);
         continue;
       }
       const f = parseTickKey(key);
@@ -1906,7 +2028,7 @@ export function onTick(_ctx, host) {
 
   // reactions are free (no model), so they do not wait for the post limits
   if (reactTick(fsx, s, log, now, tz, Math.random)) writeLog(fsx, log);
-  if (eventTick(host, s, boards, now, tz, Math.random)) return;
+  if (modTick(host, s, boards, now, tz, Math.random)) return;
   if (autoBlock(log, s, now, tz)) return;
   const profiles = loadProfiles(fsx);
   if (!profiles.length || !boards.categories.some((c) => c.boards.length)) return;

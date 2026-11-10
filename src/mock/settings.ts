@@ -31,6 +31,7 @@ export const LIFE_DEFAULTS: LifeSettings = {
 };
 
 export type EventsRate = "off" | "daily" | "weekly";
+export type ModComments = "off" | "rare" | "often";
 
 /** The community around the posts (issue #358). Every cap counts per character per day. */
 export interface CommunitySettings {
@@ -39,6 +40,10 @@ export interface CommunitySettings {
   reactionsPerDay: number;
   /** How often one event gets several characters talking on the forum. */
   events: EventsRate;
+  /** How often the Moderator comments in a lively topic. */
+  modComments: ModComments;
+  /** The Moderator closes topics that went quiet or ran too long, and ends events. */
+  modCloses: boolean;
   /** A story: a short post with a picture that vanishes after a day. */
   stories: boolean;
   storiesPerDay: number;
@@ -47,7 +52,7 @@ export interface CommunitySettings {
   chatsPerDay: number;
 }
 
-export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4 };
+export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4 };
 
 export interface SettingsMock {
   autonomous: boolean;

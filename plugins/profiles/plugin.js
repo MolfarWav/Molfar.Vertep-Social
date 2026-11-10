@@ -424,7 +424,7 @@ export const DEFAULT_SETTINGS = {
    * them talking (`events`: "off", "daily", "weekly"), a story is a short post with a picture that vanishes after a day, and characters may
    * chat with each other in the messenger (`chats`, off by default: about twice the tokens). Each cap counts per character per day.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4 },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4 },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -489,6 +489,8 @@ export function mergeSettings(base, patch) {
       reactions: bool(cm.reactions, bool(bcm.reactions, true)),
       reactionsPerDay: clampInt(cm.reactionsPerDay, 0, 50, Number.isInteger(bcm.reactionsPerDay) ? bcm.reactionsPerDay : 8),
       events: oneOf(cm.events, ["off", "daily", "weekly"], oneOf(bcm.events, ["off", "daily", "weekly"], "weekly")),
+      modComments: oneOf(cm.modComments, ["off", "rare", "often"], oneOf(bcm.modComments, ["off", "rare", "often"], "rare")),
+      modCloses: bool(cm.modCloses, bool(bcm.modCloses, true)),
       stories: bool(cm.stories, bool(bcm.stories, false)),
       storiesPerDay: clampInt(cm.storiesPerDay, 0, 10, Number.isInteger(bcm.storiesPerDay) ? bcm.storiesPerDay : 1),
       chats: bool(cm.chats, bool(bcm.chats, false)),
