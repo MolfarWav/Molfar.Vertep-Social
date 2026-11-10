@@ -100,7 +100,7 @@
 .s-messenger .story-b.new { color: var(--ink); font-weight: 600; }
 .s-messenger .story-b:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
 .s-messenger .story-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.s-messenger .chatter-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 12px; border: 0; border-top: 1px solid var(--line); background: var(--raised); color: var(--ink); font: inherit; text-align: left; cursor: pointer; flex: none; margin-top: auto; }
+.s-messenger .chatter-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 12px; border: 0; border-top: 1px solid var(--line); background: var(--raised); color: var(--ink); font: inherit; text-align: left; cursor: pointer; flex: none; }
 .s-messenger .chatter-row:hover { background: color-mix(in srgb, var(--accent) 10%, var(--raised)); }
 .s-messenger .chatter-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .s-messenger .chatter-row.p { min-height: 56px; padding: 8px 16px; }
@@ -115,7 +115,7 @@
 .s-profiles .story-bars { display: flex; gap: 4px; }
 .s-profiles .story-bars span { flex: 1; height: 3px; border-radius: 2px; background: var(--line); }
 .s-profiles .story-bars span.on { background: var(--accent); }
-.s-profiles .story-card { height: 120px; border-radius: 10px; }
+.s-profiles .story-card { min-height: 180px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 20px; color: #fff; }
 .s-profiles .story-text { margin: 0; font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .s-profiles .story-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .s-profiles .story-gap { flex: 1; }
@@ -134,3 +134,4 @@
 .s-profiles .chatter-sel .sel { flex: 1 1 150px; min-width: 0; min-height: 40px; }
 .s-profiles .chatter-log li p { margin: 2px 0 0; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
 .s-profiles .chatter-who { font-weight: 600; }
+.s-profiles .story-text.big { font-size: 18px; line-height: 1.45; text-align: center; font-weight: 500; }

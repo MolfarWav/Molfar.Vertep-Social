@@ -167,6 +167,6 @@ export const BOARD_PAGE = {
 export const BOARD_TOPICS: TopicRow[] = [
   { id: "t1", title: "Хто зламав тин?", who: "Ярина", hue: 330, me: false, replies: 3, last: { who: ME.name, when: "сьогодні 20:55", whenShort: "20:55" }, locked: false, unread: true },
   { id: "t2", title: "Правила форуму: прочитай перед першою темою", who: "Лісовик", hue: 100, me: false, replies: 0, last: { who: "Лісовик", hue: 100, when: "6 листопада 12:00", whenShort: "6 лист." }, locked: true, unread: false },
-  { id: "t3", title: "Нові голоси: представтеся", who: "Мавка", hue: 150, me: false, replies: 11, last: { who: "Берегиня", hue: 190, when: "вчора 18:20", whenShort: "вчора" }, locked: false, unread: false },
+  { id: "t3", title: "Нові голоси: представтеся", who: "Мавка", hue: 150, me: false, replies: 11, last: { who: "Берегиня", hue: 190, when: "вчора 18:20", whenShort: "вчора" }, locked: false, unread: false, event: "question" },
   { id: "t4", title: "Хто вміє плести рушники?", who: ME.name, me: true, replies: 5, last: { who: "Домовик", hue: 40, when: "5 листопада 21:02", whenShort: "5 лист." }, locked: false, unread: false },
 ];

@@ -23,9 +23,9 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
   const hint = (key: string, phoneKey?: string) => t((phone && phoneKey ? phoneKey : key) as never);
   return (
     <>
-      <div className="blk">
-        <div className="lbl">{t("settings.community.mod")}</div>
-        <div className="k hint">{t("settings.community.mod.hint")}</div>
+      <div className="ln col">
+        <b>{t("settings.community.mod")}</b>
+        <span className="k">{t("settings.community.mod.hint")}</span>
       </div>
       <Row title={t("settings.community.events")} hint={phone ? undefined : t("settings.community.events.hint")}>
         {(id) => <Segmented labelledBy={id} options={events} value={c.events} onChange={(v) => change({ events: v })} />}

@@ -230,8 +230,8 @@ export function Messenger() {
             ) : (
               <ContactGroups list={list} phone={false} sel={curId} folded={folded} onToggle={toggleGroup} onPick={pick} />
             )}
-            {!empty && <ChatterEntry contacts={contacts} phone={false} />}
           </div>
+          {!empty && <ChatterEntry contacts={contacts} phone={false} />}
           {!empty && (
             <div className="mine">
               <Flower status="online" size={22} />

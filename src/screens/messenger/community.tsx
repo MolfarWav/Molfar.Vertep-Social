@@ -71,12 +71,11 @@ export function StoriesBar({ phone }: { phone: boolean }) {
   const opened = open ? people.find((p) => p.id === open.who) : undefined;
   return (
     <>
-      <div className={`stories${phone ? " p" : ""}`} role="list" aria-label={t("messenger.stories.title")}>
+      <div className={`stories${phone ? " p" : ""}`} role="group" aria-label={t("messenger.stories.title")}>
         {people.map((p) => (
           <button
             key={p.id}
             type="button"
-            role="listitem"
             className={`story-b${p.unseen > 0 ? " new" : ""}`}
             aria-label={t(p.unseen > 0 ? "messenger.stories.open.new" : "messenger.stories.open", { name: p.name, n: p.list.length })}
             onClick={() => setOpen({ who: p.id, index: Math.max(0, p.list.findIndex((s) => !s.seen)) })}
@@ -148,8 +147,17 @@ function StoryViewer({ who, start, phone, onClose }: { who: Who; start: number; 
             <span key={x.id} className={n <= i ? "on" : ""} />
           ))}
         </div>
-        {s.image ? <MsgPicture image={s.image} /> : <div className="story-card" style={{ background: `hsl(${who.hue} 40% 30%)` }} />}
-        <p className="story-text">{s.text}</p>
+        {s.image ? (
+          <>
+            <MsgPicture image={s.image} />
+            <p className="story-text">{s.text}</p>
+          </>
+        ) : (
+          // a story with no picture is its line on a card of the character's colour
+          <div className="story-card" style={{ background: `hsl(${who.hue} 40% 28%)` }}>
+            <p className="story-text big">{s.text}</p>
+          </div>
+        )}
         <div className="story-nav">
           <button type="button" className="btn" disabled={i <= 0} onClick={() => setI(i - 1)} aria-label={t("messenger.stories.prev")}>‹</button>
           <button type="button" className="btn" disabled={i >= list.length - 1} onClick={() => setI(i + 1)} aria-label={t("messenger.stories.next")}>›</button>

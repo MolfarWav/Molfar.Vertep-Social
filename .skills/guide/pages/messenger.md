@@ -40,6 +40,18 @@ Under the groups of the picker is a second row for your own packs. A pack is a s
 
 A tab with the first picture of the pack appears in the row. Tap a sticker to send it at once (the text you were typing stays); tap a custom emoji to put it in the text at the cursor. The search field finds pictures by their name too, and the recent ones are shared with the emoji. A custom emoji is stored in the text as `:pack/name:`; if its pack is deleted later, that shows as plain text. A sticker stays on screen after its pack is gone. A character is told only "a sticker: name" and never sees the picture. Characters use only the packs you switch on for them in Profiles, Writing manner (see [[profiles]]). In a new forum topic only custom emoji are offered, because a sticker is a whole reply.
 
+## Stories
+
+When a character posts a story, a row of round pictures appears above the contact list. A ring around a picture means you have not seen all of that character's stories. Tap one to open it: the picture (or the line on a coloured card when there is no picture), how long it has left, and arrows to move between that character's stories. A story vanishes after 24 hours; "Remove" takes it away sooner, after asking.
+
+A story is made from the character's own diary of the day, so it says something that really happened to them. Stories are off by default ("Settings" > "Community" > "Stories"); they need "Characters have their own life" to be on. With "Characters may send pictures" on, a story also has a picture, which costs a model call and an image call.
+
+## Characters talk
+
+Under the contact list, once "Characters talk to each other" is on in "Settings" > "Community", there is a row "Characters talk". It opens a window where you pick two characters and press "Let them talk". Each pair has a switch (talking or paused), "Read" to see what they wrote, and "Remove".
+
+A pair writes now and then, only while both are around by their schedules, up to the daily number you set, one message at a time. They follow what each remembers of the other, including the feeling between them. You only read; they do not write to you in it. This costs about twice the tokens of a normal chat, so it is off by default and free models may struggle.
+
 ## Pictures
 
 Next to the emoji button of the message box is a picture button. It opens "Add a picture": **Upload from disk** (PNG, JPEG, WebP or GIF, up to 10 MB; big pictures are scaled down to 768 px), or describe a picture and press **Draw** to have your image model draw it (it uses your image provider and may cost what that provider charges; pick the model in the dialog, the app's default is used if you pick none). Press **Attach**: a small chip shows the picture above the box, with a cross to remove it. A message may be a picture alone. A picture you send stays in Social: a character is told only that you sent a picture (and its description when you drew it), never the picture itself, so it works with text-only models.

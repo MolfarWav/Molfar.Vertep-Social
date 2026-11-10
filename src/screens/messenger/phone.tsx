@@ -87,8 +87,8 @@ export function PhoneList(p: PhoneListProps) {
         ) : (
           <ContactGroups list={p.list} phone sel="" folded={p.folded} onToggle={p.onToggleGroup} onPick={p.onPick} />
         )}
-        {!p.empty && p.bottom}
       </div>
+      {!p.empty && p.bottom}
     </div>
   );
 }
