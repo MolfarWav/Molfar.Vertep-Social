@@ -1522,6 +1522,12 @@ export function handleRoute(req, host) {
     } catch {
       /* no diary yet */
     }
+    // and so does the list of people it has met (life/people)
+    try {
+      host.fs.remove("life/people/" + m[1] + ".json");
+    } catch {
+      /* none yet */
+    }
     // The chat belongs to the profile: without it the history would sit orphaned on disk
     // (and come back if a new profile reused the id). A profile that never had a chat is fine.
     try {

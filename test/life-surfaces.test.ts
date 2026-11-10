@@ -43,7 +43,7 @@ const settings = (h: H, patch: Record<string, unknown> = {}) => put(h, "settings
 const always1 = () => 0; // rand: always the first choice, always under every chance
 
 test("the messenger and the forum carry the same life reader (they cannot import each other, so the copies must match)", () => {
-  for (const name of ["lifeAllowed", "recentDays", "lifeSubject"]) expect(String(messenger[name]), name).toBe(String(forum[name]));
+  for (const name of ["lifeAllowed", "recentDays", "lifeSubject", "metLine"]) expect(String(messenger[name]), name).toBe(String(forum[name]));
 });
 
 test("recentDays is a block of true facts, empty when life is off for the app or the profile", () => {

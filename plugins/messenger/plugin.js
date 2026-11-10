@@ -439,6 +439,7 @@ export function systemPromptFor(p, you, recent, opts) {
   if (Array.isArray(p.habits) && p.habits.length) lines.push("Your habits: " + p.habits.slice(0, 10).map((h) => str(h && h.text)).filter(Boolean).join("; ") + ".");
   if (str(v.text)) lines.push("How you write: " + cut(str(v.text), 800));
   if (str(recent)) lines.push(recent);
+  if (isObj(opts) && str(opts.met)) lines.push(opts.met);
   if (isObj(opts) && str(opts.summary)) lines.push("What you remember from earlier in this conversation (your own notes, in order of importance): " + cut(str(opts.summary), SUMMARY_MAX));
   lines.push(LENGTH_WORDS[length] + " " + EMOJI_WORDS[emoji] + " " + (formality >= 66 ? "Formal, polite address." : formality <= 33 ? "Informal, on first-name terms." : "Neutral tone."));
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
@@ -485,6 +486,28 @@ export function youFor(fsx, profile) {
   if (k === "stranger") return null;
   if (k === "name") return y ? { name: y.name, about: "" } : null;
   return y;
+}
+
+/** What the character remembers of one person it has met (the Life plugin's list, life/people/<id>.json): a line for the prompt, or "". `key` is "c:<profile>" or "u:<persona>". Copied into the forum. */
+export function metLine(fsx, p, key) {
+  if (!lifeAllowed(fsx, p).diary) return "";
+  const d = readJson(fsx, "life/people/" + p.id + ".json", null);
+  const x = isObj(d) && Array.isArray(d.people) ? d.people.find((q) => isObj(q) && q.key === key) : null;
+  if (!x || !(x.seen > 0 || x.toMe > 0 || x.fromMe > 0)) return "";
+  const said = Array.isArray(x.said) && x.said.length ? x.said[x.said.length - 1] : null;
+  const bits = ["You have met " + cut(str(x.name), 80) + " before" + (x.seen > 0 ? " (you have seen them " + Math.floor(x.seen) + " times)" : "") + "."];
+  if (said && typeof said.text === "string" && str(said.text)) bits.push('They once told you: "' + cut(str(said.text), 160) + '".');
+  if (typeof x.note === "string" && str(x.note)) bits.push("Your impression of them: " + cut(str(x.note), 160));
+  return bits.join(" ");
+}
+
+/** What the character remembers of the user (the active persona) from the forum and earlier chats, or "": a stranger remembers nothing. */
+export function metUser(fsx, profile) {
+  if (knowsOf(fsx, profile) === "stranger") return "";
+  const y = readJson(fsx, "you.json", null);
+  const list = isObj(y) && Array.isArray(y.personas) ? y.personas.filter((x) => isObj(x) && typeof x.id === "string" && ID.test(x.id) && str(x.name)) : [];
+  const p = list.find((x) => x.id === y.active) || list[0];
+  return p ? metLine(fsx, profile, "u:" + p.id) : "";
 }
 
 /** The time of the last "new conversation" divider; 0 when there is none. */
@@ -624,6 +647,7 @@ function requestReply(host, key, profile, chat) {
       images: mayImage(host.fs, chat, Date.now()),
       stickers: stickerHint(stickerPacksFor(host.fs, profile), stickersLeft(host.fs, chat, Date.now()) > 0),
       summary: ctx.summary,
+      met: metUser(host.fs, profile),
       stranger: knowsOf(host.fs, profile) === "stranger",
     }),
     messages: ctx.messages,
@@ -1072,7 +1096,7 @@ function requestFirst(host, plan, chat) {
     ", in your own voice, about this and nothing else. No generic greeting like \"how are you\", no stage directions. If the chat has no messages yet, write in the language of your description.";
   host.llm.request("fm:" + p.id + ":" + plan.subject.ref, {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now()), { summary: ctx.summary, stranger: knowsOf(host.fs, p) === "stranger" }),
+    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now()), { summary: ctx.summary, met: metUser(host.fs, p), stranger: knowsOf(host.fs, p) === "stranger" }),
     messages: [...ctx.messages.slice(-6), { role: "user", content: ask }],
     presetParams: { temperature: 0.9, max_tokens: MAX_TOKENS[length] },
   });

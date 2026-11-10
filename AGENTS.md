@@ -93,3 +93,6 @@ and `import.tsx`. The picture comes along with an import (`POST /profiles/avatar
 - The app cannot read the shell's scheme yet: the theme comes from `?theme=`, then the last choice, then Vertep.
 - The "Open Home" button needs engine 1.13.1 (`molfarShell.openHome`); on an older engine only the text hint shows.
 - Forum: no preview of a post (dropped); the reply and new-topic prompts are not yet checked on a real model (issue #320).
+
+## Known people, who answers first (2026-11-10)
+The Life plugin also keeps `life/people/<profileId>.json`: who the character met on the forum and in the messenger, counted by rules from what those plugins store (`topicEvents`, `chatEvents`, `mergeEvents`, one scan every 5 minutes) and a model-worded impression once a day (`pn:<id>`, `noteDue`). Only the Life plugin writes it; the forum and the messenger read it through `metLine` (copies, pinned in `test/life-surfaces.test.ts`). People are keyed by id (`c:<profile>`, `u:<persona>`, `n:<name>` for an old post), the name is only shown. The forum stores `topic.addressed` (the author of the quoted post, else a named character, `addresseeOf`): `planAction` lets that character answer first. A reply is told the persona the post was written as (`personaOf`), not the active one. The Life tab shows the list (`PeopleSection`). Details: `docs/DECISIONS.md`.
