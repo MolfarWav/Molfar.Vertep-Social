@@ -1,5 +1,6 @@
 // A board's page: its topics, latest activity first (a new topic and a topic with a new reply rise to the top,
 // like on phpBB). A table on desktop, cards on phone.
+import { useState } from "react";
 import { useT } from "@/i18n/index";
 import { hueOf } from "@/mock/forum";
 import { Ava, bgOf, initial, MY_BG } from "./Ava";
@@ -32,6 +33,40 @@ export interface BoardPageProps {
   /** Opens the forum search (real forum only). */
   onSearch?: () => void;
   onRetry: () => void;
+  /** Deletes the board with its topics (real forum only); resolves to an error text, or null when it worked (the screen then leaves). */
+  onDelete?: () => Promise<string | null>;
+}
+
+/** "Delete this board": a quiet button at the foot of the page that asks first, naming what goes. */
+function DeleteBoard({ name, topics, onDelete }: { name: string; topics: number; onDelete: () => Promise<string | null> }) {
+  const t = useT();
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const run = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    const err = await onDelete();
+    setBusy(false);
+    if (err) setError(err);
+  };
+  return (
+    <div className="board-del">
+      {asking ? (
+        <div className="post-ask" role="alertdialog" aria-label={t("forum.board.deleteAsk", { name, n: topics })}>
+          <span>{t("forum.board.deleteAsk", { name, n: topics })}</span>
+          <span className="post-ask-btns">
+            <button type="button" className="btn sm danger" onClick={() => void run()} disabled={busy} aria-busy={busy}>{t("forum.board.deleteYes")}</button>
+            <button type="button" className="btn sm" onClick={() => setAsking(false)} disabled={busy}>{t("forum.post.keep")}</button>
+          </span>
+        </div>
+      ) : (
+        <button type="button" className="btn sm danger" onClick={() => setAsking(true)}>{t("forum.board.delete")}</button>
+      )}
+      {error && <div className="form-err" role="alert">{t("forum.board.deleteFailed", { error })}</div>}
+    </div>
+  );
 }
 
 function Who({ who, hue, size }: { who: string; hue?: number; size: number }) {
@@ -115,6 +150,7 @@ export function BoardPage(p: BoardPageProps) {
               ))}
             </div>
           )}
+          {p.onDelete && rows && !p.error && <DeleteBoard name={p.board.name} topics={rows.length} onDelete={p.onDelete} />}
         </div>
       </div>
     );
@@ -167,6 +203,7 @@ export function BoardPage(p: BoardPageProps) {
               ))}
             </div>
           )}
+          {p.onDelete && rows && !p.error && <DeleteBoard name={p.board.name} topics={rows.length} onDelete={p.onDelete} />}
         </div>
       </div>
     </div>

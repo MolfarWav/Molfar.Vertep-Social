@@ -217,6 +217,17 @@ export function ForumLive() {
         onNew={() => go({ view: "new", board: route.id })}
         onSearch={() => openSearch("")}
         onRetry={() => void board.reload()}
+        onDelete={async () => {
+          try {
+            await call("POST", "/forum/delete-board", { board: route.id });
+            void home.reload();
+            refreshBadges();
+            go(HOME, { replace: true });
+            return null;
+          } catch (e) {
+            return messageOf(e);
+          }
+        }}
       />
     );
   }

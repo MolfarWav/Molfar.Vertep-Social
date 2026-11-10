@@ -150,6 +150,10 @@ export function ForumPreview() {
         onTopic={() => setView("topic")}
         onNew={() => setView("new")}
         onRetry={noop}
+        onDelete={async () => {
+          setView("home");
+          return null;
+        }}
       />
     );
   }

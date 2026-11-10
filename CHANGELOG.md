@@ -5,6 +5,8 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+Also in this release: a **Relationships** tab in the profile editor (where family, work and romantic ties and the closeness are set, with buttons for the map and the family tree; it used to be at the bottom of the Life tab), **Delete this board** on a board page, and Settings re-laid out (balanced columns, wide choices under their titles, Community split into Community and Between members).
+
 The community's own life, continued (#367, #366): chronicle, replies to you, reputation, polls, reposts, and the chats.
 
 - **Daily chronicle.** Once a day, when at least two things happened between members (a friendship made or lost, a feeling gone cold, a rival tie, a rumour told, an event opened), the Moderator posts a short digest in a topic tagged "Chronicle". The facts are collected by rules; one model request words them. Nothing is posted on a quiet day. Settings > Community > Daily chronicle.

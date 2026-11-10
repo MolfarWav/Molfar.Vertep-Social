@@ -6,7 +6,7 @@ import { useT, useLangPref } from "@/i18n/index";
 import { LIMITS, type SettingsMock } from "@/mock/settings";
 import { PREVIEW, type ModelChoice } from "@/lib/api";
 import { Row, Segmented, Stepper, Switch, TimeRange, type Opt } from "./controls";
-import { CommunityRows } from "./community";
+import { CommunityRows, MembersRows } from "./community";
 import { LifeMain, LifeWorld } from "./life";
 import { PicturesRows } from "./pictures";
 import { ResetRows } from "./reset";
@@ -143,6 +143,11 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
         <GroupHead title={t("settings.group.community")} glyph="community" />
         <section className="sec" aria-label={t("settings.group.community")}>
           <CommunityRows s={s} set={set} phone />
+        </section>
+
+        <GroupHead title={t("settings.group.members")} glyph="members" />
+        <section className="sec" aria-label={t("settings.group.members")}>
+          <MembersRows s={s} set={set} phone />
         </section>
 
         <GroupHead title={t("settings.group.pictures")} glyph="pictures" />

@@ -14,6 +14,7 @@ import { StatusesTab } from "./tabs/StatusesTab";
 import { ForumTab } from "./tabs/ForumTab";
 import { HabitsTab } from "./tabs/HabitsTab";
 import { LifeTab } from "./tabs/LifeTab";
+import { RelationsTab } from "./tabs/RelationsTab";
 import { ModelTab } from "./tabs/ModelTab";
 import { TAB_IDS, type TabId } from "./tabs/types";
 import { ActionMenu, type MenuItem } from "./menu";
@@ -40,10 +41,13 @@ export interface EditorProps {
   fill: Omit<FillProps, "layout">;
   /** Opens the delete question. Not given in preview, so the menu has no delete item there. */
   onDelete?: () => void;
+  /** Opens the relationship map or the family tree (Relationships tab). */
+  onView?: (mode: "map" | "family") => void;
 }
 
 const TAB_LABEL: Record<TabId, { desk: string; phone: string }> = {
   about: { desk: "profiles.tab.about", phone: "profiles.tab.about" },
+  relations: { desk: "profiles.tab.relations", phone: "profiles.tab.relations" },
   voice: { desk: "profiles.tab.voice", phone: "profiles.tab.voiceShort" },
   statuses: { desk: "profiles.tab.statuses", phone: "profiles.tab.statusesShort" },
   forum: { desk: "profiles.tab.forum", phone: "profiles.tab.forum" },
@@ -86,7 +90,7 @@ const DotsIcon = () => (
   </svg>
 );
 
-export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, onSave, onDiscard, onRefresh, onBack, fill, onDelete }: EditorProps) {
+export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, onSave, onDiscard, onRefresh, onBack, fill, onDelete, onView }: EditorProps) {
   const t = useT();
   const [picOpen, setPicOpen] = useState(() => PREVIEW && new URLSearchParams(location.search).get("dialog") === "picture");
   const roleplay = profile.source === "roleplay";
@@ -98,7 +102,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
     : t("profiles.editor.subtitleOwn");
 
   const fillProps: FillProps = { ...fill, layout: phone ? "phone" : "desk" };
-  const props = { form, set: onSet, name: profile.name, hue: profile.hue, source: profile.source, onRefresh, fill: fillProps, profileId: profile.id };
+  const props = { form, set: onSet, name: profile.name, hue: profile.hue, source: profile.source, onRefresh, fill: fillProps, profileId: profile.id, onView };
   // The "⋯" menu: Fill empty (opens About first) and, for Roleplay profiles, the update.
   const menu: MenuItem[] = [
     {
@@ -119,6 +123,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
     : tab === "voice" ? <VoiceTab {...props} />
     : tab === "statuses" ? <StatusesTab {...props} />
     : tab === "forum" ? <ForumTab {...props} />
+    : tab === "relations" ? <RelationsTab {...props} />
     : tab === "life" ? <LifeTab {...props} />
     : tab === "model" ? <ModelTab {...props} />
     : <HabitsTab {...props} />;

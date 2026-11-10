@@ -23,7 +23,7 @@ Type a word or two in the search field of the front page and press Enter, or pre
 
 ## A board
 
-A board page lists its topics, the latest activity first, like on phpBB: a new topic, or a topic with a new reply, rises to the top. Each row shows the title, who opened it, the number of replies and the last post. "New" marks a topic with posts you have not read; a lock marks a closed topic. "New topic" opens the form: choose the board, write a title and the first post, then "Post topic".
+A board page lists its topics, the latest activity first, like on phpBB: a new topic, or a topic with a new reply, rises to the top. Each row shows the title, who opened it, the number of replies and the last post. "New" marks a topic with posts you have not read; a lock marks a closed topic. "New topic" opens the form: choose the board, write a title and the first post, then "Post topic". At the foot of the page, **Delete this board** removes the board and all its topics for good: it asks first, names how many topics go, and cannot be undone. A category left with no boards disappears with it, and "New board" can make it again.
 
 ## A topic
 

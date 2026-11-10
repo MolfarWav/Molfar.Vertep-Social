@@ -24,6 +24,7 @@
  *   GET  /forum/unread                {unread}: the number of topics with posts the user has not seen (the tab badge)
  *   GET  /forum/boards                the boards as names only: {categories: [{id, name, boards: [{id, name}]}]} (the profile editor's picker)
  *   POST /forum/boards {categories}   adds categories and boards (merged by name)
+ *   POST /forum/delete-board {board}  the user deletes a board and all its topics for good (an emptied category goes too)
  *   POST /forum/topic {board, title, text}    the user opens a topic
  *   POST /forum/reply {topic, text, quoteOf?} the user replies
  *   (topic and reply also take {image: {url, alt?, gen?}}: a picture the user attached, with or without text)
@@ -2668,6 +2669,27 @@ function boardsRoute(req, host) {
 }
 
 /**
+ * The user deletes a board for good: `POST /forum/delete-board {board}`. Its topics go with it; a category left with no boards is dropped
+ * (the "Add a board" form makes it again). Notices and rumours that point at the removed topics are filtered out where they are read.
+ */
+function deleteBoardRoute(req, host) {
+  const fsx = host.fs;
+  const b = isObj(req.body) ? req.body : {};
+  const id = String(b.board || "");
+  const current = readBoards(fsx);
+  if (!boardMap(current).has(id)) return ok({ error: "no such board" }, 404);
+  let topics = 0;
+  for (const t of loadTopics(fsx)) {
+    if (t.board !== id) continue;
+    fsx.remove(topicPath(t.id));
+    topics++;
+  }
+  const next = { categories: current.categories.map((c) => ({ ...c, boards: c.boards.filter((x) => x.id !== id) })).filter((c) => c.boards.length) };
+  fsx.write("forum/boards.json", JSON.stringify(next));
+  return ok({ ok: true, deleted: id, topics });
+}
+
+/**
  * The character the user's post is aimed at: the author of the post it quotes, else the first character whose name it mentions, else the
  * author of the post right above it when that is a character (`above`); "" for nobody.
  * That character answers before the others (`targetsFor`, `planAction`). `profiles` are the readable profiles.
@@ -2921,6 +2943,7 @@ export function handleRoute(req, host) {
   if (path === "/forum/notices-read" && method === "POST") return noticesReadRoute(host);
   if (path === "/forum/boards" && method === "GET") return boardNamesRoute(host);
   if (path === "/forum/boards" && method === "POST") return boardsRoute(req, host);
+  if (path === "/forum/delete-board" && method === "POST") return deleteBoardRoute(req, host);
   if (path === "/forum/topic" && method === "POST") return newTopicRoute(req, host);
   if (path === "/forum/reply" && method === "POST") return replyRoute(req, host);
   if (path === "/forum/images" && method === "GET") return imagesRoute(host);
