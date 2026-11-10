@@ -32,6 +32,7 @@ export const LIFE_DEFAULTS: LifeSettings = {
 
 export type EventsRate = "off" | "daily" | "weekly";
 export type ModComments = "off" | "rare" | "often";
+export type CommunityTone = "none" | "warm" | "flirty";
 
 /** The community around the posts (issue #358). Every cap counts per character per day. */
 export interface CommunitySettings {
@@ -50,9 +51,16 @@ export interface CommunitySettings {
   /** Characters chat with each other in the messenger (about twice the tokens of a normal chat). */
   chats: boolean;
   chatsPerDay: number;
+  /** The ceiling for what characters write to each other (issue #366): no romance, affection only, or hints and teasing. Never explicit. */
+  tone: CommunityTone;
+  /** Characters sometimes open a topic about what they noticed between two others (issue #367); by rules, no model call. */
+  gossip: boolean;
+  gossipPerDay: number;
+  /** A rival's post draws an argument, a jealous character goes cool (issue #367); by rules, no model call. */
+  jealousy: boolean;
 }
 
-export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4 };
+export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true };
 
 export interface SettingsMock {
   autonomous: boolean;
@@ -119,6 +127,7 @@ export const LIMITS = {
   reactionsPerDay: { min: 0, max: 50 },
   storiesPerDay: { min: 0, max: 10 },
   chatsPerDay: { min: 0, max: 30 },
+  gossipPerDay: { min: 0, max: 20 },
   messengerContext: { min: 4, max: 500 },
 } as const;
 

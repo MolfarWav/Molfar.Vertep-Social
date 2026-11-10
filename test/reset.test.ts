@@ -35,6 +35,7 @@ const world = () => ({
   "forum/boards.json": "{}",
   "forum/events.json": "{}",
   "forum/life-used.json": "{}",
+  "forum/gossip.json": "{}",
   "forum/log.json": "{}",
   "chats/rp-a.json": "{}",
   "chats/rp-b.json": "{}",

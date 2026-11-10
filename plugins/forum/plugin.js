@@ -194,6 +194,10 @@ export function readSettings(fsx) {
     modCloses: !isObj(r.community) || r.community.modCloses !== false,
     reactions: !isObj(r.community) || r.community.reactions !== false,
     reactionsPerDay: clampInt(isObj(r.community) ? r.community.reactionsPerDay : undefined, 0, 50, 8),
+    // the community's own life (#367): gossip as a topic subject, jealousy in who answers whom; both by rules, no extra model call
+    gossip: !isObj(r.community) || r.community.gossip !== false,
+    gossipPerDay: clampInt(isObj(r.community) ? r.community.gossipPerDay : undefined, 0, 20, 2),
+    jealousy: !isObj(r.community) || r.community.jealousy !== false,
     tzOffset: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
     model: modelRef(model),
   };
@@ -308,6 +312,7 @@ function readProfile(fsx, id) {
     schedule: p.schedule,
     life: isObj(p.life) ? p.life : {},
     knows: KNOWS.includes(p.knows) ? p.knows : "",
+    adult: p.adult === true,
     createdAt: num(p.createdAt),
     forum: {
       rank: str(f.rank),
@@ -742,7 +747,8 @@ export function chatNote(fsx, profile, pid) {
 // <relation-shared>
 // What the user set between two people: a level of familiarity and ties (the Life plugin writes them, "levels, ties and milestones" there).
 // Read only here: a few lines for the prompt. Romance is told only when the profile and the other character are marked adult (the user's
-// persona counts as the user's own choice), and between characters the prompt states the ceiling. A copy lives in each plugin that needs it.
+// persona counts as the user's own choice), and between characters the prompt states the ceiling of the level in Settings > Community (`tone`:
+// none = no romance told between characters, warm = affection only, flirty = hints and teasing; never anything explicit). A copy lives in each plugin that needs it.
 const LEVEL_LINE = {
   stranger: "You do not really know them.",
   slight: "You know them only in passing.",
@@ -764,7 +770,17 @@ const TIE_LINE = {
   rival: "is your rival.",
 };
 const ROMANCE_LINE = { crush: "You have a crush on NAME.", dating: "You are dating NAME.", partner: "NAME is your partner.", ex: "NAME is your ex." };
-const ROMANCE_CEILING = "Keep anything romantic between you light: warmth, hints and teasing are fine, never anything explicit.";
+const ROMANCE_CEILING = {
+  warm: "Keep anything romantic between you gentle: affection and warmth are fine, no flirting and no innuendo, nothing suggestive and never anything explicit.",
+  flirty: "Keep anything romantic between you light: warmth, hints and teasing are fine, never anything explicit.",
+};
+
+/** The tone between characters the user chose (Settings > Community): "none", "warm" (the default) or "flirty". */
+export function communityLevel(fsx) {
+  const s = readJson(fsx, "settings.json", null);
+  const c = isObj(s) && isObj(s.community) ? s.community : {};
+  return c.tone === "none" || c.tone === "flirty" ? c.tone : "warm";
+}
 
 /** The lines for one person of the character `p`'s list (`x`, key "c:<profile>" or "u:<persona>"): the level, the ties, and a romantic tie when it is allowed. */
 export function relationBits(fsx, p, key, x) {
@@ -773,7 +789,9 @@ export function relationBits(fsx, p, key, x) {
   if (typeof x.lvl === "string" && LEVEL_LINE[x.lvl]) bits.push(LEVEL_LINE[x.lvl]);
   const mine = readJson(fsx, "profiles/" + p.id + ".json", null);
   const theirs = key.startsWith("c:") ? readJson(fsx, "profiles/" + key.slice(2) + ".json", null) : null;
-  const may = isObj(mine) && mine.adult === true && (key.startsWith("u:") || (isObj(theirs) && theirs.adult === true));
+  // the level only limits what characters write to each other; toward the user's persona the profile's own rules stand
+  const level = key.startsWith("c:") ? communityLevel(fsx) : "flirty";
+  const may = level !== "none" && isObj(mine) && mine.adult === true && (key.startsWith("u:") || (isObj(theirs) && theirs.adult === true));
   let romance = false;
   for (const t of Array.isArray(x.ties) ? x.ties.slice(0, 4) : []) {
     if (!isObj(t)) continue;
@@ -784,10 +802,19 @@ export function relationBits(fsx, p, key, x) {
       romance = true;
     }
   }
-  if (romance && key.startsWith("c:")) bits.push(ROMANCE_CEILING);
+  if (romance && key.startsWith("c:")) bits.push(ROMANCE_CEILING[level]);
   return bits;
 }
 // </relation-shared>
+
+// <ceiling-shared>
+// Between characters the app asks for nothing explicit (Settings > Community, #366). A post that is plainly explicit is not filed: a check by
+// word stems in English and Ukrainian, like the OOC and sticker markers. The prompt line is the hint, this is the net; it does not catch
+// innuendo and a weak model may slip past it. The sandbox has no Unicode property escapes, so the Cyrillic stems carry no word boundary.
+const EXPLICIT_EN = /\b(blowjob|handjob|orgasm|masturbat\w*|cumshot|cum|cumming|clit|(?:had|having|have) sex|(?:fucking|fucked) (?:me|you|her|him|them)|penetrat\w* (?:her|him|me|you|them))\b/i;
+const EXPLICIT_UK = /(мінет|оргазм|орґазм|мастурб|сперм|статев[^\s]* акт|займа[^\s]* сексом|трахн|трахал|їбат|їбал|єбат|єбал)/i;
+export const overCeiling = (text) => EXPLICIT_EN.test(String(text)) || EXPLICIT_UK.test(String(text));
+// </ceiling-shared>
 
 /** What the character remembers of one person it has met (the Life plugin's list, life/people/<id>.json): a line for the prompt, or "". `key` is "c:<profile>" or "u:<persona>". Copied into the messenger. */
 export function metLine(fsx, p, key) {
@@ -928,6 +955,11 @@ export function itemFitsBoard(item, board) {
 export function pickSubject(profile, world, rand) {
   const r = rand || Math.random;
   const w = isObj(world) ? world : {};
+  // (#367) the community's own life: something that happened between other members, by rules, a share of the new topics
+  if (isObj(w.rel) && r() < GOSSIP_SHARE) {
+    const g = pickGossip(w.rel, profile.id, Number.isFinite(w.now) ? w.now : Date.now(), r);
+    if (g) return { text: gossipSubject(w.rel, g), ref: "", gossip: g };
+  }
   if (w.fsx) {
     const fits = w.board ? (i) => itemFitsBoard(i, w.board) : undefined;
     const life = lifeSubject(w.fsx, profile, Number.isFinite(w.now) ? w.now : Date.now(), new Set(lifeUsed(w.fsx)[profile.id] || []), r, fits);
@@ -1021,6 +1053,262 @@ export function parseJsonReply(text) {
 const PUNCT = /[\s.,!?;:'"«»“”‘’()[\]{}<>…—–\-_*~`/\\|@#$%^&+=]+/g;
 const normal = (s) => String(s).toLowerCase().replace(PUNCT, " ").trim();
 
+// ---------- the community's own life (#367): jealousy and gossip ----------
+// By rules, from what is already stored: each character's list of people (the Life plugin: ties, level, feeling, how often two people
+// talked) and the topics (who answered whom, who reacted to whom). No extra model call: the model only words the post it is asked for, with
+// one more line in its prompt. Everything here only reads, except `forum/gossip.json`, which this plugin owns. Romance counts only between
+// adults and only while Settings > Community > Tone is not "none" (`romanticTo`).
+
+const ROMANTIC = ["crush", "dating", "partner"];
+const CLOSE_LEVELS = ["friend", "close", "confidant"];
+const SOCIAL_WINDOW_MS = 3 * 24 * 3600 * 1000;
+const GOSSIP_FILE = "forum/gossip.json";
+const GOSSIP_KEEP = 60;
+const GOSSIP_DRAFT_MS = 2 * 3600 * 1000;
+const GOSSIP_AGAIN_MS = 7 * 24 * 3600 * 1000;
+const GOSSIP_KINDS = ["rift", "close", "sweet"];
+const GOSSIP_TONES = ["plain", "sharp", "kind"];
+/** The share of new topics that may be gossip when there is some and the day's cap is not used up. */
+export const GOSSIP_SHARE = 0.25;
+
+const GOSSIP_FACT = {
+  rift: (a, b) => a + " and " + b + " have been at odds lately",
+  close: (a, b) => a + " and " + b + " have grown close lately",
+  sweet: (a, b) => a + " seems to be sweet on " + b,
+};
+
+const pair = (m, a, b) => (m[a] && m[a][b]) || undefined;
+const bump = (m, a, b) => {
+  m[a] = m[a] || {};
+  m[a][b] = (m[a][b] || 0) + 1;
+};
+
+/**
+ * What the rules read: `names`, `adult`, and per character (a) toward another (b): `ties` (types), `lvl`, `feel`, `talk` (how often they
+ * dealt with each other, counted by the Life plugin from the forum), `known` (a has met b), and `near` (b answered or reacted to x in the
+ * last days, from the topics). `s` is the forum's settings (`jealousy`, `gossip`, `gossipPerDay`); `items` is the gossip so far.
+ */
+export function relationsOf(fsx, profiles, topics, now, s) {
+  const set = isObj(s) ? s : {};
+  const rel = { level: communityLevel(fsx), jealousy: set.jealousy !== false, gossip: set.gossip !== false, perDay: Number.isFinite(set.gossipPerDay) ? set.gossipPerDay : 2, tz: set.tzOffset === undefined ? null : set.tzOffset, names: {}, adult: {}, ties: {}, lvl: {}, feel: {}, talk: {}, known: {}, near: {}, items: readGossip(fsx).items };
+  const ids = new Set(profiles.map((p) => p.id));
+  for (const p of profiles) {
+    rel.names[p.id] = p.name;
+    if (p.adult) rel.adult[p.id] = true;
+    const d = readJson(fsx, "life/people/" + p.id + ".json", null);
+    for (const x of isObj(d) && Array.isArray(d.people) ? d.people : []) {
+      if (!isObj(x) || typeof x.key !== "string" || !x.key.startsWith("c:")) continue;
+      const b = x.key.slice(2);
+      if (!ids.has(b) || b === p.id) continue;
+      const put = (m, v) => {
+        m[p.id] = m[p.id] || {};
+        m[p.id][b] = v;
+      };
+      const types = (Array.isArray(x.ties) ? x.ties : []).filter((t) => isObj(t) && typeof t.type === "string").map((t) => t.type);
+      if (types.length) put(rel.ties, types);
+      if (typeof x.lvl === "string") put(rel.lvl, x.lvl);
+      if (typeof x.feel === "number" && Number.isFinite(x.feel) && x.feel !== 0) put(rel.feel, x.feel);
+      const talk = num(x.toMe) + num(x.fromMe);
+      if (talk > 0) put(rel.talk, talk);
+      if (talk > 0 || num(x.seen) > 0 || (typeof x.lvl === "string" && x.lvl !== "stranger")) put(rel.known, true);
+    }
+  }
+  for (const t of topics) {
+    if (now - t.lastAt > SOCIAL_WINDOW_MS) continue;
+    for (const p of livePosts(t)) {
+      if (now - p.at > SOCIAL_WINDOW_MS || !ids.has(p.by)) continue;
+      if (p.quote && ids.has(p.quote.by) && p.quote.by !== p.by) bump(rel.near, p.by, p.quote.by);
+      for (const list of Object.values(p.react || {})) for (const who of Array.isArray(list) ? list : []) if (ids.has(who) && who !== p.by) bump(rel.near, who, p.by);
+    }
+  }
+  return rel;
+}
+
+/** Is `a` romantically tied to `b` (a crush, dating, a partner), allowed: both adult, and the level in Settings is not "none". */
+export const romanticTo = (rel, a, b) => rel.level !== "none" && rel.adult[a] === true && rel.adult[b] === true && (pair(rel.ties, a, b) || []).some((t) => ROMANTIC.includes(t));
+
+/** Is `b` getting close to `x`: a romantic tie either way, or `b` answered or reacted to them at least twice lately and likes them. */
+function closeTo(rel, b, x) {
+  if (romanticTo(rel, b, x) || romanticTo(rel, x, b)) return true;
+  return (pair(rel.near, b, x) || 0) >= 2 && (pair(rel.feel, b, x) || 0) >= 3;
+}
+
+/**
+ * Is `a` jealous of, or set against, `b`? {kind: "rival"} when `a` set a rival tie to `b`; {kind: "love", over: x} when `a` has a romantic tie to
+ * `x` and `b` is getting close to `x`; null otherwise (a plain dislike is the feeling's business, not this).
+ */
+export function jealousOf(rel, a, b) {
+  if (!rel || a === b) return null;
+  if ((pair(rel.ties, a, b) || []).includes("rival")) return { kind: "rival" };
+  for (const x of Object.keys(rel.ties[a] || {})) if (x !== a && x !== b && romanticTo(rel, a, x) && closeTo(rel, b, x)) return { kind: "love", over: x };
+  return null;
+}
+
+/** `f` is a friend of `a` who has lately been warm with someone `a` is jealous of: {with: id}, else null. */
+export function hurtBy(rel, a, f) {
+  if (!rel || a === f) return null;
+  if (!(CLOSE_LEVELS.includes(pair(rel.lvl, a, f)) || (pair(rel.feel, a, f) || 0) >= 3)) return null;
+  for (const r of Object.keys(rel.names)) {
+    if (r === a || r === f || (pair(rel.near, f, r) || 0) < 1 || (pair(rel.feel, f, r) || 0) < 3) continue;
+    if (jealousOf(rel, a, r)) return { with: r };
+  }
+  return null;
+}
+
+/** The line for a reply of `a` to a post of `b` when jealousy or rivalry applies, else "". The prompt carries the ceiling, never anything explicit. */
+export function jealousLine(rel, a, b) {
+  const nm = (id) => cut(str(rel.names[id]) || "someone", 80);
+  const j = jealousOf(rel, a, b);
+  if (j && j.kind === "rival") return nm(b) + " is your rival: you enjoy disagreeing with them and may say so in your own voice, civilly: no insults to their looks, family or health.";
+  if (j) return "You are jealous of " + nm(b) + ": they have been getting close to " + nm(j.over) + ", whom you care about. Let it show a little, in your own way: a cooler answer, a dry remark, a barb at most, never cruel. " + ROMANCE_CEILING[rel.level === "flirty" ? "flirty" : "warm"];
+  const h = hurtBy(rel, a, b);
+  if (h) return nm(b) + " has been friendly with " + nm(h.with) + " lately, and you cannot stand " + nm(h.with) + ". You may feel a little left out and answer a bit cooler than usual, in your own way.";
+  return "";
+}
+
+// ----- gossip -----
+// A rumour is a short fact about two other members: they are at odds (`rift`), have grown close (`close`), or one is sweet on the other
+// (`sweet`, romance rules). `tone` is how the teller leans: harsher when it dislikes them ("sharp"), gentler when it likes them ("kind"),
+// as it was ("plain"); `truth` (0 to 1) falls with each twist and each retelling. Never about the user's persona, never from a private chat:
+// only from what the forum showed. `forum/gossip.json` holds `items` (told: {id, kind, about, tone, truth, by, from?, at, topic, told})
+// and `drafts` (chosen for a new topic, filed when the topic exists, dropped after two hours).
+
+function cleanGossip(g) {
+  if (!isObj(g) || typeof g.id !== "string" || !ID.test(g.id) || !GOSSIP_KINDS.includes(g.kind)) return null;
+  const about = (Array.isArray(g.about) ? g.about : []).filter((x) => typeof x === "string" && ID.test(x));
+  if (about.length !== 2 || typeof g.by !== "string" || !ID.test(g.by) || !Number.isFinite(g.at)) return null;
+  return {
+    id: g.id,
+    kind: g.kind,
+    about,
+    tone: GOSSIP_TONES.includes(g.tone) ? g.tone : "plain",
+    truth: Number.isFinite(g.truth) ? Math.min(1, Math.max(0, g.truth)) : 1,
+    by: g.by,
+    ...(typeof g.from === "string" && ID.test(g.from) ? { from: g.from } : {}),
+    ...(typeof g.spread === "string" && ID.test(g.spread) ? { spread: g.spread } : {}),
+    at: g.at,
+    topic: typeof g.topic === "string" && ID.test(g.topic) ? g.topic : "",
+    told: (Array.isArray(g.told) ? g.told : []).filter((x) => typeof x === "string" && ID.test(x)).slice(0, 20),
+  };
+}
+
+export function readGossip(fsx) {
+  const d = readJson(fsx, GOSSIP_FILE, null);
+  const r = isObj(d) ? d : {};
+  return { items: (Array.isArray(r.items) ? r.items : []).map(cleanGossip).filter(Boolean), drafts: (Array.isArray(r.drafts) ? r.drafts : []).map(cleanGossip).filter(Boolean) };
+}
+
+const writeGossip = (fsx, g) => fsx.write(GOSSIP_FILE, JSON.stringify({ items: g.items.slice(-GOSSIP_KEEP), drafts: g.drafts.slice(-10) }));
+
+/** How many rumours were told today (local day), counted from what is stored. */
+export const gossipToday = (items, now, tz) => items.filter((i) => localDay(i.at, tz) === localDay(now, tz)).length;
+
+/**
+ * What `a` could pass on now: {kind, about, tone, truth, spread?, from?}. Rumours it saw (two members it has met, at odds, grown close, or one
+ * sweet on the other by a romantic tie and a lately warm exchange), and rumours others told in the last days that it has not told yet.
+ * Each is weighed: a character likes to talk about those it dislikes.
+ */
+export function gossipCandidates(rel, a, now) {
+  const items = rel.items;
+  const out = [];
+  const ids = Object.keys(rel.names).filter((x) => x !== a && pair(rel.known, a, x) === true).sort();
+  const lean = (p, q) => ((pair(rel.feel, a, p) || 0) + (pair(rel.feel, a, q) || 0)) / 2;
+  const toneFor = (p, q) => (lean(p, q) <= -3 ? "sharp" : lean(p, q) >= 3 ? "kind" : "plain");
+  const truthFor = (tone) => (tone === "plain" ? 1 : tone === "sharp" ? 0.7 : 0.8);
+  const weightFor = (tone) => (tone === "sharp" ? 2 : tone === "kind" ? 0.6 : 1);
+  const told = (kind, p, q) => items.some((i) => i.kind === kind && i.about[0] === p && i.about[1] === q && now - i.at < GOSSIP_AGAIN_MS && i.told.includes(a));
+  const add = (kind, p, q) => {
+    if (told(kind, p, q)) return;
+    const tone = toneFor(p, q);
+    out.push({ kind, about: [p, q], tone, truth: truthFor(tone), w: weightFor(tone) });
+  };
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const p = ids[i];
+      const q = ids[j];
+      const talk = (pair(rel.talk, p, q) || 0) + (pair(rel.talk, q, p) || 0);
+      const fp = pair(rel.feel, p, q) || 0;
+      const fq = pair(rel.feel, q, p) || 0;
+      if (talk >= 2 && Math.min(fp, fq) <= -3) add("rift", p, q);
+      else if (talk >= 3 && Math.max(fp, fq) >= 7) add("close", p, q);
+      for (const [x, y] of [[p, q], [q, p]]) if (romanticTo(rel, x, y) && (pair(rel.near, x, y) || 0) >= 1) add("sweet", x, y);
+    }
+  }
+  for (const it of items) {
+    if (it.by === a || it.about.includes(a) || it.told.includes(a) || now - it.at > SOCIAL_WINDOW_MS) continue;
+    if (it.kind === "sweet" && rel.level === "none") continue;
+    const tone = toneFor(it.about[0], it.about[1]);
+    out.push({ kind: it.kind, about: it.about, tone, truth: Math.round(it.truth * (tone === "plain" ? 0.9 : 0.7) * 100) / 100, spread: it.id, from: it.by, w: 1 });
+  }
+  return out;
+}
+
+/** One rumour for `a`, or null: gossip is on, today's cap is not used, and there is something to pass on. */
+export function pickGossip(rel, a, now, rand) {
+  if (!rel || !rel.gossip || rel.perDay <= 0 || gossipToday(rel.items, now, rel.tz) >= rel.perDay) return null;
+  return weightedPick(gossipCandidates(rel, a, now), (c) => c.w, rand);
+}
+
+/** The sentence for a new topic's prompt: what the character noticed or heard, how to bring it up, how to lean. */
+export function gossipSubject(rel, c) {
+  const nm = (id) => cut(str(rel.names[id]) || "someone", 80);
+  const fact = GOSSIP_FACT[c.kind](nm(c.about[0]), nm(c.about[1]));
+  const lead = c.spread ? "You heard from " + nm(c.from) + " that " + fact + "." : "You have noticed that " + fact + ".";
+  const lean = {
+    plain: "Tell it as it was.",
+    sharp: "You do not like them, so you tell it harsher than it was, a bit mean, though never cruel.",
+    kind: "You like them, so you tell it gently and make it sound smaller than it is.",
+  }[c.tone];
+  return lead + " You may bring it up as idle talk, the way people do, in your own words, on a board that suits it. You are not sure of the details: say it as something you noticed or heard, not as proven fact, and never reveal anything from anyone's private chats. " + lean + (c.kind === "sweet" ? " " + ROMANCE_CEILING[rel.level === "flirty" ? "flirty" : "warm"] : "") + " If it does not fit this board, write about something else.";
+}
+
+/** Keeps the chosen rumour until its topic is filed; returns the id to ride the request key. */
+function saveDraft(fsx, c, authorId, now) {
+  const g = readGossip(fsx);
+  const id = "g-" + now.toString(36) + "-" + rid();
+  g.drafts = g.drafts.filter((d) => now - d.at < GOSSIP_DRAFT_MS);
+  g.drafts.push({ id, kind: c.kind, about: c.about, tone: c.tone, truth: c.truth, by: authorId, ...(c.from ? { from: c.from } : {}), ...(c.spread ? { spread: c.spread } : {}), at: now, topic: "", told: [authorId] });
+  writeGossip(fsx, g);
+  return id;
+}
+
+/** The topic with the rumour is filed: the draft becomes a told rumour (and the one it was passed on from learns who has told it). */
+function fileGossip(fsx, ref, author, topic, now) {
+  const g = readGossip(fsx);
+  const d = g.drafts.find((x) => x.id === ref && x.by === author.id);
+  if (!d) return;
+  g.drafts = g.drafts.filter((x) => x.id !== ref && now - x.at < GOSSIP_DRAFT_MS);
+  if (d.spread) {
+    const from = g.items.find((x) => x.id === d.spread);
+    if (from && !from.told.includes(author.id)) from.told.push(author.id);
+  }
+  g.items.push({ ...d, at: now, topic: topic.id });
+  writeGossip(fsx, g);
+}
+
+/** What a rumour says to the one it is about, in the second person: "you and X are at odds", "X is sweet on you". */
+function gossipToSubject(rel, it, subject) {
+  const other = it.about[0] === subject ? it.about[1] : it.about[0];
+  const nm = cut(str(rel.names[other]) || "someone", 80);
+  if (it.kind === "rift") return "you and " + nm + " have been at odds lately";
+  if (it.kind === "close") return "you and " + nm + " have grown close lately";
+  return it.about[0] === subject ? "you are sweet on " + nm : nm + " is sweet on you";
+}
+
+/** The rumours in this topic that are about `a` and that `a` has not answered yet (a later post of its own), newest first. */
+export function gossipAbout(rel, a, topic, now) {
+  const ps = livePosts(topic);
+  return rel.items.filter((i) => i.topic === topic.id && i.about.includes(a) && i.by !== a && now - i.at < SOCIAL_WINDOW_MS && !ps.some((p) => p.by === a && p.at > i.at)).sort((x, y) => y.at - x.at);
+}
+
+/** The line for a reply of `a` in a topic where someone talked about it, or "". */
+export function aboutMeLine(rel, a, topic, now) {
+  const it = gossipAbout(rel, a, topic, now)[0];
+  if (!it) return "";
+  const teller = cut(str(rel.names[it.by]) || "Someone", 80);
+  return teller + " said in this topic that " + gossipToSubject(rel, it, a) + (it.tone === "sharp" ? " (and made it sound worse than it is)" : "") + ". You may answer it, set it straight or take offence, in your own way.";
+}
+
 // ---------- planning: who writes what ----------
 
 function weightedPick(items, weight, rand) {
@@ -1088,10 +1376,21 @@ export function planAction(c, rand) {
   const feels = isObj(c.feels) ? c.feels : {};
   const bmap = boardMap(boards);
   const feelToward = (a, post) => feelAbout(feels, a, post);
+  const rel = isObj(c.rel) ? c.rel : null;
+  const jealous = (a, post) => !!(rel && rel.jealousy && post && post.by !== SELF && jealousOf(rel, a.id, post.by));
   // a liked person's post draws a reply up to twice as often, a disliked one's as little as a sixth
+  // (#367) a rival's, or one's the character is jealous of, draws an answer to argue; a friend lately warm with such a one a little less; a topic where
+  // someone talked about the character draws its answer twice as often
   const lean = (a, h) => {
     const ps = livePosts(h.topic);
-    return Math.min(2, Math.max(0.15, 1 + feelToward(a, h.target || ps[ps.length - 1]) / 12));
+    const post = h.target || ps[ps.length - 1];
+    let l = Math.min(2, Math.max(0.15, 1 + feelToward(a, post) / 12));
+    if (rel) {
+      if (jealous(a, post)) l = Math.max(l, 1.5);
+      else if (rel.jealousy && post && post.by !== SELF && hurtBy(rel, a.id, post.by)) l *= 0.6;
+      if (rel.gossip && gossipAbout(rel, a.id, h.topic, now).length) l = Math.min(3, l * 2);
+    }
+    return l;
   };
   const statusOf = (p) => statusAt(p.schedule, new Date(now), tz);
   const eligible = profiles.filter((p) => {
@@ -1109,7 +1408,7 @@ export function planAction(c, rand) {
   const withTargets = eligible.map((a) => {
     const t = targetsFor(a, topics, now, scope);
     // in open conflict with someone, a character often lets their mention go by; it never does that to the user's post
-    t.mention = t.mention.filter((h) => h.target.by === SELF || feelToward(a, h.target) > AVOID_AT || rand() >= AVOID_CHANCE);
+    t.mention = t.mention.filter((h) => h.target.by === SELF || feelToward(a, h.target) > AVOID_AT || jealous(a, h.target) || rand() >= AVOID_CHANCE);
     return { author: a, t };
   });
   const reply = (list, pick, leans) => {
@@ -1202,6 +1501,7 @@ export function reactionFor(text, author) {
 export function pickReaction(c, rand) {
   const { profiles, topics, settings, log, now, tz } = c;
   const feels = isObj(c.feels) ? c.feels : {};
+  const rel = isObj(c.rel) && c.rel.jealousy ? c.rel : null;
   if (!settings.reactions || settings.reactionsPerDay <= 0) return null;
   const free = profiles.filter((p) => ["online", "away"].includes(statusAt(p.schedule, new Date(now), tz)) && (log.reacts[p.id] || 0) < settings.reactionsPerDay);
   if (!free.length) return null;
@@ -1215,6 +1515,8 @@ export function pickReaction(c, rand) {
       if (Object.values(p.react || {}).some((l) => l.includes(author.id))) continue;
       const feel = feelAbout(feels, author, p);
       if (feel <= -3) continue;
+      // (#367) no reaction for someone the character is jealous of or set against
+      if (rel && p.by !== SELF && jealousOf(rel, author.id, p.by)) continue;
       cands.push({ topic: t, post: p, w: 1 + Math.max(0, feel) / 4 + (p.by === SELF ? 1 : 0) + (lifeWords(p.text).some((w) => mine.has(w)) ? 2 : 0) });
     }
   }
@@ -1255,7 +1557,8 @@ function reactTick(fsx, s, log, now, tz, rand) {
   if (!s.autonomous || !s.reactions || rand() >= REACT_CHANCE || inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
   const profiles = loadProfiles(fsx);
   if (!profiles.length) return false;
-  const pick = pickReaction({ profiles, topics: loadTopics(fsx), settings: s, log, now, tz, feels: feelsOf(fsx, profiles) }, rand);
+  const topics = loadTopics(fsx);
+  const pick = pickReaction({ profiles, topics, settings: s, log, now, tz, feels: feelsOf(fsx, profiles), rel: s.jealousy ? relationsOf(fsx, profiles, topics, now, s) : null }, rand);
   if (!pick || !putReaction(fsx, pick.topic.id, pick.post.id, pick.emoji, pick.author.id, true)) return false;
   log.reacts[pick.author.id] = (log.reacts[pick.author.id] || 0) + 1;
   return true;
@@ -1522,11 +1825,18 @@ function requestPost(host, key, settings, author, userMessage, maxTokens, images
 const lengthIndex = (p) => (isObj(p.voice) && [0, 1, 2].includes(p.voice.length) ? p.voice.length : 1);
 
 /** Asks for the plan's post under `key`. */
-function requestPlan(host, key, settings, plan, boards, topics, rand) {
+function requestPlan(host, key, settings, plan, boards, topics, rand, rel) {
   if (plan.kind === "reply") {
     const b = boardMap(boards).get(plan.topic.board);
     const user = userKnownTo(host.fs, plan.author, plan.topic, plan.target);
-    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target, user ? user.label : ""), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()), user, topics, plan.target && plan.target.by !== SELF ? metLine(host.fs, plan.author, "c:" + plan.target.by) : "");
+    // what the author remembers of the one it answers, plus (#367) jealousy or rivalry toward them and a rumour about the author in this topic
+    const bits = [];
+    if (plan.target && plan.target.by !== SELF) {
+      bits.push(metLine(host.fs, plan.author, "c:" + plan.target.by));
+      if (rel && rel.jealousy) bits.push(jealousLine(rel, plan.author.id, plan.target.by));
+    }
+    if (rel && rel.gossip) bits.push(aboutMeLine(rel, plan.author.id, plan.topic, Date.now()));
+    requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target, user ? user.label : ""), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()), user, topics, bits.filter(Boolean).join(" "));
   } else {
     const titles = topics.filter((t) => t.board === plan.board.id).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
     const subject = plan.subject || pickSubject(plan.author, { board: plan.board, titles }, rand);
@@ -1590,6 +1900,10 @@ export function fileResult(fsx, f, result, now, boards) {
     // a drawn picture wins over a sticker: a post holds one picture
     const stuck = !draw && st.sticker ? { state: "ready", url: st.sticker.url, alt: st.sticker.alt, sticker: st.sticker.ref } : null;
     if (!text && !draw && !stuck) return failure("the model returned nothing");
+    // (#367) between characters nothing explicit is filed; an answer to the user follows the character's own rules
+    const lastPost = livePosts(topic).slice(-1)[0];
+    const toUser = f.quote ? !!topic.posts.find((p) => p.id === f.quote && p.by === SELF) : !!(lastPost && lastPost.by === SELF);
+    if (!toUser && overCeiling(text)) return { error: "the post went past the ceiling between characters and was not filed" };
     if (text && livePosts(topic).slice(-CONTEXT_POSTS).some((p) => normal(p.text) === normal(text))) return { error: "the post repeats an earlier one" };
     const target = f.quote ? topic.posts.find((p) => p.id === f.quote && !p.removed) : null;
     const post = { id: "p-" + now + "-" + rid(), ...mine, at: now, text, ...(draw ? { image: draw } : stuck ? { image: stuck } : {}), ...(target ? { quote: quoteOf(target) } : {}) };
@@ -1610,19 +1924,23 @@ export function fileResult(fsx, f, result, now, boards) {
   const wanted = j ? cut(str(typeof j.image === "string" ? j.image : "").replace(/\s+/g, " "), 400) || inline.prompt : "";
   const draw = wanted && mayImage(fsx, author, loadTopics(fsx), now) ? { state: "pending", prompt: wanted, gen: true } : null;
   if (!title || (!text && !draw)) return { error: "the model's answer was not a topic" };
+  if (overCeiling(title + " " + text)) return { error: "the post went past the ceiling between characters and was not filed" };
   if (loadTopics(fsx).some((t) => t.board === hit.board.id && normal(t.title) === normal(title))) return { error: "the topic repeats an earlier one" };
   const post = { id: "p-" + now + "-" + rid(), ...mine, at: now, text, ...(draw ? { image: draw } : {}) };
   const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: hit.board.id, title, ...mine, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, posts: [post] };
   writeTopic(fsx, topic);
-  if (f.ref) markLifeUsed(fsx, author.id, f.ref);
+  if (f.ref && f.ref.startsWith("g-")) fileGossip(fsx, f.ref, author, topic, now);
+  else if (f.ref) markLifeUsed(fsx, author.id, f.ref);
   return { topicId: topic.id, post };
 }
 
 /** Chooses the subject of a new-topic plan (so its id can ride the request key) and returns the plan. */
-function withSubject(fsx, plan, topics, now, rand) {
+export function withSubject(fsx, plan, topics, now, rand, rel) {
   if (plan && plan.kind === "topic") {
     const titles = topics.filter((t) => t.board === plan.board.id).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
-    plan.subject = pickSubject(plan.author, { board: plan.board, titles, fsx, now }, rand);
+    plan.subject = pickSubject(plan.author, { board: plan.board, titles, fsx, now, rel: rel && rel.gossip ? rel : null }, rand);
+    // a rumour is kept as a draft until its topic is filed, and its id rides the request key
+    if (plan.subject.gossip) plan.subject.ref = saveDraft(fsx, plan.subject.gossip, plan.author.id, now);
   }
   return plan;
 }
@@ -2027,14 +2345,15 @@ function forceRoute(req, host) {
     const topics = loadTopics(fsx);
     const taken = new Set();
     const plans = [];
+    const rel = s.jealousy || s.gossip ? relationsOf(fsx, profiles, topics, now, s) : null;
     for (let i = 0; i < count; i++) {
-      const plan = withSubject(fsx, planAction({ profiles, topics: topics.filter((t) => !taken.has(t.id)), boards, settings: s, log, now, tz, mode: "force", scope, feels: feelsOf(fsx, profiles) }, Math.random), topics, now, Math.random);
+      const plan = withSubject(fsx, planAction({ profiles, topics: topics.filter((t) => !taken.has(t.id)), boards, settings: s, log, now, tz, mode: "force", scope, feels: feelsOf(fsx, profiles), rel }, Math.random), topics, now, Math.random, rel);
       if (!plan) break;
       if (plan.kind === "reply") taken.add(plan.topic.id);
       plans.push(plan);
     }
     if (!plans.length) return ok({ ok: false, code: "no-target", error: boards.categories.some((c) => c.boards.length) ? "no character can write here" : "there are no boards yet" });
-    plans.forEach((plan, i) => requestPlan(host, "f" + i, s, plan, boards, topics, Math.random));
+    plans.forEach((plan, i) => requestPlan(host, "f" + i, s, plan, boards, topics, Math.random, rel));
     return { __llmPending: true, stash: { plans: plans.map(filingOf) } };
   }
 
@@ -2096,9 +2415,10 @@ export function onTick(_ctx, host) {
   const profiles = loadProfiles(fsx);
   if (!profiles.length || !boards.categories.some((c) => c.boards.length)) return;
   const topics = loadTopics(fsx);
-  const plan = withSubject(fsx, planAction({ profiles, topics, boards, settings: s, log, now, tz, mode: "auto", feels: feelsOf(fsx, profiles) }, Math.random), topics, now, Math.random);
+  const rel = s.jealousy || s.gossip ? relationsOf(fsx, profiles, topics, now, s) : null;
+  const plan = withSubject(fsx, planAction({ profiles, topics, boards, settings: s, log, now, tz, mode: "auto", feels: feelsOf(fsx, profiles), rel }, Math.random), topics, now, Math.random, rel);
   if (!plan) return;
-  requestPlan(host, tickKey(filingOf(plan)), s, plan, boards, topics, Math.random);
+  requestPlan(host, tickKey(filingOf(plan)), s, plan, boards, topics, Math.random, rel);
 }
 
 // ---------- routing ----------

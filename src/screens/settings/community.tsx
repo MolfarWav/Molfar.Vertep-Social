@@ -1,6 +1,7 @@
 // Settings > Community (issue #358): what happens around the posts by itself. The Moderator (events, comments, closing topics),
 // reactions, stories, and characters talking to each other. Everything that needs a model says so; the rest costs nothing.
 // Reactions are on by default (no model call); the rest that spends tokens is off or weekly/rare.
+import { useId } from "react";
 import { useT } from "@/i18n/index";
 import { LIMITS, type SettingsMock } from "@/mock/settings";
 import { Row, Segmented, Stepper, Switch, type Opt } from "./controls";
@@ -8,6 +9,7 @@ import type { Patch } from "./parts";
 
 export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set: Patch; phone?: boolean }) {
   const t = useT();
+  const toneId = useId();
   const c = s.community;
   const change = (patch: Partial<typeof c>) => set({ community: { ...c, ...patch } });
   const events: Opt<typeof c.events>[] = [
@@ -19,6 +21,11 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
     { value: "off", label: t("settings.community.off") },
     { value: "rare", label: t("settings.community.rare") },
     { value: "often", label: t("settings.community.often") },
+  ];
+  const tones: Opt<typeof c.tone>[] = [
+    { value: "none", label: t("settings.community.tone.none") },
+    { value: "warm", label: t("settings.community.tone.warm") },
+    { value: "flirty", label: t("settings.community.tone.flirty") },
   ];
   const hint = (key: string, phoneKey?: string) => t((phone && phoneKey ? phoneKey : key) as never);
   return (
@@ -63,6 +70,34 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
           {() => <Stepper name={t("settings.community.chats.limit")} value={c.chatsPerDay} min={LIMITS.chatsPerDay.min} max={LIMITS.chatsPerDay.max} onChange={(v) => change({ chatsPerDay: v })} />}
         </Row>
       </div>
+
+      <div className="ln col">
+        <b>{t("settings.community.life")}</b>
+        <span className="k">{t("settings.community.life.hint")}</span>
+      </div>
+      {phone ? (
+        // on a phone the three choices need the whole width: title, choices, hint, stacked
+        <div className="ln col">
+          <b id={toneId}>{t("settings.community.tone")}</b>
+          <Segmented labelledBy={toneId} options={tones} value={c.tone} onChange={(v) => change({ tone: v })} />
+          <span className="k">{t("settings.community.tone.phone.hint")}</span>
+        </div>
+      ) : (
+        <Row title={t("settings.community.tone")} hint={t("settings.community.tone.hint")}>
+          {(id) => <Segmented labelledBy={id} options={tones} value={c.tone} onChange={(v) => change({ tone: v })} />}
+        </Row>
+      )}
+      <Row title={t("settings.community.gossip")} hint={hint("settings.community.gossip.hint", "settings.community.gossip.phone.hint")}>
+        {(id) => <Switch labelledBy={id} checked={c.gossip} onChange={(v) => change({ gossip: v })} />}
+      </Row>
+      <div className={`pictures-more${c.gossip ? "" : " is-off"}`} aria-disabled={!c.gossip || undefined}>
+        <Row title={t("settings.community.gossip.limit")}>
+          {() => <Stepper name={t("settings.community.gossip.limit")} value={c.gossipPerDay} min={LIMITS.gossipPerDay.min} max={LIMITS.gossipPerDay.max} onChange={(v) => change({ gossipPerDay: v })} />}
+        </Row>
+      </div>
+      <Row title={t("settings.community.jealousy")} hint={hint("settings.community.jealousy.hint", "settings.community.jealousy.phone.hint")}>
+        {(id) => <Switch labelledBy={id} checked={c.jealousy} onChange={(v) => change({ jealousy: v })} />}
+      </Row>
     </>
   );
 }
