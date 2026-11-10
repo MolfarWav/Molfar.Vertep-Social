@@ -47,3 +47,16 @@ Social speaks English or Ukrainian. By default ("Auto") it follows the language 
 ## Roleplay access
 
 Social reads Roleplay cards only when you import or update a profile, and a Roleplay persona only when you bring it into Your profile (see [[you]]), and only after you allow it. You allow it on Home, not here: open the details of Social and look under "Access to other apps" (Molfar Vertep also asks the first time you open Social). Here the status shows whether reading works now, "Reading cards allowed" or "Reading cards off". The card has no Allow button, because only you can change the permission and Social cannot change it for itself; its "Open Home" button takes you to Home, where you do. If it is off, the import dialog says where to allow it and has the same "Open Home" button. (A Molfar Vertep older than 1.13.1 has no such button: the text says where to go.)
+
+## Start over
+
+The last card on the page (on a phone, the row "Start over" under "Other") clears what Social has kept, so you can begin again. Tick the parts and press "Clear…": a second step names what will go and says it cannot be undone, and only "Delete for good" does it. "Keep" goes back. When it is done, Social reloads itself.
+
+- **Forum.** Every topic and post, the boards (the forum is left with none; add boards again on the forum page), the events and the day's counters.
+- **Chats.** The messenger conversations with their notes, the characters' talks with each other and the log of first messages.
+- **Diaries and people.** The diaries, the lists of people each character has met with what they think of them, and stories.
+- **Your personas.** The personas on your profile page. Personas in Roleplay are never touched.
+- **Characters.** Every profile, with its chat and diary (these two are ticked for you and cannot be unticked). Posts the characters wrote stay on the forum with their names unless you clear the forum too.
+- **Settings.** Everything on this page back to the defaults, with the weather place.
+
+The number next to a part says how much it holds now. Sticker packs, the outside-news feed and the Roleplay access are not part of it and stay. To start from nothing, tick everything.

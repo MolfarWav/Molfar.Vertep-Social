@@ -16,6 +16,9 @@
  *          {ok, proposal} or {ok: false, error, code?}; nothing is changed (the screen applies it)
  *   GET    /settings                  the app settings (settings.json merged over the defaults)
  *   PUT    /settings                  save a partial patch of them; the reply is the full settings
+ *   GET    /settings/reset            {counts}: what each part of "Start over" holds now
+ *   POST   /settings/reset {parts}    clears parts (forum, chats, diaries, personas, profiles, settings) for good: {ok, cleared}
+ *          (clearing the profiles also clears their chats and diaries)
  *   GET    /profiles/roleplay/status  {state: "ready" | "closed"}: may Social read Roleplay right now
  *   GET    /profiles/roleplay         what can be imported: {state, characters, hidden, truncated}
  *   POST   /profiles/import {kind: "card", id, key?, model?}   one card -> one profile (the one-time digest)
@@ -534,6 +537,78 @@ function settingsRoute(req, host) {
     const next = mergeSettings(readSettings(fsx), req.body);
     fsx.write("settings.json", JSON.stringify(next, null, 2));
     return ok({ ok: true, settings: next });
+  }
+  return ok({ error: "method not allowed" }, 405);
+}
+
+// ---------- start over (issue #366) ----------
+
+/**
+ * What "Start over" can clear, by part. A part is a list of paths under the app's data folder (`fs.remove` takes a folder with
+ * everything in it). Not touched on purpose: the sticker packs (the user's own pictures), the outside-news feed (`.cache`, rebuilt
+ * by itself) and the Roleplay access grant (the engine's). A part that is not asked for stays exactly as it is.
+ */
+export const RESET_PARTS = {
+  forum: ["forum/topics", "forum/boards.json", "forum/events.json", "forum/life-used.json", "forum/log.json"],
+  chats: ["chats", "chatter", "firstlog.json"],
+  diaries: ["life/diary", "life/people", "life/people-meta.json", "stories"],
+  personas: ["you.json"],
+  profiles: ["profiles"],
+  settings: ["settings.json", "life/place.json"],
+};
+
+/** Parts that only make sense with their profile: without it they would sit orphaned on disk and come back with a reused id. */
+const RESET_WITH_PROFILES = ["chats", "diaries"];
+
+/** The asked parts, known ones only, in a fixed order; clearing the profiles clears their chats and diaries too. */
+export function resetParts(asked) {
+  const want = new Set(Array.isArray(asked) ? asked.map(String).filter((k) => Object.prototype.hasOwnProperty.call(RESET_PARTS, k)) : []);
+  if (want.has("profiles")) for (const k of RESET_WITH_PROFILES) want.add(k);
+  return Object.keys(RESET_PARTS).filter((k) => want.has(k));
+}
+
+/** How many things each part holds now (null: nothing to count), so the dialog can say what goes. */
+export function resetCounts(fsx) {
+  const count = (dir) => {
+    try {
+      return fsx.list(dir).filter((n) => String(n).endsWith(".json")).length;
+    } catch {
+      return 0;
+    }
+  };
+  const you = readJson(fsx, YOU_FILE, null);
+  return {
+    forum: count("forum/topics"),
+    chats: count("chats"),
+    diaries: count("life/diary"),
+    personas: isObj(you) && Array.isArray(you.personas) ? you.personas.length : 0,
+    profiles: listProfiles(fsx).length,
+    settings: null,
+  };
+}
+
+/** Removes the parts; the answer says which ones went. A path that is not there is fine. */
+export function resetData(fsx, asked) {
+  const parts = resetParts(asked);
+  for (const k of parts) {
+    for (const rel of RESET_PARTS[k]) {
+      try {
+        fsx.remove(rel);
+      } catch {
+        /* not there */
+      }
+    }
+  }
+  return parts;
+}
+
+function resetRoute(req, host) {
+  if (req.method === "GET") return ok({ counts: resetCounts(host.fs) });
+  if (req.method === "POST") {
+    const asked = isObj(req.body) ? req.body.parts : null;
+    const parts = resetData(host.fs, asked);
+    if (!parts.length) return ok({ ok: false, error: "nothing chosen" }, 400);
+    return ok({ ok: true, cleared: parts });
   }
   return ok({ error: "method not allowed" }, 405);
 }
@@ -1535,6 +1610,7 @@ function youRoute(req, host, path) {
 export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   const method = req && req.method;
+  if (path === "/settings/reset") return resetRoute(req, host);
   if (path === "/settings") return settingsRoute(req, host);
   if (path === "/you" || path.startsWith("/you/")) return youRoute(req, host, path);
   if (path !== "/profiles" && !path.startsWith("/profiles/")) return null;
