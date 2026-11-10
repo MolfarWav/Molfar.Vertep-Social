@@ -45,7 +45,7 @@ function topicOf(posts: any[]) {
 const author = (h: H) => forum.loadProfiles(h.host.fs)[0];
 
 test("youOf and knowsOf are the messenger's, copied", () => {
-  for (const name of ["youOf", "knowsOf"]) expect(String(forum[name]), name).toBe(String(messenger[name]));
+  for (const name of ["youOf", "knowsOf", "activePersonaId"]) expect(String(forum[name]), name).toBe(String(messenger[name]));
 });
 
 test("the user is not in the conversation: nothing is added", () => {

@@ -697,11 +697,11 @@ export function lifeSubject(fsx, p, now, shared, rand, fits) {
 const KNOWS = ["knows", "name", "stranger"];
 const NOTE_FOR_FORUM = 800;
 
-/** The active persona of Your profile ({name, about}), or null. */
-export function youOf(fsx) {
+/** The persona `pid` of Your profile ({name, about}), or with none the active one: what a character is told about the person writing. Null when there is none. A copy lives in the forum. */
+export function youOf(fsx, pid) {
   const y = readJson(fsx, "you.json", null);
   if (!isObj(y) || !Array.isArray(y.personas)) return null;
-  const p = y.personas.find((x) => isObj(x) && x.id === y.active) || y.personas.find((x) => isObj(x) && str(x.name));
+  const p = pid ? y.personas.find((x) => isObj(x) && x.id === pid) : y.personas.find((x) => isObj(x) && x.id === y.active) || y.personas.find((x) => isObj(x) && str(x.name));
   return isObj(p) && str(p.name) ? { name: cut(str(p.name), 80), about: cut(str(p.about), 600) } : null;
 }
 
@@ -712,6 +712,14 @@ export function personaOf(fsx, id) {
   return isObj(p) && str(p.name) ? { name: cut(str(p.name), 80), about: cut(str(p.about), 600) } : null;
 }
 
+/** The id of the active persona (else the first), "" when there is none: the chat of a pair is this persona's. A copy of the messenger's. */
+export function activePersonaId(fsx) {
+  const y = readJson(fsx, "you.json", null);
+  const list = (isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && typeof x.id === "string" && ID.test(x.id) && str(x.name));
+  const p = list.find((x) => isObj(y) && x.id === y.active) || list[0];
+  return p ? p.id : "";
+}
+
 /** How well the profile knows the user: its own choice, else Settings > Messenger, else "knows". */
 export function knowsOf(fsx, profile) {
   if (isObj(profile) && KNOWS.includes(profile.knows)) return profile.knows;
@@ -719,11 +727,14 @@ export function knowsOf(fsx, profile) {
   return isObj(s) && KNOWS.includes(s.messengerKnows) ? s.messengerKnows : "knows";
 }
 
-/** The memory note of this profile's chat with the user, as the messenger keeps it; "" when there is none or the messenger's note switch is off. */
-export function chatNote(fsx, profile) {
+/** The memory note of this profile's chat with the persona `pid` (else the active one), as the messenger keeps it (`chats/<profile>.<persona>.json`, or `chats/<profile>.json` while there is no persona); "" when there is none or the messenger's note switch is off. */
+export function chatNote(fsx, profile, pid) {
   const s = readJson(fsx, "settings.json", null);
   if (isObj(s) && s.messengerSummary === false) return "";
-  const chat = readJson(fsx, "chats/" + profile.id + ".json", null);
+  const who = pid || activePersonaId(fsx);
+  let chat = readJson(fsx, "chats/" + profile.id + (who ? "." + who : "") + ".json", null);
+  // a chat from before personas had their own is adopted by the active persona the first time the messenger runs; until then it is theirs
+  if (!isObj(chat) && who && who === activePersonaId(fsx)) chat = readJson(fsx, "chats/" + profile.id + ".json", null);
   const sum = isObj(chat) && isObj(chat.summary) ? chat.summary : null;
   return sum ? cut(noControls(str(sum.text)).replace(/<[^>]*>/g, " ").replace(/[ \t]{2,}/g, " ").trim(), NOTE_FOR_FORUM) : "";
 }
@@ -842,7 +853,7 @@ export function userKnownTo(fsx, author, topic, target) {
   const you = post.persona ? personaOf(fsx, post.persona) : youOf(fsx);
   const name = knows === "stranger" ? "" : str(post.name) || (you ? you.name : "");
   const met = knows !== "stranger" && str(post.name) ? metLine(fsx, author, userKeyOf(post)) : "";
-  return { label: name, name, about: knows === "knows" && you ? you.about : "", note: toUser && knows !== "stranger" ? chatNote(fsx, author) : "", ...(met ? { met } : {}) };
+  return { label: name, name, about: knows === "knows" && you ? you.about : "", note: toUser && knows !== "stranger" ? chatNote(fsx, author, post.persona || "") : "", ...(met ? { met } : {}) };
 }
 
 const LENGTH_WORDS = ["Short: one or two sentences.", "Medium: two to four sentences.", "Long: a short paragraph when the topic asks for it."];
