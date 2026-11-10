@@ -1259,7 +1259,7 @@ export function gossipSubject(rel, c) {
     sharp: "You do not like them, so you tell it harsher than it was, a bit mean, though never cruel.",
     kind: "You like them, so you tell it gently and make it sound smaller than it is.",
   }[c.tone];
-  return lead + " You may bring it up as idle talk, the way people do, in your own words, on a board that suits it. You are not sure of the details: say it as something you noticed or heard, not as proven fact, and never reveal anything from anyone's private chats. " + lean + (c.kind === "sweet" ? " " + ROMANCE_CEILING[rel.level === "flirty" ? "flirty" : "warm"] : "") + " If it does not fit this board, write about something else.";
+  return lead + " You may bring it up as idle talk, the way people do, in your own words, on a board that suits it. You are not sure of the details: say it as something you noticed or heard, not as proven fact. Add no details you were not given (no places, dates or events), and never reveal anything from anyone's private chats. " + lean + (c.kind === "sweet" ? " " + ROMANCE_CEILING[rel.level === "flirty" ? "flirty" : "warm"] : "") + " If it does not fit this board, write about something else.";
 }
 
 /** Keeps the chosen rumour until its topic is filed; returns the id to ride the request key. */
@@ -1833,8 +1833,10 @@ function requestPlan(host, key, settings, plan, boards, topics, rand, rel) {
     const bits = [];
     if (plan.target && plan.target.by !== SELF) {
       bits.push(metLine(host.fs, plan.author, "c:" + plan.target.by));
-      if (rel && rel.jealousy) bits.push(jealousLine(rel, plan.author.id, plan.target.by));
     }
+    // an answer with no target goes to the topic: jealousy then looks at whoever wrote last, as the planner's weights do
+    const aimed = plan.target || livePosts(plan.topic).slice(-1)[0];
+    if (rel && rel.jealousy && aimed && aimed.by !== SELF && aimed.by !== plan.author.id) bits.push(jealousLine(rel, plan.author.id, aimed.by));
     if (rel && rel.gossip) bits.push(aboutMeLine(rel, plan.author.id, plan.topic, Date.now()));
     requestPost(host, key, settings, plan.author, replyContext(b ? b.board : null, plan.topic, plan.target, user ? user.label : ""), MAX_TOKENS[lengthIndex(plan.author)], mayImage(host.fs, plan.author, topics, Date.now()), user, topics, bits.filter(Boolean).join(" "));
   } else {

@@ -233,6 +233,24 @@ test("planAction: a rival's post draws an answer to argue, where a plain dislike
   expect(n).toBe(100);
 });
 
+test("an answer with no target to the topic still carries the rival line, from whoever wrote last", () => {
+  const lists = { anna: [person("clara", { ties: [{ type: "rival" }], feel: -5 })] };
+  const h = world(lists);
+  put(h, "forum/boards.json", boards);
+  put(h, "forum/topics/tR.json", topic("tR", [post("r1", "clara", Date.now() - 5000, "Print is dead.")]));
+  for (const id of ["boris", "dmytro"]) h.files.delete("profiles/" + id + ".json");
+  const requests: any[] = [];
+  const host = { fs: h.fs, llm: { results: {}, request: (key: string, req: any) => void requests.push({ key, req }) } };
+  const out = forum.handleRoute({ method: "POST", path: "/forum/force", body: { count: 1, topic: "tR" } }, host);
+  expect(out.__llmPending).toBe(true);
+  expect(requests[0].req.systemPrompt).toContain("Clara is your rival");
+  // jealousy off: the line is gone
+  put(h, "settings.json", { tzOffset: 0, community: { jealousy: false } });
+  requests.length = 0;
+  forum.handleRoute({ method: "POST", path: "/forum/force", body: { count: 1, topic: "tR" } }, host);
+  expect(requests[0].req.systemPrompt).not.toContain("rival");
+});
+
 test("pickReaction: no reaction for a rival while jealousy is on", () => {
   const { rel, anna, log } = base();
   const boris = forum.loadProfiles(makeHost(world({}).files).fs).find((p: any) => p.id === "boris");
