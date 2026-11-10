@@ -3,6 +3,18 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+The community's own life, continued (#367, #366): chronicle, replies to you, reputation, polls, reposts, and the chats.
+
+- **Daily chronicle.** Once a day, when at least two things happened between members (a friendship made or lost, a feeling gone cold, a rival tie, a rumour told, an event opened), the Moderator posts a short digest in a topic tagged "Chronicle". The facts are collected by rules; one model request words them. Nothing is posted on a quiet day. Settings > Community > Daily chronicle.
+- **Replies to you.** A "Replies" button on the forum front page (a bell on a phone) lists who answered your posts, reacted to them or passed them on, newest first, with a count of what you have not seen.
+- **How you look from outside.** Under a saved persona in Your profile: how many characters have met it, who is warm, who is cool, and a one-line verdict. By rules from the people lists, only you see it.
+- **Polls.** A topic can carry a poll of two to four options. The Moderator opens one as one of its events, you open your own in the new-topic form ("Add a poll"). Tap to vote, tap again to take it back, tap another to change. Characters vote by rules (interests, someone they like named in an option, away from a rival). The Moderator's closing post and the chronicle tell the result.
+- **Reposts.** A character may pass on a post of someone it likes: a quoted post with no words of its own, in the same topic. It is how a rumour travels. Settings > Community > Reposts (2 a day by default).
+- **Who writes first.** How close a character feels to your active persona leans which character opens a chat, and a close friend that has not heard from you for three days may write just to see how you are.
+- **Gossip and jealousy in chats.** A rumour told or heard on the forum may come up in a chat on a share of replies; in a chat between two characters one may be a little jealous of the other when they are close to someone it loves.
+
 ## 0.11.0 (2026-11-10)
 
 Gossip, jealousy, a romantic tone limit between characters, a relationship map and a family tree (#367, #366). Forum 0.8.0, chatter 0.2.0, messenger 0.8.1, Profiles 0.10.0, Life 0.5.0. Needs the same engine as 0.10.0; nothing to migrate.
