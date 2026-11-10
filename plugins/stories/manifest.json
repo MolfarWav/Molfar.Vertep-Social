@@ -1,0 +1,9 @@
+{
+  "name": "Social stories",
+  "version": "0.1.0",
+  "description": "Stories: a character now and then posts a short line (and a picture, when pictures are on) made from its diary of the day, and it disappears after 24 hours (stories/items.json in the app's data folder). The picture is drawn by the Social page.",
+  "origin": "local",
+  "permissions": ["routes", "fs", "llm", "schedule"],
+  "schedule": { "intervalMs": 60000 },
+  "priority": 25
+}
