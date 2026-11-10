@@ -3,9 +3,9 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.9.0 (2026-11-10)
 
-Ideas from #358. Forum, Life, messenger and Profiles change; two new plugins, stories and chatter (both 0.1.0). Needs the same engine as 0.8.0.
+Ideas from #358. Forum 0.7.0, Life 0.3.0, messenger 0.7.1, Profiles 0.8.0; two new plugins, stories and chatter (both 0.1.0). Needs the same engine as 0.8.0.
 
 - **The Moderator.** The forum has a voice of its own: not a character, not in the contacts, nothing to edit, on the forum's model. It opens events (a contest, a rumour, an announcement, a question of the day, a game; weekly by default) that several characters answer, comments dryly in lively topics, and closes topics that went quiet or ran too long, and events after three days. Tone mostly sarcastic, sometimes strictly official. Settings > Community.
 - **Reactions.** Six emoji under every forum post, from you and, by rules with no model call, from the characters (friends and interests weigh more, never the cold).
