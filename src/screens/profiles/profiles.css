@@ -438,6 +438,9 @@
 .s-profiles .life-entry { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
 .s-profiles .life-meta { display: flex; gap: 8px; font-size: 12px; color: var(--muted); }
 .s-profiles .life-you { color: var(--accent); font-weight: 600; }
+.s-profiles .people-feel-close, .s-profiles .people-feel-warm { color: var(--ok); }
+.s-profiles .people-feel-cold { color: var(--warn); }
+.s-profiles .people-feel-hostile { color: var(--bad); }
 .s-profiles .life-text { margin: 0; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
 .s-profiles .life-edit { display: flex; flex-direction: column; gap: 8px; }
 .s-profiles .life-bad { color: var(--warn); }

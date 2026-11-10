@@ -67,6 +67,9 @@ const SNIPPET_CHARS = 140;
 const MAX_TOPICS = 1000;
 const CONTEXT_POSTS = 8;
 const LIVE_MS = 7 * 24 * 3600 * 1000;
+// relationships (the Life plugin's feel score, -12 to 12): at or below AVOID_AT a character skips a mention of it with this chance
+const AVOID_AT = -7;
+const AVOID_CHANCE = 0.6;
 const TEXT_MAX = 4000;
 const TITLE_MAX = 120;
 const FORCE_MAX = 3;
@@ -716,7 +719,27 @@ export function metLine(fsx, p, key) {
   const bits = ["You have met " + cut(str(x.name), 80) + " before" + (x.seen > 0 ? " (you have seen them " + Math.floor(x.seen) + " times)" : "") + "."];
   if (said && typeof said.text === "string" && str(said.text)) bits.push('They once told you: "' + cut(str(said.text), 160) + '".');
   if (typeof x.note === "string" && str(x.note)) bits.push("Your impression of them: " + cut(str(x.note), 160));
+  // how it stands between you, counted by the Life plugin from the tone of what was said either way (see toneOf there)
+  const feel = typeof x.feel === "number" && Number.isFinite(x.feel) ? x.feel : 0;
+  if (feel >= 7) bits.push("You are close to them and warm with them.");
+  else if (feel >= 3) bits.push("You get on well with them.");
+  else if (feel <= -7) bits.push("You are in open conflict with them: you may be sharp or pointed with them, in your own way.");
+  else if (feel <= -3) bits.push("You do not get on with them: you tend to be cool with them.");
   return bits.join(" ");
+}
+
+/** What each character feels toward each person it has met (life/people/<id>.json): {authorId: {key: feel}}, only the non-zero ones; empty when Life is off. */
+export function feelsOf(fsx, profiles) {
+  const out = {};
+  for (const p of profiles) {
+    if (!lifeAllowed(fsx, p).diary) continue;
+    const d = readJson(fsx, "life/people/" + p.id + ".json", null);
+    if (!isObj(d) || !Array.isArray(d.people)) continue;
+    const m = {};
+    for (const x of d.people) if (isObj(x) && typeof x.key === "string" && typeof x.feel === "number" && Number.isFinite(x.feel) && x.feel !== 0) m[x.key] = x.feel;
+    if (Object.keys(m).length) out[p.id] = m;
+  }
+  return out;
 }
 
 /** The key of the user's persona on a post, as the Life plugin lists people: "u:<persona id>", else "n:<name>". */
@@ -970,7 +993,15 @@ export function targetsFor(author, topics, now, scope) {
  */
 export function planAction(c, rand) {
   const { profiles, topics, boards, settings, log, now, tz, mode, scope } = c;
+  const feels = isObj(c.feels) ? c.feels : {};
   const bmap = boardMap(boards);
+  // how the author feels about whoever wrote the post (a character, or the user as a persona): -12 to 12, 0 when unknown
+  const feelToward = (a, post) => (post && isObj(feels[a.id]) && feels[a.id][post.by === SELF ? userKeyOf(post) : "c:" + post.by]) || 0;
+  // a liked person's post draws a reply up to twice as often, a disliked one's as little as a sixth
+  const lean = (a, h) => {
+    const ps = livePosts(h.topic);
+    return Math.min(2, Math.max(0.15, 1 + feelToward(a, h.target || ps[ps.length - 1]) / 12));
+  };
   const statusOf = (p) => statusAt(p.schedule, new Date(now), tz);
   const eligible = profiles.filter((p) => {
     if (mode !== "auto") return true;
@@ -984,9 +1015,14 @@ export function planAction(c, rand) {
     if (p.id === log.lastAuthor) w *= 0.3;
     return w;
   };
-  const withTargets = eligible.map((a) => ({ author: a, t: targetsFor(a, topics, now, scope) }));
-  const reply = (list, pick) => {
-    const x = weightedPick(withTargets.filter((y) => list(y.t).length), (y) => weightOf(y.author), rand);
+  const withTargets = eligible.map((a) => {
+    const t = targetsFor(a, topics, now, scope);
+    // in open conflict with someone, a character often lets their mention go by; it never does that to the user's post
+    t.mention = t.mention.filter((h) => h.target.by === SELF || feelToward(a, h.target) > AVOID_AT || rand() >= AVOID_CHANCE);
+    return { author: a, t };
+  });
+  const reply = (list, pick, leans) => {
+    const x = weightedPick(withTargets.filter((y) => list(y.t).length), (y) => weightOf(y.author) * (leans ? Math.max(...list(y.t).map((h) => lean(y.author, h))) : 1), rand);
     if (!x) return null;
     const hit = pick(list(x.t), x.author);
     return { kind: "reply", author: x.author, topic: hit.topic, target: hit.target };
@@ -1024,10 +1060,11 @@ export function planAction(c, rand) {
         (h) => {
           const b = bmap.get(h.topic.board);
           const liked = b && author.forum.favourites.includes(b.board.name.toLowerCase());
-          return (liked ? 3 : 1) / (1 + Math.max(0, now - h.topic.lastAt) / 3600000 / 12);
+          return ((liked ? 3 : 1) * lean(author, h)) / (1 + Math.max(0, now - h.topic.lastAt) / 3600000 / 12);
         },
         rand,
       ),
+    true,
   );
   return live || newTopic();
 }
@@ -1541,7 +1578,7 @@ function forceRoute(req, host) {
     const taken = new Set();
     const plans = [];
     for (let i = 0; i < count; i++) {
-      const plan = withSubject(fsx, planAction({ profiles, topics: topics.filter((t) => !taken.has(t.id)), boards, settings: s, log, now, tz, mode: "force", scope }, Math.random), topics, now, Math.random);
+      const plan = withSubject(fsx, planAction({ profiles, topics: topics.filter((t) => !taken.has(t.id)), boards, settings: s, log, now, tz, mode: "force", scope, feels: feelsOf(fsx, profiles) }, Math.random), topics, now, Math.random);
       if (!plan) break;
       if (plan.kind === "reply") taken.add(plan.topic.id);
       plans.push(plan);
@@ -1598,7 +1635,7 @@ export function onTick(_ctx, host) {
   const profiles = loadProfiles(fsx);
   if (!profiles.length || !boards.categories.some((c) => c.boards.length)) return;
   const topics = loadTopics(fsx);
-  const plan = withSubject(fsx, planAction({ profiles, topics, boards, settings: s, log, now, tz, mode: "auto" }, Math.random), topics, now, Math.random);
+  const plan = withSubject(fsx, planAction({ profiles, topics, boards, settings: s, log, now, tz, mode: "auto", feels: feelsOf(fsx, profiles) }, Math.random), topics, now, Math.random);
   if (!plan) return;
   requestPlan(host, tickKey(filingOf(plan)), s, plan, boards, topics, Math.random);
 }

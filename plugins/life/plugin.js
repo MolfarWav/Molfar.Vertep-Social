@@ -818,8 +818,41 @@ const SCAN_EVERY_MS = 5 * 60 * 1000;
 const SEEN_WINDOW = 8;
 const PERSON_KEY = /^[cun]:[^\s]{1,80}$/;
 const SELF = "me";
+const FEEL_MAX = 12;
+const FEEL_COOL_PER_DAY = 0.93;
 const peoplePath = (id) => "life/people/" + id + ".json";
 const PEOPLE_META = "life/people-meta.json";
+
+// ---------- tone: a rule-based reading of how a post sounds (no model call) ----------
+// A short list of word stems in English and Ukrainian (a stem matches the start of a word; the sandbox has no Unicode property escapes, so
+// words are split on punctuation). It reads the mood of a line, not its meaning: 1 warm, -1 sharp, 0 neither. A negation right before a
+// word flips it. Emoji count too. It is a cheap proxy; the character's own model still words the impression once a day.
+
+const WARM = ["thank", "great", "love", "nice", "glad", "agree", "wonderful", "lovely", "awesome", "cool", "happy", "welcome", "sweet", "kind", "haha", "lol", "good", "дяк", "чудов", "класн", "кльов", "круто", "люблю", "згод", "приємн", "радий", "рада", "раді", "молодц", "супер", "гарн", "чудес", "вітаю", "ласкав", "підтрим", "смішн", "хаха", "добре", "добрий", "ура"];
+const SHARP = ["stupid", "idiot", "hate", "awful", "terrible", "nonsense", "wrong", "annoying", "shut", "boring", "rude", "liar", "disgust", "useless", "pathetic", "ridiculous", "dumb", "лайно", "дурн", "ідіот", "нісенітн", "бред", "ненавиджу", "огидн", "жахлив", "дратує", "дратуєш", "брехн", "відчепись", "замовкн", "тупий", "тупа", "безглузд", "набрид", "нудн", "хамськ"];
+const NOT = ["не", "ні", "нема", "not", "no", "never", "dont", "doesnt", "isnt", "wasnt", "arent", "wont", "cant", "cannot", "didnt"];
+const WARM_MARKS = ["❤", "\u{1F60A}", "\u{1F600}", "\u{1F604}", "\u{1F601}", "\u{1F602}", "\u{1F923}", "\u{1F496}", "\u{1F495}", "\u{1F44D}", "\u{1F642}", "\u{1F970}", "\u{1F60D}", "\u{1F389}"];
+const SHARP_MARKS = ["\u{1F621}", "\u{1F620}", "\u{1F4A2}", "\u{1F44E}", "\u{1F612}", "\u{1F644}", "\u{1F92C}", "\u{1F624}"];
+
+/** How a line sounds: 1 warm, -1 sharp, 0 neither. */
+export function toneOf(text) {
+  const t = String(text || "").toLowerCase();
+  let score = 0;
+  for (const m of WARM_MARKS) if (t.includes(m)) score += 1;
+  for (const m of SHARP_MARKS) if (t.includes(m)) score -= 1;
+  const ws = t.split(/[\s.,!?;:"«»“”()[\]{}<>…—–\-_/\\|]+/).filter(Boolean);
+  ws.forEach((w, i) => {
+    const sign = WARM.some((x) => w.startsWith(x)) ? 1 : SHARP.some((x) => w.startsWith(x)) ? -1 : 0;
+    if (!sign) return;
+    // "not nice", "не дуже гарно": a negation one or two words before
+    const negated = [ws[i - 1], ws[i - 2]].some((x) => x && NOT.includes(x.replace(/'/g, "")));
+    score += negated ? -sign : sign;
+  });
+  return score > 0 ? 1 : score < 0 ? -1 : 0;
+}
+
+/** The word for a feeling score: "warm" from 3, "close" from 7, "cold" from -3, "hostile" from -7; "" in between. */
+export const feelWord = (feel) => (feel >= 7 ? "close" : feel >= 3 ? "warm" : feel <= -7 ? "hostile" : feel <= -3 ? "cold" : "");
 
 const keyOfUser = (post) => (typeof post.persona === "string" && ID.test(post.persona) ? "u:" + post.persona : "n:" + (str(post.name).toLowerCase().replace(/\s+/g, "_").slice(0, 60) || "you"));
 
@@ -842,6 +875,7 @@ function cleanPerson(x) {
     note: cut(str(x.note), NOTE_CHARS),
     noteAt: num(x.noteAt),
     fresh: Math.max(0, Math.floor(num(x.fresh))),
+    feel: Math.round(Math.max(-FEEL_MAX, Math.min(FEEL_MAX, num(x.feel))) * 10) / 10,
   };
 }
 
@@ -886,7 +920,7 @@ export function topicEvents(id, topic, since) {
       if (isObj(x.quote) && x.quote.by !== id) {
         q = { key: x.quote.by === SELF ? keyOfUser({ name: x.quote.name, persona: posts.find((p) => p.by === SELF && p.name === x.quote.name && p.persona)?.persona }) : "c:" + x.quote.by, name: str(x.quote.name), text: str(x.quote.text) };
       } else if (!x.quote && i > 0 && posts[i - 1].by === SELF) q = { ...who(posts[i - 1]), text: posts[i - 1].text };
-      if (q && q.name && PERSON_KEY.test(q.key)) out.push({ key: q.key, name: q.name, at: x.at, where: "forum", seen: 0, toMe: 0, fromMe: 1, said: noMark(q.text) });
+      if (q && q.name && PERSON_KEY.test(q.key)) out.push({ key: q.key, name: q.name, at: x.at, where: "forum", seen: 0, toMe: 0, fromMe: 1, said: noMark(q.text), tone: toneOf(x.text) });
       return;
     }
     const seesIt = i < first ? posts[first].at > since && first - i <= SEEN_WINDOW : x.at > since;
@@ -894,7 +928,7 @@ export function topicEvents(id, topic, since) {
     const w = who(x);
     if (!w.name || !PERSON_KEY.test(w.key)) return;
     const toMe = isObj(x.quote) && x.quote.by === id;
-    out.push({ ...w, at: x.at, where: "forum", seen: 1, toMe: toMe ? 1 : 0, fromMe: 0, said: toMe ? noMark(x.text) : "" });
+    out.push({ ...w, at: x.at, where: "forum", seen: 1, toMe: toMe ? 1 : 0, fromMe: 0, said: toMe ? noMark(x.text) : "", tone: toMe ? toneOf(x.text) : 0 });
   });
   return out;
 }
@@ -905,8 +939,8 @@ export function chatEvents(chat, me, since) {
   const out = [];
   for (const m of chat.messages) {
     if (!isObj(m) || !Number.isFinite(m.at) || m.at <= since || typeof m.who !== "string") continue;
-    if (m.who === SELF) out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 1, toMe: 1, fromMe: 0, said: noMark(typeof m.text === "string" ? m.text : "") });
-    else out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 0, toMe: 0, fromMe: 1, said: "" });
+    if (m.who === SELF) out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 1, toMe: 1, fromMe: 0, said: noMark(typeof m.text === "string" ? m.text : ""), tone: toneOf(m.text) });
+    else out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 0, toMe: 0, fromMe: 1, said: "", tone: toneOf(m.text) });
   }
   return out;
 }
@@ -916,9 +950,12 @@ export function mergeEvents(pf, events) {
   for (const e of events) {
     let p = pf.people.find((x) => x.key === e.key);
     if (!p) {
-      p = { key: e.key, name: e.name, kind: e.key.startsWith("c:") ? "character" : "user", first: e.at, last: e.at, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", noteAt: 0, fresh: 0 };
+      p = { key: e.key, name: e.name, kind: e.key.startsWith("c:") ? "character" : "user", first: e.at, last: e.at, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", noteAt: 0, fresh: 0, feel: 0 };
       pf.people.push(p);
     }
+    // feelings cool over the days and move by the tone of what was said either way (theirs to the character, the character's to them)
+    if (e.at > p.last) p.feel *= Math.pow(FEEL_COOL_PER_DAY, (e.at - p.last) / 86400000);
+    p.feel = Math.round(Math.max(-FEEL_MAX, Math.min(FEEL_MAX, p.feel + (e.tone || 0))) * 10) / 10;
     p.name = e.name || p.name;
     p.first = Math.min(p.first || e.at, e.at);
     p.last = Math.max(p.last, e.at);

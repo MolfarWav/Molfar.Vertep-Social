@@ -372,6 +372,11 @@ export const strings: Bundle = {
     "profiles.people.noteLabel": "Her impression of {name}",
     "profiles.people.knownBy": "Who remembers her",
     "profiles.people.knownBySeen": "has seen her {seen} times",
+    "profiles.people.feel.close": "close",
+    "profiles.people.feel.warm": "friendly",
+    "profiles.people.feel.cold": "cool",
+    "profiles.people.feel.hostile": "at odds",
+    "profiles.people.feelTip": "How she feels about them: the app reads the tone of what was said either way. It shapes whom she answers and how.",
   },
   uk: {
     "profiles.title": "Профілі",
@@ -742,5 +747,10 @@ export const strings: Bundle = {
     "profiles.people.noteLabel": "Її враження про {name}",
     "profiles.people.knownBy": "Хто її памʼятає",
     "profiles.people.knownBySeen": "бачив(ла) її {seen} раз",
+    "profiles.people.feel.close": "близькі",
+    "profiles.people.feel.warm": "приязні",
+    "profiles.people.feel.cold": "холодні",
+    "profiles.people.feel.hostile": "на ножах",
+    "profiles.people.feelTip": "Як вона до них ставиться: застосунок читає тон сказаного в обидва боки. Це впливає на те, кому вона відповідає і як.",
   },
 };

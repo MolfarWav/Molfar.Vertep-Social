@@ -19,6 +19,8 @@ export interface Person {
   said: { at: number; where: "forum" | "messenger"; text: string }[];
   /** The character's own impression, worded by the model once a day (or by the user); "" until there is one. */
   note: string;
+  /** How she feels about them, -12 (at odds) to 12 (close), read from the tone of what was said either way; 0 when unknown. */
+  feel?: number;
 }
 
 /** Another character whose list holds this one. */
@@ -39,8 +41,8 @@ const now = Date.now();
 let fake: Person[] | null = null;
 const fakePeople = (): Person[] =>
   (fake ??= [
-    { key: "u:you", name: "Сергій", kind: "user", first: now - 6 * 864e5, last: now - 3600e3, seen: 14, toMe: 6, fromMe: 5, said: [{ at: now - 3600e3, where: "forum", text: "А ти бачила туман над озером сьогодні вранці?" }], note: "Тихий, уважний, пише рідко, але до діла." },
-    { key: "c:rp-kolya", name: "Коля", kind: "character", first: now - 3 * 864e5, last: now - 2 * 864e5, seen: 4, toMe: 1, fromMe: 0, said: [], note: "" },
+    { key: "u:you", name: "Сергій", kind: "user", first: now - 6 * 864e5, last: now - 3600e3, seen: 14, toMe: 6, fromMe: 5, said: [{ at: now - 3600e3, where: "forum", text: "А ти бачила туман над озером сьогодні вранці?" }], note: "Тихий, уважний, пише рідко, але до діла.", feel: 8 },
+    { key: "c:rp-kolya", name: "Коля", kind: "character", first: now - 3 * 864e5, last: now - 2 * 864e5, seen: 4, toMe: 1, fromMe: 0, said: [], note: "", feel: -8 },
   ]);
 const fakeKnownBy: KnownBy[] = [{ id: "rp-yaryna", name: "Ярина", seen: 9, note: "Тиха, але завжди відповідає по суті." }];
 

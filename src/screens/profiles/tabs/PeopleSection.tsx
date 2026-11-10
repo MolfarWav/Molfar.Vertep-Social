@@ -5,6 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useT, currentLang } from "@/i18n/index";
 import { forgetPeople, loadPeople, saveNote, type KnownBy, type Person } from "../people-api";
 
+/** The band of a feeling score, as the Life plugin's `feelWord` names it: "" between -3 and 3. */
+const feelBand = (feel?: number): "" | "close" | "warm" | "cold" | "hostile" => {
+  const f = feel ?? 0;
+  return f >= 7 ? "close" : f >= 3 ? "warm" : f <= -7 ? "hostile" : f <= -3 ? "cold" : "";
+};
+
 export function PeopleSection({ profileId }: { profileId: string }) {
   const t = useT();
   const lang = currentLang();
@@ -63,6 +69,11 @@ export function PeopleSection({ profileId }: { profileId: string }) {
             <div className="life-meta">
               <b>{p.name}</b>
               <span className="life-you">{t(p.kind === "user" ? "profiles.people.you" : "profiles.people.character")}</span>
+              {feelBand(p.feel) && (
+                <span className={"life-you people-feel people-feel-" + feelBand(p.feel)} title={t("profiles.people.feelTip")}>
+                  {t(("profiles.people.feel." + feelBand(p.feel)) as never)}
+                </span>
+              )}
               <span>{t("profiles.people.counts", { seen: String(p.seen), last: day(p.last) })}</span>
             </div>
             {p.said.length > 0 && <p className="life-text">{t("profiles.people.said", { text: p.said[p.said.length - 1].text })}</p>}
