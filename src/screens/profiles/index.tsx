@@ -177,7 +177,7 @@ const dropProfile = (s: Store, id: string): Store => {
 function changedKeys(a: ProfileForm, b: ProfileForm): string[] {
   const out: string[] = [];
   const same = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
-  if (a.nick !== b.nick || a.about !== b.about) out.push("profiles.tab.about");
+  if (a.nick !== b.nick || a.about !== b.about || (a.adult ?? false) !== (b.adult ?? false)) out.push("profiles.tab.about");
   if (!same(a.interests, b.interests)) out.push("profiles.about.interests");
   if (!same(a.tags, b.tags)) out.push("profiles.about.tags");
   if (!same(a.habits, b.habits) || a.habitsAuto !== b.habitsAuto) out.push("profiles.tab.habits");

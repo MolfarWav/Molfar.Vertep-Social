@@ -139,6 +139,56 @@ function pairKeys(fsx) {
   }
 }
 
+// <relation-shared>
+// What the user set between two people: a level of familiarity and ties (the Life plugin writes them, "levels, ties and milestones" there).
+// Read only here: a few lines for the prompt. Romance is told only when the profile and the other character are marked adult (the user's
+// persona counts as the user's own choice), and between characters the prompt states the ceiling. A copy lives in each plugin that needs it.
+const LEVEL_LINE = {
+  stranger: "You do not really know them.",
+  slight: "You know them only in passing.",
+  acquaintance: "You are acquaintances: you know each other a little.",
+  penfriend: "You are pen friends: you chat now and then and enjoy it.",
+  friend: "You are friends.",
+  close: "You are close friends and trust them.",
+  confidant: "They are one of your closest people: you confide in them.",
+};
+const TIE_LINE = {
+  spouse: "is your spouse.",
+  parent: "is your parent.",
+  child: "is your child.",
+  sibling: "is your brother or sister.",
+  relative: "is a relative of yours.",
+  colleague: "is your colleague.",
+  boss: "is your boss.",
+  subordinate: "works under you.",
+  rival: "is your rival.",
+};
+const ROMANCE_LINE = { crush: "You have a crush on NAME.", dating: "You are dating NAME.", partner: "NAME is your partner.", ex: "NAME is your ex." };
+const ROMANCE_CEILING = "Keep anything romantic between you light: warmth, hints and teasing are fine, never anything explicit.";
+
+/** The lines for one person of the character `p`'s list (`x`, key "c:<profile>" or "u:<persona>"): the level, the ties, and a romantic tie when it is allowed. */
+export function relationBits(fsx, p, key, x) {
+  const bits = [];
+  const name = cut(str(x.name), 80) || "They";
+  if (typeof x.lvl === "string" && LEVEL_LINE[x.lvl]) bits.push(LEVEL_LINE[x.lvl]);
+  const mine = readJson(fsx, "profiles/" + p.id + ".json", null);
+  const theirs = key.startsWith("c:") ? readJson(fsx, "profiles/" + key.slice(2) + ".json", null) : null;
+  const may = isObj(mine) && mine.adult === true && (key.startsWith("u:") || (isObj(theirs) && theirs.adult === true));
+  let romance = false;
+  for (const t of Array.isArray(x.ties) ? x.ties.slice(0, 4) : []) {
+    if (!isObj(t)) continue;
+    if (typeof t.type === "string" && TIE_LINE[t.type]) bits.push(name + " " + TIE_LINE[t.type]);
+    else if (t.type === "other" && typeof t.label === "string" && str(t.label)) bits.push("Your tie with " + name + ": " + cut(str(t.label), 40).replace(/[<>]/g, "") + ".");
+    else if (may && typeof t.type === "string" && ROMANCE_LINE[t.type]) {
+      bits.push(ROMANCE_LINE[t.type].replace("NAME", name));
+      romance = true;
+    }
+  }
+  if (romance && key.startsWith("c:")) bits.push(ROMANCE_CEILING);
+  return bits;
+}
+// </relation-shared>
+
 // ---------- the prompt ----------
 
 /** What `speaker` remembers of `other` (the Life plugin's list, life/people/<speaker>.json): their impression, and how it stands between them. */
@@ -153,7 +203,7 @@ export function relationLine(fsx, speakerId, otherId) {
   else if (feel >= 3) bits.push("You get on well with them.");
   else if (feel <= -7) bits.push("You are in open conflict with them: you may be sharp or pointed with them, in your own way.");
   else if (feel <= -3) bits.push("You do not get on with them: you tend to be cool with them.");
-  return bits.join(" ");
+  return bits.concat(relationBits(fsx, { id: speakerId }, "c:" + otherId, x)).join(" ");
 }
 
 export function chatSystem(me, other, relation) {

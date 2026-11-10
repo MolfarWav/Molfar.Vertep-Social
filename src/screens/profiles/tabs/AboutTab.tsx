@@ -3,7 +3,7 @@
 import { useT } from "@/i18n/index";
 import type { Habit } from "@/mock/profiles";
 import { PREVIEW } from "@/lib/api";
-import { AddChip, Chip, Field, withItem } from "../ui";
+import { AddChip, Chip, Field, Switch, withItem } from "../ui";
 import { FillActions } from "../fill-ui";
 import type { TabProps } from "./types";
 
@@ -43,6 +43,11 @@ export function AboutTab({ form, set, onRefresh, fill, source }: TabProps) {
           />
         )}
       </Field>
+
+      <div className="f">
+        <Switch on={form.adult === true} onChange={(adult) => set({ adult })}>{t("profiles.about.adult")}</Switch>
+        <p className="k">{t("profiles.about.adultHint")}</p>
+      </div>
 
       <div className="f">
         <span className="lb">{t("profiles.about.interests")}</span>
