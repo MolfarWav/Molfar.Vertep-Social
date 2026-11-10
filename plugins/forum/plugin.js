@@ -67,6 +67,16 @@ const SNIPPET_CHARS = 140;
 const MAX_TOPICS = 1000;
 const CONTEXT_POSTS = 8;
 const LIVE_MS = 7 * 24 * 3600 * 1000;
+// relationships (the Life plugin's feel score, -12 to 12): at or below AVOID_AT a character skips a mention of it with this chance
+const AVOID_AT = -7;
+const AVOID_CHANCE = 0.6;
+// events (issue #358): the moderator's topic that several characters talk about
+const MOD = "_mod";
+const EVENT_LIVE_MS = 2 * 24 * 3600 * 1000;
+const EVENT_GAP_MS = { daily: 20 * 3600 * 1000, weekly: 6.5 * 24 * 3600 * 1000 };
+const EVENT_INVITES = 4;
+const EVENT_FAIL_WAIT_MS = 30 * 60 * 1000;
+export const EVENT_KINDS = ["contest", "rumour", "announcement", "question", "game"];
 const TEXT_MAX = 4000;
 const TITLE_MAX = 120;
 const FORCE_MAX = 3;
@@ -178,6 +188,12 @@ export function readSettings(fsx) {
     quietFrom: time(r.quietFrom, DEFAULTS.quietFrom),
     quietTo: time(r.quietTo, DEFAULTS.quietTo),
     writers: r.writers === "equal" ? "equal" : "profile",
+    // what the community around the posts does by itself (Settings > Community); reactions need no model
+    events: isObj(r.community) && ["off", "daily", "weekly"].includes(r.community.events) ? r.community.events : "weekly",
+    modComments: isObj(r.community) && ["off", "rare", "often"].includes(r.community.modComments) ? r.community.modComments : "rare",
+    modCloses: !isObj(r.community) || r.community.modCloses !== false,
+    reactions: !isObj(r.community) || r.community.reactions !== false,
+    reactionsPerDay: clampInt(isObj(r.community) ? r.community.reactionsPerDay : undefined, 0, 50, 8),
     tzOffset: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
     model: modelRef(model),
   };
@@ -203,10 +219,13 @@ export function readLog(fsx, now, tz) {
   const byAuthor = {};
   if (same && isObj(l.byAuthor)) for (const [k, v] of Object.entries(l.byAuthor)) if (ID.test(k) && num(v) > 0) byAuthor[k] = Math.floor(num(v));
   const e = isObj(l.error) ? l.error : null;
+  const reacts = {};
+  if (same && isObj(l.reacts)) for (const [k, v] of Object.entries(l.reacts)) if (ID.test(k) && num(v) > 0) reacts[k] = Math.floor(num(v));
   return {
     day,
     posts: same ? Math.max(0, Math.floor(num(l.posts))) : 0,
     byAuthor,
+    reacts,
     lastAutoAt: num(l.lastAutoAt),
     nextAt: num(l.nextAt),
     lastAuthor: ID.test(String(l.lastAuthor)) ? String(l.lastAuthor) : "",
@@ -351,7 +370,8 @@ function cleanPost(p) {
   const persona = by === SELF && typeof p.persona === "string" && ID.test(p.persona) ? p.persona : "";
   if (p.removed === true) return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: "", removed: true };
   const image = cleanImage(p.image);
-  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(persona ? { persona } : {}), ...(q ? { quote: q } : {}), ...(image ? { image } : {}) };
+  const react = cleanReact(p.react);
+  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(persona ? { persona } : {}), ...(q ? { quote: q } : {}), ...(image ? { image } : {}), ...(react ? { react } : {}) };
 }
 
 export function readTopic(fsx, id) {
@@ -375,6 +395,8 @@ export function readTopic(fsx, id) {
     owe: clampInt(t.owe, 0, 3, 0),
     // the character the user's last post was aimed at (it quoted that character, or named them): answers first
     addressed: typeof t.addressed === "string" && ID.test(t.addressed) ? t.addressed : "",
+    // an event (issue #358): what kind, when it was posted, and the characters invited to talk about it
+    ...(cleanEvent(t.event) ? { event: cleanEvent(t.event) } : {}),
     posts,
   };
 }
@@ -716,7 +738,32 @@ export function metLine(fsx, p, key) {
   const bits = ["You have met " + cut(str(x.name), 80) + " before" + (x.seen > 0 ? " (you have seen them " + Math.floor(x.seen) + " times)" : "") + "."];
   if (said && typeof said.text === "string" && str(said.text)) bits.push('They once told you: "' + cut(str(said.text), 160) + '".');
   if (typeof x.note === "string" && str(x.note)) bits.push("Your impression of them: " + cut(str(x.note), 160));
+  // how it stands between you, counted by the Life plugin from the tone of what was said either way (see toneOf there)
+  const feel = typeof x.feel === "number" && Number.isFinite(x.feel) ? x.feel : 0;
+  if (feel >= 7) bits.push("You are close to them and warm with them.");
+  else if (feel >= 3) bits.push("You get on well with them.");
+  else if (feel <= -7) bits.push("You are in open conflict with them: you may be sharp or pointed with them, in your own way.");
+  else if (feel <= -3) bits.push("You do not get on with them: you tend to be cool with them.");
   return bits.join(" ");
+}
+
+/** What each character feels toward each person it has met (life/people/<id>.json): {authorId: {key: feel}}, only the non-zero ones; empty when Life is off. */
+export function feelsOf(fsx, profiles) {
+  const out = {};
+  for (const p of profiles) {
+    if (!lifeAllowed(fsx, p).diary) continue;
+    const d = readJson(fsx, "life/people/" + p.id + ".json", null);
+    if (!isObj(d) || !Array.isArray(d.people)) continue;
+    const m = {};
+    for (const x of d.people) if (isObj(x) && typeof x.key === "string" && typeof x.feel === "number" && Number.isFinite(x.feel) && x.feel !== 0) m[x.key] = x.feel;
+    if (Object.keys(m).length) out[p.id] = m;
+  }
+  return out;
+}
+
+/** How the author feels about whoever wrote the post (a character, or the user as a persona): -12 to 12, 0 when unknown. */
+function feelAbout(feels, author, post) {
+  return (post && isObj(feels[author.id]) && feels[author.id][post.by === SELF ? userKeyOf(post) : "c:" + post.by]) || 0;
 }
 
 /** The key of the user's persona on a post, as the Life plugin lists people: "u:<persona id>", else "n:<name>". */
@@ -932,7 +979,7 @@ const canAnswer = (author, post) => (post.by === SELF ? author.forum.repliesYou 
 
 /** The replies an author could write, by tier: the user's post still owed replies, a mention, or just a live topic. */
 export function targetsFor(author, topics, now, scope) {
-  const out = { owed: [], mention: [], live: [] };
+  const out = { owed: [], event: [], mention: [], live: [] };
   for (const t of topics) {
     if (t.locked || (scope && scope.topic && t.id !== scope.topic) || (scope && scope.board && t.board !== scope.board)) continue;
     const ps = livePosts(t);
@@ -953,6 +1000,11 @@ export function targetsFor(author, topics, now, scope) {
       out.owed.push({ topic: t, target: ps[userIdx], first });
       continue;
     }
+    // an event the author was invited to and has not written in yet: it comes before a plain mention
+    if (t.event && t.event.invited.includes(author.id) && now - t.event.at < EVENT_LIVE_MS && !ps.some((p) => p.by === author.id) && author.forum.repliesOthers) {
+      out.event.push({ topic: t, target: null });
+      continue;
+    }
     const tail = ps.slice(-6);
     const mi = tail.findIndex((p, i) => p.by !== author.id && mentions(p.text, author.name) && !tail.slice(i + 1).some((q) => q.by === author.id));
     if (mi >= 0 && canAnswer(author, tail[mi]) && now - tail[mi].at < LIVE_MS) {
@@ -970,7 +1022,14 @@ export function targetsFor(author, topics, now, scope) {
  */
 export function planAction(c, rand) {
   const { profiles, topics, boards, settings, log, now, tz, mode, scope } = c;
+  const feels = isObj(c.feels) ? c.feels : {};
   const bmap = boardMap(boards);
+  const feelToward = (a, post) => feelAbout(feels, a, post);
+  // a liked person's post draws a reply up to twice as often, a disliked one's as little as a sixth
+  const lean = (a, h) => {
+    const ps = livePosts(h.topic);
+    return Math.min(2, Math.max(0.15, 1 + feelToward(a, h.target || ps[ps.length - 1]) / 12));
+  };
   const statusOf = (p) => statusAt(p.schedule, new Date(now), tz);
   const eligible = profiles.filter((p) => {
     if (mode !== "auto") return true;
@@ -984,9 +1043,14 @@ export function planAction(c, rand) {
     if (p.id === log.lastAuthor) w *= 0.3;
     return w;
   };
-  const withTargets = eligible.map((a) => ({ author: a, t: targetsFor(a, topics, now, scope) }));
-  const reply = (list, pick) => {
-    const x = weightedPick(withTargets.filter((y) => list(y.t).length), (y) => weightOf(y.author), rand);
+  const withTargets = eligible.map((a) => {
+    const t = targetsFor(a, topics, now, scope);
+    // in open conflict with someone, a character often lets their mention go by; it never does that to the user's post
+    t.mention = t.mention.filter((h) => h.target.by === SELF || feelToward(a, h.target) > AVOID_AT || rand() >= AVOID_CHANCE);
+    return { author: a, t };
+  });
+  const reply = (list, pick, leans) => {
+    const x = weightedPick(withTargets.filter((y) => list(y.t).length), (y) => weightOf(y.author) * (leans ? Math.max(...list(y.t).map((h) => lean(y.author, h))) : 1), rand);
     if (!x) return null;
     const hit = pick(list(x.t), x.author);
     return { kind: "reply", author: x.author, topic: hit.topic, target: hit.target };
@@ -998,6 +1062,8 @@ export function planAction(c, rand) {
   if (addressed) return addressed;
   const owed = reply((t) => t.owed, oldest);
   if (owed) return owed;
+  const event = reply((t) => t.event, oldest);
+  if (event) return event;
   const mention = reply((t) => t.mention, oldest);
   if (mention) return mention;
 
@@ -1024,12 +1090,357 @@ export function planAction(c, rand) {
         (h) => {
           const b = bmap.get(h.topic.board);
           const liked = b && author.forum.favourites.includes(b.board.name.toLowerCase());
-          return (liked ? 3 : 1) / (1 + Math.max(0, now - h.topic.lastAt) / 3600000 / 12);
+          return ((liked ? 3 : 1) * lean(author, h)) / (1 + Math.max(0, now - h.topic.lastAt) / 3600000 / 12);
         },
         rand,
       ),
+    true,
   );
   return live || newTopic();
+}
+
+// ---------- reactions (issue #358): a click on a post, from the user, or from a character by rules (no model call) ----------
+
+export const REACTIONS = ["\u{1F44D}", "❤️", "\u{1F602}", "\u{1F62E}", "\u{1F622}", "\u{1F525}"];
+const REACT_MAX = 30;
+const REACT_CHANCE = 0.3;
+const REACT_WINDOW_MS = 3 * 24 * 3600 * 1000;
+
+/** `{emoji: [who]}` with only the known emoji and valid ids (the user is "me"), or null when nobody reacted. */
+export function cleanReact(raw) {
+  if (!isObj(raw)) return null;
+  const out = {};
+  for (const e of REACTIONS) {
+    const list = Array.isArray(raw[e]) ? [...new Set(raw[e].filter((x) => x === SELF || (typeof x === "string" && ID.test(x))))].slice(0, REACT_MAX) : [];
+    if (list.length) out[e] = list;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+const hasAny = (t, list) => list.some((w) => t.includes(w));
+
+/** Which reaction a character gives a post: by what the text sounds like, a fire for what is among its interests, else a thumb. */
+export function reactionFor(text, author) {
+  const t = String(text).toLowerCase();
+  if (hasAny(t, ["haha", "lol", "хаха", "хах", "\u{1F602}", "\u{1F923}"])) return REACTIONS[2];
+  if (hasAny(t, ["sorry", "unfortunately", "шкода", "сумно", "на жаль", "\u{1F622}"])) return REACTIONS[4];
+  if (hasAny(t, ["love", "thank", "дякую", "люблю", "❤", "\u{1F970}"])) return REACTIONS[1];
+  if (hasAny(t, ["wow", "whoa", "нічого собі", "ого", "\u{1F62E}"])) return REACTIONS[3];
+  const mine = new Set((Array.isArray(author.interests) ? author.interests : []).flatMap((i) => lifeWords(i)));
+  if (lifeWords(t).some((w) => mine.has(w))) return REACTIONS[5];
+  return REACTIONS[0];
+}
+
+/**
+ * One reaction a character could give now: {author, topic, post, emoji} or null. An online or away character that has not used up its
+ * `reactionsPerDay` picks a recent post of someone else that it has not reacted to; people it likes and the user weigh more, a post of
+ * someone it is cold to (feeling -3 or less) is never picked, a post about its interests weighs more.
+ */
+export function pickReaction(c, rand) {
+  const { profiles, topics, settings, log, now, tz } = c;
+  const feels = isObj(c.feels) ? c.feels : {};
+  if (!settings.reactions || settings.reactionsPerDay <= 0) return null;
+  const free = profiles.filter((p) => ["online", "away"].includes(statusAt(p.schedule, new Date(now), tz)) && (log.reacts[p.id] || 0) < settings.reactionsPerDay);
+  if (!free.length) return null;
+  const author = free[Math.floor(rand() * free.length)];
+  const mine = new Set(author.interests.flatMap((i) => lifeWords(i)));
+  const cands = [];
+  for (const t of topics) {
+    if (t.locked || now - t.lastAt > REACT_WINDOW_MS) continue;
+    for (const p of livePosts(t).slice(-12)) {
+      if (p.by === author.id || now - p.at > REACT_WINDOW_MS) continue;
+      if (Object.values(p.react || {}).some((l) => l.includes(author.id))) continue;
+      const feel = feelAbout(feels, author, p);
+      if (feel <= -3) continue;
+      cands.push({ topic: t, post: p, w: 1 + Math.max(0, feel) / 4 + (p.by === SELF ? 1 : 0) + (lifeWords(p.text).some((w) => mine.has(w)) ? 2 : 0) });
+    }
+  }
+  const hit = weightedPick(cands, (x) => x.w, rand);
+  return hit ? { author, topic: hit.topic, post: hit.post, emoji: reactionFor(hit.post.text, author) } : null;
+}
+
+/** Writes a reaction (`who` is "me" for the user) into the topic file; a repeat is a no-op. Returns the post's new `react`, or null when the post is gone. */
+function putReaction(fsx, topicId, postId, emoji, who, on) {
+  const topic = readTopic(fsx, topicId);
+  const post = topic ? topic.posts.find((p) => p.id === postId && !p.removed) : null;
+  if (!post || !REACTIONS.includes(emoji)) return null;
+  const react = { ...(post.react || {}) };
+  const list = (react[emoji] || []).filter((x) => x !== who);
+  if (on) list.push(who);
+  if (list.length) react[emoji] = list;
+  else delete react[emoji];
+  post.react = react;
+  if (!Object.keys(react).length) delete post.react;
+  writeTopic(fsx, topic);
+  return post.react || {};
+}
+
+/** The user clicks a reaction on a post: `POST /forum/react {topic, post, emoji}` toggles it. */
+function reactRoute(req, host) {
+  const b = isObj(req.body) ? req.body : {};
+  const topic = readTopic(host.fs, String(b.topic || ""));
+  const post = topic ? topic.posts.find((p) => p.id === String(b.post || "") && !p.removed) : null;
+  if (!post) return ok({ error: "no such post" }, 404);
+  const emoji = String(b.emoji || "");
+  if (!REACTIONS.includes(emoji)) return ok({ error: "unknown reaction" }, 400);
+  const on = !(post.react && Array.isArray(post.react[emoji]) && post.react[emoji].includes(SELF));
+  return ok({ ok: true, react: putReaction(host.fs, topic.id, post.id, emoji, SELF, on) });
+}
+
+/** One chance per tick that a character reacts to a post; true when the log changed. */
+function reactTick(fsx, s, log, now, tz, rand) {
+  if (!s.autonomous || !s.reactions || rand() >= REACT_CHANCE || inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
+  const profiles = loadProfiles(fsx);
+  if (!profiles.length) return false;
+  const pick = pickReaction({ profiles, topics: loadTopics(fsx), settings: s, log, now, tz, feels: feelsOf(fsx, profiles) }, rand);
+  if (!pick || !putReaction(fsx, pick.topic.id, pick.post.id, pick.emoji, pick.author.id, true)) return false;
+  log.reacts[pick.author.id] = (log.reacts[pick.author.id] || 0) + 1;
+  return true;
+}
+
+// ---------- the Moderator (issue #358): the forum's own voice ----------
+// Not a character: no profile, not in the contacts, nothing the user can edit; the author id is "_mod". It uses the forum's model
+// (Settings > Models). By rules it decides when and what: now and then an event (a contest, a rumour, an announcement, a question, a
+// game: several invited characters talk about it), a dry comment in a lively topic, and closing topics that went quiet or ran too long
+// (and the end of an event, with a verdict). The user may reopen what it closed and remove what it wrote, like any post. One model
+// request at a time, state in forum/events.json {last, kind, lastComment, lastClose, pendingAt, failedAt}.
+
+const EVENT_STATE = "forum/events.json";
+const MOD_PENDING_MS = 10 * 60 * 1000;
+const MOD_GAP_MS = { rare: 8 * 3600 * 1000, often: 2 * 3600 * 1000 };
+const MOD_COMMENT_CHANCE = 0.15;
+const MOD_CLOSE_GAP_MS = 20 * 3600 * 1000;
+const MOD_CLOSE_QUIET_MS = 14 * 24 * 3600 * 1000;
+const MOD_CLOSE_EVENT_MS = 3 * 24 * 3600 * 1000;
+const MOD_CLOSE_LONG = 400;
+
+export function cleanEvent(e) {
+  if (!isObj(e) || !EVENT_KINDS.includes(e.kind) || !Number.isFinite(e.at)) return null;
+  return { kind: e.kind, at: e.at, invited: (Array.isArray(e.invited) ? e.invited : []).filter((x) => typeof x === "string" && ID.test(x)).slice(0, 8) };
+}
+
+function readEventState(fsx) {
+  const d = readJson(fsx, EVENT_STATE, null);
+  const r = isObj(d) ? d : {};
+  return { last: num(r.last), kind: EVENT_KINDS.includes(r.kind) ? r.kind : "", lastComment: num(r.lastComment), lastClose: num(r.lastClose), pendingAt: num(r.pendingAt), failedAt: num(r.failedAt) };
+}
+
+const writeEventState = (fsx, st) => fsx.write(EVENT_STATE, JSON.stringify(st));
+
+/** The tones the Moderator takes, weighed: mostly dry and sarcastic, now and then strictly official or absurdly formal. */
+export const MOD_TONES = [
+  { id: "sarcastic", weight: 6, line: "Your tone this time: dry and sarcastic, a little tired of everyone, but never cruel. Tease the topic or the situation, not anyone's looks, family, health or real life." },
+  { id: "serious", weight: 2, line: "Your tone this time: strictly official and very serious, like a notice from a ministry, even when the matter is small." },
+  { id: "deadpan", weight: 2, line: "Your tone this time: deadpan and absurdly formal about something trivial." },
+];
+
+export const modTone = (rand) => weightedPick(MOD_TONES, (t) => t.weight, rand);
+
+/** The Moderator's voice, the same in every request; `tone` is one of MOD_TONES. */
+export function modSystem(tone) {
+  return [
+    "You are the Moderator of a small online forum where the members are characters and one human. You are the forum's own voice: you are not a character of any story and you have no profile.",
+    "You are dry, quick and a little sarcastic, and you like order. You may tease, but never cruelly: no insults to the human user, no jokes about anyone's looks, family, health, religion or politics, nothing that would really hurt.",
+    tone.line,
+    "Write plain forum text: no markdown, no name label, no quotation marks around the whole post. Keep it short.",
+    "Write in the language of the forum's recent posts or topic titles given below; when there are none, in English.",
+    "Do not invent facts about the real world. Never mention that you are an AI or a model.",
+  ].join("\n");
+}
+
+const EVENT_BRIEF = {
+  contest: "a small contest or challenge that members can join with one post each (for example: show your best find of the week)",
+  rumour: "a rumour that has gone round the forum, which members can wonder about, doubt or add to",
+  announcement: "an announcement from the moderators: a rule, a change or something to look forward to on the forum, as serious or as silly as your tone",
+  question: "a question of the day that every member can answer from their own life",
+  game: "a simple word game the members can play in turns (a chain of associations, finish the sentence)",
+};
+
+/** Is an event due, and which kind: {kind} or null. Never the same kind twice in a row; needs two characters, a board, and no request still out. */
+export function eventDue(settings, st, profiles, boards, now, tz, rand) {
+  if (!settings.autonomous || settings.events === "off" || profiles.length < 2) return null;
+  if (!boards.categories.some((c) => c.boards.length)) return null;
+  if (inQuiet(now, tz, settings.quietFrom, settings.quietTo)) return null;
+  if (now - st.last < EVENT_GAP_MS[settings.events] || now - st.pendingAt < MOD_PENDING_MS || now - st.failedAt < EVENT_FAIL_WAIT_MS) return null;
+  const kinds = EVENT_KINDS.filter((k) => k !== st.kind);
+  return { kind: kinds[Math.floor(rand() * kinds.length)] };
+}
+
+/** The board an event goes on: a general one when there is, else any. */
+export function eventBoard(boards, rand) {
+  const list = [...boardMap(boards).values()];
+  const general = list.filter((b) => GENERAL_BOARD.test(str(b.board.name) + " " + str(b.board.desc)));
+  const pool = general.length ? general : list;
+  return pool.length ? pool[Math.floor(rand() * pool.length)].board : null;
+}
+
+/** Up to EVENT_INVITES characters who will talk about it: those that answer others, weighed by their frequency. */
+export function eventGuests(profiles, rand) {
+  const left = profiles.filter((p) => p.forum.repliesOthers);
+  const out = [];
+  while (out.length < EVENT_INVITES && left.length) {
+    const p = weightedPick(left, (x) => 5 + x.forum.frequency, rand);
+    out.push(p.id);
+    left.splice(left.indexOf(p), 1);
+  }
+  return out;
+}
+
+export function eventSystem(tone) {
+  return [modSystem(tone), "You open one topic to get members talking.", 'Answer with JSON only: {"title": "the topic title, at most 80 characters", "text": "the opening post, one to four sentences"}'].join("\n");
+}
+
+export function eventUser(kind, titles) {
+  const lines = ["The topic to open: " + EVENT_BRIEF[kind] + "."];
+  if (titles.length) lines.push("Recent topic titles on the forum (do not repeat them): " + titles.slice(0, 8).map((x) => '"' + cut(x, 80) + '"').join(", ") + ".");
+  return lines.join("\n");
+}
+
+/** The language of a few texts: Ukrainian (Cyrillic) or English; names the Moderator and its posts. */
+const modName = (...texts) => (/[Ѐ-ӿ]/.test(texts.join(" ")) ? "Модератор" : "Moderator");
+
+/** A lively topic the Moderator may comment on, or null: open, active in the last 12 hours, five posts or more, the last one not its own, none of its own in the last eight. */
+export function pickModComment(topics, st, settings, now, rand) {
+  if (!MOD_GAP_MS[settings.modComments] || now - st.lastComment < MOD_GAP_MS[settings.modComments]) return null;
+  const cands = [];
+  for (const t of topics) {
+    if (t.locked || now - t.lastAt > 12 * 3600 * 1000) continue;
+    const ps = livePosts(t);
+    if (ps.length < 5 || ps[ps.length - 1].by === MOD || ps.slice(-8).some((p) => p.by === MOD)) continue;
+    cands.push({ topic: t, w: 1 + ps.filter((p) => now - p.at < 6 * 3600 * 1000).length });
+  }
+  const hit = weightedPick(cands, (x) => x.w, rand);
+  return hit ? hit.topic : null;
+}
+
+/** What a topic may be closed for, or null: an event three days old ("event"), quiet for two weeks ("quiet"), or very long ("long"). The oldest first. */
+export function modCloseReason(t, now) {
+  if (t.locked) return null;
+  const n = livePosts(t).length;
+  if (t.event && now - t.event.at > MOD_CLOSE_EVENT_MS) return "event";
+  if (n >= 4 && now - t.lastAt > MOD_CLOSE_QUIET_MS) return "quiet";
+  if (n >= MOD_CLOSE_LONG) return "long";
+  return null;
+}
+
+export function pickModClose(topics, st, settings, now) {
+  if (!settings.modCloses || now - st.lastClose < MOD_CLOSE_GAP_MS) return null;
+  const list = topics.filter((t) => modCloseReason(t, now)).sort((a, b) => a.lastAt - b.lastAt);
+  return list.length ? { topic: list[0], reason: modCloseReason(list[0], now) } : null;
+}
+
+const CLOSE_LINE = {
+  event: "The event in this topic is over. Wrap it up: name a winner or a verdict only if the posts make one clear, otherwise hand one out jokingly (or say nobody earned it), then close the topic.",
+  quiet: "Nobody has written here for weeks. Close the topic, with a remark about the silence.",
+  long: "This topic has grown far too long. Close it and say so.",
+};
+
+const postsBlock = (t, n) => livePosts(t).slice(-n).map((p) => "- " + (p.by === SELF ? str(p.name) || "User" : str(p.name)) + ": " + cut(p.text.replace(/\s+/g, " "), 200)).join("\n");
+
+/** Asks the model for one Moderator thing when one is due: an event, a comment, or a closing. True when it asked (the tick does nothing else). */
+function modTick(host, s, boards, now, tz, rand) {
+  const fsx = host.fs;
+  if (!s.autonomous) return false;
+  // the first one comes one period after the forum began to keep time, not on the first tick after an update
+  if (readJson(fsx, EVENT_STATE, null) === null) {
+    writeEventState(fsx, { last: now, kind: "", lastComment: now, lastClose: now, pendingAt: 0, failedAt: 0 });
+    return false;
+  }
+  const st = readEventState(fsx);
+  if (now - st.pendingAt < MOD_PENDING_MS || now - st.failedAt < EVENT_FAIL_WAIT_MS) return false;
+  const ask = (key, tone, content, maxTokens, system) => {
+    st.pendingAt = now;
+    writeEventState(fsx, st);
+    host.llm.request(key, {
+      ...(s.model ? { model: s.model } : {}),
+      systemPrompt: system || modSystem(tone),
+      messages: [{ role: "user", content }],
+      presetParams: { temperature: 0.9, max_tokens: maxTokens },
+    });
+    return true;
+  };
+  const profiles = loadProfiles(fsx);
+  const due = eventDue(s, st, profiles, boards, now, tz, rand);
+  if (due) {
+    const tone = modTone(rand);
+    const titles = loadTopics(fsx).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
+    return ask("ev:" + due.kind, tone, eventUser(due.kind, titles), 400, eventSystem(tone));
+  }
+  if (inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
+  const wantsComment = s.modComments !== "off" && now - st.lastComment >= MOD_GAP_MS[s.modComments];
+  const wantsClose = s.modCloses && now - st.lastClose >= MOD_CLOSE_GAP_MS;
+  if (!(wantsComment || wantsClose) || rand() >= MOD_COMMENT_CHANCE) return false;
+  const topics = loadTopics(fsx);
+  const close = wantsClose ? pickModClose(topics, st, s, now) : null;
+  if (close) {
+    return ask("mx:" + close.topic.id, modTone(rand), 'Topic: "' + cut(close.topic.title, 100) + '"\nRecent posts:\n' + postsBlock(close.topic, 6) + "\n\n" + CLOSE_LINE[close.reason] + " Write the last post of the topic: one or two sentences.", 200);
+  }
+  const target = wantsComment ? pickModComment(topics, st, s, now, rand) : null;
+  if (target) {
+    return ask("mc:" + target.id, modTone(rand), 'Topic: "' + cut(target.title, 100) + '"\nRecent posts:\n' + postsBlock(target, 8) + "\n\nWrite one comment of your own on what is going on, one or two sentences. Address no one in particular unless it is obvious.", 200);
+  }
+  return false;
+}
+
+/** Files a Moderator comment ("mc") or closing ("mx") from a model answer: appends the post, and for a closing locks the topic. Returns {topicId} or {error}. */
+export function fileModPost(fsx, kind, topicId, result, now) {
+  const st = readEventState(fsx);
+  const fail = (error) => {
+    st.failedAt = now;
+    st.pendingAt = 0;
+    writeEventState(fsx, st);
+    return { error };
+  };
+  const r = isObj(result) ? result : {};
+  if (r.error || !str(r.text)) return fail(r.error || "the model returned nothing");
+  const topic = readTopic(fsx, topicId);
+  if (!topic || topic.locked) return fail("the topic is not open any more");
+  const text = cleanReply(r.text, "Moderator");
+  if (!text) return fail("the model returned nothing");
+  if (livePosts(topic).slice(-CONTEXT_POSTS).some((p) => normal(p.text) === normal(text))) return fail("the post repeats an earlier one");
+  const recent = livePosts(topic).slice(-6).map((p) => p.text).join(" ");
+  const name = modName(topic.title, recent);
+  topic.posts.push({ id: "p-" + now + "-" + rid(), by: MOD, name, hue: 45, at: now, text });
+  topic.lastAt = now;
+  topic.unread = true;
+  if (kind === "mx") topic.locked = true;
+  writeTopic(fsx, topic);
+  st.pendingAt = 0;
+  st.failedAt = 0;
+  if (kind === "mx") st.lastClose = now;
+  else st.lastComment = now;
+  writeEventState(fsx, st);
+  return { topicId: topic.id };
+}
+
+/** Files the model's event as a topic by the moderator, with its guests. Returns {topicId} or {error}. */
+export function fileEventResult(fsx, result, boards, now, rand, kindKey) {
+  const st = readEventState(fsx);
+  const r = isObj(result) ? result : {};
+  const fail = (error) => {
+    st.failedAt = now;
+    st.pendingAt = 0;
+    writeEventState(fsx, st);
+    return { error };
+  };
+  if (r.error || !str(r.text)) return fail(r.error || "the model returned nothing");
+  const j = parseJsonReply(r.text);
+  const title = j ? oneLine(j.title, TITLE_MAX) : "";
+  const text = j ? cleanReply(String(j.text || ""), "") : "";
+  if (title.length < 3 || !text) return fail("the model's answer was not a topic");
+  const board = eventBoard(boards, rand);
+  if (!board) return fail("there are no boards");
+  const topics = loadTopics(fsx);
+  if (topics.some((t) => t.board === board.id && normal(t.title) === normal(title))) return fail("the topic repeats an earlier one");
+  if (topics.length >= MAX_TOPICS) return fail("too many topics");
+  const profiles = loadProfiles(fsx);
+  const kind = EVENT_KINDS.includes(kindKey) ? kindKey : "announcement";
+  const name = modName(title, text);
+  const post = { id: "p-" + now + "-" + rid(), by: MOD, name, hue: 45, at: now, text };
+  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: board.id, title, by: MOD, name, hue: 45, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, event: { kind, at: now, invited: eventGuests(profiles, rand) }, posts: [post] };
+  writeTopic(fsx, topic);
+  writeEventState(fsx, { ...st, last: now, kind, pendingAt: 0, failedAt: 0 });
+  return { topicId: topic.id };
 }
 
 // ---------- requests and filing ----------
@@ -1220,7 +1631,7 @@ function boardRoute(req, host) {
     .map((t) => {
       const ps = livePosts(t);
       const lp = ps[ps.length - 1] || t.posts[t.posts.length - 1];
-      return { id: t.id, title: t.title, by: t.by, name: t.name, hue: t.hue, createdAt: t.createdAt, replies: Math.max(0, ps.length - 1), lastAt: t.lastAt, lastBy: lp.by, lastName: lp.name, lastHue: lp.hue, locked: t.locked, unread: t.unread };
+      return { id: t.id, title: t.title, by: t.by, name: t.name, hue: t.hue, createdAt: t.createdAt, replies: Math.max(0, ps.length - 1), lastAt: t.lastAt, lastBy: lp.by, lastName: lp.name, lastHue: lp.hue, locked: t.locked, unread: t.unread, ...(t.event ? { event: t.event.kind } : {}) };
     });
   return ok({ board: { id, name: hit.board.name, desc: hit.board.desc, category: hit.category.name }, topics });
 }
@@ -1256,7 +1667,19 @@ function topicRoute(req, host) {
       online: prof ? ["online", "away"].includes(statusAt(prof.schedule, new Date(now), tz)) : p.by === SELF,
     };
   }
+  // who reacted, by name, for the tooltip of a reaction (the user is "me")
+  const reactors = {};
+  for (const p of shown) {
+    for (const list of Object.values(p.react || {})) {
+      for (const who of list) {
+        if (reactors[who] !== undefined) continue;
+        const prof = who === SELF ? null : readProfile(fsx, who);
+        reactors[who] = who === SELF ? "" : prof ? prof.name : "";
+      }
+    }
+  }
   return ok({
+    reactors,
     topic: {
       id: topic.id,
       title: topic.title,
@@ -1265,6 +1688,7 @@ function topicRoute(req, host) {
       lastAt: topic.lastAt,
       locked: topic.locked,
       unread: topic.unread,
+      ...(topic.event ? { event: topic.event.kind } : {}),
       posts: shown.map((p) => (p.by === SELF ? { ...p, as: personaFor(you, p) } : p)),
     },
     paging: { page, pages, size: PAGE_SIZE, total, from, live: livePosts(topic).length },
@@ -1541,7 +1965,7 @@ function forceRoute(req, host) {
     const taken = new Set();
     const plans = [];
     for (let i = 0; i < count; i++) {
-      const plan = withSubject(fsx, planAction({ profiles, topics: topics.filter((t) => !taken.has(t.id)), boards, settings: s, log, now, tz, mode: "force", scope }, Math.random), topics, now, Math.random);
+      const plan = withSubject(fsx, planAction({ profiles, topics: topics.filter((t) => !taken.has(t.id)), boards, settings: s, log, now, tz, mode: "force", scope, feels: feelsOf(fsx, profiles) }, Math.random), topics, now, Math.random);
       if (!plan) break;
       if (plan.kind === "reply") taken.add(plan.topic.id);
       plans.push(plan);
@@ -1578,12 +2002,20 @@ export function onTick(_ctx, host) {
   const s = readSettings(fsx);
   const tz = s.tzOffset;
   const results = host.llm.results || {};
-  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:"));
+  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:") || k.startsWith("ev:") || k.startsWith("mc:") || k.startsWith("mx:"));
   const boards = readBoards(fsx);
   const log = readLog(fsx, now, tz);
 
   if (done.length) {
     for (const key of done) {
+      if (key.startsWith("ev:")) {
+        fileEventResult(fsx, results[key], boards, now, Math.random, key.slice(3));
+        continue;
+      }
+      if (key.startsWith("mc:") || key.startsWith("mx:")) {
+        if (ID.test(key.slice(3))) fileModPost(fsx, key.slice(0, 2), key.slice(3), results[key], now);
+        continue;
+      }
       const f = parseTickKey(key);
       if (!f) continue;
       const r = fileResult(fsx, f, results[key], now, boards);
@@ -1594,11 +2026,14 @@ export function onTick(_ctx, host) {
     return;
   }
 
+  // reactions are free (no model), so they do not wait for the post limits
+  if (reactTick(fsx, s, log, now, tz, Math.random)) writeLog(fsx, log);
+  if (modTick(host, s, boards, now, tz, Math.random)) return;
   if (autoBlock(log, s, now, tz)) return;
   const profiles = loadProfiles(fsx);
   if (!profiles.length || !boards.categories.some((c) => c.boards.length)) return;
   const topics = loadTopics(fsx);
-  const plan = withSubject(fsx, planAction({ profiles, topics, boards, settings: s, log, now, tz, mode: "auto" }, Math.random), topics, now, Math.random);
+  const plan = withSubject(fsx, planAction({ profiles, topics, boards, settings: s, log, now, tz, mode: "auto", feels: feelsOf(fsx, profiles) }, Math.random), topics, now, Math.random);
   if (!plan) return;
   requestPlan(host, tickKey(filingOf(plan)), s, plan, boards, topics, Math.random);
 }
@@ -1622,6 +2057,7 @@ export function handleRoute(req, host) {
   if (path === "/forum/image" && method === "POST") return imageRoute(req, host);
   if (path === "/forum/read" && method === "POST") return readRoute(req, host);
   if (path === "/forum/lock" && method === "POST") return lockRoute(req, host);
+  if (path === "/forum/react" && method === "POST") return reactRoute(req, host);
   if (path === "/forum/remove-post" && method === "POST") return removePostRoute(req, host);
   if (path === "/forum/delete-topic" && method === "POST") return deleteTopicRoute(req, host);
   if (path === "/forum/force" && method === "POST") return forceRoute(req, host);

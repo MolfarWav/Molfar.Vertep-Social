@@ -172,3 +172,23 @@
 .s-settings.is-phone .cat { height: 44px; padding: 0 14px; }
 .s-settings.is-phone .txt { height: 44px; }
 .s-settings.is-phone .life-world .ln.col { padding: 0; }
+
+/* Subjects of the outside feed (#358): a fold with a summary, groups of pills, the user's own subjects */
+.s-settings .topics { display: flex; flex-direction: column; gap: 8px; }
+.s-settings .fold { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.s-settings .fold:hover { border-color: var(--accent); }
+.s-settings .fold:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.s-settings .fold-caret { font-size: 18px; line-height: 1; color: var(--ink); flex: none; }
+.s-settings .fold-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.s-settings .fold-text .k { overflow-wrap: anywhere; }
+.s-settings .fold-body { display: flex; flex-direction: column; gap: 14px; padding: 4px 2px 2px; }
+.s-settings .tgroup { display: flex; flex-direction: column; gap: 6px; }
+.s-settings .cat .cnt { font-weight: 400; opacity: 0.85; }
+.s-settings .cat.own { display: inline-flex; align-items: center; gap: 4px; }
+.s-settings .own-x { border: 0; background: none; color: inherit; font: inherit; font-size: 16px; line-height: 1; padding: 0 2px; cursor: pointer; }
+.s-settings .own-x:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
+.s-settings .own-form { display: flex; flex-wrap: wrap; gap: 6px; }
+.s-settings .own-form .txt { flex: 1 1 150px; }
+.s-settings.is-phone .fold { min-height: 52px; }
+.s-settings.is-phone .own-x { min-width: 32px; min-height: 32px; }
+.s-settings.is-phone .ln.col > .k { padding: 0 12px 12px; }

@@ -18,6 +18,8 @@ export interface LifeSettings {
   cats: Record<LifeCat, boolean>;
   /** The place the user typed for the weather ("" = no weather). */
   place: string;
+  /** Subjects the feed keeps (issue #358): ids of the plugin's list and the user's own. Empty = every category. */
+  topics: { on: string[]; custom: { id: string; label: string; words: string[] }[] };
 }
 
 export const LIFE_DEFAULTS: LifeSettings = {
@@ -25,7 +27,32 @@ export const LIFE_DEFAULTS: LifeSettings = {
   world: true,
   cats: { news: true, politics: true, games: true, film: true, anime: true, science: true, culture: true, weather: true, reddit: true },
   place: "",
+  topics: { on: [], custom: [] },
 };
+
+export type EventsRate = "off" | "daily" | "weekly";
+export type ModComments = "off" | "rare" | "often";
+
+/** The community around the posts (issue #358). Every cap counts per character per day. */
+export interface CommunitySettings {
+  /** Characters react to posts by rules (no model call). */
+  reactions: boolean;
+  reactionsPerDay: number;
+  /** How often one event gets several characters talking on the forum. */
+  events: EventsRate;
+  /** How often the Moderator comments in a lively topic. */
+  modComments: ModComments;
+  /** The Moderator closes topics that went quiet or ran too long, and ends events. */
+  modCloses: boolean;
+  /** A story: a short post with a picture that vanishes after a day. */
+  stories: boolean;
+  storiesPerDay: number;
+  /** Characters chat with each other in the messenger (about twice the tokens of a normal chat). */
+  chats: boolean;
+  chatsPerDay: number;
+}
+
+export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4 };
 
 export interface SettingsMock {
   autonomous: boolean;
@@ -50,6 +77,7 @@ export interface SettingsMock {
   notify: { tab: boolean; system: boolean; sound: boolean };
   roleplayAccess: boolean;
   life: LifeSettings;
+  community: CommunitySettings;
   /** Pictures in messages: characters may send generated pictures, at most `perDay` each (messenger and forum separately). */
   images: { on: boolean; perDay: number };
   /** Forum model requests already made today (a count from the server in the real app). */
@@ -75,6 +103,7 @@ export const SETTINGS_MOCK: SettingsMock = {
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: true,
   life: { ...LIFE_DEFAULTS, place: "Kyiv, Ukraine" },
+  community: { ...COMMUNITY_DEFAULTS, stories: true, chats: true },
   images: { on: true, perDay: 2 },
   usedToday: 12,
 };
@@ -87,6 +116,9 @@ export const LIMITS = {
   postsPerAuthor: { min: 1, max: 50 },
   messengerPerDay: { min: 0, max: 50 },
   imagesPerDay: { min: 0, max: 20 },
+  reactionsPerDay: { min: 0, max: 50 },
+  storiesPerDay: { min: 0, max: 10 },
+  chatsPerDay: { min: 0, max: 30 },
   messengerContext: { min: 4, max: 500 },
 } as const;
 

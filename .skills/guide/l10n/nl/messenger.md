@@ -1,4 +1,4 @@
-<!-- source: 02ec1512cca0 -->
+<!-- source: def6fe72e8ea -->
 # Social: Messenger
 
 De Messenger is een chat met de personages die in Social wonen. Je ziet een contactenlijst, het gesprek met het geselecteerde contact en een kaart met hun gegevens. Wie één-op-één met een personage wil praten, begint hier.
@@ -40,6 +40,18 @@ Onder de groepen van de kiezer staat een tweede rij voor je eigen pakketten. Een
 **Gratis pakketten.** In "Sticker packs" opent de kaart "Free packs" een catalogus met pakketten van andere kunstenaars (op dit moment de geanimeerde Noto-emoji van Google, CC BY 4.0, en de Fluent 3D-emoji van Microsoft, MIT). Elke kaart toont een voorbeeld, de maker, de licentie en een link naar de bron. "Add the pack" downloadt de afbeeldingen en maakt er een gewoon pakket van dat van jou is; de maker en de licentie blijven bij het pakket in het beheer staan. Een pakket dat al is toegevoegd toont "Added" (verwijder het om het opnieuw toe te voegen). De lijst wordt van GitHub gelezen wanneer je hem opent, dus je hebt een internetverbinding nodig; als hij niet geladen kan worden, zie je waarom en een knop "Try again". Alleen pakketten die de eigenaar van Social in de catalogus heeft gezet verschijnen daar, altijd met een vrije licentie (CC0, CC BY of MIT).
 
 In de rij verschijnt een tabblad met de eerste afbeelding van het pakket. Tik op een sticker om hem meteen te versturen (de tekst die je aan het typen was, blijft staan); tik op een eigen emoji om hem in de tekst te zetten, op de plek van de cursor. Het zoekveld vindt afbeeldingen ook op naam, en de recente worden gedeeld met de emoji. Een eigen emoji wordt in de tekst opgeslagen als `:pack/name:`; als zijn pakket later wordt verwijderd, verschijnt dat als gewone tekst. Een sticker blijft op het scherm staan als zijn pakket al weg is. Een personage krijgt alleen te horen "a sticker: name" en ziet de afbeelding nooit. Personages gebruiken alleen de pakketten die jij voor hen aanzet in Profiles, Writing manner (zie [[profiles]]). In een nieuw forumonderwerp worden alleen eigen emoji aangeboden, omdat een sticker een heel antwoord is.
+
+## Stories
+
+Wanneer een personage een story plaatst, verschijnt er boven de contactenlijst een rij ronde afbeeldingen. Een ring om een afbeelding betekent dat je nog niet alle stories van dat personage hebt gezien. Tik erop om hem te openen: de afbeelding (of de regel op een gekleurde kaart als er geen afbeelding is), hoeveel tijd er nog over is, en pijltjes om tussen de stories van dat personage te bewegen. Een story verdwijnt na 24 uur; "Remove" haalt hem eerder weg, na een vraag.
+
+Een story wordt gemaakt van het eigen dagboek van het personage over de dag, dus hij zegt iets wat hun echt is overkomen. Stories staan standaard uit ("Settings" > "Community" > "Stories"); "Characters have their own life" moet aan staan. Als "Characters may send pictures" aan staat, heeft een story ook een afbeelding, wat een modelaanroep en een afbeeldingsaanroep kost.
+
+## Characters talk
+
+Onder de contactenlijst staat, zodra "Characters talk to each other" aan staat in "Settings" > "Community", een rij "Characters talk". Die opent een venster waarin je twee personages kiest en op "Let them talk" drukt. Elk paar heeft een schakelaar (praten of gepauzeerd), "Read" om te zien wat ze schreven, en "Remove".
+
+Een paar schrijft af en toe, alleen terwijl beiden volgens hun schema aanwezig zijn, tot het dagelijkse aantal dat je instelt, één bericht tegelijk. Ze houden rekening met wat ieder van de ander onthoudt, inclusief het gevoel tussen hen. Jij leest alleen; ze schrijven er niet aan jou in. Dit kost ongeveer twee keer zoveel tokens als een gewone chat, dus het staat standaard uit en gratis modellen kunnen het lastig vinden.
 
 ## Afbeeldingen
 

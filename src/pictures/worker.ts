@@ -22,6 +22,11 @@ interface MessengerItem {
   prompt: string;
   model: string;
 }
+interface StoryItem {
+  id: string;
+  prompt: string;
+  model: string;
+}
 interface ForumItem {
   topic: string;
   post: string;
@@ -58,9 +63,10 @@ export function useImageWorker(): void {
       if (running || !alive) return;
       running = true;
       try {
-        const [m, f] = await Promise.all([
+        const [m, f, st] = await Promise.all([
           call<{ items: MessengerItem[] }>("GET", "/messenger/images").catch(() => ({ items: [] as MessengerItem[] })),
           call<{ items: ForumItem[] }>("GET", "/forum/images").catch(() => ({ items: [] as ForumItem[] })),
+          call<{ items: StoryItem[] }>("GET", "/stories/images").catch(() => ({ items: [] as StoryItem[] })),
         ]);
         for (const it of m.items) {
           if (!alive) break;
@@ -73,6 +79,12 @@ export function useImageWorker(): void {
           if (!lock(`f:${it.topic}:${it.post}`)) continue;
           const r = await draw(it.prompt, it.model);
           await call("POST", "/forum/image", { topic: it.topic, post: it.post, ...r }).catch(() => undefined);
+        }
+        for (const it of st.items) {
+          if (!alive) break;
+          if (!lock(`s:${it.id}`)) continue;
+          const r = await draw(it.prompt, it.model);
+          await call("POST", "/stories/image", { id: it.id, ...r }).catch(() => undefined);
         }
       } finally {
         running = false;

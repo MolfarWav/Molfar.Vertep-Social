@@ -33,8 +33,17 @@ function boardsFor(state: string): MockCategory[] {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/** Reactions drawn in the design preview, by post number. */
+const DEMO_REACT: Record<number, NonNullable<ShownPost["react"]>> = {
+  1: [
+    { emoji: "\u{1F44D}", n: 2, mine: true, who: "Ви, Мавка" },
+    { emoji: "\u{1F602}", n: 1, mine: false, who: "Лісовик" },
+  ],
+  2: [{ emoji: "\u{1F525}", n: 1, mine: false, who: "Ярина" }],
+};
+
 function shown(p: MockPost, selfName: string): ShownPost {
-  return { id: String(p.id), n: p.id, who: p.me ? selfName : p.who, me: p.me, hue: hueOf(p.who), role: p.role, count: p.count, joined: p.joined, subject: p.subject, clock: p.clock, text: p.text, quote: p.quote, sig: p.sig };
+  return { id: String(p.id), n: p.id, who: p.me ? selfName : p.who, me: p.me, hue: hueOf(p.who), role: p.role, count: p.count, joined: p.joined, subject: p.subject, clock: p.clock, text: p.text, quote: p.quote, sig: p.sig, ...(DEMO_REACT[p.id] ? { react: DEMO_REACT[p.id] } : {}) };
 }
 
 const STRIP_STATES: Record<string, StripState> = { autonomyoff: "off", limit: "limit", quiet: "quiet", nobody: "nobody" };
@@ -125,6 +134,7 @@ export function ForumPreview() {
         title={TOPIC.title}
         category={TOPIC.category}
         board={{ id: BOARD_PAGE.id, name: TOPIC.board }}
+        onReact={async () => undefined}
         posts={posts}
         error=""
         locked={locked}

@@ -420,6 +420,12 @@ export const DEFAULT_SETTINGS = {
   notify: { tab: true, system: true, sound: false },
   roleplayAccess: false,
   /**
+   * The community around the posts (issue #358): characters react to posts by rules (no model call), an event now and then gets several of
+   * them talking (`events`: "off", "daily", "weekly"), a story is a short post with a picture that vanishes after a day, and characters may
+   * chat with each other in the messenger (`chats`, off by default: about twice the tokens). Each cap counts per character per day.
+   */
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4 },
+  /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
    */
@@ -428,6 +434,8 @@ export const DEFAULT_SETTINGS = {
     world: true,
     cats: { news: true, politics: true, games: true, film: true, anime: true, science: true, culture: true, weather: true, reddit: true },
     place: "",
+    /** Subjects the outside feed keeps (issue #358): ids of the Life plugin's list, and the user's own ({id, label, words}). Empty = every category. */
+    topics: { on: [], custom: [] },
   },
   /** The browser's UTC offset in minutes (UTC minus local), stored so schedules run in the user's own time; null until known. */
   tzOffset: null,
@@ -438,6 +446,21 @@ const bool = (v, d) => (typeof v === "boolean" ? v : d);
 const oneOf = (v, set, d) => (set.includes(v) ? v : d);
 const modelRef = (v) => (typeof v === "string" && v !== "default" && MODEL_REF.test(v.trim()) ? v.trim() : "");
 
+/** The life topics: catalog ids (the Life plugin checks them against its list) and the user's own topics, bounded. */
+function cleanTopics(raw) {
+  const r = isObj(raw) ? raw : {};
+  const on = [...new Set((Array.isArray(r.on) ? r.on : []).filter((id) => typeof id === "string" && /^[a-z0-9-]{1,30}$/.test(id)))].slice(0, 12);
+  const custom = [];
+  for (const c of Array.isArray(r.custom) ? r.custom : []) {
+    if (!isObj(c)) continue;
+    const label = plain(typeof c.label === "string" ? c.label : "", 40);
+    const list = Array.isArray(c.words) ? c.words : typeof c.words === "string" ? c.words.split(/[,;\n]/) : [];
+    const words = [...new Set(list.filter((w) => typeof w === "string").map((w) => plain(w, 30).toLowerCase()).filter((w) => w.length >= 2))].slice(0, 6);
+    if (label && words.length && custom.length < 6) custom.push({ id: typeof c.id === "string" && /^c[a-z0-9]{1,12}$/.test(c.id) ? c.id : "c" + Math.floor(Math.random() * 1e9).toString(36), label, words });
+  }
+  return { on, custom };
+}
+
 /** The settings with `patch` applied over `base`; unknown keys and bad values are dropped. */
 export function mergeSettings(base, patch) {
   const b = isObj(base) ? base : DEFAULT_SETTINGS;
@@ -446,6 +469,8 @@ export function mergeSettings(base, patch) {
   const n = isObj(p.notify) ? p.notify : {};
   const im = isObj(p.images) ? p.images : {};
   const bim = isObj(b.images) ? b.images : DEFAULT_SETTINGS.images;
+  const cm = isObj(p.community) ? p.community : {};
+  const bcm = isObj(b.community) ? b.community : DEFAULT_SETTINGS.community;
   const l = isObj(p.life) ? p.life : {};
   const lc = isObj(l.cats) ? l.cats : {};
   const bl = isObj(b.life) ? b.life : DEFAULT_SETTINGS.life;
@@ -458,6 +483,18 @@ export function mergeSettings(base, patch) {
       world: bool(l.world, bool(bl.world, true)),
       cats,
       place: typeof l.place === "string" ? plain(l.place, 80) : typeof bl.place === "string" ? bl.place : "",
+      topics: "topics" in l ? cleanTopics(l.topics) : cleanTopics(bl.topics),
+    },
+    community: {
+      reactions: bool(cm.reactions, bool(bcm.reactions, true)),
+      reactionsPerDay: clampInt(cm.reactionsPerDay, 0, 50, Number.isInteger(bcm.reactionsPerDay) ? bcm.reactionsPerDay : 8),
+      events: oneOf(cm.events, ["off", "daily", "weekly"], oneOf(bcm.events, ["off", "daily", "weekly"], "weekly")),
+      modComments: oneOf(cm.modComments, ["off", "rare", "often"], oneOf(bcm.modComments, ["off", "rare", "often"], "rare")),
+      modCloses: bool(cm.modCloses, bool(bcm.modCloses, true)),
+      stories: bool(cm.stories, bool(bcm.stories, false)),
+      storiesPerDay: clampInt(cm.storiesPerDay, 0, 10, Number.isInteger(bcm.storiesPerDay) ? bcm.storiesPerDay : 1),
+      chats: bool(cm.chats, bool(bcm.chats, false)),
+      chatsPerDay: clampInt(cm.chatsPerDay, 0, 30, Number.isInteger(bcm.chatsPerDay) ? bcm.chatsPerDay : 4),
     },
     autonomous: bool(p.autonomous, b.autonomous),
     activity: oneOf(p.activity, ["quiet", "moderate", "lively", "chaotic"], b.activity),

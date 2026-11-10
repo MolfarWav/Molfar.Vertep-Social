@@ -1,6 +1,6 @@
 // Phone layouts (below 768 px): the contact list under the shell's top bar and
 // tabs, and the full-screen chat that hides both and has a back button.
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
 import { Flower } from "@/components/Flower";
 import { BarActions, useChrome } from "@/shell/nav";
@@ -26,6 +26,9 @@ export interface PhoneListProps {
   onToggleGroup: (s: Status) => void;
   onPick: (id: string) => void;
   onProfiles: () => void;
+  /** Under the status bar (the stories) and under the contacts (characters talk). */
+  top?: ReactNode;
+  bottom?: ReactNode;
 }
 
 export function PhoneList(p: PhoneListProps) {
@@ -55,6 +58,7 @@ export function PhoneList(p: PhoneListProps) {
           <span className="mystat">{t("messenger.myStatus", { status: t(STATUS_KEY.online) })} ▾</span>
         </div>
       )}
+      {!p.empty && p.top}
       {!p.empty && p.searchOpen && (
         <div className="sbar">
           <input
@@ -84,6 +88,7 @@ export function PhoneList(p: PhoneListProps) {
           <ContactGroups list={p.list} phone sel="" folded={p.folded} onToggle={p.onToggleGroup} onPick={p.onPick} />
         )}
       </div>
+      {!p.empty && p.bottom}
     </div>
   );
 }

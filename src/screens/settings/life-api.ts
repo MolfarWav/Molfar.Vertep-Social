@@ -1,6 +1,7 @@
 // Settings > Life talks to the `life` plugin: the state of the shared feed, "Update now", and the weather place lookup.
 // In the design preview (`?screen=`) the same calls answer from a small fake, so the screen can be drawn and checked.
 import { PREVIEW, call } from "@/lib/api";
+import type { TopicsCatalog } from "./topics";
 
 /** GET /life/world: what the feed holds now and whether another fetch is due (plugins/life, `worldStatus`). */
 export interface WorldStatus {
@@ -13,6 +14,10 @@ export interface WorldStatus {
   place: string;
   placeWanted: string;
   due: boolean;
+  /** How many of the kept items matched each chosen subject. */
+  byTopic?: Record<string, number>;
+  /** The feed was fetched under another choice of subjects: it catches up on the next fetch. */
+  topicsStale?: boolean;
 }
 
 const FAKE: WorldStatus = {
@@ -24,6 +29,39 @@ const FAKE: WorldStatus = {
   placeWanted: "Kyiv, Ukraine",
   due: false,
 };
+
+const FAKE_TOPICS: TopicsCatalog = {
+  groups: [
+    { id: "world", en: "World and society", uk: "Світ і суспільство" },
+    { id: "tech", en: "Technology", uk: "Технології" },
+    { id: "science", en: "Science and nature", uk: "Наука й природа" },
+    { id: "screen", en: "Games and screen", uk: "Ігри й екран" },
+  ],
+  topics: [
+    { id: "europe", group: "world", en: "Europe", uk: "Європа" },
+    { id: "economy", group: "world", en: "Economy and business", uk: "Економіка й бізнес" },
+    { id: "health", group: "world", en: "Health and medicine", uk: "Здоровʼя й медицина" },
+    { id: "tech", group: "tech", en: "Technology", uk: "Технології" },
+    { id: "ai", group: "tech", en: "AI and robots", uk: "ШІ й роботи" },
+    { id: "space", group: "science", en: "Space", uk: "Космос" },
+    { id: "nature", group: "science", en: "Nature and animals", uk: "Природа й тварини" },
+    { id: "games", group: "screen", en: "PC and console games", uk: "Ігри" },
+    { id: "anime", group: "screen", en: "Anime and manga", uk: "Аніме й манга" },
+  ],
+  max: 12,
+  customMax: 6,
+  byTopic: { space: 6, anime: 6 },
+};
+
+/** The list of subjects the user can pick (plugins/life, `TOPICS`). */
+export async function loadTopics(): Promise<TopicsCatalog | null> {
+  if (PREVIEW) return FAKE_TOPICS;
+  try {
+    return await call<TopicsCatalog>("GET", "/life/topics");
+  } catch {
+    return null;
+  }
+}
 
 export async function loadWorldStatus(): Promise<WorldStatus | null> {
   if (PREVIEW) return FAKE;

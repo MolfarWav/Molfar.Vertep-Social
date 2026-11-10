@@ -498,6 +498,12 @@ export function metLine(fsx, p, key) {
   const bits = ["You have met " + cut(str(x.name), 80) + " before" + (x.seen > 0 ? " (you have seen them " + Math.floor(x.seen) + " times)" : "") + "."];
   if (said && typeof said.text === "string" && str(said.text)) bits.push('They once told you: "' + cut(str(said.text), 160) + '".');
   if (typeof x.note === "string" && str(x.note)) bits.push("Your impression of them: " + cut(str(x.note), 160));
+  // how it stands between you, counted by the Life plugin from the tone of what was said either way (see toneOf there)
+  const feel = typeof x.feel === "number" && Number.isFinite(x.feel) ? x.feel : 0;
+  if (feel >= 7) bits.push("You are close to them and warm with them.");
+  else if (feel >= 3) bits.push("You get on well with them.");
+  else if (feel <= -7) bits.push("You are in open conflict with them: you may be sharp or pointed with them, in your own way.");
+  else if (feel <= -3) bits.push("You do not get on with them: you tend to be cool with them.");
   return bits.join(" ");
 }
 

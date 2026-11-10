@@ -8,7 +8,7 @@ import { MsgPicture } from "@/pictures/MsgPicture";
 import { RichText } from "@/stickers/Render";
 import { hueOf } from "@/mock/forum";
 import { Ava, bgOf, initial, MY_BG } from "./Ava";
-import type { ShownPost } from "./model";
+import { REACTION_SET, type ShownPost } from "./model";
 
 export type { ShownPost };
 
@@ -29,6 +29,7 @@ export function PostCard({
   onQuote,
   onReply,
   remove,
+  onReact,
 }: {
   post: ShownPost;
   phone: boolean;
@@ -38,11 +39,18 @@ export function PostCard({
   /** The user's own moderation (real forum only): removes this post, or deletes the whole topic when it is the opening post.
    *  Resolves to an error text, or null when it worked. */
   remove?: { topic: boolean; run: () => Promise<string | null> };
+  /** Gives or takes back a reaction (real forum only); the chips are drawn without it, but do nothing. */
+  onReact?: (post: ShownPost, emoji: string) => Promise<void>;
 }) {
   const t = useT();
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [picking, setPicking] = useState(false);
+  const react = async (emoji: string) => {
+    setPicking(false);
+    await onReact?.(post, emoji);
+  };
   const confirm = async () => {
     if (!remove || busy) return;
     setBusy(true);
@@ -65,6 +73,36 @@ export function PostCard({
       {post.text && <div className="post-text"><RichText text={post.text} /></div>}
       {post.image && <MsgPicture image={post.image} />}
       {post.sig && <div className="post-sig">{post.sig}</div>}
+      {(post.react?.length || onReact) && (
+        <div className="post-react">
+          {post.react?.map((r) => (
+            <button
+              key={r.emoji}
+              type="button"
+              className={"rx" + (r.mine ? " mine" : "")}
+              aria-pressed={r.mine}
+              disabled={!onReact}
+              title={r.who}
+              aria-label={t("forum.react.chip", { emoji: r.emoji, n: r.n, who: r.who })}
+              onClick={() => void react(r.emoji)}
+            >
+              <span className="emo" aria-hidden="true">{r.emoji}</span> {r.n}
+            </button>
+          ))}
+          {onReact && (
+            <button type="button" className="rx add" aria-expanded={picking} aria-label={t("forum.react.add")} title={t("forum.react.add")} onClick={() => setPicking((v) => !v)}>
+              {"\u{1F642}"}+
+            </button>
+          )}
+          {picking && (
+            <span className="rx-pick" role="group" aria-label={t("forum.react.pick")}>
+              {REACTION_SET.map((e) => (
+                <button key={e} type="button" className="rx" aria-label={e} onClick={() => void react(e)}>{e}</button>
+              ))}
+            </span>
+          )}
+        </div>
+      )}
     </>
   );
   const actions = !post.removed && (

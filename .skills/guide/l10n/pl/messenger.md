@@ -1,4 +1,4 @@
-<!-- source: 02ec1512cca0 -->
+<!-- source: def6fe72e8ea -->
 # Social: Messenger
 
 Messenger to czat z postaciami, które mieszkają w Social. Widzisz listę kontaktów, rozmowę z wybranym kontaktem i kartę z jego danymi. Każdy, kto chce porozmawiać z postacią w cztery oczy, zaczyna tutaj.
@@ -40,6 +40,18 @@ Pod grupami wybieraka jest drugi rząd na twoje własne paczki. Paczka to zestaw
 **Darmowe paczki.** W "Sticker packs" karta "Free packs" otwiera katalog paczek innych artystów (obecnie animowane emoji Noto od Google, CC BY 4.0, oraz emoji 3D Fluent od Microsoftu, MIT). Każda karta pokazuje podgląd, autora, licencję i link do źródła. "Add the pack" pobiera obrazki i tworzy zwykłą, twoją paczkę; autor i licencja zostają przy paczce w menedżerze. Paczka, która jest już dodana, pokazuje "Added" (usuń ją, aby dodać ponownie). Lista jest wczytywana z GitHuba przy otwarciu, więc potrzebne jest połączenie z internetem; jeśli nie da się jej wczytać, widzisz powód i przycisk "Try again". Pojawiają się tam tylko paczki, które właściciel Social umieścił w katalogu, zawsze na wolnej licencji (CC0, CC BY lub MIT).
 
 W rzędzie pojawia się zakładka z pierwszym obrazkiem paczki. Dotknij naklejki, aby wysłać ją od razu (tekst, który pisałeś, zostaje); dotknij własnego emoji, aby wstawić je do tekstu w miejscu kursora. Pole wyszukiwania znajduje obrazki także po nazwie, a ostatnio użyte są wspólne z emoji. Własne emoji jest zapisane w tekście jako `:pack/name:`; jeśli jego paczka zostanie później usunięta, pokaże się jako zwykły tekst. Naklejka zostaje na ekranie po usunięciu swojej paczki. Postać dowiaduje się tylko "a sticker: name" i nigdy nie widzi obrazka. Postacie używają tylko tych paczek, które włączysz dla nich w Profiles, Writing manner (zobacz [[profiles]]). W nowym wątku forum oferowane są tylko własne emoji, bo naklejka to cała odpowiedź.
+
+## Stories
+
+Gdy postać publikuje story, nad listą kontaktów pojawia się rząd okrągłych obrazków. Obwódka wokół obrazka oznacza, że nie widziałeś wszystkich story tej postaci. Dotknij jednego, aby je otworzyć: obrazek (albo linia na kolorowej karcie, gdy nie ma obrazka), ile mu zostało czasu i strzałki do przechodzenia między story tej postaci. Story znika po 24 godzinach; "Remove" usuwa je wcześniej, po pytaniu.
+
+Story powstaje z własnego dziennika postaci z danego dnia, więc mówi o czymś, co naprawdę jej się przydarzyło. Story są domyślnie wyłączone ("Settings" > "Community" > "Stories"); wymagają włączonego "Characters have their own life". Gdy "Characters may send pictures" jest włączone, story ma też obrazek, co kosztuje jedno wywołanie modelu i jedno wywołanie obrazu.
+
+## Characters talk
+
+Pod listą kontaktów, gdy w "Settings" > "Community" jest włączone "Characters talk to each other", pojawia się wiersz "Characters talk". Otwiera okno, w którym wybierasz dwie postacie i naciskasz "Let them talk". Każda para ma przełącznik (rozmawiają albo wstrzymane), "Read", aby zobaczyć, co napisały, i "Remove".
+
+Para pisze od czasu do czasu, tylko gdy obie są obecne według swoich harmonogramów, do dziennej liczby, którą ustawisz, po jednej wiadomości naraz. Kierują się tym, co każda pamięta o drugiej, razem z uczuciem między nimi. Ty tylko czytasz; nie piszą w tym do ciebie. Kosztuje to około dwa razy więcej tokenów niż zwykły czat, więc jest domyślnie wyłączone, a darmowe modele mogą sobie z tym nie radzić.
 
 ## Obrazki
 

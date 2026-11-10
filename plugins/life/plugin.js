@@ -43,7 +43,7 @@ const FAIL_WAIT_MS = 30 * 60 * 1000;
 const WORLD_FAIL_WAIT_MS = 2 * 3600 * 1000;
 const TICK_DAYS = 2;
 const PER_SOURCE = 6;
-const WORLD_MAX = 90;
+const WORLD_MAX = 160;
 const FEED_BYTES = 1500000;
 const TITLE_CHARS = 160;
 const TEXT_CHARS = 300;
@@ -140,6 +140,7 @@ export function readSettings(fsx) {
     world: l.world !== false,
     cats,
     place: cut(str(l.place), 80),
+    topics: cleanTopicSetting(l.topics),
     tz: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
     model: modelRef(isObj(r.models) ? r.models.messenger : ""),
   };
@@ -259,17 +260,146 @@ export function pickWorldItem(profile, items, skip, rand) {
   return r() < 0.5 ? pool[Math.floor(r() * pool.length)] : null;
 }
 
+// ---------- topics (issue #358): which subjects the outside feed keeps ----------
+// With no topic on, the feed is every enabled category, as before. With topics on, an item is kept when it comes from a feed the topic
+// brings (BBC section feeds, only fetched then) or a word of the topic starts a word of its title or text; the categories still decide
+// where from. The user can add topics of their own (a name and a few words); the list below is code, so it travels with the app.
+
+export const TOPIC_GROUPS = [
+  { id: "world", en: "World and society", uk: "Світ і суспільство" },
+  { id: "tech", en: "Technology", uk: "Технології" },
+  { id: "science", en: "Science and nature", uk: "Наука й природа" },
+  { id: "screen", en: "Games and screen", uk: "Ігри й екран" },
+  { id: "culture", en: "Culture and ideas", uk: "Культура й ідеї" },
+  { id: "life", en: "Everyday life", uk: "Щоденне життя" },
+  { id: "sport", en: "Sport and play", uk: "Спорт і гра" },
+];
+
+/** Word stems: a stem of four letters or more starts a word, a shorter one is the whole word. English and Ukrainian only. */
+export const TOPICS = [
+  { id: "europe", group: "world", en: "Europe", uk: "Європа", words: ["europ", "brussels", "євро", "брюсел"], feeds: ["bbc-europe"] },
+  { id: "usa", group: "world", en: "USA and Canada", uk: "США й Канада", words: ["american", "washington", "congress", "canad", "сша", "вашингтон", "канад"], feeds: ["bbc-us"] },
+  { id: "asia", group: "world", en: "Asia", uk: "Азія", words: ["asia", "china", "japan", "india", "korea", "азі", "китай", "япон", "інді", "корея"], feeds: ["bbc-asia"] },
+  { id: "mideast", group: "world", en: "Middle East", uk: "Близький Схід", words: ["israel", "gaza", "iran", "syria", "lebanon", "ізраїл", "іран", "сирі", "ліван"], feeds: ["bbc-mideast"] },
+  { id: "africa", group: "world", en: "Africa", uk: "Африка", words: ["africa", "nigeria", "kenya", "egypt", "африк", "нігері", "кені", "єгип"], feeds: ["bbc-africa"] },
+  { id: "ukraine", group: "world", en: "Ukraine", uk: "Україна", words: ["ukrain", "kyiv", "kharkiv", "odesa", "lviv", "україн", "київ", "харків", "одес", "львів"], feeds: [] },
+  { id: "economy", group: "world", en: "Economy and business", uk: "Економіка й бізнес", words: ["econom", "market", "inflation", "bank", "trade", "економ", "ринок", "інфляц", "банк", "бізнес"], feeds: ["bbc-business"] },
+  { id: "politics", group: "world", en: "Politics", uk: "Політика", words: ["election", "parliament", "minister", "government", "вибор", "парламент", "міністр", "уряд", "політ"], feeds: [] },
+  { id: "defence", group: "world", en: "Defence and security", uk: "Оборона й безпека", words: ["military", "defence", "army", "missile", "security", "оборон", "армі", "ракет", "безпек", "війн"], feeds: [] },
+  { id: "environment", group: "world", en: "Climate and environment", uk: "Клімат і довкілля", words: ["climate", "environment", "pollution", "wildlife", "клімат", "довкілл", "забруднен"], feeds: ["bbc-science"] },
+  { id: "health", group: "world", en: "Health and medicine", uk: "Здоровʼя й медицина", words: ["health", "medic", "hospital", "vaccine", "cancer", "здоров", "медиц", "лікар", "вакцин"], feeds: ["bbc-health"] },
+  { id: "education", group: "world", en: "Education", uk: "Освіта", words: ["school", "universit", "student", "teacher", "education", "школ", "університет", "студент", "освіт"], feeds: ["bbc-education"] },
+  { id: "tech", group: "tech", en: "Technology", uk: "Технології", words: ["technolog", "internet", "software", "startup", "технолог", "інтернет", "програм"], feeds: ["bbc-tech"] },
+  { id: "ai", group: "tech", en: "AI and robots", uk: "ШІ й роботи", words: ["ai", "artificial", "robot", "chatbot", "штучн", "робот", "нейромереж", "чатбот"], feeds: [] },
+  { id: "cyber", group: "tech", en: "Cybersecurity and privacy", uk: "Кібербезпека й приватність", words: ["cyber", "hacker", "privacy", "malware", "кібер", "хакер", "приватн", "шкідлив"], feeds: [] },
+  { id: "gadgets", group: "tech", en: "Phones and gadgets", uk: "Телефони й гаджети", words: ["phone", "iphone", "android", "gadget", "смартфон", "гаджет", "телефон"], feeds: [] },
+  { id: "space", group: "science", en: "Space", uk: "Космос", words: ["space", "nasa", "rocket", "moon", "mars", "orbit", "космос", "місяц", "марс", "орбіт"], feeds: ["nasa"] },
+  { id: "physics", group: "science", en: "Physics and chemistry", uk: "Фізика й хімія", words: ["physics", "quantum", "particle", "chemical", "фізик", "квант", "частинк", "хімі"], feeds: [] },
+  { id: "nature", group: "science", en: "Nature and animals", uk: "Природа й тварини", words: ["species", "animal", "dinosaur", "evolution", "wildlife", "тварин", "динозавр", "еволюц", "природ"], feeds: [] },
+  { id: "history", group: "science", en: "History and archaeology", uk: "Історія й археологія", words: ["history", "archaeolog", "ancient", "museum", "історі", "археолог", "давн", "музе"], feeds: [] },
+  { id: "earth", group: "science", en: "Earth and weather", uk: "Земля й погода", words: ["earthquake", "volcano", "storm", "flood", "землетрус", "вулкан", "шторм", "повін"], feeds: [] },
+  { id: "energy", group: "science", en: "Energy and transport", uk: "Енергетика й транспорт", words: ["energy", "electric", "solar", "nuclear", "railway", "енерг", "електр", "сонячн", "атомн", "залізнич"], feeds: [] },
+  { id: "mind", group: "science", en: "Mind and psychology", uk: "Психологія", words: ["psycholog", "brain", "sleep", "mental", "психолог", "мозок", "ментальн"], feeds: [] },
+  { id: "games", group: "screen", en: "PC and console games", uk: "Ігри", words: ["game", "steam", "playstation", "xbox", "nintendo", "ігр", "стим"], feeds: ["pcgamer"] },
+  { id: "rpg", group: "screen", en: "RPG and strategy", uk: "RPG і стратегії", words: ["rpg", "strategy", "dungeon", "roguelike", "рольов", "стратег"], feeds: [] },
+  { id: "indie", group: "screen", en: "Indie and retro games", uk: "Інді й ретро ігри", words: ["indie", "retro", "pixel", "інді", "ретро"], feeds: [] },
+  { id: "movies", group: "screen", en: "Films", uk: "Фільми", words: ["film", "movie", "cinema", "director", "фільм", "кіно", "режисер"], feeds: ["variety"] },
+  { id: "series", group: "screen", en: "TV series and streaming", uk: "Серіали й стрімінг", words: ["series", "season", "netflix", "streaming", "episode", "серіал", "сезон", "стрім"], feeds: [] },
+  { id: "anime", group: "screen", en: "Anime and manga", uk: "Аніме й манга", words: ["anime", "manga", "аніме", "манга"], feeds: ["ann"] },
+  { id: "comics", group: "screen", en: "Comics and superheroes", uk: "Комікси й супергерої", words: ["comic", "marvel", "superhero", "комікс", "марвел", "супергер"], feeds: [] },
+  { id: "fantasy", group: "screen", en: "Sci-fi and fantasy", uk: "Фантастика й фентезі", words: ["fantasy", "scifi", "dragon", "tolkien", "wizard", "фентезі", "фантаст", "дракон", "чарівн"], feeds: [] },
+  { id: "music", group: "culture", en: "Music", uk: "Музика", words: ["music", "album", "concert", "band", "singer", "музик", "альбом", "концерт", "гурт", "співак"], feeds: ["bbc-arts"] },
+  { id: "books", group: "culture", en: "Books", uk: "Книжки", words: ["book", "novel", "author", "literature", "книжк", "книг", "роман", "письменник", "літератур"], feeds: [] },
+  { id: "art", group: "culture", en: "Art and design", uk: "Мистецтво й дизайн", words: ["painting", "gallery", "design", "artist", "мистецтв", "картин", "галере", "дизайн", "художник"], feeds: ["bbc-arts"] },
+  { id: "myth", group: "culture", en: "Folklore and mythology", uk: "Фольклор і міфи", words: ["myth", "legend", "folklore", "fairy", "міф", "легенд", "фольклор", "казк"], feeds: [] },
+  { id: "ideas", group: "culture", en: "Philosophy and ideas", uk: "Філософія й ідеї", words: ["philosoph", "ethics", "belief", "філософ", "етик", "переконан"], feeds: [] },
+  { id: "language", group: "culture", en: "Languages and words", uk: "Мови й слова", words: ["language", "linguist", "dialect", "translation", "мов", "лінгвіст", "діалект", "переклад"], feeds: [] },
+  { id: "humour", group: "culture", en: "Memes and humour", uk: "Меми й гумор", words: ["meme", "funny", "joke", "viral", "мем", "жарт", "смішн", "гумор"], feeds: [] },
+  { id: "food", group: "life", en: "Food and cooking", uk: "Їжа й кулінарія", words: ["food", "recipe", "restaurant", "cooking", "bread", "рецепт", "ресторан", "кулінар", "страв"], feeds: [] },
+  { id: "travel", group: "life", en: "Travel and places", uk: "Подорожі", words: ["travel", "tourist", "island", "holiday", "подорож", "турист", "острів", "відпустк"], feeds: [] },
+  { id: "pets", group: "life", en: "Pets", uk: "Домашні улюбленці", words: ["pet", "kitten", "puppy", "cat", "dog", "кошен", "цуценя", "собак", "котик", "улюбленц"], feeds: [] },
+  { id: "fashion", group: "life", en: "Fashion and beauty", uk: "Мода й краса", words: ["fashion", "dress", "beauty", "makeup", "мода", "модн", "одяг", "краса"], feeds: [] },
+  { id: "cars", group: "life", en: "Cars and motorbikes", uk: "Авто й мотоцикли", words: ["motor", "motorbike", "driver", "автомобіл", "мотоцикл", "водій", "авто"], feeds: [] },
+  { id: "home", group: "life", en: "Home and garden", uk: "Дім і сад", words: ["garden", "house", "plant", "interior", "будинок", "рослин", "інтерʼєр", "городн"], feeds: [] },
+  { id: "sport", group: "sport", en: "Sport", uk: "Спорт", words: ["sport", "olympic", "tennis", "basketball", "спорт", "олімп", "теніс", "баскетбол"], feeds: ["bbc-sport"] },
+  { id: "football", group: "sport", en: "Football", uk: "Футбол", words: ["football", "soccer", "striker", "football", "футбол", "воротар"], feeds: ["bbc-football"] },
+  { id: "chess", group: "sport", en: "Chess and board games", uk: "Шахи й настільні ігри", words: ["chess", "boardgame", "шахи", "настіль"], feeds: [] },
+  { id: "outdoors", group: "sport", en: "Fitness and outdoors", uk: "Фітнес і природа", words: ["running", "hiking", "fitness", "marathon", "марафон", "похід", "фітнес", "турпохід"], feeds: [] },
+];
+
+/** Section feeds of a host the plugin already reads (feeds.bbci.co.uk); fetched only while a topic that lists them is on. */
+export const TOPIC_SOURCES = [
+  { id: "bbc-europe", cat: "news", name: "BBC Europe", kind: "rss", url: "https://feeds.bbci.co.uk/news/world/europe/rss.xml", topicOnly: true },
+  { id: "bbc-us", cat: "news", name: "BBC US and Canada", kind: "rss", url: "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml", topicOnly: true },
+  { id: "bbc-asia", cat: "news", name: "BBC Asia", kind: "rss", url: "https://feeds.bbci.co.uk/news/world/asia/rss.xml", topicOnly: true },
+  { id: "bbc-mideast", cat: "news", name: "BBC Middle East", kind: "rss", url: "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml", topicOnly: true },
+  { id: "bbc-africa", cat: "news", name: "BBC Africa", kind: "rss", url: "https://feeds.bbci.co.uk/news/world/africa/rss.xml", topicOnly: true },
+  { id: "bbc-business", cat: "news", name: "BBC Business", kind: "rss", url: "https://feeds.bbci.co.uk/news/business/rss.xml", topicOnly: true },
+  { id: "bbc-health", cat: "news", name: "BBC Health", kind: "rss", url: "https://feeds.bbci.co.uk/news/health/rss.xml", topicOnly: true },
+  { id: "bbc-education", cat: "news", name: "BBC Education", kind: "rss", url: "https://feeds.bbci.co.uk/news/education/rss.xml", topicOnly: true },
+  { id: "bbc-tech", cat: "news", name: "BBC Technology", kind: "rss", url: "https://feeds.bbci.co.uk/news/technology/rss.xml", topicOnly: true },
+  { id: "bbc-science", cat: "science", name: "BBC Science and Environment", kind: "rss", url: "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml", topicOnly: true },
+  { id: "bbc-arts", cat: "culture", name: "BBC Entertainment and Arts", kind: "rss", url: "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml", topicOnly: true },
+  { id: "bbc-sport", cat: "news", name: "BBC Sport", kind: "rss", url: "https://feeds.bbci.co.uk/sport/rss.xml", topicOnly: true },
+  { id: "bbc-football", cat: "news", name: "BBC Football", kind: "rss", url: "https://feeds.bbci.co.uk/sport/football/rss.xml", topicOnly: true },
+];
+const TOPIC_PER_SOURCE = 12;
+export const TOPICS_ON_MAX = 12;
+export const CUSTOM_MAX = 6;
+const CUSTOM_WORDS_MAX = 6;
+
+/** The topic part of the life settings: `on` (ids of catalog topics) and `custom` ([{id, label, words}]), cleaned. */
+export function cleanTopicSetting(raw) {
+  const r = isObj(raw) ? raw : {};
+  const known = new Set(TOPICS.map((t) => t.id));
+  const on = [...new Set((Array.isArray(r.on) ? r.on : []).filter((id) => typeof id === "string" && known.has(id)))].slice(0, TOPICS_ON_MAX);
+  const custom = [];
+  for (const c of Array.isArray(r.custom) ? r.custom : []) {
+    if (!isObj(c)) continue;
+    const label = cut(oneLine(c.label, 40), 40);
+    const list = Array.isArray(c.words) ? c.words : String(c.words || "").split(/[,;\n]/);
+    const ws = [...new Set(list.map((w) => oneLine(String(w), 30).toLowerCase()).filter((w) => w.length >= 2))].slice(0, CUSTOM_WORDS_MAX);
+    if (!label || !ws.length) continue;
+    // the id the settings carry is kept (the screen shows counts by it); a missing or taken one is made from the name
+    let id = typeof c.id === "string" && /^c[a-z0-9]{1,12}$/.test(c.id) ? c.id : "c" + hashId(label);
+    while (custom.some((x) => x.id === id)) id = ("c" + hashId(id + label)).slice(0, 13);
+    custom.push({ id, label, words: ws });
+    if (custom.length >= CUSTOM_MAX) break;
+  }
+  return { on, custom };
+}
+
+/** The topics in use: [{id, words, feeds}] (the catalog's, then the user's own, which bring no feeds). */
+export function selectedTopics(settings) {
+  const t = settings.topics || { on: [], custom: [] };
+  return [...TOPICS.filter((x) => t.on.includes(x.id)), ...t.custom.map((c) => ({ id: c.id, words: c.words, feeds: [] }))];
+}
+
+/** A key of what is selected; a fetch made under another key is out of date. */
+export const topicsKey = (settings) => selectedTopics(settings).map((t) => t.id + ":" + t.words.join("+")).join("|");
+
+const tokens = (s) => String(s).toLowerCase().split(/[\s.,!?;:'"«»“”()[\]{}<>…—–\-_/\\|]+/).filter(Boolean);
+
+/** Whether an item ({from, title, text}) is about a topic ({words, feeds}). */
+export function topicHit(topic, item) {
+  if (topic.feeds.includes(item.from)) return true;
+  const toks = tokens(str(item.title) + " " + str(item.text));
+  return topic.words.some((w) => toks.some((t) => (w.length >= 4 ? t.startsWith(w) : t === w)));
+}
+
 // ---------- the world feed: reading ----------
 
 export function readWorld(fsx) {
   const w = readJson(fsx, WORLD_FILE, null);
-  if (!isObj(w)) return { day: "", fetchedAt: 0, cats: [], place: "", items: [], errors: {}, failedAt: 0 };
+  if (!isObj(w)) return { day: "", fetchedAt: 0, cats: [], place: "", items: [], errors: {}, failedAt: 0, topicsKey: "", byTopic: {} };
   return {
     day: typeof w.day === "string" ? w.day : "",
     fetchedAt: num(w.fetchedAt),
     cats: (Array.isArray(w.cats) ? w.cats : []).filter((c) => CATS.includes(c)),
     place: str(w.place),
-    items: (Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && CATS.includes(i.cat) && str(i.title)).map((i) => ({ id: String(i.id), cat: i.cat, src: str(i.src), title: str(i.title), text: str(i.text) })),
+    items: (Array.isArray(w.items) ? w.items : []).filter((i) => isObj(i) && typeof i.id === "string" && ID.test(i.id) && CATS.includes(i.cat) && str(i.title)).map((i) => ({ id: String(i.id), cat: i.cat, src: str(i.src), ...(typeof i.from === "string" && ID.test(i.from) ? { from: i.from } : {}), title: str(i.title), text: str(i.text) })),
+    topicsKey: typeof w.topicsKey === "string" ? w.topicsKey : "",
+    byTopic: isObj(w.byTopic) ? w.byTopic : {},
     errors: isObj(w.errors) ? w.errors : {},
     failedAt: num(w.failedAt),
   };
@@ -580,6 +710,9 @@ const fillDate = (url, now, tz) => {
 /** The sources to fetch for these settings (one per enabled category member; weather only with a looked-up place). */
 export function sourcesFor(settings, place) {
   const list = SOURCES.filter((s) => settings.cats[s.cat]);
+  // the feeds a chosen topic brings, in a category that is on
+  const need = new Set(selectedTopics(settings).flatMap((t) => t.feeds));
+  for (const s of TOPIC_SOURCES) if (need.has(s.id) && settings.cats[s.cat]) list.push(s);
   if (settings.cats.weather && place) list.push({ id: "weather", cat: "weather", name: "Open-Meteo", kind: "weather", url: forecastUrl(place.lat, place.lon) });
   return list;
 }
@@ -591,7 +724,7 @@ export function worldDue(settings, world, place, now, tz) {
   if (!want.length) return false;
   if (now - world.failedAt < WORLD_FAIL_WAIT_MS) return false;
   const placeName = place ? place.name : "";
-  return world.day !== localDay(now, tz) || want.some((c) => !world.cats.includes(c)) || world.place !== placeName;
+  return world.day !== localDay(now, tz) || want.some((c) => !world.cats.includes(c)) || world.place !== placeName || (world.topicsKey || "") !== topicsKey(settings);
 }
 
 function requestWorld(host, settings, place, now) {
@@ -625,7 +758,7 @@ export function buildWorld(settings, place, results, now, rand) {
     }
     let found = [];
     try {
-      if (s.kind === "rss") found = parseFeed(typeof r.text === "string" ? r.text : "", PER_SOURCE);
+      if (s.kind === "rss") found = parseFeed(typeof r.text === "string" ? r.text : "", s.topicOnly ? TOPIC_PER_SOURCE : PER_SOURCE);
       else if (s.kind === "wiki") found = parseWiki(r.json, rand);
       else found = [parseWeather(r.json, place ? place.name : "")].filter(Boolean);
     } catch (e) {
@@ -636,10 +769,27 @@ export function buildWorld(settings, place, results, now, rand) {
       const id = hashId(s.id + "|" + f.title);
       if (seen.has(id)) continue;
       seen.add(id);
-      items.push({ id, cat: s.cat, src: s.name, title: f.title, text: f.text });
+      items.push({ id, cat: s.cat, src: s.name, from: s.id, title: f.title, text: f.text });
     }
   }
-  return { day: localDay(now, settings.tz), fetchedAt: now, cats: [...cats], place: place ? place.name : "", items: items.slice(0, WORLD_MAX), errors, failedAt: items.length ? 0 : now };
+  // with topics on, only what is about one of them stays (the weather is kept: it has its own switch and place)
+  const chosen = selectedTopics(settings);
+  const byTopic = {};
+  let kept = items;
+  if (chosen.length) {
+    kept = items.filter((i) => {
+      if (i.cat === "weather") return true;
+      let any = false;
+      for (const t of chosen) {
+        if (topicHit(t, i)) {
+          byTopic[t.id] = (byTopic[t.id] || 0) + 1;
+          any = true;
+        }
+      }
+      return any;
+    });
+  }
+  return { day: localDay(now, settings.tz), fetchedAt: now, cats: [...cats], place: place ? place.name : "", items: kept.slice(0, WORLD_MAX), errors, failedAt: items.length ? 0 : now, topicsKey: topicsKey(settings), byTopic };
 }
 
 function fileWorld(fsx, settings, results, now) {
@@ -679,6 +829,8 @@ export function worldStatus(fsx, settings, now) {
     fetchedAt: w.fetchedAt,
     count: enabledItems(w, settings).length,
     byCat,
+    byTopic: w.byTopic,
+    topicsStale: w.topicsKey !== topicsKey(settings),
     errors: w.errors,
     place: place ? place.name : "",
     placeWanted: settings.place,
@@ -818,8 +970,41 @@ const SCAN_EVERY_MS = 5 * 60 * 1000;
 const SEEN_WINDOW = 8;
 const PERSON_KEY = /^[cun]:[^\s]{1,80}$/;
 const SELF = "me";
+const FEEL_MAX = 12;
+const FEEL_COOL_PER_DAY = 0.93;
 const peoplePath = (id) => "life/people/" + id + ".json";
 const PEOPLE_META = "life/people-meta.json";
+
+// ---------- tone: a rule-based reading of how a post sounds (no model call) ----------
+// A short list of word stems in English and Ukrainian (a stem matches the start of a word; the sandbox has no Unicode property escapes, so
+// words are split on punctuation). It reads the mood of a line, not its meaning: 1 warm, -1 sharp, 0 neither. A negation right before a
+// word flips it. Emoji count too. It is a cheap proxy; the character's own model still words the impression once a day.
+
+const WARM = ["thank", "great", "love", "nice", "glad", "agree", "wonderful", "lovely", "awesome", "cool", "happy", "welcome", "sweet", "kind", "haha", "lol", "good", "дяк", "чудов", "класн", "кльов", "круто", "люблю", "згод", "приємн", "радий", "рада", "раді", "молодц", "супер", "гарн", "чудес", "вітаю", "ласкав", "підтрим", "смішн", "хаха", "добре", "добрий", "ура"];
+const SHARP = ["stupid", "idiot", "hate", "awful", "terrible", "nonsense", "wrong", "annoying", "shut", "boring", "rude", "liar", "disgust", "useless", "pathetic", "ridiculous", "dumb", "лайно", "дурн", "ідіот", "нісенітн", "бред", "ненавиджу", "огидн", "жахлив", "дратує", "дратуєш", "брехн", "відчепись", "замовкн", "тупий", "тупа", "безглузд", "набрид", "нудн", "хамськ"];
+const NOT = ["не", "ні", "нема", "not", "no", "never", "dont", "doesnt", "isnt", "wasnt", "arent", "wont", "cant", "cannot", "didnt"];
+const WARM_MARKS = ["❤", "\u{1F60A}", "\u{1F600}", "\u{1F604}", "\u{1F601}", "\u{1F602}", "\u{1F923}", "\u{1F496}", "\u{1F495}", "\u{1F44D}", "\u{1F642}", "\u{1F970}", "\u{1F60D}", "\u{1F389}"];
+const SHARP_MARKS = ["\u{1F621}", "\u{1F620}", "\u{1F4A2}", "\u{1F44E}", "\u{1F612}", "\u{1F644}", "\u{1F92C}", "\u{1F624}"];
+
+/** How a line sounds: 1 warm, -1 sharp, 0 neither. */
+export function toneOf(text) {
+  const t = String(text || "").toLowerCase();
+  let score = 0;
+  for (const m of WARM_MARKS) if (t.includes(m)) score += 1;
+  for (const m of SHARP_MARKS) if (t.includes(m)) score -= 1;
+  const ws = t.split(/[\s.,!?;:"«»“”()[\]{}<>…—–\-_/\\|]+/).filter(Boolean);
+  ws.forEach((w, i) => {
+    const sign = WARM.some((x) => w.startsWith(x)) ? 1 : SHARP.some((x) => w.startsWith(x)) ? -1 : 0;
+    if (!sign) return;
+    // "not nice", "не дуже гарно": a negation one or two words before
+    const negated = [ws[i - 1], ws[i - 2]].some((x) => x && NOT.includes(x.replace(/'/g, "")));
+    score += negated ? -sign : sign;
+  });
+  return score > 0 ? 1 : score < 0 ? -1 : 0;
+}
+
+/** The word for a feeling score: "warm" from 3, "close" from 7, "cold" from -3, "hostile" from -7; "" in between. */
+export const feelWord = (feel) => (feel >= 7 ? "close" : feel >= 3 ? "warm" : feel <= -7 ? "hostile" : feel <= -3 ? "cold" : "");
 
 const keyOfUser = (post) => (typeof post.persona === "string" && ID.test(post.persona) ? "u:" + post.persona : "n:" + (str(post.name).toLowerCase().replace(/\s+/g, "_").slice(0, 60) || "you"));
 
@@ -842,6 +1027,7 @@ function cleanPerson(x) {
     note: cut(str(x.note), NOTE_CHARS),
     noteAt: num(x.noteAt),
     fresh: Math.max(0, Math.floor(num(x.fresh))),
+    feel: Math.round(Math.max(-FEEL_MAX, Math.min(FEEL_MAX, num(x.feel))) * 10) / 10,
   };
 }
 
@@ -878,7 +1064,8 @@ export function topicEvents(id, topic, since) {
   const first = posts.findIndex((p) => p.by === id);
   if (first < 0) return [];
   const out = [];
-  const who = (p) => ({ key: p.by === SELF ? keyOfUser(p) : "c:" + p.by, name: str(p.name) });
+  // the moderator's event posts ("_mod") are not a person to remember
+  const who = (p) => ({ key: p.by === SELF ? keyOfUser(p) : "c:" + p.by, name: p.by === "_mod" ? "" : str(p.name) });
   posts.forEach((x, i) => {
     if (x.by === id) {
       if (x.at <= since) return;
@@ -886,7 +1073,7 @@ export function topicEvents(id, topic, since) {
       if (isObj(x.quote) && x.quote.by !== id) {
         q = { key: x.quote.by === SELF ? keyOfUser({ name: x.quote.name, persona: posts.find((p) => p.by === SELF && p.name === x.quote.name && p.persona)?.persona }) : "c:" + x.quote.by, name: str(x.quote.name), text: str(x.quote.text) };
       } else if (!x.quote && i > 0 && posts[i - 1].by === SELF) q = { ...who(posts[i - 1]), text: posts[i - 1].text };
-      if (q && q.name && PERSON_KEY.test(q.key)) out.push({ key: q.key, name: q.name, at: x.at, where: "forum", seen: 0, toMe: 0, fromMe: 1, said: noMark(q.text) });
+      if (q && q.name && PERSON_KEY.test(q.key)) out.push({ key: q.key, name: q.name, at: x.at, where: "forum", seen: 0, toMe: 0, fromMe: 1, said: noMark(q.text), tone: toneOf(x.text) });
       return;
     }
     const seesIt = i < first ? posts[first].at > since && first - i <= SEEN_WINDOW : x.at > since;
@@ -894,7 +1081,7 @@ export function topicEvents(id, topic, since) {
     const w = who(x);
     if (!w.name || !PERSON_KEY.test(w.key)) return;
     const toMe = isObj(x.quote) && x.quote.by === id;
-    out.push({ ...w, at: x.at, where: "forum", seen: 1, toMe: toMe ? 1 : 0, fromMe: 0, said: toMe ? noMark(x.text) : "" });
+    out.push({ ...w, at: x.at, where: "forum", seen: 1, toMe: toMe ? 1 : 0, fromMe: 0, said: toMe ? noMark(x.text) : "", tone: toMe ? toneOf(x.text) : 0 });
   });
   return out;
 }
@@ -905,8 +1092,8 @@ export function chatEvents(chat, me, since) {
   const out = [];
   for (const m of chat.messages) {
     if (!isObj(m) || !Number.isFinite(m.at) || m.at <= since || typeof m.who !== "string") continue;
-    if (m.who === SELF) out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 1, toMe: 1, fromMe: 0, said: noMark(typeof m.text === "string" ? m.text : "") });
-    else out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 0, toMe: 0, fromMe: 1, said: "" });
+    if (m.who === SELF) out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 1, toMe: 1, fromMe: 0, said: noMark(typeof m.text === "string" ? m.text : ""), tone: toneOf(m.text) });
+    else out.push({ key: me.key, name: me.name, at: m.at, where: "messenger", seen: 0, toMe: 0, fromMe: 1, said: "", tone: toneOf(m.text) });
   }
   return out;
 }
@@ -916,9 +1103,12 @@ export function mergeEvents(pf, events) {
   for (const e of events) {
     let p = pf.people.find((x) => x.key === e.key);
     if (!p) {
-      p = { key: e.key, name: e.name, kind: e.key.startsWith("c:") ? "character" : "user", first: e.at, last: e.at, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", noteAt: 0, fresh: 0 };
+      p = { key: e.key, name: e.name, kind: e.key.startsWith("c:") ? "character" : "user", first: e.at, last: e.at, seen: 0, toMe: 0, fromMe: 0, said: [], note: "", noteAt: 0, fresh: 0, feel: 0 };
       pf.people.push(p);
     }
+    // feelings cool over the days and move by the tone of what was said either way (theirs to the character, the character's to them)
+    if (e.at > p.last) p.feel *= Math.pow(FEEL_COOL_PER_DAY, (e.at - p.last) / 86400000);
+    p.feel = Math.round(Math.max(-FEEL_MAX, Math.min(FEEL_MAX, p.feel + (e.tone || 0))) * 10) / 10;
     p.name = e.name || p.name;
     p.first = Math.min(p.first || e.at, e.at);
     p.last = Math.max(p.last, e.at);
@@ -1108,6 +1298,7 @@ export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   if (!path.startsWith("/life/") && path !== "/life") return null;
   const parts = path.split("/").filter(Boolean); // ["life", "diary", id, "entry", eid]
+  if (parts[1] === "topics" && req.method === "GET") return ok({ groups: TOPIC_GROUPS, topics: TOPICS.map(({ id, group, en, uk }) => ({ id, group, en, uk })), max: TOPICS_ON_MAX, customMax: CUSTOM_MAX, byTopic: readWorld(host.fs).byTopic });
   if (parts[1] === "people") return peopleRoute(req, host, parts);
   if (parts[1] === "diary") return diaryRoute(req, host, parts);
   if (parts[1] === "world") return worldRoute(req, host, parts);

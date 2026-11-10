@@ -2,6 +2,7 @@ import { useT } from "@/i18n/index";
 import { LIMITS, type SettingsMock } from "@/mock/settings";
 import type { ModelChoice } from "@/lib/api";
 import { Row, Segmented, Slider, Stepper, Switch, TimeRange, type Opt } from "./controls";
+import { CommunityRows } from "./community";
 import { LifeMain, LifeWorld } from "./life";
 import { PicturesRows } from "./pictures";
 import { AccessControl, Card, LanguageRows, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
@@ -133,6 +134,10 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
         <Card title={t("settings.section.life")} glyph="life">
           <LifeMain s={s} set={set} />
           <LifeWorld s={s} set={set} />
+        </Card>
+
+        <Card title={t("settings.section.community")} glyph="community">
+          <CommunityRows s={s} set={set} />
         </Card>
 
         <Card title={t("settings.section.notify")} glyph="notify">
