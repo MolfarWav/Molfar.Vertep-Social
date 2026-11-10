@@ -3,7 +3,12 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.8.0 (2026-11-10)
+
+Known people, answering the addressed character first, a board picker. Forum 0.6.0, Life 0.2.0, messenger 0.7.0, Profiles 0.7.0 (stickers 0.2.0). Needs the same engine as 0.7.0.
+
+- **The people list can be edited, and shows who remembers a character (#357).** On the Life tab you can reword an impression (**Edit**), and under the list **Who remembers her** shows the other characters whose lists hold this one. `PUT /life/people/<id>/<key>`, and `GET` carries `knownBy`.
+- **A reply right under a character's post is aimed at that character.** After a quote and a named character, the author of the post just above counts as addressed (a reply under your own post addresses nobody).
 
 - **Favourite boards are picked from the boards that exist.** In a profile's Forum tab the boards of the forum are listed under "Favourite boards": tap one to add it (typing a name still works). The forum plugin has a light `GET /forum/boards` (names only).
 - **The forum answers whoever you addressed first.** Quote a character's post, or name them, and that character replies before the others, even when the owed replies of the topic are used up (`topic.addressed`, `addresseeOf`). Others reply as before when the character is offline or does not answer you.

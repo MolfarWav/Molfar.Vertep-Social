@@ -1387,13 +1387,15 @@ function boardsRoute(req, host) {
 }
 
 /**
- * The character the user's post is aimed at: the author of the post it quotes, else the first character whose name it mentions; "" for nobody.
+ * The character the user's post is aimed at: the author of the post it quotes, else the first character whose name it mentions, else the
+ * author of the post right above it when that is a character (`above`); "" for nobody.
  * That character answers before the others (`targetsFor`, `planAction`). `profiles` are the readable profiles.
  */
-export function addresseeOf(profiles, target, text) {
+export function addresseeOf(profiles, target, text, above) {
   if (target && target.by !== SELF && profiles.some((p) => p.id === target.by)) return target.by;
   const hit = profiles.find((p) => mentions(String(text), p.name));
-  return hit ? hit.id : "";
+  if (hit) return hit.id;
+  return !target && above && above.by !== SELF && profiles.some((p) => p.id === above.by) ? above.by : "";
 }
 
 /** The user posted: characters reply in a few minutes, within the safety net (the slot moves up, never past the hard gap). */
@@ -1442,11 +1444,12 @@ function replyRoute(req, host) {
   const now = Date.now();
   const target = typeof b.quoteOf === "string" ? topic.posts.find((p) => p.id === b.quoteOf && !p.removed) : null;
   const post = { id: "p-" + now + "-" + rid(), ...meFields(meNow(fsx)), at: now, text, ...(picked ? { image: picked } : {}), ...(target ? { quote: quoteOf(target) } : {}) };
+  const above = livePosts(topic).slice(-1)[0];
   topic.posts.push(post);
   topic.lastAt = now;
   topic.unread = false;
   topic.owe = 1 + Math.floor(Math.random() * 3);
-  topic.addressed = addresseeOf(loadProfiles(fsx), target, text);
+  topic.addressed = addresseeOf(loadProfiles(fsx), target, text, above);
   writeTopic(fsx, topic);
   userPosted(fsx, now);
   return ok({ ok: true, post });

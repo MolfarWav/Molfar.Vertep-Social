@@ -22,6 +22,8 @@
  *   POST   /life/diary/<profile>/write              write a day now (testing); {ok, diary} or {ok: false, error, code?}
  *   DELETE /life/diary/<profile>                    forget the whole diary
  *   GET    /life/people/<profile>                   {people: [{key, name, kind, first, last, seen, toMe, fromMe, said, note, noteAt}]}
+ *       plus `knownBy`: [{id, name, seen, note}], the other characters whose lists hold this one
+ *   PUT    /life/people/<profile>/<key>             {note} the user words the impression of one person
  *   DELETE /life/people/<profile>[/<key>]           forget one person, or everyone (the count restarts from now)
  *   GET    /life/world                              {status}
  *   POST   /life/world/refresh                      fetch the feed now; {ok, status}
@@ -1052,6 +1054,18 @@ function fileNotesResult(fsx, id, result, now, tz) {
   writePeople(fsx, id, pf);
 }
 
+/** The other characters that remember this one: [{id, name, seen, note}], the most seen first. Read from their lists; nothing is written. */
+export function knownBy(fsx, id) {
+  const out = [];
+  for (const other of profileIds(fsx)) {
+    if (other === id) continue;
+    const p = readProfile(fsx, other);
+    const x = p ? readPeople(fsx, other).people.find((q) => q.key === "c:" + id) : null;
+    if (x) out.push({ id: other, name: p.name, seen: x.seen, note: x.note });
+  }
+  return out.sort((a, b) => b.seen - a.seen).slice(0, 20);
+}
+
 function peopleRoute(req, host, parts) {
   const fsx = host.fs;
   const id = idOf(parts[2]);
@@ -1063,7 +1077,19 @@ function peopleRoute(req, host, parts) {
   } catch {
     // keep it as it came
   }
-  if (!key && req.method === "GET") return ok(peopleView(readPeople(fsx, id)));
+  if (!key && req.method === "GET") return ok({ ...peopleView(readPeople(fsx, id)), knownBy: knownBy(fsx, id) });
+  if (key && req.method === "PUT") {
+    // the user's own wording of the impression; the model's next one replaces it only after three new meetings
+    const b = isObj(req.body) ? req.body : {};
+    const pf = readPeople(fsx, id);
+    const x = pf.people.find((q) => q.key === key);
+    if (!x) return ok({ error: "no such person" }, 404);
+    x.note = oneLine(b.note, NOTE_CHARS);
+    x.noteAt = Date.now();
+    x.fresh = 0;
+    writePeople(fsx, id, pf);
+    return ok({ ok: true, ...peopleView(pf) });
+  }
   if (!key && req.method === "DELETE") {
     // forget everyone; the scan restarts from now, so the old meetings are not counted again
     writePeople(fsx, id, { ...emptyPeople(), scanned: Date.now() });

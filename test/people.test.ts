@@ -291,12 +291,31 @@ test("the user's reply remembers who was addressed; a plain reply clears it; a n
   const call = (body: object) => forum.handleRoute({ method: "POST", path: "/forum/reply", body: { topic: "t", ...body } }, h.host);
   call({ text: "Answering you", quoteOf: "p1" });
   expect(get(h, "forum/topics/t.json").addressed).toBe("yaryna");
+  // an unquoted reply right under a character's post is aimed at that character; under the user's own post it is aimed at nobody
+  put(h, "forum/topics/t.json", { ...get(h, "forum/topics/t.json"), posts: [post("p1", "yaryna", "Yaryna", "Hello", now - 9)] });
+  call({ text: "Just under it" });
+  expect(get(h, "forum/topics/t.json").addressed).toBe("yaryna");
   call({ text: "Just a thought" });
   expect(get(h, "forum/topics/t.json").addressed).toBe("");
   call({ text: "Mavka, you will like this" });
   expect(get(h, "forum/topics/t.json").addressed).toBe("mavka");
   // the persona rides on the post
   expect(get(h, "forum/topics/t.json").posts.at(-1).persona).toBe("u1");
+});
+
+test("the user can reword an impression; the list says which other characters remember this one", () => {
+  const h = makeHost();
+  seedWorld(h);
+  life.onTick({}, h.host);
+  const key = encodeURIComponent("u:u1");
+  const r = life.handleRoute({ method: "PUT", path: "/life/people/mavka/" + key, body: { note: "  Kind <b>to me</b>.  " } }, h.host);
+  expect(r.json.people.find((p: any) => p.key === "u:u1").note).toBe("Kind to me .");
+  expect(life.handleRoute({ method: "PUT", path: "/life/people/mavka/" + encodeURIComponent("c:ghost"), body: { note: "x" } }, h.host).status).toBe(404);
+  // yaryna's list holds mavka (she saw her posts), so mavka is known by yaryna
+  const got = life.handleRoute({ method: "GET", path: "/life/people/mavka" }, h.host).json;
+  expect(got.knownBy.map((k: any) => k.id)).toEqual(["yaryna"]);
+  expect(got.knownBy[0].seen).toBeGreaterThan(0);
+  expect(life.knownBy(h.host.fs, "ghost")).toEqual([]);
 });
 
 test("GET /forum/boards lists the boards by name for the profile editor", () => {

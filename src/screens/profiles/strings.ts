@@ -367,6 +367,11 @@ export const strings: Bundle = {
     "profiles.people.forgetOne": "Forget {name}",
     "profiles.people.forgetAll": "Forget everyone",
     "profiles.people.forgetAllAsk": "Forget everyone she has met?",
+    "profiles.people.edit": "Edit",
+    "profiles.people.editOne": "Edit the impression of {name}",
+    "profiles.people.noteLabel": "Her impression of {name}",
+    "profiles.people.knownBy": "Who remembers her",
+    "profiles.people.knownBySeen": "has seen her {seen} times",
   },
   uk: {
     "profiles.title": "Профілі",
@@ -732,5 +737,10 @@ export const strings: Bundle = {
     "profiles.people.forgetOne": "Забути {name}",
     "profiles.people.forgetAll": "Забути всіх",
     "profiles.people.forgetAllAsk": "Забути всіх, кого вона зустрічала?",
+    "profiles.people.edit": "Змінити",
+    "profiles.people.editOne": "Змінити враження про {name}",
+    "profiles.people.noteLabel": "Її враження про {name}",
+    "profiles.people.knownBy": "Хто її памʼятає",
+    "profiles.people.knownBySeen": "бачив(ла) її {seen} раз",
   },
 };
