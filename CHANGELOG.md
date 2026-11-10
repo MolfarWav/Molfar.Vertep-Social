@@ -3,11 +3,9 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.12.0 (2026-11-10)
 
-Also in this release: a **Relationships** tab in the profile editor (where family, work and romantic ties and the closeness are set, with buttons for the map and the family tree; it used to be at the bottom of the Life tab), **Delete this board** on a board page, and Settings re-laid out (balanced columns, wide choices under their titles, Community split into Community and Between members).
-
-The community's own life, continued (#367, #366): chronicle, replies to you, reputation, polls, reposts, and the chats.
+The community's own life, continued (#367, #366): chronicle, replies to you, reputation, polls, reposts, and the chats. Forum 0.9.0, chatter 0.3.0, messenger 0.9.0, Profiles 0.11.0, Life 0.6.0. Needs the same engine as 0.11.0; nothing to migrate.
 
 - **Daily chronicle.** Once a day, when at least two things happened between members (a friendship made or lost, a feeling gone cold, a rival tie, a rumour told, an event opened), the Moderator posts a short digest in a topic tagged "Chronicle". The facts are collected by rules; one model request words them. Nothing is posted on a quiet day. Settings > Community > Daily chronicle.
 - **Replies to you.** A "Replies" button on the forum front page (a bell on a phone) lists who answered your posts, reacted to them or passed them on, newest first, with a count of what you have not seen.
@@ -16,6 +14,7 @@ The community's own life, continued (#367, #366): chronicle, replies to you, rep
 - **Reposts.** A character may pass on a post of someone it likes: a quoted post with no words of its own, in the same topic. It is how a rumour travels. Settings > Community > Reposts (2 a day by default).
 - **Who writes first.** How close a character feels to your active persona leans which character opens a chat, and a close friend that has not heard from you for three days may write just to see how you are.
 - **Gossip and jealousy in chats.** A rumour told or heard on the forum may come up in a chat on a share of replies; in a chat between two characters one may be a little jealous of the other when they are close to someone it loves.
+- **Polish.** A **Relationships** tab in the profile editor (where family, work and romantic ties and the closeness are set, with buttons for the map and the family tree; it used to be at the bottom of the Life tab), **Delete this board** on a board page, and Settings re-laid out (balanced columns, wide choices under their titles, Community split into Community and Between members).
 
 ## 0.11.0 (2026-11-10)
 
