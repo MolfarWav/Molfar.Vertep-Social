@@ -5,6 +5,7 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+- **Levels, ties and milestones (#366).** Each person in a character's list has a level of familiarity (seven rungs, from stranger to confidant) that grows with the meetings or is set by hand (a floor, or pinned), and ties: family, work, rival, your own words, and romantic ones (crush, dating, partner, ex) on one side only, for adults only. Family and work ties mirror onto the other character's list. Someone not met yet can be added by hand, a persona included. The prompt gets one or two lines; the list shows milestones (a level reached, a feeling that crossed a line, a tie set). New: `adult` on a profile (a switch in About; an import sets it from the card's structured age, 18 or more), `level`, `ties`, `marks` per person, `PUT /life/people/<id>/<key>` with `level`, `pinned`, `ties`, `mirror`. Forgetting a person keeps what you set.
 - **Start over (#366).** Settings has a new card (on a phone, a row under "Other") that clears what Social kept: the forum (boards too), chats, diaries and people, your personas, the characters, the settings. Tick the parts, press "Clear…", confirm; the characters take their chats and diaries with them. Sticker packs, the outside-news feed and the Roleplay access stay. New routes `GET`/`POST /settings/reset` in the profiles plugin.
 
 ## 0.9.0 (2026-11-10)

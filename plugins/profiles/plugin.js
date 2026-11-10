@@ -305,6 +305,8 @@ export function cleanProfile(raw, id, now, prev) {
       ? { stickerPacks: [...new Set(raw.stickerPacks.filter((x) => typeof x === "string" && ID.test(x)))].slice(0, 40) }
       : {}),
     ...(raw.knows === "name" || raw.knows === "stranger" || raw.knows === "knows" ? { knows: raw.knows } : {}),
+    // 18 or older: the only way a romantic tie or a flirty tone is allowed (set by hand; an import sets it from the card's structured age). A hard rule.
+    ...(raw.adult === true ? { adult: true } : {}),
     picture: typeof raw.picture === "string" && PICTURE.test(raw.picture.trim()) ? raw.picture.trim() : "",
     voice: {
       text: multi(v.text, 1500),
@@ -1109,6 +1111,15 @@ function profileOf(profile, key) {
   return members.find((m) => names(m).some((n) => n === k || k.includes(n) || n.includes(k))) || null;
 }
 
+/** Is the character 18 or older by the card's structured age ("25", "25 years"): true only for a number of 18 and over. */
+export function adultByCard(profile, key) {
+  const m = profileOf(profile, key);
+  const id = m && isObj(m.identity) ? m.identity : {};
+  const hit = typeof id.age === "number" ? [String(id.age)] : /[0-9]{1,3}/.exec(String(id.age || ""));
+  const n = hit ? Number(hit[0]) : NaN;
+  return Number.isFinite(n) && n >= 18;
+}
+
 /**
  * The structured profile (`extensions.molfar_profile`, or a persona's `profile`) as labelled lines, leaving out what
  * the compiled text already says, and leaving out the private and adult sections on purpose (a profile is shown on a
@@ -1160,7 +1171,7 @@ export function buildMaterial(ref, doc) {
   const prof = profileLines(ext.molfar_profile, cast.length ? name : "", desc + "\n" + pers);
   if (prof) lines.push("From the structured profile:\n" + prof);
   if (first) lines.push("How the story opens (first message):\n" + first);
-  return { name, title, text: lines.join("\n\n") };
+  return { name, title, text: lines.join("\n\n"), adult: adultByCard(ext.molfar_profile, cast.length ? name : "") };
 }
 
 const DIGEST_SYSTEM = [
@@ -1215,6 +1226,7 @@ export function profileFromDigest(ref, material, digest, now) {
       cardHash: material.hash || "",
       from: { kind: "card", id: ref.id, ...(ref.key ? { key: ref.key } : {}) },
       nick: material.name,
+      adult: material.adult === true,
       about: digest.about,
       interests: digest.interests,
       habits: digest.habits.map((text, i) => ({ id: "h" + i + "-" + now, text, by: "self" })),
@@ -1251,7 +1263,7 @@ function digestPass(host, ref, model) {
     messages: [{ role: "user", content: material.text }],
     presetParams: { temperature: 0.6, max_tokens: 2000 },
   });
-  return { __llmPending: true, stash: { name: material.name, title: material.title, hash: hashText(material.text) } };
+  return { __llmPending: true, stash: { name: material.name, title: material.title, hash: hashText(material.text), adult: material.adult === true } };
 }
 
 function importRoute(req, host) {
@@ -1274,7 +1286,7 @@ function importRoute(req, host) {
   const out = cleanDigest(r);
   if (out.error) return ok(failure(out.error));
   const now = Date.now();
-  const p = profileFromDigest(ref, { name: plain(stash.name, 80), title: plain(stash.title, 120), hash: plain(stash.hash, 40) }, out.digest, now);
+  const p = profileFromDigest(ref, { name: plain(stash.name, 80), title: plain(stash.title, 120), hash: plain(stash.hash, 40), adult: stash.adult === true }, out.digest, now);
   if (!p) return ok({ error: "the profile has no name" }, 400);
   fsx.write(profilePath(id), JSON.stringify(p, null, 2));
   return ok({ ok: true, profile: p });

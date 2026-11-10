@@ -449,3 +449,14 @@
 .s-profiles.is-phone .life-state { grid-template-columns: minmax(0, 1fr); }
 .s-profiles.is-phone .life-actions .btn { min-height: 44px; }
 .s-profiles.is-phone .life-flags .k { margin-left: 0; }
+
+/* levels, ties and milestones in the people list (#366) */
+.s-profiles .chip-romance { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.s-profiles .people-marks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.s-profiles .rel-edit { gap: 14px; }
+.s-profiles .rel-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.s-profiles .rel-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.s-profiles .rel-add .inp { flex: 1 1 160px; min-width: 0; width: auto; }
+.s-profiles .rel-addperson { display: flex; flex-direction: column; gap: 6px; }
+.s-profiles.is-phone .rel-add .btn { min-height: 44px; flex: 1 1 100%; }
+.s-profiles.is-phone .rel-edit .inp { min-height: 44px; }

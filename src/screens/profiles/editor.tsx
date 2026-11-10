@@ -64,6 +64,7 @@ export function formOf(p: MockProfile): ProfileForm {
     life: p.life,
     model: p.model,
     knows: p.knows,
+    adult: p.adult,
     stickerPacks: p.stickerPacks,
     imageModel: p.imageModel,
     picture: p.picture,
