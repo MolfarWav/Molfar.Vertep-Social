@@ -13,6 +13,7 @@ import { useLiveMessenger } from "./live";
 import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
 import { PhoneChat, PhoneList } from "./phone";
 import { MemoryDialog } from "./memory";
+import { ChatterEntry, StoriesBar } from "./community";
 import { dayLabel } from "./real";
 
 // Real mode (no `?screen=`): the contacts and chats come from the engine (live.ts, real.ts), and the
@@ -188,6 +189,8 @@ export function Messenger() {
             onToggleGroup={toggleGroup}
             onPick={pick}
             onProfiles={toProfiles}
+            top={real || PREVIEW ? <StoriesBar phone /> : null}
+            bottom={real || PREVIEW ? <ChatterEntry contacts={contacts} phone /> : null}
           />
         )}
         {memory}
@@ -211,6 +214,7 @@ export function Messenger() {
               onChange={(e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
             />
           )}
+          {!empty && <StoriesBar phone={false} />}
           <div className="plist">
             {empty ? (
               <EmptyBlock
@@ -226,6 +230,7 @@ export function Messenger() {
             ) : (
               <ContactGroups list={list} phone={false} sel={curId} folded={folded} onToggle={toggleGroup} onPick={pick} />
             )}
+            {!empty && <ChatterEntry contacts={contacts} phone={false} />}
           </div>
           {!empty && (
             <div className="mine">

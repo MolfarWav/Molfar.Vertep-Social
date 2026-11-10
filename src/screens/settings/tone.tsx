@@ -4,13 +4,14 @@ import type { ReactNode } from "react";
 // The colour never names a block alone: the title and the icon always do. The CSS for the tones is in settings.css.
 
 export type Tone = "cyan" | "rose" | "emerald" | "amber" | "violet" | "teal" | "sky" | "orange";
-export type Glyph = "forum" | "messenger" | "life" | "pictures" | "models" | "notify" | "language" | "access" | "other";
+export type Glyph = "forum" | "messenger" | "life" | "community" | "pictures" | "models" | "notify" | "language" | "access" | "other";
 
 /** What each block looks like: its tone and icon, by the name the screens use. */
 export const LOOK: Record<Glyph, Tone> = {
   forum: "cyan",
   messenger: "rose",
   life: "emerald",
+  community: "sky",
   pictures: "amber",
   models: "violet",
   notify: "teal",
@@ -40,6 +41,15 @@ const PATHS: Record<Glyph, ReactNode> = {
       <path d="M12 21v-9" />
       <path d="M12 12c0-4-2.5-6.5-7-6.5 0 4 2.5 6.5 7 6.5z" />
       <path d="M12 14c0-3.5 2.2-6 7-6 0 3.8-2.6 6-7 6z" />
+    </>
+  ),
+  // two people
+  community: (
+    <>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <circle cx="17" cy="9" r="2.4" />
+      <path d="M16 14.2c3 0 5 2 5 5" />
     </>
   ),
   // a picture: frame, sun, hills
