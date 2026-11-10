@@ -507,6 +507,7 @@ export function systemPromptFor(p, you, recent, opts) {
   if (str(v.text)) lines.push("How you write: " + cut(str(v.text), 800));
   if (str(recent)) lines.push(recent);
   if (isObj(opts) && str(opts.met)) lines.push(opts.met);
+  if (isObj(opts) && str(opts.gossip)) lines.push(opts.gossip);
   if (isObj(opts) && str(opts.summary)) lines.push("What you remember from earlier in this conversation (your own notes, in order of importance): " + cut(str(opts.summary), SUMMARY_MAX));
   lines.push(LENGTH_WORDS[length] + " " + EMOJI_WORDS[emoji] + " " + (formality >= 66 ? "Formal, polite address." : formality <= 33 ? "Informal, on first-name terms." : "Neutral tone."));
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
@@ -617,6 +618,43 @@ export function relationBits(fsx, p, key, x) {
   return bits;
 }
 // </relation-shared>
+
+// <chat-life-shared>
+// What a character may bring up in a chat from the community's own life (#367): a rumour it told or heard on the forum lately (the forum plugin
+// keeps forum/gossip.json). By rules, with no extra model call: one more line in the prompt, now and then. Never about the character itself,
+// never from a private chat, and a romantic rumour only while Settings > Community > Romantic tone is not "none". A copy lives in each plugin that needs it.
+const CHAT_GOSSIP_MS = 3 * 24 * 3600 * 1000;
+const CHAT_GOSSIP_SHARE = 0.25;
+const CHAT_GOSSIP_FACT = {
+  rift: (a, b) => a + " and " + b + " have been at odds lately",
+  close: (a, b) => a + " and " + b + " have grown close lately",
+  sweet: (a, b) => a + " seems to be sweet on " + b,
+};
+
+/** One line for the prompt, or "": the newest rumour `p` told or heard in the last days, not about `p` or about anyone in `skip` (the one it is talking to), with the Settings switch on, on a share of the replies. */
+export function chatGossipLine(fsx, p, now, rand, skip) {
+  const s = readJson(fsx, "settings.json", null);
+  const c = isObj(s) && isObj(s.community) ? s.community : {};
+  if (c.gossip === false || rand() >= CHAT_GOSSIP_SHARE) return "";
+  const g = readJson(fsx, "forum/gossip.json", null);
+  const level = communityLevel(fsx);
+  const avoid = Array.isArray(skip) ? skip : [];
+  const hit = (isObj(g) && Array.isArray(g.items) ? g.items : [])
+    .filter((i) => isObj(i) && CHAT_GOSSIP_FACT[i.kind] && Array.isArray(i.about) && i.about.length === 2 && i.about.every((x) => typeof x === "string" && ID.test(x)) && Number.isFinite(i.at) && now - i.at < CHAT_GOSSIP_MS)
+    .filter((i) => (i.by === p.id || (Array.isArray(i.told) && i.told.includes(p.id))) && !i.about.includes(p.id) && !avoid.some((x) => i.about.includes(x)) && !(i.kind === "sweet" && level === "none"))
+    .sort((x, y) => y.at - x.at)[0];
+  if (!hit) return "";
+  const names = hit.about.map((id) => {
+    const d = readJson(fsx, "profiles/" + id + ".json", null);
+    return isObj(d) ? cut(str(d.name), 80) : "";
+  });
+  if (!names[0] || !names[1]) return "";
+  return (
+    "On the forum you have lately talked about this: " + CHAT_GOSSIP_FACT[hit.kind](names[0], names[1]) + ". If it comes up in this chat you may mention it, in your own words, as something you noticed or heard and are not sure of; add no details you were not given, and never reveal anything from anyone's private chats." +
+    (hit.kind === "sweet" ? " " + ROMANCE_CEILING[level === "flirty" ? "flirty" : "warm"] : "")
+  );
+}
+// </chat-life-shared>
 
 /** What the character remembers of one person it has met (the Life plugin's list, life/people/<id>.json): a line for the prompt, or "". `key` is "c:<profile>" or "u:<persona>". Copied into the forum. */
 export function metLine(fsx, p, key) {
@@ -785,6 +823,7 @@ function requestReply(host, key, profile, chat) {
       summary: ctx.summary,
       met: metUser(host.fs, profile, chat.persona),
       stranger: knowsOf(host.fs, profile) === "stranger",
+      gossip: knowsOf(host.fs, profile) === "stranger" ? "" : chatGossipLine(host.fs, profile, Date.now(), Math.random, []),
     }),
     messages: ctx.messages,
     presetParams: { temperature: 0.85, max_tokens: MAX_TOKENS[length] },
@@ -1133,6 +1172,10 @@ const FIRST_GAP_MS = 20 * 60 * 1000;
 const FIRST_AFTER_TALK_MS = 30 * 60 * 1000;
 const FIRST_FAIL_WAIT_MS = 10 * 60 * 1000;
 const FIRST_LOG = "firstlog.json";
+// the level the persona has in the character's list (#366) decides who opens a chat: a stranger rarely does, a close friend often, and a close friend
+// who has not heard from the user for a while may write with no news of its own, only to see how they are
+const FIRST_WEIGHT = { stranger: 0.25, slight: 0.4, acquaintance: 0.7, penfriend: 1, friend: 1.5, close: 2, confidant: 2.5 };
+const CHECKIN_AFTER_MS = 3 * 24 * 3600 * 1000;
 
 const clampInt = (v, lo, hi, d) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : d);
 const hm = (t) => {
@@ -1191,6 +1234,35 @@ function readFirstLog(fsx, now, tz) {
   return { day, n: clampInt(l.n, 0, 1000, 0), by: isObj(l.by) ? l.by : {}, lastAt: Number.isFinite(l.lastAt) ? l.lastAt : 0, failAt: Number.isFinite(l.failAt) ? l.failAt : 0 };
 }
 
+/** The character's entry for the persona (the Life plugin's list, key "u:<persona>"), or null. */
+function personEntry(fsx, p, persona) {
+  if (!persona) return null;
+  const d = readJson(fsx, "life/people/" + p.id + ".json", null);
+  const x = isObj(d) && Array.isArray(d.people) ? d.people.find((q) => isObj(q) && q.key === "u:" + persona) : null;
+  return isObj(x) ? x : null;
+}
+
+/** How likely a character is to open a chat, from its level toward the persona and the feeling: 1 when it has no entry. */
+export function firstWeight(x) {
+  if (!isObj(x)) return 1;
+  const feel = typeof x.feel === "number" && Number.isFinite(x.feel) ? x.feel : 0;
+  let w = typeof x.lvl === "string" && FIRST_WEIGHT[x.lvl] !== undefined ? FIRST_WEIGHT[x.lvl] : 1;
+  if (feel >= 3) w *= 1.3;
+  if (feel <= -3) w *= 0.3;
+  return w;
+}
+
+/** A reason to write with no news: a close friend (a friend who feels warm) and nothing said in the chat for three days. {text, ref} or null. */
+export function checkInSubject(x, chat, now, day) {
+  if (!isObj(x) || !chat.messages.length) return null;
+  const feel = typeof x.feel === "number" && Number.isFinite(x.feel) ? x.feel : 0;
+  if (!(x.lvl === "close" || x.lvl === "confidant" || (x.lvl === "friend" && feel >= 3))) return null;
+  const last = chat.messages[chat.messages.length - 1];
+  const days = Math.floor((now - last.at) / (24 * 3600 * 1000));
+  if (days < 3) return null;
+  return { text: "You have not talked for " + days + " days and you care about them. Write a short, warm message to see how they are, as a close friend would. Do not invent any news about yourself or about them.", ref: "checkin-" + day };
+}
+
 /**
  * Who may open a conversation now and about what: {profile, subject} or null. The conditions, in order: the setting is on, the
  * day's limit and the 20-minute gap are not used up, not in the quiet hours, a chance per tick that spreads the day, then
@@ -1218,10 +1290,19 @@ export function planFirst(fsx, now, rand) {
     if (chat.pending || chat.failed) continue;
     const last = chat.messages[chat.messages.length - 1];
     if (last && (last.first === true || now - last.at < FIRST_AFTER_TALK_MS)) continue;
-    const subject = lifeSubject(fsx, p, now, new Set(chat.shared), r);
-    if (subject) cands.push({ profile: p, subject, persona: me });
+    const x = personEntry(fsx, p, me);
+    const subject = lifeSubject(fsx, p, now, new Set(chat.shared), r) || (knowsOf(fsx, p) === "stranger" ? null : checkInSubject(x, chat, now, localDay(now, tz)));
+    if (subject) cands.push({ profile: p, subject, persona: me, w: firstWeight(x) });
   }
-  return cands.length ? cands[Math.floor(r() * cands.length)] : null;
+  if (!cands.length) return null;
+  // equal weights (nobody has a level yet) keep the plain draw; otherwise the level leans it
+  if (cands.every((c) => c.w === cands[0].w)) return cands[Math.floor(r() * cands.length)];
+  let at = r() * cands.reduce((n, c) => n + c.w, 0);
+  for (const c of cands) {
+    at -= c.w;
+    if (at < 0) return c;
+  }
+  return cands[cands.length - 1];
 }
 
 /** Asks for the first message of a conversation; the key carries the profile and what it is about. */

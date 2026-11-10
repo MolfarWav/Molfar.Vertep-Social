@@ -10,7 +10,7 @@ Open a profile and its **Life** tab to see the diary. You can **Edit** or **Dele
 
 ## Where the diary shows
 
-- **Messenger**: a character that is online may open a chat about something from its diary, within the limit "First messages per day" in Settings. It never writes two first messages in a row without your answer, never right after a talk, and at most once a day per character. With nothing to tell, it stays silent.
+- **Messenger**: a character that is online may open a chat about something from its diary, within the limit "First messages per day" in Settings. How close it feels to your persona leans which character writes: close friends more often, strangers rarely, and a close friend that has not heard from you for three days may write just to see how you are. It never writes two first messages in a row without your answer, never right after a talk, and at most once a day per character. With nothing to tell, it stays silent.
 - **Forum**: a new topic may start from a diary entry. The same entry is not told twice in the same place.
 - **Every reply** a character writes in either place is given its last diary entries as true facts, so it can mention what it did today when it fits.
 
