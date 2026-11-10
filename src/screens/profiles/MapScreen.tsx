@@ -9,14 +9,16 @@ import { useT } from "@/i18n/index";
 import { useYou } from "@/screens/you/store";
 import { Dialog } from "./dialog";
 import { loadGraph } from "./map-api";
+import { FamilyOutline, FamilyTree } from "./FamilyTree";
+import { familyOf } from "./family-model";
 import { crowd, edgesOf, pairKey, ringOrder, type Edge, type GLink, type Graph } from "./map-model";
 import { RelationMap, type MapPerson } from "./RelationMap";
 import { useTieWord } from "./tabs/RelationEditor";
 import { Seg } from "./ui";
 
-export type ProfilesView = "list" | "map";
+export type ProfilesView = "list" | "map" | "family";
 
-/** The "List | Map" switch: on top of the profile list and on top of the map. */
+/** The "List | Map | Family" switch: on top of the profile list, the map and the family tree. */
 export function ViewSwitch({ value, onChange }: { value: ProfilesView; onChange: (v: ProfilesView) => void }) {
   const t = useT();
   return (
@@ -25,6 +27,7 @@ export function ViewSwitch({ value, onChange }: { value: ProfilesView; onChange:
       options={[
         { value: "list" as const, label: t("profiles.map.list") },
         { value: "map" as const, label: t("profiles.map.map") },
+        { value: "family" as const, label: t("profiles.family.tab") },
       ]}
       value={value}
       onChange={onChange}
@@ -34,18 +37,18 @@ export function ViewSwitch({ value, onChange }: { value: ProfilesView; onChange:
 
 type Phase = { phase: "loading" } | { phase: "error"; message: string } | { phase: "ready"; graph: Graph };
 
-const LS = "social:map-list";
-const readList = (): boolean | null => {
+/** The text version of the map ("social:map-list") and of the family tree ("social:family-outline"): the last choice, per browser. */
+const readFlag = (key: string): boolean | null => {
   try {
-    const v = localStorage.getItem(LS);
+    const v = localStorage.getItem(key);
     return v === "1" ? true : v === "0" ? false : null;
   } catch {
     return null;
   }
 };
-const saveList = (on: boolean) => {
+const saveFlag = (key: string, on: boolean) => {
   try {
-    localStorage.setItem(LS, on ? "1" : "0");
+    localStorage.setItem(key, on ? "1" : "0");
   } catch {
     // not remembered
   }
@@ -60,6 +63,8 @@ interface Known {
 
 export interface MapScreenProps {
   phone: boolean;
+  /** The picture on show: the relationship map or the family tree (both read the same graph). */
+  mode: "map" | "family";
   /** The characters (hue and picture come from here). */
   profiles: Known[];
   onView: (v: ProfilesView) => void;
@@ -79,7 +84,9 @@ export function MapScreen(p: MapScreenProps) {
   const [state, setState] = useState<Phase>({ phase: "loading" });
   const [tries, setTries] = useState(0);
   const [selected, setSelected] = useState<string | null>(p.initial ?? null);
-  const [asList, setAsList] = useState<boolean | null>(p.initialList ? true : readList());
+  const family = p.mode === "family";
+  const flagKey = family ? "social:family-outline" : "social:map-list";
+  const [asList, setAsList] = useState<boolean | null>(p.initialList ? true : readFlag(flagKey));
 
   useEffect(() => {
     let live = true;
@@ -104,17 +111,18 @@ export function MapScreen(p: MapScreenProps) {
       return { ...n, name: src?.name ?? n.name, hue: src?.hue ?? 200, picture: src?.picture || undefined };
     });
     const edges = edgesOf(graph);
-    return { people, edges, order: ringOrder(graph.nodes, edges) };
+    return { people, edges, order: ringOrder(graph.nodes, edges), fam: familyOf(graph), byKey: new Map(people.map((x) => [x.key, x])) };
   }, [graph, p.profiles, you]);
 
-  const listFirst = model ? crowd(model.people.length).listFirst : false;
+  // the map opens as the list for a crowd; the family tree as the outline on a phone when a row is wider than 4 people
+  const listFirst = !model ? false : family ? p.phone && model.fam.groups.some((g) => g.widest > 4) : crowd(model.people.length).listFirst;
   const list = asList ?? listFirst;
   const toggle = () => {
-    saveList(!list);
+    saveFlag(flagKey, !list);
     setAsList(!list);
   };
   const pick = useCallback((k: string | null) => setSelected(k), []);
-  const canPick = !!model && model.people.filter((x) => x.kind === "character").length >= 2;
+  const canPick = !!model && model.people.filter((x) => x.kind === "character").length >= 2 && (!family || model.fam.groups.length > 0);
   const sel = model && selected ? model.people.find((x) => x.key === selected) ?? null : null;
 
   let body;
@@ -140,6 +148,26 @@ export function MapScreen(p: MapScreenProps) {
         {p.onNew && <button type="button" className="btn cta" onClick={p.onNew}>{t("profiles.new")}</button>}
       </div>
     );
+  } else if (model && family) {
+    const fam = model.fam;
+    body =
+      fam.groups.length === 0 ? (
+        <div className="pm-note">
+          <b>{t("profiles.family.empty.title")}</b>
+          <p className="k">{t("profiles.family.empty.text")}</p>
+          <button type="button" className="btn cta" onClick={() => p.onView("map")}>{t("profiles.family.empty.map")}</button>
+        </div>
+      ) : (
+        <>
+          {list ? (
+            <FamilyOutline groups={fam.groups} people={model.byKey} selected={selected} onSelect={pick} />
+          ) : (
+            <FamilyTree groups={fam.groups} people={model.byKey} selected={selected} onSelect={pick} />
+          )}
+          {fam.loners.length > 0 && <p className="pm-hint k">{t("profiles.family.loners", { n: fam.loners.length })}</p>}
+          {p.phone && !selected && <p className="pm-hint k">{t("profiles.map.pick")}</p>}
+        </>
+      );
   } else if (model) {
     body = (
       <>
@@ -163,14 +191,14 @@ export function MapScreen(p: MapScreenProps) {
   return (
     <div className={`pm-screen${p.phone ? " is-phone" : ""}`}>
       <header className="pm-head">
-        {p.phone ? <h1 className="title">{t("profiles.title")}</h1> : <div className="tbar">{t("profiles.map.title")}</div>}
+        {p.phone ? <h1 className="title">{t("profiles.title")}</h1> : <div className="tbar">{t(family ? "profiles.family.title" : "profiles.map.title")}</div>}
         <div className="pm-bar">
-          <ViewSwitch value="map" onChange={p.onView} />
+          <ViewSwitch value={p.mode} onChange={p.onView} />
           {canPick && (
-            <button type="button" className="btn pm-toggle" onClick={toggle}>{t(list ? "profiles.map.asMap" : "profiles.map.asList")}</button>
+            <button type="button" className="btn pm-toggle" onClick={toggle}>{t(family ? (list ? "profiles.family.asTree" : "profiles.family.asOutline") : list ? "profiles.map.asMap" : "profiles.map.asList")}</button>
           )}
         </div>
-        {canPick && !list && <Legend />}
+        {canPick && !list && (family ? <FamilyLegend /> : <Legend />)}
       </header>
       <div className="pm-body">
         <main className="pm-main">{body}</main>
@@ -198,6 +226,18 @@ function Legend() {
       <li><svg width="28" height="14" aria-hidden="true"><line className="pm-lg pm-lg-rival" x1="1" y1="7" x2="27" y2="7" strokeWidth="2.5" /></svg>{t("profiles.map.legend.rival")}</li>
       <li><svg width="28" height="14" aria-hidden="true"><line className="pm-lg pm-lg-family" x1="1" y1="5" x2="27" y2="5" strokeWidth="1.6" /><line className="pm-lg pm-lg-family" x1="1" y1="9" x2="27" y2="9" strokeWidth="1.6" /></svg>{t("profiles.map.legend.family")}</li>
       <li><svg width="28" height="14" aria-hidden="true"><line className="pm-lg pm-lg-plain" x1="1" y1="7" x2="27" y2="7" strokeWidth="3.5" /></svg>{t("profiles.map.legend.plain")}</li>
+    </ul>
+  );
+}
+
+/** The legend of the family tree: what a line means. */
+function FamilyLegend() {
+  const t = useT();
+  return (
+    <ul className="pm-legend" aria-label={t("profiles.map.legend")}>
+      <li><svg width="28" height="14" aria-hidden="true"><line className="pm-lg pm-lg-family" x1="1" y1="5" x2="27" y2="5" strokeWidth="1.6" /><line className="pm-lg pm-lg-family" x1="1" y1="9" x2="27" y2="9" strokeWidth="1.6" /></svg>{t("profiles.family.legend.spouse")}</li>
+      <li><svg width="28" height="14" aria-hidden="true"><path className="pm-lg pm-lg-plain" d="M14 1V7H3V13M14 7H25V13" fill="none" strokeWidth="1.6" /></svg>{t("profiles.family.legend.parent")}</li>
+      <li><svg width="28" height="14" aria-hidden="true"><path className="pm-lg pm-lg-plain" d="M2 12Q14 -2 26 12" fill="none" strokeWidth="1.6" strokeDasharray="3 3" /></svg>{t("profiles.family.legend.dotted")}</li>
     </ul>
   );
 }

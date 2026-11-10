@@ -30,6 +30,8 @@ function mockGraph(): Graph {
     { key: "c:pereles", name: "Перелесник", kind: "character" },
     { key: "c:berehynia", name: "Берегиня", kind: "character" },
     { key: "c:domovyk", name: "Домовик", kind: "character" },
+    { key: "c:chuhaister", name: "Чугайстер", kind: "character" },
+    { key: "c:horpyna", name: "Горпина", kind: "character" },
     { key: "u:u-yaroslav", name: "Ярослав", kind: "user" },
   ];
   const links: GLink[] = [
@@ -40,11 +42,24 @@ function mockGraph(): Graph {
     link("mavka", "u:u-yaroslav", "friend", "warm", [{ type: "crush" }], 9),
     link("yaryna", "c:pereles", "friend", "warm", [{ type: "dating" }], 11),
     link("pereles", "c:yaryna", "friend", "close", [{ type: "partner" }], 11),
-    link("berehynia", "c:domovyk", "penfriend", "", [{ type: "colleague" }], 6),
-    link("domovyk", "c:berehynia", "acquaintance", "", [], 4),
-    link("lisovyk", "c:berehynia", "acquaintance", "", [], 3),
-    link("pereles", "u:u-yaroslav", "slight", "", [], 2),
+    // a family: Berehynia and Domovyk are a couple, Mavka and Lisovyk their children; Chugaister is a relative of Domovyk
+    link("berehynia", "c:domovyk", "close", "warm", [{ type: "spouse" }], 6),
+    link("domovyk", "c:berehynia", "close", "warm", [{ type: "spouse" }], 4),
+    link("lisovyk", "c:berehynia", "close", "", [{ type: "parent" }], 3),
+    link("lisovyk", "c:domovyk", "friend", "", [{ type: "parent" }], 3),
+    link("mavka", "c:berehynia", "close", "warm", [{ type: "parent" }], 8),
+    link("domovyk", "c:chuhaister", "acquaintance", "", [{ type: "relative" }], 2),
+    // a single parent and her child, who has the user's persona as a sibling
+    link("pereles", "c:horpyna", "friend", "", [{ type: "parent" }], 5),
+    link("pereles", "u:u-yaroslav", "slight", "", [{ type: "sibling" }], 2),
   ];
+  if (empty === "nofamily") return { nodes, links: links.map((l) => ({ ...l, ties: l.ties.filter((t) => !["spouse", "parent", "child", "sibling", "relative"].includes(t.type)) })) };
+  if (empty === "famconflict") {
+    return {
+      nodes: nodes.filter((x) => ["c:mavka", "c:yaryna", "c:lisovyk", "c:pereles"].includes(x.key)),
+      links: [link("mavka", "c:yaryna", "friend", "", [{ type: "parent" }]), link("yaryna", "c:lisovyk", "friend", "", [{ type: "parent" }]), link("lisovyk", "c:mavka", "friend", "", [{ type: "parent" }]), link("pereles", "c:mavka", "friend", "", [{ type: "spouse" }])],
+    };
+  }
   return { nodes, links };
 }
 

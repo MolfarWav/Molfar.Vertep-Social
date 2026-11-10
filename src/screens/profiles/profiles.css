@@ -536,3 +536,25 @@
 .s-profiles .pm-phone-switch .seg { width: 100%; }
 .s-profiles .pm-phone-switch .seg button { flex: 1; height: 40px; }
 .s-profiles .pf-dlg .pm-panel { padding: 14px 14px 18px; overflow-y: auto; }
+
+/* ---- the family tree (#366) ---- */
+.s-profiles .ft { display: flex; flex-direction: column; gap: 14px; }
+.s-profiles .ft-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 6px; max-width: 100%; }
+.s-profiles .ft-svg { display: block; margin: 0 auto; max-width: none; }
+.s-profiles .ft-l { stroke-linecap: round; stroke-linejoin: round; transition: opacity 0.15s; stroke-width: 1.8; }
+.s-profiles .ft-l-spouse { stroke: var(--rel-family); stroke-width: 1.8; }
+.s-profiles .ft-l-parent { stroke: var(--muted); }
+.s-profiles .ft-l-sibling, .s-profiles .ft-l-relative { stroke: var(--muted); stroke-dasharray: 3 4; }
+.s-profiles .ft-l.lit { stroke: var(--ink); }
+.s-profiles .ft-l-spouse.lit { stroke: var(--rel-family); stroke-width: 2.4; }
+.s-profiles .ft-l.dim { opacity: 0.12; }
+.s-profiles .ft-warn circle { fill: var(--warn); }
+.s-profiles .ft-warn text { fill: #000; font-size: 12px; font-weight: 700; }
+.s-profiles .ft-conflict { margin: 6px 8px 4px; color: var(--warn); }
+.s-profiles .ft-outline { display: flex; flex-direction: column; gap: 14px; }
+.s-profiles .ft-ol-group { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 10px; }
+.s-profiles .ft-ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.s-profiles .ft-ol .ft-ol { margin: 6px 0 0 14px; padding-left: 14px; border-left: 2px solid var(--line); }
+.s-profiles .ft-ol-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.s-profiles .ft-ol-p { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 10px 4px 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); color: var(--ink); font: inherit; cursor: pointer; }
+.s-profiles .ft-ol-p.on { border-color: var(--accent); }

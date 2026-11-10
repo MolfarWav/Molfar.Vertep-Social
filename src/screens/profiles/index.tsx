@@ -98,7 +98,7 @@ interface Preview {
   state: string | null;
   /** Seeds the example ideas of the interview (preview only). */
   seed: number | undefined;
-  /** `view=map`: the relationship map; `select` is a person picked on it (a key, "c:mavka"); `maplist=1` starts it as the list. */
+  /** `view=map`: the relationship map, `view=family`: the family tree; `select` is a person picked on it (a key, "c:mavka"); `maplist=1` starts it as the list. */
   select: string | null;
   maplist: boolean;
 }
@@ -231,7 +231,8 @@ function previewDiff(id: string): UpdateDiff | null {
 const MODE_KEY = "social:profiles-view";
 const readMode = (): ProfilesView => {
   try {
-    return localStorage.getItem(MODE_KEY) === "map" ? "map" : "list";
+    const v = localStorage.getItem(MODE_KEY);
+    return v === "map" || v === "family" ? v : "list";
   } catch {
     return "list";
   }
@@ -259,7 +260,7 @@ export function Profiles() {
   });
   const [store, setStore] = useState(() => makeStore(pv));
   // The list or the relationship map (#366); the choice is kept in this browser, the design preview takes it from `view=map`.
-  const [mode, setMode] = useState<ProfilesView>(() => (PREVIEW ? (pv.view === "map" ? "map" : "list") : readMode()));
+  const [mode, setMode] = useState<ProfilesView>(() => (PREVIEW ? (pv.view === "map" || pv.view === "family" ? pv.view : "list") : readMode()));
   const changeMode = (v: ProfilesView) => {
     setMode(v);
     if (!PREVIEW) saveMode(v);
@@ -655,9 +656,10 @@ export function Profiles() {
     ) : null;
   } else if (store.all.length === 0) {
     body = PREVIEW ? <FirstRun phone={phone} onImport={openImport} /> : <FirstRun phone={phone} onImport={openImport} onNew={() => setNewMode({ start: { stage: "choose" } })} />;
-  } else if (mode === "map") {
+  } else if (mode !== "list") {
     body = (
       <MapScreen
+        mode={mode}
         phone={phone}
         profiles={store.all.map((p) => ({ id: p.id, name: p.name, hue: p.hue, picture: p.picture }))}
         onView={changeMode}
