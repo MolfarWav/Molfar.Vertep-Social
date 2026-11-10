@@ -1,4 +1,4 @@
-<!-- source: 02ec1512cca0 -->
+<!-- source: def6fe72e8ea -->
 # Social : Messenger
 
 Le Messenger est une conversation avec les personnages qui vivent dans Social. Vous voyez une liste de contacts, la discussion avec le contact sélectionné et une carte avec ses coordonnées. Quiconque veut parler à un personnage en tête-à-tête commence ici.
@@ -40,6 +40,18 @@ Sous les groupes du sélecteur se trouve une seconde ligne pour vos propres pack
 **Free packs.** Dans « Sticker packs », la carte « Free packs » ouvre un catalogue de packs d’autres artistes (pour l’instant les emoji animés Noto de Google, CC BY 4.0, et les emoji 3D Fluent de Microsoft, MIT). Chaque carte montre un aperçu, l’auteur, la licence et un lien vers la source. « Add the pack » télécharge ses images et en fait un pack ordinaire à vous ; l’auteur et la licence restent sur le pack dans le gestionnaire. Un pack déjà ajouté affiche « Added » (supprimez-le pour le rajouter). La liste est lue depuis GitHub à l’ouverture, il faut donc une connexion internet ; si elle ne peut pas être chargée, vous voyez pourquoi et un bouton « Try again ». Seuls apparaissent les packs que le propriétaire de Social a mis dans le catalogue, toujours sous licence libre (CC0, CC BY ou MIT).
 
 Un onglet avec la première image du pack apparaît dans la ligne. Touchez un sticker pour l’envoyer aussitôt (le texte que vous étiez en train de saisir reste) ; touchez un emoji personnalisé pour le placer dans le texte, au curseur. Le champ de recherche trouve aussi les images par leur nom, et les récents sont partagés avec les emoji. Un emoji personnalisé est stocké dans le texte sous la forme `:pack/name:` ; si son pack est supprimé plus tard, il s’affiche comme du texte simple. Un sticker reste à l’écran une fois son pack disparu. On dit seulement au personnage « a sticker: name », et il ne voit jamais l’image. Les personnages n’utilisent que les packs que vous activez pour eux dans Profiles, Writing manner (voir [[profiles]]). Dans un nouveau sujet du forum, seuls les emoji personnalisés sont proposés, car un sticker est une réponse entière.
+
+## Stories
+
+Quand un personnage publie une story, une rangée de pastilles rondes apparaît au-dessus de la liste de contacts. Un anneau autour d’une image signifie que vous n’avez pas vu toutes les stories de ce personnage. Touchez-en une pour l’ouvrir : l’image (ou la ligne sur une carte colorée quand il n’y a pas d’image), le temps qu’il lui reste, et des flèches pour passer d’une story à l’autre de ce personnage. Une story disparaît au bout de 24 heures ; « Remove » la retire plus tôt, après confirmation.
+
+Une story est tirée du propre journal du jour du personnage : elle dit donc quelque chose qui lui est vraiment arrivé. Les stories sont désactivées par défaut (« Settings » > « Community » > « Stories ») ; elles exigent que « Characters have their own life » soit activé. Avec « Characters may send pictures » activé, une story a aussi une image, ce qui coûte un appel au modèle et un appel d’image.
+
+## Les personnages parlent
+
+Sous la liste de contacts, une fois « Characters talk to each other » activé dans « Settings » > « Community », il y a une ligne « Characters talk ». Elle ouvre une fenêtre où vous choisissez deux personnages et appuyez sur « Let them talk ». Chaque paire a un interrupteur (en conversation ou en pause), « Read » pour voir ce qu’ils ont écrit, et « Remove ».
+
+Une paire écrit de temps en temps, seulement tant que les deux sont disponibles selon leur planning, jusqu’au nombre quotidien que vous fixez, un message à la fois. Ils tiennent compte de ce que chacun retient de l’autre, y compris du sentiment qui existe entre eux. Vous ne faites que lire ; ils ne vous écrivent pas dans cet échange. Cela coûte environ deux fois plus de tokens qu’une discussion normale, c’est donc désactivé par défaut et les modèles gratuits peuvent avoir du mal.
 
 ## Images
 

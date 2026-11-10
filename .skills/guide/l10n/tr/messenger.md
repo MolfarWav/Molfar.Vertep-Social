@@ -1,4 +1,4 @@
-<!-- source: 02ec1512cca0 -->
+<!-- source: def6fe72e8ea -->
 # Social: Messenger
 
 Messenger, Social'da yaşayan karakterlerle yapılan bir sohbettir. Bir kişi listesi, seçili kişiyle konuşma ve onun bilgilerinin olduğu bir kart görürsünüz. Bir karakterle birebir konuşmak isteyen buradan başlar.
@@ -40,6 +40,18 @@ Seçicinin gruplarının altında kendi paketleriniz için ikinci bir sıra bulu
 **Ücretsiz paketler.** "Sticker packs" içindeki "Free packs" kartı, başka sanatçıların paketlerinden oluşan bir katalog açar (şu an Google'ın hareketli Noto emojileri, CC BY 4.0, ve Microsoft'un Fluent 3D emojileri, MIT). Her kartta bir önizleme, yazar, lisans ve kaynağa giden bir bağlantı görünür. "Add the pack" resimlerini indirir ve sizin sıradan bir paketinizi oluşturur; yazar ve lisans, yöneticide paketin üzerinde kalır. Zaten eklenmiş bir pakette "Added" yazar (yeniden eklemek için onu silin). Liste, açtığınızda GitHub'dan okunur; bu yüzden internet bağlantısı gerekir. Yüklenemezse nedenini ve bir "Try again" düğmesi görürsünüz. Katalogda yalnızca Social'ın sahibinin koyduğu paketler bulunur ve bunlar her zaman ücretsiz bir lisansla gelir (CC0, CC BY veya MIT).
 
 Sırada, paketin ilk resmini taşıyan bir sekme belirir. Bir çıkartmaya dokunursanız hemen gönderilir (yazmakta olduğunuz metin yerinde kalır); bir özel emojiye dokunursanız metne imlecin olduğu yere eklenir. Arama alanı resimleri adlarıyla da bulur, en son kullanılanlar ise emojilerle ortaktır. Özel bir emoji metinde `:pack/name:` olarak saklanır; paketi sonradan silinirse düz metin olarak görünür. Bir çıkartma, paketi gittikten sonra da ekranda kalır. Karaktere yalnızca "a sticker: name" söylenir ve resmi hiçbir zaman görmez. Karakterler yalnızca sizin onlar için Profiles, Writing manner'da açtığınız paketleri kullanır (bkz. [[profiles]]). Yeni bir forum konusunda yalnızca özel emojiler sunulur, çünkü bir çıkartma başlı başına bir yanıttır.
+
+## Hikayeler
+
+Bir karakter hikaye paylaştığında kişi listesinin üstünde yuvarlak resimlerden oluşan bir sıra belirir. Bir resmin etrafındaki halka, o karakterin hikayelerinin hepsini görmediğiniz anlamına gelir. Birini açmak için dokunun: resim (resim yoksa renkli bir kart üzerindeki satır), ne kadar süresi kaldığı ve o karakterin hikayeleri arasında gezinmek için oklar. Bir hikaye 24 saat sonra kaybolur; "Remove" onu, sorduktan sonra, daha erken kaldırır.
+
+Bir hikaye karakterin o günkü kendi güncesinden yapılır, bu yüzden gerçekten başına gelen bir şeyi anlatır. Hikayeler varsayılan olarak kapalıdır ("Settings" > "Community" > "Stories"); açık olmaları için "Characters have their own life" açık olmalıdır. "Characters may send pictures" açıkken bir hikayede ayrıca bir resim de olur; bu bir model çağrısına ve bir görsel çağrısına mal olur.
+
+## Karakterler konuşur
+
+Kişi listesinin altında, "Settings" > "Community" içinde "Characters talk to each other" açıldığında, "Characters talk" adlı bir satır bulunur. İki karakter seçip "Let them talk"a bastığınız bir pencere açar. Her çiftin bir anahtarı (konuşuyor ya da duraklatıldı), yazdıklarını görmek için "Read" ve "Remove" vardır.
+
+Bir çift ara sıra yazar; yalnızca ikisi de programlarına göre ortadayken, sizin belirlediğiniz günlük sayıya kadar, her seferinde bir mesaj. Her birinin diğeri hakkında hatırladıklarını, aralarındaki duygu dahil, dikkate alırlar. Siz yalnızca okursunuz; onlar bunun içinde size yazmaz. Bu, normal bir sohbetin yaklaşık iki katı token'a mal olur, bu yüzden varsayılan olarak kapalıdır ve ücretsiz modeller zorlanabilir.
 
 ## Resimler
 

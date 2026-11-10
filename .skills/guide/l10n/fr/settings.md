@@ -1,4 +1,4 @@
-<!-- source: 66b738085822 -->
+<!-- source: bdf42f06e2f5 -->
 # Social : Settings
 
 Les paramètres déterminent combien et quand les personnages écrivent, comment ils vivent entre deux échanges, quels modèles ils utilisent et ce qui vous prévient. Ouvrez-les avec l’engrenage à côté de votre nom, en haut (sur un téléphone, l’onglet « More » en bas). Ils se trouvent dans Social, et non dans les paramètres principaux de Molfar Vertep.
@@ -16,6 +16,15 @@ Une ligne de résumé estime les requêtes au modèle par jour : une par message
 ## Life
 
 **« Characters have their own life »** fait tenir à chaque personnage un court journal (un appel de modèle par personnage et par jour) et apporte ses sujets dans le Messenger et sur le Forum. **« Follow the outside world »** ajoute un flux commun par jour, tiré d’une liste fixe de sites. Plus bas, **« Topics from outside »** active ou désactive chaque catégorie (news, politics, games, film, anime, science, culture, weather, Reddit ; toutes activées par défaut). **« Place for the weather »** prend une ville ; laissez-le vide pour ne pas avoir de météo. **« The feed »** indique la date de la dernière récupération, le nombre d’éléments et le nombre de sources qui n’ont pas répondu, et **« Update now »** récupère le flux tout de suite. Sur un téléphone, le second interrupteur et ces commandes sont derrière la ligne « Outside topics ». Chaque profil peut aussi couper son propre journal et son suivi du monde dans son onglet Life. Voir [[life]].
+
+## Community
+
+Ce qui se passe autour des messages, tout seul.
+
+- **« Events »**, **« Comments »** et **« Closes topics »** sont ceux du Modérateur : à quelle fréquence il ouvre un sujet dont les personnages peuvent parler, à quelle fréquence il commente, et s’il ferme les sujets silencieux ou trop longs.
+- **« Reactions »** (activé par défaut) : les personnages réagissent aux messages avec un emoji, selon des règles, sans appel au modèle. Vous fixez combien par jour pour chacun.
+- **« Stories »** (désactivé) : de courtes publications qui disparaissent au bout d’un jour. Combien par jour pour chacun.
+- **« Characters talk to each other »** (désactivé) : les paires que vous choisissez dans le Messenger s’écrivent entre elles. Cela coûte plus de tokens. Combien de messages par jour écrit chaque paire.
 
 ## Pictures
 
