@@ -1,4 +1,4 @@
-<!-- source: def6fe72e8ea -->
+<!-- source: 23cac07929d2 -->
 # Social: Messenger
 
 O Messenger é um chat com os personagens que vivem no Social. Você vê uma lista de contatos, a conversa com o contato selecionado e um cartão com os detalhes dele. Quem quer falar com um personagem de um para um começa aqui.
@@ -20,6 +20,8 @@ O status muda o comportamento do personagem. Um personagem online responde em se
 Um personagem vê as últimas 24 mensagens do chat a cada resposta (de 4 a 500 em Settings, Messenger, "Messages a character remembers"; veja [[settings]]). As mensagens mais antigas não se perdem: quando saem da janela, uma chamada ao modelo de vez em quando as resume numa **nota** curta que vai ao modelo junto com as mensagens mais recentes. A nota fica sob "Memory" no cartão de informações em um computador; o botão "Memory and conversation…" ali, ou o botão de livro na barra do topo do chat em um telefone, a abre. Você pode ler a nota, editá-la e apertar "Save note": o que você escrever a substitui, e o modelo a complementa depois. "Note of older messages" em Settings desliga esse resumo.
 
 No mesmo diálogo, **New conversation…** põe um divisor no registro. O personagem não vê nada de antes dele. "Keep the note and start" primeiro resume as mensagens que ainda não estão na nota (uma chamada ao modelo), para que o personagem continue lembrando do essencial; "Start without the note" começa do zero. As mensagens antigas continuam no chat, acima do divisor. **Clear chat…** apaga todo o histórico e a nota, depois de uma confirmação; não dá para desfazer.
+
+Um chat pertence a um par: o personagem e a persona que estava ativa quando ele foi escrito (veja [[you]]). Com uma só persona nada muda. Com várias, cada persona tem um chat e uma nota de memória separados com cada personagem, e o Messenger mostra os chats da ativa; o cabeçalho diz "as <name>". Os chats feitos antes de as personas terem os seus próprios foram para a persona que estava ativa quando você abriu o Messenger pela primeira vez após a atualização. Apagar uma persona apaga os seus chats.
 
 Quanto um personagem conhece você também é uma escolha: "Characters know you" em Settings (o padrão), ou "How well it knows you" na aba Voice de um perfil. **Knows you** passa ao modelo o nome e o "About" da sua persona ativa; **Name only** só o nome; **Stranger** nada, e o personagem só sabe de você o que você escrever. O Fórum segue a mesma escolha (veja [[forum]]). Uma mensagem entre parênteses duplos, como ((isto)), ou que começa com OOC é você falando fora do personagem: o personagem responde de forma breve e direta, e depois segue em frente.
 

@@ -1,4 +1,4 @@
-<!-- source: def6fe72e8ea -->
+<!-- source: 23cac07929d2 -->
 # Social: Messenger
 
 Messenger, Social'da yaşayan karakterlerle yapılan bir sohbettir. Bir kişi listesi, seçili kişiyle konuşma ve onun bilgilerinin olduğu bir kart görürsünüz. Bir karakterle birebir konuşmak isteyen buradan başlar.
@@ -20,6 +20,8 @@ Durum, bir karakterin davranışını değiştirir. Online bir karakter birkaç 
 Bir karakter her yanıtta sohbetin son 24 mesajını görür (Settings, Messenger altındaki "Messages a character remembers" ile 4 ile 500 arası; bkz. [[settings]]). Eski mesajlar kaybolmaz: ekrandan çıktıklarında, ara sıra bir model çağrısı bunları son mesajlarla birlikte modele giden kısa bir **not** haline getirir. Not, bilgisayarda bilgi kartındaki "Memory" altındadır; oradaki "Memory and conversation…" düğmesi ya da telefonda sohbetin üst çubuğundaki kitap düğmesi onu açar. Notu okuyabilir, düzenleyebilir ve "Save note"a basabilirsiniz: yazdığınız not eskisinin yerini alır, model de sonradan ona ekleme yapar. Settings içindeki "Note of older messages" bu katlamayı kapatır.
 
 Aynı pencerede **New conversation…** kayıt defterine bir ayırıcı koyar. Karakter bundan önceki hiçbir şeyi görmez. "Keep the note and start" önce notta henüz olmayan mesajları katlar (bir model çağrısı); böylece karakter özü yine hatırlar. "Start without the note" sıfırdan başlar. Eski mesajlar ayırıcının üstünde sohbette kalır. **Clear chat…** onaydan sonra tüm geçmişi ve notu siler; geri alınamaz.
+
+Bir sohbet bir çifte aittir: karakter ve sohbet yazılırken aktif olan persona (bkz. [[you]]). Tek personayla hiçbir şey değişmez. Birden çok personayla her personanın her karakterle ayrı bir sohbeti ve bellek notu olur; Messenger aktif personanın sohbetlerini gösterir; başlıkta "as <name>" yazar. Personaların kendi sohbetleri olmadan önce yaptığınız sohbetler, güncellemeden sonra Messenger'ı ilk açtığınızda aktif olan personaya geçti. Bir personayı silmek sohbetlerini de siler.
 
 Karakterin sizi ne kadar tanıdığı da bir seçimdir: Settings içindeki "Characters know you" (varsayılan) ya da bir profilin Voice sekmesindeki "How well it knows you". **Knows you**, aktif personanızın adını ve "About" bölümünü modele iletir; **Name only** yalnızca adı; **Stranger** hiçbir şey, karakter sizin hakkınızda yalnızca yazdıklarınızdan öğrenir. Forum da aynı seçimi izler ([[forum]] sayfasına bakın). Çift parantez içindeki, ((böyle)) gibi bir mesaj ya da OOC ile başlayan mesaj, rol dışında konuşmanızdır: karakter kısa ve açık yanıt verir, sonra kaldığı yerden devam eder.
 

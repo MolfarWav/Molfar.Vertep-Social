@@ -1252,6 +1252,30 @@ function activeMe(fsx) {
   return p ? { key: "u:" + p.id, name: cut(str(p.name), 80) } : null;
 }
 
+/** The chats of this character, one per persona (`chats/<id>.<persona>.json`; `chats/<id>.json` is from before personas had their own): [{chat, me: {key, name}}]. */
+function chatsOf(fsx, id, active) {
+  let names = [];
+  try {
+    names = fsx.list("chats");
+  } catch {
+    return [];
+  }
+  const y = readJson(fsx, "you.json", null);
+  const out = [];
+  for (const n of names) {
+    const m = /^([A-Za-z0-9_-]{1,60})(?:\.([A-Za-z0-9_-]{1,60}))?\.json$/.exec(n);
+    if (!m || m[1] !== id) continue;
+    const chat = readJson(fsx, "chats/" + n, null);
+    if (!m[2]) {
+      if (active) out.push({ chat, me: active });
+      continue;
+    }
+    const persona = (isObj(y) && Array.isArray(y.personas) ? y.personas : []).find((x) => isObj(x) && x.id === m[2] && str(x.name));
+    if (persona) out.push({ chat, me: { key: "u:" + persona.id, name: cut(str(persona.name), 80) } });
+  }
+  return out;
+}
+
 /** One pass over the forum and the chats for every character whose diary is on. Returns how many people entries changed. */
 function scanPeople(fsx, now) {
   const ids = profileIds(fsx).filter((id) => {
@@ -1274,7 +1298,7 @@ function scanPeople(fsx, now) {
     const pf = files[id];
     const events = [];
     for (const t of topics) events.push(...topicEvents(id, t, pf.scanned));
-    events.push(...chatEvents(readJson(fsx, "chats/" + id + ".json", null), me, pf.scanned));
+    for (const c of chatsOf(fsx, id, me)) events.push(...chatEvents(c.chat, c.me, pf.scanned));
     pf.scanned = now;
     if (events.length) {
       mergeEvents(pf, events);

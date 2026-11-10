@@ -3,8 +3,11 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.10.0 (2026-11-10)
 
+A chat for each persona, levels and ties between people, and a Start over card. Life 0.4.0, messenger 0.8.0, forum 0.7.1, Profiles 0.9.0, chatter 0.1.1. Needs the same engine as 0.9.0. The first time the Messenger runs after the update, an old chat moves to the persona that is active then (see the first item).
+
+- **A chat for each pair of character and persona (#366).** The Messenger now keeps a separate chat and memory note for every persona with every character (`chats/<profile>.<persona>.json`). With one persona nothing changes. With several, switching the active persona switches every chat, and the header says "as <name>". A chat from before went to the persona active when it was first opened after the update (done once, silently). A reply is written into the chat it was asked in, even after you switched; characters write first only to the active persona; the forum reads the note of the chat with the persona a post was written as; the people list counts each persona's chat under that persona. Deleting a persona deletes its chats and its entries in the lists.
 - **Levels, ties and milestones (#366).** Each person in a character's list has a level of familiarity (seven rungs, from stranger to confidant) that grows with the meetings or is set by hand (a floor, or pinned), and ties: family, work, rival, your own words, and romantic ones (crush, dating, partner, ex) on one side only, for adults only. Family and work ties mirror onto the other character's list. Someone not met yet can be added by hand, a persona included. The prompt gets one or two lines; the list shows milestones (a level reached, a feeling that crossed a line, a tie set). New: `adult` on a profile (a switch in About; an import sets it from the card's structured age, 18 or more), `level`, `ties`, `marks` per person, `PUT /life/people/<id>/<key>` with `level`, `pinned`, `ties`, `mirror`. Forgetting a person keeps what you set.
 - **Start over (#366).** Settings has a new card (on a phone, a row under "Other") that clears what Social kept: the forum (boards too), chats, diaries and people, your personas, the characters, the settings. Tick the parts, press "Clear…", confirm; the characters take their chats and diaries with them. Sticker packs, the outside-news feed and the Roleplay access stay. New routes `GET`/`POST /settings/reset` in the profiles plugin.
 

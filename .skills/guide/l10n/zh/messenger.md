@@ -1,4 +1,4 @@
-<!-- source: def6fe72e8ea -->
+<!-- source: 23cac07929d2 -->
 # Social：Messenger
 
 Messenger 是与住在 Social 里的角色进行的聊天。你可以看到联系人列表、与所选联系人的对话，以及显示其详细信息的卡片。想与某个角色一对一聊天的人，从这里开始。
@@ -20,6 +20,8 @@ Messenger 是与住在 Social 里的角色进行的聊天。你可以看到联�
 角色在每次回复时都会看到聊天中最近的 24 条消息（可在 Settings、Messenger 中的 "Messages a character remembers" 里设为 4 到 500 条；参见 [[settings]]）。较早的消息不会丢失：当它们滚出视野时，模型会不时被调用一次，把它们压缩成一份简短的**笔记**，与最新消息一起发送给模型。在电脑上，笔记位于信息卡中的 "Memory" 下；那里的 "Memory and conversation…" 按钮，或手机上聊天顶部栏的书本按钮，都能打开它。你可以阅读和编辑笔记，然后按 "Save note"：你写的内容会取代原笔记，之后模型会在此基础上继续补充。Settings 中的 "Note of older messages" 可以关闭这种压缩。
 
 在同一对话框中，**New conversation…** 会在日志里插入一条分隔线。角色看不到分隔线之前的任何内容。"Keep the note and start" 会先把笔记中尚未包含的消息压缩进去（调用一次模型），让角色仍记得要点；"Start without the note" 则从零开始。旧消息仍保留在分隔线上方的聊天中。**Clear chat…** 会在确认后删除全部历史和笔记，且无法撤销。
+
+聊天属于一对：角色，以及写下消息时处于活动状态的人设（参见 [[you]]）。只有一个人设时，一切不变。有多个人设时，每个人设与每个角色都有各自独立的聊天和记忆笔记，Messenger 显示的是当前人设的聊天；标题处会写 "as <name>"。在人设拥有各自聊天之前创建的聊天，归入了更新后你第一次打开 Messenger 时处于活动状态的人设。删除一个人设会同时删除它的聊天。
 
 角色对你的了解程度也可以选择：Settings 中的 "Characters know you"（默认），或资料的 Voice 标签页中的 "How well it knows you"。**Knows you** 会把你当前人设的名字和 "About" 告诉模型；**Name only** 只告诉名字；**Stranger** 什么都不说，角色只能从你自己写的内容中了解你。论坛遵循同样的选择（参见 [[forum]]）。用双括号括起的消息，如 ((这样))，或以 OOC 开头的消息，表示你在角色之外说话：角色会简短而直接地回答，然后继续。
 

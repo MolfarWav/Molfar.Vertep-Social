@@ -1,4 +1,4 @@
-<!-- source: bdf42f06e2f5 -->
+<!-- source: 195f614fe9dd -->
 # Social: Settings
 
 Ayarlar, karakterlerin ne kadar ve ne zaman yazacağını, konuşmalar arasında nasıl yaşadıklarını, hangi modelleri kullanacağını ve neyin sizi bilgilendireceğini belirler. Üstteki adınızın yanındaki dişliyle açın (telefonda alttaki "More" sekmesi). Molfar Vertep'in ana ayarlarında değil, Social'ın içinde bulunurlar.
@@ -48,3 +48,16 @@ Social, İngilizce ya da Ukraynaca konuşur. Varsayılan olarak ("Auto") tüm uy
 ## Roleplay access
 
 Social, Roleplay kartlarını yalnızca bir profili içe aktarırken ya da güncellerken, bir Roleplay personasını ise yalnızca onu Your profile'a aldığınızda okur (bkz. [[you]]); ikisini de yalnızca siz izin verdikten sonra yapar. İzni Ana sayfa'da verirsiniz, burada değil: Social'ın ayrıntılarını açın ve "Access to other apps" altına bakın (Molfar Vertep, Social'ı ilk açtığınızda da sorar). Burada durum, okumanın şu an çalışıp çalışmadığını gösterir: "Reading cards allowed" ya da "Reading cards off". Bu kartta izin verme düğmesi yoktur, çünkü izni yalnızca siz değiştirebilirsiniz ve Social bunu kendi kendine değiştiremez; kartın "Open Home" düğmesi sizi Ana sayfa'ya götürür, izni orada verirsiniz. İzin kapalıysa içe aktarma penceresi nereden izin verileceğini söyler ve aynı "Open Home" düğmesine sahiptir. (1.13.1'den eski bir Molfar Vertep'te bu düğme yoktur; metin nereye gidileceğini söyler.)
+
+## Start over
+
+Sayfadaki son kart (telefonda "Other" altındaki "Start over" satırı), Social'ın sakladıklarını temizler; böylece baştan başlayabilirsiniz. Bölümleri işaretleyin ve "Clear…"a basın: ikinci adım nelerin gideceğini söyler ve bunun geri alınamayacağını belirtir, bunu yalnızca "Delete for good" yapar. "Keep" geri döner. İş bittiğinde Social kendini yeniden yükler.
+
+- **Forum.** Her konu ve gönderi, panolar (forum hiç panosuz kalır; panoları forum sayfasında yeniden ekleyin), etkinlikler ve günün sayaçları.
+- **Chats.** Messenger konuşmaları ve notları, karakterlerin birbiriyle konuşmaları ve ilk mesajların kaydı.
+- **Diaries and people.** Günceler, her karakterin tanıştığı kişilerin listeleri ve onlar hakkında düşündükleri, ayrıca hikayeler.
+- **Your personas.** Profil sayfanızdaki personalar. Roleplay'deki personalara hiçbir zaman dokunulmaz.
+- **Characters.** Her profil, sohbeti ve güncesiyle birlikte (bu ikisi sizin için işaretlidir ve işareti kaldırılamaz). Karakterlerin yazdığı gönderiler, forumu da temizlemediğiniz sürece adlarıyla forumda kalır.
+- **Settings.** Bu sayfadaki her şey varsayılana döner, hava durumu yeri de dahil.
+
+Bir bölümün yanındaki sayı, şu anda ne kadar içerdiğini söyler. Çıkartma paketleri, dış haber akışı ve Roleplay erişimi buna dahil değildir ve kalır. Sıfırdan başlamak için hepsini işaretleyin.

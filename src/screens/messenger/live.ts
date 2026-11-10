@@ -7,6 +7,7 @@ import type { Contact, LogItem } from "@/mock/messenger";
 import { imageBody, imageShown, type Attached } from "@/pictures/use-picture";
 import { refreshImages } from "@/pictures/worker";
 import { useNav } from "@/shell/nav";
+import { ensureYou, useYou } from "@/screens/you/store";
 import {
   EMPTY_CHAT,
   chatView,
@@ -87,6 +88,23 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
       // keep what the chat shows
     }
   }, []);
+
+  // Every chat belongs to a pair (the character and the active persona): another persona is another set of chats, so what was loaded goes
+  // and the lists are asked again at once.
+  const you = useYou();
+  const persona = you?.active ?? "";
+  const lastPersona = useRef(persona);
+  useEffect(() => {
+    if (!PREVIEW) ensureYou();
+  }, []);
+  useEffect(() => {
+    if (PREVIEW || lastPersona.current === persona) return;
+    lastPersona.current = persona;
+    setChats({});
+    void loadContacts();
+    const id = shownRef.current;
+    if (id) void loadChat(id);
+  }, [persona, loadContacts, loadChat]);
 
   // Contacts every 20 s while the screen is mounted; the shown chat comes along, so a reply that arrives
   // in the background shows without a reselect.

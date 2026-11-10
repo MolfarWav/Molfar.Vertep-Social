@@ -546,6 +546,48 @@ function settingsRoute(req, host) {
 // ---------- start over (issue #366) ----------
 
 /**
+ * Removes chat files: a chat is `chats/<profile>.<persona>.json` (`chats/<profile>.json` was made while Your profile had no persona).
+ * `profile` limits it to one character's chats, `persona` to one persona's; with neither, every persona's chat goes (not the plain ones).
+ */
+export function removeChats(fsx, { profile, persona } = {}) {
+  let names = [];
+  try {
+    names = fsx.list("chats");
+  } catch {
+    return 0;
+  }
+  let n = 0;
+  for (const name of names) {
+    const m = /^([A-Za-z0-9_-]{1,60})(?:\.([A-Za-z0-9_-]{1,60}))?\.json$/.exec(name);
+    if (!m || (profile && m[1] !== profile) || (persona && m[2] !== persona) || (!profile && !persona && !m[2])) continue;
+    try {
+      fsx.remove("chats/" + name);
+      n++;
+    } catch {
+      /* gone already */
+    }
+  }
+  return n;
+}
+
+/** A persona that was deleted takes its chats with it, and the character's list entries for it. */
+export function forgetPersona(fsx, id) {
+  removeChats(fsx, { persona: id });
+  let names = [];
+  try {
+    names = fsx.list("life/people");
+  } catch {
+    return;
+  }
+  for (const name of names) {
+    if (!/^[A-Za-z0-9_-]{1,60}\.json$/.test(name)) continue;
+    const d = readJson(fsx, "life/people/" + name, null);
+    if (!isObj(d) || !Array.isArray(d.people) || !d.people.some((x) => isObj(x) && x.key === "u:" + id)) continue;
+    fsx.write("life/people/" + name, JSON.stringify({ ...d, people: d.people.filter((x) => !(isObj(x) && x.key === "u:" + id)) }));
+  }
+}
+
+/**
  * What "Start over" can clear, by part. A part is a list of paths under the app's data folder (`fs.remove` takes a folder with
  * everything in it). Not touched on purpose: the sticker packs (the user's own pictures), the outside-news feed (`.cache`, rebuilt
  * by itself) and the Roleplay access grant (the engine's). A part that is not asked for stays exactly as it is.
@@ -601,6 +643,8 @@ export function resetData(fsx, asked) {
       }
     }
   }
+  // the personas are gone: so are the chats that were theirs (a "chats" reset removed them all already)
+  if (parts.includes("personas")) removeChats(fsx);
   return parts;
 }
 
@@ -1612,6 +1656,7 @@ function youRoute(req, host, path) {
     if (at >= 0) you.personas.splice(at, 1);
     if (you.active === m[1]) you.active = you.personas.length ? you.personas[0].id : "";
     writeYou(fsx, you);
+    if (at >= 0) forgetPersona(fsx, m[1]);
     return ok({ ok: true, you: youReply(you) });
   }
   return ok({ error: "method not allowed" }, 405);
@@ -1660,6 +1705,7 @@ export function handleRoute(req, host) {
     } catch {
       /* no chat file */
     }
+    removeChats(host.fs, { profile: m[1] });
     return ok({ ok: true });
   }
   return ok({ error: "not found" }, 404);

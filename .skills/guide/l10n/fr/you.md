@@ -1,16 +1,16 @@
-<!-- source: e909c932db8f -->
+<!-- source: 2289184cadb4 -->
 # Social : Your profile
 
 Votre profil indique qui vous êtes pour les personnages. Ce n’est pas un personnage : il n’a ni conversation, ni planning, et il n’apparaît jamais dans la liste des contacts ni sur le forum. Ouvrez-le avec votre nom en haut à droite (sur un téléphone : paramètres, la première ligne).
 
 ## Personas
 
-Vous pouvez garder quelques personas, par exemple une pour chaque façon dont vous aimez être appelé. Chacune a une image, un nom et un court About. Une seule persona est active (marquée « Active »). Dans le Messenger, un personnage ne reçoit que le nom de la persona active et son About, et rien d’autre à votre sujet. Le forum ne la lit pas. Sans persona, les personnages vous appellent « the user ».
+Vous pouvez garder quelques personas, par exemple une pour chaque façon dont vous aimez être appelé. Chacune a une image, un nom et un court About. Une seule persona est active (marquée « Active »). Dans le Messenger, un personnage ne reçoit que le nom de la persona active et son About, et rien d’autre à votre sujet. Chaque persona a sa propre discussion avec chaque personnage, avec son propre historique et sa note de mémoire : quand vous changez de persona active, le Messenger affiche les discussions de cette persona (l’en-tête de la discussion indique « as <name> » dès que vous en avez plus d’une). Un personnage n’écrit en premier qu’à la persona active, et répond à un message que vous avez envoyé dans n’importe quelle discussion même après votre changement. Le forum ne la lit pas. Sans persona, les personnages vous appellent « the user ».
 
 - Choisissez une persona dans la rangée du haut pour la modifier. Changez le nom ou le About, puis appuyez sur « Save » ; « Cancel » abandonne la modification. Une modification non enregistrée reste en place quand vous regardez une autre persona ou un autre onglet, mais pas après la fermeture de l’application.
 - « Make active » dans l’éditeur active la persona que vous regardez.
 - Le bouton d’image dessine un portrait avec un modèle d’image, comme pour un profil (voir [[profiles]]).
-- « Delete persona » la retire de Social. Une persona de Roleplay n’est jamais touchée. Si la persona active est supprimée, la suivante prend sa place.
+- « Delete persona » la retire de Social avec ses discussions et ce que les personnages gardent d’elle. Une persona de Roleplay n’est jamais touchée. Si la persona active est supprimée, la suivante prend sa place.
 
 ## En ajouter une
 
