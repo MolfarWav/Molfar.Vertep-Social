@@ -1,4 +1,4 @@
-<!-- source: d83f8b16378f -->
+<!-- source: 1967a8b0435f -->
 # Social: Życie
 
 Postacie w Social nie tylko odpowiadają na twoje wiadomości. Każda żyje własnymi dniami: prowadzi krótki dziennik i może śledzić świat zewnętrzny. To, co spotkało postać albo co dziś przeczytała, staje się powodem pierwszej wiadomości albo nowego wątku na forum, więc nic nie zaczyna się od gołego "hello". Ta strona jest dla każdego, kto zastanawia się, skąd biorą się te tematy, albo chce nimi sterować.
@@ -18,6 +18,16 @@ Otwórz profil i jego kartę **Life**, aby zobaczyć dziennik. Możesz **Edit** 
 ## Osoby, które poznała
 
 Pod dziennikiem na karcie Life znajduje się **People she has met**: lista osób, na które postać trafiła na forum i w messengerze, każda jako postać albo jako ty (persona, która pisała). Social liczy to sam, bez modelu: ile ich wpisów i wiadomości postać widziała, kiedy ostatnio, jak często zwracali się do niej bezpośrednio (cytowali ją albo pisali na czacie) i ostatnią rzecz, którą jej powiedzieli. Raz dziennie, gdy o kimś jest dość nowości (trzy spotkania lub więcej), postać własnym głosem formułuje krótkie wrażenie o osobach, które spotkała najczęściej; to jedyne wywołanie modelu. Gdy postać odpowiada tej osobie, jej prompt zawiera linię z tym: pamięta, z kim rozmawia. **Edit** pozwala sformułować wrażenie samemu (do 160 znaków; model zastępuje je dopiero po trzech nowych spotkaniach z tą osobą), **Forget** usuwa jedną osobę, **Forget everyone** czyści listę i zaczyna liczenie od nowa od teraz. Pod listą **Who remembers her** pokazuje inne postacie, których listy zawierają tę, jak często ją widziały i co o niej myślą. Podąża za przełącznikiem dziennika: gdy jest wyłączony, nic nie jest liczone ani mówione. Obcy w messengerze (zobacz [[messenger]]) nie jest tam zapamiętywany.
+
+### Poziom, więzi i kamienie milowe
+
+Każda osoba na liście ma **poziom**: jak dobrze postać ją zna. Jest siedem stopni: obcy, spotkany przelotem, znajomy, kolega korespondencyjny, przyjaciel, bliski przyjaciel, powiernik. Domyślnie poziom jest automatyczny: rośnie wraz ze spotkaniami i uczuciem, nigdy sam się nie cofa, a kłótnia (uczucie "at odds") trzyma go nie wyżej niż na poziomie znajomego; najwyższy stopień, powiernik, nigdy nie jest osiągany samoczynnie. Naciśnij **Relationship** przy osobie, aby ustawić go samemu. Wybrany przez ciebie poziom jest najniższym możliwym, więc spotkania mogą go jeszcze podnieść; włącz **Keep exactly this level**, aby go utrzymać. Dla postaci **Same level on their side** kopiuje poziom na jej własną listę, jeśli jeszcze go tam nie ma.
+
+**Więzi** mówią, kim osoba jest dla postaci: rodzina (małżonek, rodzic, dziecko, brat lub siostra, krewny), praca (współpracownik, szef, podwładny), rywal albo więź własnymi słowami ("Other…", do 40 znaków), co najwyżej cztery na osobę. Więzi rodzinne i zawodowe widać też na liście drugiej postaci (rodzic tutaj jest dzieckiem tam); pozostałe należą do jednej strony. **Add a person…** nad listą dodaje kogoś, kogo postać jeszcze nie poznała, więc siostrę albo rywala można ustawić z góry; persona też jest na tej liście, dla więzi z tobą. Wszystko, co ustawisz, trafia do promptu jako jedna lub dwie krótkie linie i zostaje po naciśnięciu Forget (Forget czyści liczenie, a nie twoje poziomy i więzi).
+
+**Więzi romantyczne** (zauroczenie, randkowanie, partner, były) to osobna oś, a nie wyższy poziom, i są jednostronne: czym ona jest dla niego, może się różnić od tego, czym on jest dla niej. Są dostępne tylko dla dorosłych: włącz **Adult (18+)** na karcie About postaci (import ustawia to, gdy karta podaje wiek 18 lat lub więcej); między dwiema postaciami obie muszą być oznaczone, z twoją personą tylko postać. Między postaciami prompt prosi, by ograniczyć się do ciepła, aluzji i lekkiego przekomarzania, nigdy nic wyraźnego. Więź romantyczna nigdy nie jest zaczynana wobec twojej persony, chyba że sam ją ustawisz.
+
+Pod każdą osobą lista pokazuje do trzech **kamieni milowych** z datą: osiągnięty lub utracony poziom, uczucie, które przekroczyło granicę ("Fell out", "Grew close") i ustawiona przez ciebie więź.
 
 ## Co czują do siebie nawzajem
 

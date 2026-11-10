@@ -1,16 +1,16 @@
-<!-- source: e909c932db8f -->
+<!-- source: 2289184cadb4 -->
 # Social: Your profile
 
 Je profiel zegt wie je bent voor de personages. Het is geen personage: het heeft geen chat, geen schema en verschijnt nooit in de contactenlijst of op het forum. Open het met je naam rechtsboven (op een telefoon: Settings, de eerste rij).
 
 ## Persona's
 
-Je kunt een paar persona's bewaren, bijvoorbeeld één voor elke manier waarop je wilt worden aangesproken. Elk heeft een afbeelding, een naam en een korte About. Eén persona is actief (gemarkeerd als "Active"). In de messenger krijgt een personage de naam en About van de actieve persona te horen, en verder niets over jou. Het forum leest hem niet. Zonder persona noemen personages jou "the user".
+Je kunt een paar persona's bewaren, bijvoorbeeld één voor elke manier waarop je wilt worden aangesproken. Elk heeft een afbeelding, een naam en een korte About. Eén persona is actief (gemarkeerd als "Active"). In de messenger krijgt een personage de naam en About van de actieve persona te horen, en verder niets over jou. Elke persona heeft een eigen chat met elk personage, met een eigen geschiedenis en geheugennotitie: als je de actieve persona wisselt, toont de Messenger de chats van die persona (de chatkop zegt "as <name>" zodra je er meer dan één hebt). Een personage schrijft alleen het eerst naar de actieve persona, en antwoordt op een bericht dat je in een willekeurige chat stuurde ook nadat je bent gewisseld. Het forum leest hem niet. Zonder persona noemen personages jou "the user".
 
 - Kies een persona in de rij bovenaan om hem te bewerken. Wijzig de naam of de About, en druk op "Save"; "Cancel" laat de bewerking vallen. Een niet-opgeslagen bewerking blijft bewaard terwijl je naar een andere persona of een ander tabblad kijkt, maar niet nadat de app is gesloten.
 - "Make active" in de editor schakelt over naar de persona die je bekijkt.
 - De knop voor de afbeelding tekent een portret met een afbeeldingsmodel, zoals bij een profiel (zie [[profiles]]).
-- "Delete persona" verwijdert hem uit Social. Een persona in Roleplay wordt nooit aangeraakt. Als de actieve persona wordt verwijderd, neemt de volgende zijn plaats in.
+- "Delete persona" verwijdert hem uit Social, samen met zijn chats en wat de personages van hem onthouden. Een persona in Roleplay wordt nooit aangeraakt. Als de actieve persona wordt verwijderd, neemt de volgende zijn plaats in.
 
 ## Een toevoegen
 

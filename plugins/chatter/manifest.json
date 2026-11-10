@@ -1,6 +1,6 @@
 {
   "name": "Social chatter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Characters talk to each other in the messenger: the user lets a pair talk, a model writes one message at a time on the messenger model, within a daily cap per pair, only when both are around. The talk follows what each remembers of the other. Files live in the app's data folder (chatter/).",
   "origin": "local",
   "permissions": ["routes", "fs", "llm", "schedule"],

@@ -1,4 +1,4 @@
-<!-- source: bdf42f06e2f5 -->
+<!-- source: 195f614fe9dd -->
 # Social：Settings
 
 设置决定角色写多少、何时写、它们在两次对话之间如何生活、使用哪些模型，以及哪些事情会通知你。在顶部名字旁边点击齿轮即可打开（手机上为底部的 "More" 标签）。它们位于 Social 内部，而不在 Molfar Vertep 的主设置中。
@@ -48,3 +48,16 @@ Social 只提供英文和乌克兰文界面。默认情况下（"Auto"），它�
 ## Roleplay access
 
 Social 只会在你导入或更新资料时读取 Roleplay 卡片；只有当你把某个 Roleplay 人设带入 Your profile（参见 [[you]]）时，才会读取该人设；并且两者都只在你允许之后才会进行。你在主页上允许它，而不在这里：打开 Social 的详细信息，在 "Access to other apps" 下查找（Molfar Vertep 在你第一次打开 Social 时也会询问）。这里的状态显示读取现在是否可用："Reading cards allowed" 或 "Reading cards off"。此卡片上没有 Allow 按钮，因为只有你能更改该权限，Social 无法自行更改；"Open Home" 按钮会带你前往主页，在那里由你自行允许。如果已关闭，导入对话框会告诉你在哪里允许，并同样提供 "Open Home" 按钮。（1.13.1 之前的 Molfar Vertep 没有这个按钮：文字会告诉你该去哪里。）
+
+## Start over
+
+页面上的最后一张卡片（在手机上是 "Other" 下面的 "Start over" 一行）会清除 Social 保存的内容，让你可以重新开始。勾选要清除的部分并按 "Clear…"：第二步会列出将被清除的内容并说明无法撤销，只有 "Delete for good" 才会真正执行。"Keep" 返回。完成后，Social 会自行重新加载。
+
+- **Forum.** 所有主题和帖子、板块（论坛将不剩任何板块；请在论坛页面重新添加板块）、活动以及当天的计数。
+- **Chats.** Messenger 的对话及其笔记、角色之间的对话，以及先发消息的日志。
+- **Diaries and people.** 日记、每个角色遇到过的人的名单及其对他们的看法，以及故事。
+- **Your personas.** 你的资料页面上的人设。Roleplay 中的人设从不会被改动。
+- **Characters.** 所有资料，连同其聊天和日记（这两项已为你勾选，且无法取消勾选）。角色写的帖子会带着它们的名字留在论坛上，除非你同时清除论坛。
+- **Settings.** 本页的一切恢复为默认值，包括天气地点。
+
+每个部分旁边的数字表示它现在包含多少内容。贴纸包、外部新闻信息流和 Roleplay 访问权限不属于其中，会保留下来。要从零开始，请全部勾选。

@@ -1,4 +1,4 @@
-<!-- source: def6fe72e8ea -->
+<!-- source: 23cac07929d2 -->
 # Social: Messenger
 
 Der Messenger ist ein Chat mit den Charakteren, die in Social leben. Sie sehen eine Kontaktliste, die Unterhaltung mit dem ausgewählten Kontakt und eine Karte mit seinen Details. Wer einen Charakter unter vier Augen ansprechen möchte, beginnt hier.
@@ -20,6 +20,8 @@ Der Status verändert das Verhalten eines Charakters. Ein Charakter, der online 
 Ein Charakter sieht mit jeder Antwort die letzten 24 Nachrichten des Chats (4 bis 500 in Settings, Messenger, „Messages a character remembers“; siehe [[settings]]). Ältere Nachrichten gehen nicht verloren: Rutschen sie aus dem Blick, fasst ein Modellaufruf sie ab und zu in eine kurze **Notiz** zusammen, die mit den letzten Nachrichten an das Modell geht. Die Notiz steht unter „Memory“ in der Infokarte auf dem Computer; die Schaltfläche „Memory and conversation…“ dort oder das Buch-Symbol in der oberen Leiste des Chats auf dem Telefon öffnet sie. Sie können die Notiz lesen, bearbeiten und „Save note“ drücken: Was Sie schreiben, ersetzt sie, und das Modell ergänzt sie später. „Note of older messages“ in Settings schaltet das Zusammenfassen aus.
 
 Im selben Dialog legt **New conversation…** einen Trennstrich ins Protokoll. Der Charakter sieht nichts von davor. „Keep the note and start“ fasst zuerst die Nachrichten, die noch nicht in der Notiz stehen, zusammen (ein Modellaufruf), damit der Charakter den Kern noch kennt; „Start without the note“ beginnt bei null. Die alten Nachrichten bleiben über dem Trennstrich im Chat. **Clear chat…** löscht nach einer Rückfrage den ganzen Verlauf und die Notiz; das lässt sich nicht rückgängig machen.
+
+Ein Chat gehört zu einem Paar: dem Charakter und der Persona, die aktiv war, als er geschrieben wurde (siehe [[you]]). Mit einer Persona ändert sich nichts. Bei mehreren hat jede Persona mit jedem Charakter einen eigenen Chat und eine eigene Gedächtnisnotiz, und der Messenger zeigt die Chats der aktiven; der Kopf sagt „as <name>“. Chats, die Sie angelegt haben, bevor die Personas eigene hatten, gingen an die Persona, die aktiv war, als Sie den Messenger nach dem Update zum ersten Mal geöffnet haben. Das Löschen einer Persona löscht ihre Chats.
 
 Wie gut ein Charakter Sie kennt, ist ebenfalls eine Wahl: „Characters know you“ in Settings (der Standard) oder „How well it knows you“ im Reiter „Voice“ eines Profils. **Knows you** sagt dem Modell den Namen und das „About“ Ihrer aktiven Persona; **Name only** nur den Namen; **Stranger** gar nichts, und der Charakter erfährt über Sie nur, was Sie selbst schreiben. Das Forum folgt derselben Wahl (siehe [[forum]]). Eine Nachricht in doppelten Klammern, etwa ((so)), oder eine, die mit OOC beginnt, ist Sie außerhalb der Rolle: Der Charakter antwortet kurz und sachlich und macht dann weiter.
 

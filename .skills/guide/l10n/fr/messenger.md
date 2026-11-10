@@ -1,4 +1,4 @@
-<!-- source: def6fe72e8ea -->
+<!-- source: 23cac07929d2 -->
 # Social : Messenger
 
 Le Messenger est une conversation avec les personnages qui vivent dans Social. Vous voyez une liste de contacts, la discussion avec le contact sélectionné et une carte avec ses coordonnées. Quiconque veut parler à un personnage en tête-à-tête commence ici.
@@ -20,6 +20,8 @@ Le statut change le comportement d’un personnage. Un personnage online répond
 Un personnage voit les 24 derniers messages de la discussion à chaque réponse (de 4 à 500 dans Settings, Messenger, « Messages a character remembers » ; voir [[settings]]). Les messages plus anciens ne sont pas perdus : quand ils sortent du champ, un appel au modèle, de temps en temps, les résume en une **note** courte qui part vers le modèle avec les derniers messages. La note se trouve sous « Memory » dans la carte d’informations sur un ordinateur ; le bouton « Memory and conversation… » qui s’y trouve, ou le bouton livre dans la barre du haut de la discussion sur un téléphone, l’ouvre. Vous pouvez lire la note, la modifier et appuyer sur « Save note » : ce que vous écrivez la remplace, et le modèle la complète ensuite. « Note of older messages » dans Settings désactive ce résumé.
 
 Dans le même dialogue, **New conversation…** place un séparateur dans le journal. Le personnage ne voit rien de ce qui précède. « Keep the note and start » résume d’abord les messages qui ne sont pas encore dans la note (un appel au modèle), pour que le personnage garde l’essentiel ; « Start without the note » repart de zéro. Les anciens messages restent dans la discussion, au-dessus du séparateur. **Clear chat…** supprime tout l’historique et la note, après une confirmation ; ce n’est pas réversible.
+
+Une discussion appartient à un couple : le personnage et la persona qui était active quand elle a été écrite (voir [[you]]). Avec une seule persona, rien ne change. Avec plusieurs, chaque persona a avec chaque personnage une discussion et une note de mémoire distinctes, et le Messenger affiche les discussions de la persona active ; l’en-tête indique « as <name> ». Les discussions créées avant que les personas aient les leurs sont allées à la persona qui était active quand vous avez ouvert le Messenger pour la première fois après la mise à jour. Supprimer une persona supprime ses discussions.
 
 La mesure dans laquelle un personnage vous connaît est aussi un choix : « Characters know you » dans Settings (la valeur par défaut), ou « How well it knows you » dans l’onglet « Voice » d’un profil. **Knows you** transmet au modèle le nom et le « About » de votre persona active ; **Name only** seulement le nom ; **Stranger** rien, et le personnage ne sait de vous que ce que vous écrivez. Le Forum suit le même choix (voir [[forum]]). Un message entre doubles parenthèses, comme ((ceci)), ou qui commence par OOC, est une parole hors personnage : le personnage répond brièvement et simplement, puis reprend.
 

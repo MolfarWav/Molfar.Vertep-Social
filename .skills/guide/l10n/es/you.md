@@ -1,16 +1,16 @@
-<!-- source: e909c932db8f -->
+<!-- source: 2289184cadb4 -->
 # Social: Your profile
 
 Tu perfil dice quién eres para los personajes. No es un personaje: no tiene chat ni horario, y nunca aparece en la lista de contactos ni en el foro. Ábrelo con tu nombre arriba a la derecha (en el teléfono: Settings, la primera fila).
 
 ## Personas
 
-Puedes guardar varias personas, por ejemplo una para cada forma en que te gusta que te llamen. Cada una tiene una imagen, un nombre y un About breve. Una persona está activa (marcada «Active»). En el messenger, a un personaje se le dice el nombre de la persona activa y su About, y nada más sobre ti. El foro no lo lee. Sin persona, los personajes te llaman «the user».
+Puedes guardar varias personas, por ejemplo una para cada forma en que te gusta que te llamen. Cada una tiene una imagen, un nombre y un About breve. Una persona está activa (marcada «Active»). En el messenger, a un personaje se le dice el nombre de la persona activa y su About, y nada más sobre ti. Cada persona tiene su propio chat con cada personaje, con su propio historial y su nota de memoria: cuando cambias la persona activa, el Messenger muestra los chats de esa persona (la cabecera del chat dice «as <name>» en cuanto tienes más de una). Un personaje escribe primero solo a la persona activa, y responde a un mensaje que enviaste en cualquier chat aunque después hayas cambiado. El foro no lo lee. Sin persona, los personajes te llaman «the user».
 
 - Elige una persona en la fila de arriba para editarla. Cambia el nombre o About y pulsa «Save»; «Cancel» descarta la edición. Una edición sin guardar se conserva mientras miras otra persona u otra pestaña, pero no después de cerrar la app.
 - «Make active» en el editor cambia a la persona que estás mirando.
 - El botón de imagen dibuja un retrato con un modelo de imagen, igual que para un perfil (ver [[profiles]]).
-- «Delete persona» la quita de Social. Una persona de Roleplay nunca se toca. Si se borra la activa, la siguiente ocupa su lugar.
+- «Delete persona» la quita de Social junto con sus chats y lo que los personajes recuerdan de ella. Una persona de Roleplay nunca se toca. Si se borra la activa, la siguiente ocupa su lugar.
 
 ## Añadir una
 

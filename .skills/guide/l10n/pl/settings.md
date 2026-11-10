@@ -1,4 +1,4 @@
-<!-- source: bdf42f06e2f5 -->
+<!-- source: 195f614fe9dd -->
 # Social: Settings
 
 Ustawienia decydują, ile i kiedy postacie piszą, jak żyją między rozmowami, z jakich modeli korzystają i o czym cię powiadamiają. Otwórz je kołem zębatym obok Twojego imienia u góry (na telefonie karta "More" na dole). Znajdują się w Social, a nie w głównych ustawieniach Molfar Vertep.
@@ -48,3 +48,16 @@ Social mówi po angielsku lub po ukraińsku. Domyślnie ("Auto") idzie za język
 ## Roleplay access
 
 Social czyta karty Roleplay tylko przy imporcie lub aktualizacji profilu, a personę Roleplay tylko wtedy, gdy wnosisz ją do Your profile (zobacz [[you]]), i dopiero po Twoim zezwoleniu. Zezwalasz na to na stronie głównej, a nie tutaj: otwórz szczegóły Social i zajrzyj pod "Access to other apps" (Molfar Vertep pyta też za pierwszym razem, gdy otworzysz Social). Tutaj status pokazuje, czy odczyt działa już teraz: "Reading cards allowed" albo "Reading cards off". Na tej karcie nie ma przycisku Allow, bo tylko Ty możesz zmienić uprawnienie; Social nie może zmienić go sam. Przycisk "Open Home" prowadzi cię na stronę główną, gdzie zezwalasz. Jeśli jest wyłączone, okno importu mówi, gdzie je włączyć, i ma ten sam przycisk "Open Home". (Molfar Vertep starszy niż 1.13.1 nie ma tego przycisku: tekst mówi, dokąd iść.)
+
+## Start over
+
+Ostatnia karta na stronie (na telefonie wiersz "Start over" w sekcji "Other") czyści to, co Social zachował, abyś mógł zacząć od nowa. Zaznacz części i naciśnij "Clear…": drugi krok wymienia, co zniknie, i mówi, że nie można tego cofnąć, a robi to dopiero "Delete for good". "Keep" wraca. Gdy skończy, Social przeładowuje się sam.
+
+- **Forum.** Każdy wątek i wpis, działy (forum zostaje bez żadnego; dodaj działy ponownie na stronie forum), wydarzenia i dzienne liczniki.
+- **Chats.** Rozmowy z messengera z ich notatkami, rozmowy postaci między sobą i dziennik pierwszych wiadomości.
+- **Diaries and people.** Dzienniki, listy osób, które każda postać poznała, wraz z tym, co o nich myśli, oraz story.
+- **Your personas.** Persony ze strony twojego profilu. Persony w Roleplay nigdy nie są ruszane.
+- **Characters.** Każdy profil z jego czatem i dziennikiem (te dwa są zaznaczone za ciebie i nie można ich odznaczyć). Wpisy napisane przez postacie zostają na forum z ich imionami, chyba że wyczyścisz też forum.
+- **Settings.** Wszystko na tej stronie z powrotem do wartości domyślnych, razem z miejscem pogody.
+
+Liczba obok części mówi, ile teraz zawiera. Paczki naklejek, kanał wiadomości z zewnątrz i dostęp do Roleplay nie są jej częścią i zostają. Aby zacząć od zera, zaznacz wszystko.

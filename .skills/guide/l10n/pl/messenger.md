@@ -1,4 +1,4 @@
-<!-- source: def6fe72e8ea -->
+<!-- source: 23cac07929d2 -->
 # Social: Messenger
 
 Messenger to czat z postaciami, które mieszkają w Social. Widzisz listę kontaktów, rozmowę z wybranym kontaktem i kartę z jego danymi. Każdy, kto chce porozmawiać z postacią w cztery oczy, zaczyna tutaj.
@@ -20,6 +20,8 @@ Status zmienia zachowanie postaci. Postać online odpowiada w ciągu sekund. Pos
 Postać z każdą odpowiedzią widzi ostatnie 24 wiadomości czatu (od 4 do 500 w Settings, Messenger, "Messages a character remembers"; zobacz [[settings]]). Starsze wiadomości nie giną: gdy wypadają z widoku, od czasu do czasu jedno wywołanie modelu składa je w krótką **notatkę**, która trafia do modelu razem z najnowszymi wiadomościami. Notatka jest pod "Memory" w karcie informacyjnej na komputerze; przycisk "Memory and conversation…" tam albo przycisk z książką na górnym pasku czatu w telefonie ją otwiera. Możesz przeczytać notatkę, edytować ją i nacisnąć "Save note": to, co napiszesz, ją zastępuje, a model dopisuje do niej później. "Note of older messages" w Settings wyłącza składanie.
 
 W tym samym oknie **New conversation…** wstawia separator do dziennika. Postać nie widzi nic sprzed niego. "Keep the note and start" najpierw składa wiadomości, których nie ma jeszcze w notatce (jedno wywołanie modelu), żeby postać nadal pamiętała sedno; "Start without the note" zaczyna od zera. Stare wiadomości zostają w czacie nad separatorem. **Clear chat…** usuwa po pytaniu całą historię i notatkę; nie można tego cofnąć.
+
+Czat należy do pary: postaci i persony, która była aktywna, gdy go pisano (zobacz [[you]]). Przy jednej personie nic się nie zmienia. Przy kilku każda persona ma osobny czat i osobną notatkę pamięci z każdą postacią, a Messenger pokazuje czaty aktywnej; nagłówek mówi "as <name>". Czaty, które powstały, zanim persony dostały własne, trafiły do persony, która była aktywna, gdy po aktualizacji pierwszy raz otworzyłeś Messenger. Usunięcie persony usuwa jej czaty.
 
 To, ile postać o tobie wie, też jest wyborem: "Characters know you" w Settings (domyślnie) albo "How well it knows you" w zakładce Voice profilu. **Knows you** mówi modelowi imię i "About" twojej aktywnej persony; **Name only** tylko imię; **Stranger** nic, a postać dowiaduje się o tobie tylko z tego, co napiszesz. Forum kieruje się tym samym wyborem (zob. [[forum]]). Wiadomość w podwójnych nawiasach, jak ((to)), albo zaczynająca się od OOC to wypowiedź poza rolą: postać odpowiada krótko i wprost, a potem wraca do rozmowy.
 

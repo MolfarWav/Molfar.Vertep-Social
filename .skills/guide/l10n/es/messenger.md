@@ -1,4 +1,4 @@
-<!-- source: def6fe72e8ea -->
+<!-- source: 23cac07929d2 -->
 # Social: Messenger
 
 El Messenger es un chat con los personajes que viven en Social. Ves una lista de contactos, la conversación con el contacto seleccionado y una tarjeta con sus datos. Quien quiera hablar con un personaje uno a uno empieza aquí.
@@ -20,6 +20,8 @@ El estado cambia cómo se comporta un personaje. Un personaje online responde en
 Un personaje ve los últimos 24 mensajes del chat con cada respuesta (de 4 a 500 en Settings, Messenger, «Messages a character remembers»; ver [[settings]]). Los mensajes antiguos no se pierden: cuando salen de la vista, una llamada al modelo de vez en cuando los resume en una **nota** breve que se envía al modelo junto con los mensajes más recientes. La nota aparece bajo «Memory» en la tarjeta de información en un ordenador; el botón «Memory and conversation…» de allí, o el botón de libro en la barra superior del chat en un teléfono, la abre. Puedes leer la nota, editarla y pulsar «Save note»: lo que escribas la reemplaza, y el modelo la sigue completando después. «Note of older messages» en Settings desactiva ese resumen.
 
 En el mismo diálogo, **New conversation…** pone un separador en el registro. El personaje no ve nada de antes. «Keep the note and start» primero resume los mensajes que aún no están en la nota (una llamada al modelo), para que el personaje siga recordando lo esencial; «Start without the note» empieza desde cero. Los mensajes antiguos se quedan en el chat, encima del separador. **Clear chat…** borra todo el historial y la nota, tras una confirmación; no se puede deshacer.
+
+Un chat pertenece a una pareja: el personaje y la persona que estaba activa cuando se escribió (ver [[you]]). Con una sola persona nada cambia. Con varias, cada persona tiene un chat y una nota de memoria propios con cada personaje, y el Messenger muestra los chats de la activa; la cabecera dice «as <name>». Los chats que hiciste antes de que las personas tuvieran los suyos pasaron a la persona que estaba activa cuando abriste el Messenger por primera vez tras la actualización. Borrar una persona borra sus chats.
 
 Cuánto te conoce un personaje también es una elección: «Characters know you» en Settings (el valor por defecto), o «How well it knows you» en la pestaña «Voice» de un perfil. **Knows you** dice al modelo el nombre y el «About» de tu persona activa; **Name only** solo el nombre; **Stranger** nada, y el personaje solo sabe de ti lo que escribas. El Forum sigue la misma elección (ver [[forum]]). Un mensaje entre dobles paréntesis, como ((esto)), o que empiece por OOC, es hablar fuera de personaje: el personaje responde breve y claramente, y luego sigue.
 

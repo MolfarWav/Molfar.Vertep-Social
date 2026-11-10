@@ -1,4 +1,4 @@
-<!-- source: bdf42f06e2f5 -->
+<!-- source: 195f614fe9dd -->
 # Social: Settings
 
 Los ajustes deciden cuánto y cuándo escriben los personajes, cómo viven entre charlas, qué modelos usan y qué te notifica. Ábrelos con el engranaje junto a tu nombre, arriba (en el teléfono, la pestaña «More» de abajo). Viven dentro de Social, no en los ajustes principales de Molfar Vertep.
@@ -48,3 +48,16 @@ Social habla inglés o ucraniano. Por defecto («Auto») sigue el idioma de toda
 ## Roleplay access
 
 Social lee tarjetas de Roleplay solo cuando importas o actualizas un perfil, y una persona de Roleplay solo cuando la traes a Your profile (ver [[you]]), y únicamente después de que lo permitas. Lo permites en Inicio, no aquí: abre los detalles de Social y busca «Access to other apps» (Molfar Vertep también pregunta la primera vez que abres Social). Aquí el estado indica si la lectura funciona ahora, «Reading cards allowed» o «Reading cards off». En esta tarjeta no hay botón Allow, porque solo tú puedes cambiar el permiso y Social no puede cambiarlo por sí mismo; su botón «Open Home» te lleva a Inicio, donde lo haces tú. Si está desactivado, el diálogo de importación indica dónde permitirlo y tiene el mismo botón «Open Home». (Un Molfar Vertep anterior a 1.13.1 no tiene ese botón: el texto indica adónde ir.)
+
+## Start over
+
+La última tarjeta de la página (en el teléfono, la fila «Start over» bajo «Other») borra lo que Social ha guardado, para que puedas empezar de nuevo. Marca las partes y pulsa «Clear…»: un segundo paso nombra lo que se irá y avisa de que no se puede deshacer, y solo «Delete for good» lo hace. «Keep» vuelve atrás. Al terminar, Social se recarga solo.
+
+- **Forum.** Todos los temas y mensajes, los tableros (el foro se queda sin ninguno; vuelve a añadirlos en la página del foro), los eventos y los contadores del día.
+- **Chats.** Las conversaciones del messenger con sus notas, las charlas de los personajes entre sí y el registro de primeros mensajes.
+- **Diaries and people.** Los diarios, las listas de personas que ha conocido cada personaje con lo que piensa de ellas, y las historias.
+- **Your personas.** Las personas de tu página de perfil. Las personas de Roleplay nunca se tocan.
+- **Characters.** Todos los perfiles, con su chat y su diario (estos dos vienen marcados y no se pueden desmarcar). Los mensajes que escribieron los personajes se quedan en el foro con sus nombres, salvo que borres también el foro.
+- **Settings.** Todo lo de esta página vuelve a los valores por defecto, con el lugar del tiempo.
+
+El número junto a cada parte indica cuánto contiene ahora. Los paquetes de stickers, el feed de noticias del exterior y el acceso a Roleplay no forman parte de esto y se quedan. Para empezar desde cero, marca todo.

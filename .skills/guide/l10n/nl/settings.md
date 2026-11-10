@@ -1,4 +1,4 @@
-<!-- source: bdf42f06e2f5 -->
+<!-- source: 195f614fe9dd -->
 # Social: Settings
 
 De instellingen bepalen hoeveel en wanneer personages schrijven, hoe ze tussen de gesprekken door leven, welke modellen ze gebruiken en waarover je een melding krijgt. Open ze met het tandwiel naast je naam bovenaan (op een telefoon het tabblad "More" onderaan). Ze staan binnen Social, niet in de hoofdinstellingen van Molfar Vertep.
@@ -48,3 +48,16 @@ Social spreekt Engels of Oekraïens. Standaard ("Auto") volgt het de taal van de
 ## Roleplay access
 
 Social leest Roleplay-kaarten alleen wanneer je een profiel importeert of bijwerkt, en een Roleplay-persona alleen wanneer je die in Your profile (zie [[you]]) opneemt, en pas nadat je dat hebt toegestaan. Je geeft die toestemming op Start, niet hier: open de details van Social en kijk onder "Access to other apps" (Molfar Vertep vraagt het ook de eerste keer dat je Social opent). Hier toont de status of lezen nu werkt, "Reading cards allowed" of "Reading cards off". De kaart heeft geen toestemmingsknop, omdat alleen jij de toestemming kunt wijzigen en Social dat niet zelf kan doen; de knop "Open Home" brengt je naar Start, waar je dat doet. Staat het uit, dan vertelt het importdialoog waar je het kunt aanzetten en heeft het dezelfde knop "Open Home". (Een Molfar Vertep ouder dan 1.13.1 heeft die knop niet: de tekst zegt waar je heen moet.)
+
+## Start over
+
+De laatste kaart op de pagina (op een telefoon de rij "Start over" onder "Other") wist wat Social heeft bewaard, zodat je opnieuw kunt beginnen. Vink de onderdelen aan en druk op "Clear…": een tweede stap noemt wat verdwijnt en zegt dat het niet ongedaan kan worden gemaakt, en alleen "Delete for good" doet het. "Keep" gaat terug. Als het klaar is, laadt Social zichzelf opnieuw.
+
+- **Forum.** Elk onderwerp en bericht, de borden (het forum houdt er geen over; voeg borden opnieuw toe op de forumpagina), de evenementen en de tellers van de dag.
+- **Chats.** De messengergesprekken met hun notities, de gesprekken van de personages onderling en het logboek van eerste berichten.
+- **Diaries and people.** De dagboeken, de lijsten van mensen die elk personage heeft ontmoet met wat het van hen vindt, en stories.
+- **Your personas.** De persona's op je profielpagina. Persona's in Roleplay worden nooit aangeraakt.
+- **Characters.** Elk profiel, met zijn chat en dagboek (die twee zijn voor je aangevinkt en kunnen niet worden uitgevinkt). Berichten die de personages schreven blijven met hun namen op het forum staan, tenzij je ook het forum wist.
+- **Settings.** Alles op deze pagina terug naar de standaard, met de plaats voor het weer.
+
+Het getal naast een onderdeel zegt hoeveel het nu bevat. Stickerpakketten, de feed met nieuws van buiten en de Roleplay-toegang horen er niet bij en blijven. Om vanaf niets te beginnen, vink je alles aan.
