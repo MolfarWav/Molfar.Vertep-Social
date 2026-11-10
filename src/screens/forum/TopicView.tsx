@@ -21,6 +21,8 @@ export interface TopicViewProps {
   posts: ShownPost[] | null;
   error: string;
   locked: boolean;
+  /** The kind of event this topic was opened for, when it was (real forum only). */
+  event?: string;
   writing: boolean;
   notice: WriteNotice | null;
   onCloseNotice: () => void;
@@ -172,6 +174,7 @@ export function TopicView(p: TopicViewProps) {
       {!p.phone && (
         <>
           <span aria-hidden="true">›</span>
+          {p.event && <span className="evmark">{t(`forum.event.kind.${p.event}` as never)}</span>}
           <span className="here">{p.title}</span>
         </>
       )}
@@ -188,6 +191,7 @@ export function TopicView(p: TopicViewProps) {
           <div className="hd-text">
             <div className="hd-title">{p.title}</div>
             <div className="hd-sub">
+              {p.event && <span className="evmark">{t(`forum.event.kind.${p.event}` as never)}</span>}
               {p.board?.name} · {postsLabel}
             </div>
           </div>

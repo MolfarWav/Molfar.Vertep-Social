@@ -250,3 +250,6 @@
 .s-forum .rx-pick { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 18px; background: var(--base); }
 .s-forum .rx-pick .rx { border-color: transparent; font-size: 18px; padding: 0 8px; }
 .s-forum.is-phone .rx { min-height: 40px; }
+
+/* The mark of an event topic (#358): a small tonal tag before the title, word and colour together */
+.s-forum .evmark { display: inline-block; margin-right: 6px; padding: 1px 8px; border: 1px solid color-mix(in srgb, var(--warn) 55%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--warn) 14%, var(--panel)); color: var(--warn); font-size: 12px; font-weight: 600; white-space: nowrap; vertical-align: middle; }

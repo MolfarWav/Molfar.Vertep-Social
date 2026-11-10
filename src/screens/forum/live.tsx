@@ -205,6 +205,7 @@ export function ForumLive() {
         posts={page ? postsFromEngine(page, now, lang, t) : null}
         error={topic.error}
         locked={info?.locked ?? false}
+        event={info?.event}
         writing={write.busy}
         notice={write.notice}
         onCloseNotice={write.dismiss}

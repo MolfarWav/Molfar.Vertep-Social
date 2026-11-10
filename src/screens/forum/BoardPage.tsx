@@ -43,6 +43,7 @@ function Name({ r }: { r: TopicRow }) {
   return (
     <>
       {r.locked && <LockIcon size={14} />}
+      {r.event && <span className="evmark">{t(`forum.event.kind.${r.event}` as never)}</span>}
       <span className="trow-title">{r.title}</span>
       {r.unread && <span className="newmark">{t("forum.board.newMark")}</span>}
     </>

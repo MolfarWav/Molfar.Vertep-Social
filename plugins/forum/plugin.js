@@ -70,6 +70,13 @@ const LIVE_MS = 7 * 24 * 3600 * 1000;
 // relationships (the Life plugin's feel score, -12 to 12): at or below AVOID_AT a character skips a mention of it with this chance
 const AVOID_AT = -7;
 const AVOID_CHANCE = 0.6;
+// events (issue #358): the moderator's topic that several characters talk about
+const MOD = "_mod";
+const EVENT_LIVE_MS = 2 * 24 * 3600 * 1000;
+const EVENT_GAP_MS = { daily: 20 * 3600 * 1000, weekly: 6.5 * 24 * 3600 * 1000 };
+const EVENT_INVITES = 4;
+const EVENT_FAIL_WAIT_MS = 30 * 60 * 1000;
+export const EVENT_KINDS = ["contest", "rumour", "announcement", "question", "game"];
 const TEXT_MAX = 4000;
 const TITLE_MAX = 120;
 const FORCE_MAX = 3;
@@ -182,6 +189,7 @@ export function readSettings(fsx) {
     quietTo: time(r.quietTo, DEFAULTS.quietTo),
     writers: r.writers === "equal" ? "equal" : "profile",
     // what the community around the posts does by itself (Settings > Community); reactions need no model
+    events: isObj(r.community) && ["off", "daily", "weekly"].includes(r.community.events) ? r.community.events : "weekly",
     reactions: !isObj(r.community) || r.community.reactions !== false,
     reactionsPerDay: clampInt(isObj(r.community) ? r.community.reactionsPerDay : undefined, 0, 50, 8),
     tzOffset: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
@@ -385,6 +393,8 @@ export function readTopic(fsx, id) {
     owe: clampInt(t.owe, 0, 3, 0),
     // the character the user's last post was aimed at (it quoted that character, or named them): answers first
     addressed: typeof t.addressed === "string" && ID.test(t.addressed) ? t.addressed : "",
+    // an event (issue #358): what kind, when it was posted, and the characters invited to talk about it
+    ...(cleanEvent(t.event) ? { event: cleanEvent(t.event) } : {}),
     posts,
   };
 }
@@ -967,7 +977,7 @@ const canAnswer = (author, post) => (post.by === SELF ? author.forum.repliesYou 
 
 /** The replies an author could write, by tier: the user's post still owed replies, a mention, or just a live topic. */
 export function targetsFor(author, topics, now, scope) {
-  const out = { owed: [], mention: [], live: [] };
+  const out = { owed: [], event: [], mention: [], live: [] };
   for (const t of topics) {
     if (t.locked || (scope && scope.topic && t.id !== scope.topic) || (scope && scope.board && t.board !== scope.board)) continue;
     const ps = livePosts(t);
@@ -986,6 +996,11 @@ export function targetsFor(author, topics, now, scope) {
     const first = t.addressed === author.id;
     if ((t.owe > 0 || first) && userIdx >= 0 && !wroteSince && author.forum.repliesYou) {
       out.owed.push({ topic: t, target: ps[userIdx], first });
+      continue;
+    }
+    // an event the author was invited to and has not written in yet: it comes before a plain mention
+    if (t.event && t.event.invited.includes(author.id) && now - t.event.at < EVENT_LIVE_MS && !ps.some((p) => p.by === author.id) && author.forum.repliesOthers) {
+      out.event.push({ topic: t, target: null });
       continue;
     }
     const tail = ps.slice(-6);
@@ -1045,6 +1060,8 @@ export function planAction(c, rand) {
   if (addressed) return addressed;
   const owed = reply((t) => t.owed, oldest);
   if (owed) return owed;
+  const event = reply((t) => t.event, oldest);
+  if (event) return event;
   const mention = reply((t) => t.mention, oldest);
   if (mention) return mention;
 
@@ -1177,6 +1194,135 @@ function reactTick(fsx, s, log, now, tz, rand) {
   if (!pick || !putReaction(fsx, pick.topic.id, pick.post.id, pick.emoji, pick.author.id, true)) return false;
   log.reacts[pick.author.id] = (log.reacts[pick.author.id] || 0) + 1;
   return true;
+}
+
+// ---------- events (issue #358): now and then the moderator opens a topic, and several characters talk about it ----------
+// By rules: when (once a day or a week), which kind, which board (a general one), who is invited (up to four, by their frequency).
+// By the model: one request that words the title and the text. State in forum/events.json {last, kind, pendingAt, failedAt}.
+
+const EVENT_STATE = "forum/events.json";
+
+export function cleanEvent(e) {
+  if (!isObj(e) || !EVENT_KINDS.includes(e.kind) || !Number.isFinite(e.at)) return null;
+  return { kind: e.kind, at: e.at, invited: (Array.isArray(e.invited) ? e.invited : []).filter((x) => typeof x === "string" && ID.test(x)).slice(0, 8) };
+}
+
+function readEventState(fsx) {
+  const d = readJson(fsx, EVENT_STATE, null);
+  const r = isObj(d) ? d : {};
+  return { last: num(r.last), kind: EVENT_KINDS.includes(r.kind) ? r.kind : "", pendingAt: num(r.pendingAt), failedAt: num(r.failedAt) };
+}
+
+const writeEventState = (fsx, st) => fsx.write(EVENT_STATE, JSON.stringify(st));
+
+const EVENT_BRIEF = {
+  contest: "a small friendly contest or challenge that members can join with one post each (for example: show your best find of the week)",
+  rumour: "a rumour that has gone round the forum, which members can wonder about, doubt or add to",
+  announcement: "an announcement from the moderators: a small change or something to look forward to on the forum",
+  question: "a question of the day that every member can answer from their own life",
+  game: "a simple word game the members can play in turns (a chain of associations, finish the sentence)",
+};
+
+/** Is an event due, and which kind: {kind} or null. Never the same kind twice in a row; needs two characters, a board, and no event still pending. */
+export function eventDue(settings, st, profiles, boards, now, tz, rand) {
+  if (!settings.autonomous || settings.events === "off" || profiles.length < 2) return null;
+  if (!boards.categories.some((c) => c.boards.length)) return null;
+  if (inQuiet(now, tz, settings.quietFrom, settings.quietTo)) return null;
+  if (now - st.last < EVENT_GAP_MS[settings.events] || now - st.pendingAt < 10 * 60 * 1000 || now - st.failedAt < EVENT_FAIL_WAIT_MS) return null;
+  const kinds = EVENT_KINDS.filter((k) => k !== st.kind);
+  return { kind: kinds[Math.floor(rand() * kinds.length)] };
+}
+
+/** The board an event goes on: a general one when there is, else any. */
+export function eventBoard(boards, rand) {
+  const list = [...boardMap(boards).values()];
+  const general = list.filter((b) => GENERAL_BOARD.test(str(b.board.name) + " " + str(b.board.desc)));
+  const pool = general.length ? general : list;
+  return pool.length ? pool[Math.floor(rand() * pool.length)].board : null;
+}
+
+/** Up to EVENT_INVITES characters who will talk about it: those that answer others, weighed by their frequency. */
+export function eventGuests(profiles, rand) {
+  const left = profiles.filter((p) => p.forum.repliesOthers);
+  const out = [];
+  while (out.length < EVENT_INVITES && left.length) {
+    const p = weightedPick(left, (x) => 5 + x.forum.frequency, rand);
+    out.push(p.id);
+    left.splice(left.indexOf(p), 1);
+  }
+  return out;
+}
+
+export function eventSystem() {
+  return [
+    "You are the moderator of a small online forum where the members are characters and one human.",
+    "You open one topic to get members talking. Write it as a real forum moderator would: warm, short, plain text, no markdown.",
+    "Write in the language of the forum's recent topic titles given below. When there are none, write in English.",
+    "Do not invent facts about the real world. Do not mention that you are an AI.",
+    'Answer with JSON only: {"title": "the topic title, at most 80 characters", "text": "the opening post, one to four sentences"}',
+  ].join("\n");
+}
+
+export function eventUser(kind, titles) {
+  const lines = ["The topic to open: " + EVENT_BRIEF[kind] + "."];
+  if (titles.length) lines.push("Recent topic titles on the forum (do not repeat them): " + titles.slice(0, 8).map((x) => '"' + cut(x, 80) + '"').join(", ") + ".");
+  return lines.join("\n");
+}
+
+/** Asks the model for an event when one is due; true when it asked (so the tick does nothing else). */
+function eventTick(host, s, boards, now, tz, rand) {
+  const fsx = host.fs;
+  if (s.events === "off" || !s.autonomous) return false;
+  // the first event comes one period after the forum began to keep time, not on the first tick after an update
+  if (readJson(fsx, EVENT_STATE, null) === null) {
+    writeEventState(fsx, { last: now, kind: "", pendingAt: 0, failedAt: 0 });
+    return false;
+  }
+  const st = readEventState(fsx);
+  const profiles = loadProfiles(fsx);
+  const due = eventDue(s, st, profiles, boards, now, tz, rand);
+  if (!due) return false;
+  const titles = loadTopics(fsx).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
+  st.pendingAt = now;
+  writeEventState(fsx, st);
+  const model = s.model;
+  host.llm.request("ev:" + due.kind, {
+    ...(model ? { model } : {}),
+    systemPrompt: eventSystem(),
+    messages: [{ role: "user", content: eventUser(due.kind, titles) }],
+    presetParams: { temperature: 0.9, max_tokens: 400 },
+  });
+  return true;
+}
+
+/** Files the model's event as a topic by the moderator, with its guests. Returns {topicId} or {error}. */
+export function fileEventResult(fsx, result, boards, now, rand, kindKey) {
+  const st = readEventState(fsx);
+  const r = isObj(result) ? result : {};
+  const fail = (error) => {
+    st.failedAt = now;
+    st.pendingAt = 0;
+    writeEventState(fsx, st);
+    return { error };
+  };
+  if (r.error || !str(r.text)) return fail(r.error || "the model returned nothing");
+  const j = parseJsonReply(r.text);
+  const title = j ? oneLine(j.title, TITLE_MAX) : "";
+  const text = j ? cleanReply(String(j.text || ""), "") : "";
+  if (title.length < 3 || !text) return fail("the model's answer was not a topic");
+  const board = eventBoard(boards, rand);
+  if (!board) return fail("there are no boards");
+  const topics = loadTopics(fsx);
+  if (topics.some((t) => t.board === board.id && normal(t.title) === normal(title))) return fail("the topic repeats an earlier one");
+  if (topics.length >= MAX_TOPICS) return fail("too many topics");
+  const profiles = loadProfiles(fsx);
+  const kind = EVENT_KINDS.includes(kindKey) ? kindKey : "announcement";
+  const name = /[\u0400-\u04FF]/.test(title + text) ? "Модератор" : "Moderator";
+  const post = { id: "p-" + now + "-" + rid(), by: MOD, name, hue: 45, at: now, text };
+  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: board.id, title, by: MOD, name, hue: 45, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, event: { kind, at: now, invited: eventGuests(profiles, rand) }, posts: [post] };
+  writeTopic(fsx, topic);
+  writeEventState(fsx, { last: now, kind: topic.event.kind, pendingAt: 0, failedAt: 0 });
+  return { topicId: topic.id };
 }
 
 // ---------- requests and filing ----------
@@ -1367,7 +1513,7 @@ function boardRoute(req, host) {
     .map((t) => {
       const ps = livePosts(t);
       const lp = ps[ps.length - 1] || t.posts[t.posts.length - 1];
-      return { id: t.id, title: t.title, by: t.by, name: t.name, hue: t.hue, createdAt: t.createdAt, replies: Math.max(0, ps.length - 1), lastAt: t.lastAt, lastBy: lp.by, lastName: lp.name, lastHue: lp.hue, locked: t.locked, unread: t.unread };
+      return { id: t.id, title: t.title, by: t.by, name: t.name, hue: t.hue, createdAt: t.createdAt, replies: Math.max(0, ps.length - 1), lastAt: t.lastAt, lastBy: lp.by, lastName: lp.name, lastHue: lp.hue, locked: t.locked, unread: t.unread, ...(t.event ? { event: t.event.kind } : {}) };
     });
   return ok({ board: { id, name: hit.board.name, desc: hit.board.desc, category: hit.category.name }, topics });
 }
@@ -1424,6 +1570,7 @@ function topicRoute(req, host) {
       lastAt: topic.lastAt,
       locked: topic.locked,
       unread: topic.unread,
+      ...(topic.event ? { event: topic.event.kind } : {}),
       posts: shown.map((p) => (p.by === SELF ? { ...p, as: personaFor(you, p) } : p)),
     },
     paging: { page, pages, size: PAGE_SIZE, total, from, live: livePosts(topic).length },
@@ -1737,12 +1884,16 @@ export function onTick(_ctx, host) {
   const s = readSettings(fsx);
   const tz = s.tzOffset;
   const results = host.llm.results || {};
-  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:"));
+  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:") || k.startsWith("ev:"));
   const boards = readBoards(fsx);
   const log = readLog(fsx, now, tz);
 
   if (done.length) {
     for (const key of done) {
+      if (key.startsWith("ev:")) {
+        fileEventResult(fsx, results[key], boards, now, Math.random, key.slice(3));
+        continue;
+      }
       const f = parseTickKey(key);
       if (!f) continue;
       const r = fileResult(fsx, f, results[key], now, boards);
@@ -1755,6 +1906,7 @@ export function onTick(_ctx, host) {
 
   // reactions are free (no model), so they do not wait for the post limits
   if (reactTick(fsx, s, log, now, tz, Math.random)) writeLog(fsx, log);
+  if (eventTick(host, s, boards, now, tz, Math.random)) return;
   if (autoBlock(log, s, now, tz)) return;
   const profiles = loadProfiles(fsx);
   if (!profiles.length || !boards.categories.some((c) => c.boards.length)) return;

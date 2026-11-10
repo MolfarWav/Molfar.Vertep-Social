@@ -51,6 +51,8 @@ export interface TopicRow {
   last: { who: string; hue?: number; when: string; whenShort: string };
   locked: boolean;
   unread: boolean;
+  /** The kind of event the moderator opened this topic for (contest, rumour, announcement, question, game); absent for a plain topic. */
+  event?: string;
 }
 
 export interface ShownPost {
@@ -144,6 +146,7 @@ export interface EngineTopicRow {
   lastHue: number;
   locked: boolean;
   unread: boolean;
+  event?: string;
 }
 export interface EngineBoardPage {
   board: { id: string; name: string; desc: string; category: string };
@@ -185,6 +188,7 @@ export interface EngineTopicPage {
     lastAt: number;
     locked: boolean;
     unread: boolean;
+    event?: string;
     posts: EnginePost[];
   };
   /** Which page of the topic this is; absent from an engine that does not page. */
@@ -332,6 +336,7 @@ export function rowsFromEngine(page: EngineBoardPage, now: number, lang: string,
     },
     locked: r.locked,
     unread: r.unread,
+    ...(r.event ? { event: r.event } : {}),
   }));
 }
 

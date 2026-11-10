@@ -912,7 +912,8 @@ export function topicEvents(id, topic, since) {
   const first = posts.findIndex((p) => p.by === id);
   if (first < 0) return [];
   const out = [];
-  const who = (p) => ({ key: p.by === SELF ? keyOfUser(p) : "c:" + p.by, name: str(p.name) });
+  // the moderator's event posts ("_mod") are not a person to remember
+  const who = (p) => ({ key: p.by === SELF ? keyOfUser(p) : "c:" + p.by, name: p.by === "_mod" ? "" : str(p.name) });
   posts.forEach((x, i) => {
     if (x.by === id) {
       if (x.at <= since) return;
