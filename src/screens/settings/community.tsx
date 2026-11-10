@@ -43,6 +43,9 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
       <Row title={t("settings.community.closes")} hint={phone ? undefined : t("settings.community.closes.hint")}>
         {(id) => <Switch labelledBy={id} checked={c.modCloses} onChange={(v) => change({ modCloses: v })} />}
       </Row>
+      <Row title={t("settings.community.chronicle")} hint={phone ? undefined : t("settings.community.chronicle.hint")}>
+        {(id) => <Switch labelledBy={id} checked={c.chronicle} onChange={(v) => change({ chronicle: v })} />}
+      </Row>
 
       <Row title={t("settings.community.reactions")} hint={hint("settings.community.reactions.hint", "settings.community.reactions.phone.hint")}>
         {(id) => <Switch labelledBy={id} checked={c.reactions} onChange={(v) => change({ reactions: v })} />}

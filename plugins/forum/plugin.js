@@ -77,6 +77,8 @@ const EVENT_GAP_MS = { daily: 20 * 3600 * 1000, weekly: 6.5 * 24 * 3600 * 1000 }
 const EVENT_INVITES = 4;
 const EVENT_FAIL_WAIT_MS = 30 * 60 * 1000;
 export const EVENT_KINDS = ["contest", "rumour", "announcement", "question", "game"];
+/** Topics the Moderator opens for other reasons than the random event (a day's chronicle); they carry `event` like the rest, so the list and the topic show the same badge. */
+export const SPECIAL_KINDS = ["chronicle"];
 const TEXT_MAX = 4000;
 const TITLE_MAX = 120;
 const FORCE_MAX = 3;
@@ -198,6 +200,8 @@ export function readSettings(fsx) {
     gossip: !isObj(r.community) || r.community.gossip !== false,
     gossipPerDay: clampInt(isObj(r.community) ? r.community.gossipPerDay : undefined, 0, 20, 2),
     jealousy: !isObj(r.community) || r.community.jealousy !== false,
+    // the Moderator's daily digest of what happened between members (#367): one model request a day, only when there is something to say
+    chronicle: !isObj(r.community) || r.community.chronicle !== false,
     tzOffset: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
     model: modelRef(model),
   };
@@ -1581,14 +1585,14 @@ const MOD_CLOSE_EVENT_MS = 3 * 24 * 3600 * 1000;
 const MOD_CLOSE_LONG = 400;
 
 export function cleanEvent(e) {
-  if (!isObj(e) || !EVENT_KINDS.includes(e.kind) || !Number.isFinite(e.at)) return null;
+  if (!isObj(e) || !(EVENT_KINDS.includes(e.kind) || SPECIAL_KINDS.includes(e.kind)) || !Number.isFinite(e.at)) return null;
   return { kind: e.kind, at: e.at, invited: (Array.isArray(e.invited) ? e.invited : []).filter((x) => typeof x === "string" && ID.test(x)).slice(0, 8) };
 }
 
 function readEventState(fsx) {
   const d = readJson(fsx, EVENT_STATE, null);
   const r = isObj(d) ? d : {};
-  return { last: num(r.last), kind: EVENT_KINDS.includes(r.kind) ? r.kind : "", lastComment: num(r.lastComment), lastClose: num(r.lastClose), pendingAt: num(r.pendingAt), failedAt: num(r.failedAt) };
+  return { last: num(r.last), kind: EVENT_KINDS.includes(r.kind) ? r.kind : "", lastComment: num(r.lastComment), lastClose: num(r.lastClose), pendingAt: num(r.pendingAt), failedAt: num(r.failedAt), lastChronicle: num(r.lastChronicle), chronicleTry: num(r.chronicleTry) };
 }
 
 const writeEventState = (fsx, st) => fsx.write(EVENT_STATE, JSON.stringify(st));
@@ -1683,7 +1687,8 @@ export function pickModComment(topics, st, settings, now, rand) {
 export function modCloseReason(t, now) {
   if (t.locked) return null;
   const n = livePosts(t).length;
-  if (t.event && now - t.event.at > MOD_CLOSE_EVENT_MS) return "event";
+  // a chronicle is not an event to end with a verdict: it stays open like any topic and goes quiet by the usual rule
+  if (t.event && t.event.kind !== "chronicle" && now - t.event.at > MOD_CLOSE_EVENT_MS) return "event";
   if (n >= 4 && now - t.lastAt > MOD_CLOSE_QUIET_MS) return "quiet";
   if (n >= MOD_CLOSE_LONG) return "long";
   return null;
@@ -1709,10 +1714,15 @@ function modTick(host, s, boards, now, tz, rand) {
   if (!s.autonomous) return false;
   // the first one comes one period after the forum began to keep time, not on the first tick after an update
   if (readJson(fsx, EVENT_STATE, null) === null) {
-    writeEventState(fsx, { last: now, kind: "", lastComment: now, lastClose: now, pendingAt: 0, failedAt: 0 });
+    writeEventState(fsx, { last: now, kind: "", lastComment: now, lastClose: now, pendingAt: 0, failedAt: 0, lastChronicle: now - CHRONICLE_LEAD_MS, chronicleTry: 0 });
     return false;
   }
   const st = readEventState(fsx);
+  // a forum that kept time before the chronicle existed: its first digest comes about a day after the update, not at once
+  if (!st.lastChronicle) {
+    st.lastChronicle = now - CHRONICLE_LEAD_MS;
+    writeEventState(fsx, st);
+  }
   if (now - st.pendingAt < MOD_PENDING_MS || now - st.failedAt < EVENT_FAIL_WAIT_MS) return false;
   const ask = (key, tone, content, maxTokens, system) => {
     st.pendingAt = now;
@@ -1733,6 +1743,15 @@ function modTick(host, s, boards, now, tz, rand) {
     return ask("ev:" + due.kind, tone, eventUser(due.kind, titles), 400, eventSystem(tone));
   }
   if (inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
+  if (chronicleDue(s, st, profiles, boards, now)) {
+    st.chronicleTry = now;
+    const made = chronicleFacts(fsx, profiles, loadTopics(fsx), now, tz, Math.max(st.lastChronicle, now - CHRONICLE_WINDOW_MS));
+    if (made.strong >= CHRONICLE_MIN) {
+      const tone = modTone(rand);
+      return ask("cr:" + localDay(now, tz), tone, chronicleUser(made.facts, loadTopics(fsx).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title)), 450, chronicleSystem(tone));
+    }
+    writeEventState(fsx, st);
+  }
   const wantsComment = s.modComments !== "off" && now - st.lastComment >= MOD_GAP_MS[s.modComments];
   const wantsClose = s.modCloses && now - st.lastClose >= MOD_CLOSE_GAP_MS;
   if (!(wantsComment || wantsClose) || rand() >= MOD_COMMENT_CHANCE) return false;
@@ -1806,6 +1825,140 @@ export function fileEventResult(fsx, result, boards, now, rand, kindKey) {
   const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: board.id, title, by: MOD, name, hue: 45, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, event: { kind, at: now, invited: eventGuests(profiles, rand) }, posts: [post] };
   writeTopic(fsx, topic);
   writeEventState(fsx, { ...st, last: now, kind, pendingAt: 0, failedAt: 0 });
+  return { topicId: topic.id };
+}
+
+// ---------- the chronicle (#367): the Moderator's daily digest ----------
+// Once a day (after a gap of CHRONICLE_GAP_MS, outside quiet hours) the Moderator posts what happened between the members: who made friends, who
+// fell out (the milestones in the people lists, characters only), what rumours were told, the Moderator's own events, the busiest topic.
+// The facts are collected by rules; the model only words them (one request, key `cr:<day>`). Nothing is posted when there are fewer than
+// CHRONICLE_MIN strong facts, and nothing from a private chat or about the user's persona is ever in the list. Settings > Community > Chronicle.
+
+const CHRONICLE_GAP_MS = 22 * 3600 * 1000;
+const CHRONICLE_LEAD_MS = 2 * 3600 * 1000;
+const CHRONICLE_WINDOW_MS = 30 * 3600 * 1000;
+const CHRONICLE_RETRY_MS = 30 * 60 * 1000;
+const CHRONICLE_MIN = 2;
+const CHRONICLE_FACTS = 8;
+const CHRONICLE_LEVEL_UP = { acquaintance: "got to know each other", penfriend: "became pen friends", friend: "became friends", close: "became close friends", confidant: "became confidants" };
+const CHRONICLE_FEEL = { cold: " has cooled toward ", hostile: " is now openly at odds with " };
+
+export function chronicleDue(settings, st, profiles, boards, now) {
+  if (!settings.autonomous || !settings.chronicle || profiles.length < 2) return false;
+  if (!boards.categories.some((c) => c.boards.length)) return false;
+  return now - st.lastChronicle >= CHRONICLE_GAP_MS && now - st.chronicleTry >= CHRONICLE_RETRY_MS;
+}
+
+/**
+ * The facts of the day, one short English sentence each: {facts, strong, people}. `strong` counts the ones that carry the digest (milestones,
+ * rumours, events); `people` are the characters named, for the guests of the topic. `since` is the start of the window.
+ */
+export function chronicleFacts(fsx, profiles, topics, now, tz, since) {
+  const ids = new Map(profiles.map((p) => [p.id, p]));
+  const level = communityLevel(fsx);
+  const strong = [];
+  const seen = new Set();
+  const people = new Set();
+  const add = (key, text, who) => {
+    if (seen.has(key) || strong.length >= CHRONICLE_FACTS) return;
+    seen.add(key);
+    strong.push(text);
+    for (const w of who) people.add(w);
+  };
+  const pairKey = (kind, a, b) => kind + "|" + [a, b].sort().join("|");
+  for (const a of profiles) {
+    const d = readJson(fsx, "life/people/" + a.id + ".json", null);
+    for (const x of isObj(d) && Array.isArray(d.people) ? d.people : []) {
+      if (!isObj(x) || typeof x.key !== "string" || !x.key.startsWith("c:")) continue;
+      const b = ids.get(x.key.slice(2));
+      if (!b || b.id === a.id) continue;
+      const an = cut(a.name, 60);
+      const bn = cut(b.name, 60);
+      for (const m of Array.isArray(x.marks) ? x.marks : []) {
+        if (!isObj(m) || !(num(m.at) > since)) continue;
+        if (m.k === "level" && m.up === true && CHRONICLE_LEVEL_UP[m.v]) add(pairKey("up:" + m.v, a.id, b.id), an + " and " + bn + " " + CHRONICLE_LEVEL_UP[m.v], [a.id, b.id]);
+        else if (m.k === "level" && m.up !== true) add(pairKey("down", a.id, b.id), an + " and " + bn + " drifted apart", [a.id, b.id]);
+        else if (m.k === "feel" && CHRONICLE_FEEL[m.v]) add("feel|" + a.id + "|" + b.id, an + CHRONICLE_FEEL[m.v] + bn, [a.id, b.id]);
+        else if (m.k === "tie" && m.v === "rival") add(pairKey("rival", a.id, b.id), an + " and " + bn + " became rivals", [a.id, b.id]);
+        else if (m.k === "tie" && (m.v === "dating" || m.v === "partner") && level !== "none" && a.adult && b.adult) add(pairKey("couple", a.id, b.id), an + " and " + bn + " are seeing each other now", [a.id, b.id]);
+      }
+    }
+  }
+  for (const it of readGossip(fsx).items) {
+    if (it.at <= since || (it.kind === "sweet" && level === "none")) continue;
+    const p = ids.get(it.about[0]);
+    const q = ids.get(it.about[1]);
+    const by = ids.get(it.by);
+    if (!p || !q || !by) continue;
+    add("gossip|" + it.id, cut(by.name, 60) + " has been telling people (an unconfirmed rumour) that " + GOSSIP_FACT[it.kind](cut(p.name, 60), cut(q.name, 60)), [by.id]);
+  }
+  for (const t of topics) {
+    if (t.by !== MOD || !t.event || t.event.kind === "chronicle" || t.createdAt <= since) continue;
+    add("event|" + t.id, "The Moderator opened a topic (" + t.event.kind + ') "' + cut(t.title, 80) + '", with ' + Math.max(0, livePosts(t).length - 1) + " answers so far", t.event.invited);
+  }
+  const extra = [];
+  const busy = topics
+    .filter((t) => !(t.by === MOD && t.event))
+    .map((t) => ({ t, n: livePosts(t).filter((p) => p.at > since).length }))
+    .filter((x) => x.n >= 4)
+    .sort((x, y) => y.n - x.n)[0];
+  if (busy) extra.push('The busiest topic was "' + cut(busy.t.title, 80) + '" (' + busy.n + " new posts)");
+  const posts = topics.reduce((n, t) => n + livePosts(t).filter((p) => p.at > since).length, 0);
+  const opened = topics.filter((t) => t.createdAt > since).length;
+  if (strong.length && posts) extra.push("In all, " + posts + " new posts and " + opened + " new topics on the forum");
+  return { facts: [...strong, ...extra], strong: strong.length, people: [...people].filter((id) => ids.has(id)) };
+}
+
+export function chronicleSystem(tone) {
+  return [
+    modSystem(tone),
+    "You write the forum's daily chronicle: a short digest of what happened between the members since yesterday.",
+    "Use only the facts given. Add no names, places, dates or events of your own. A rumour is a rumour: pass it on as something people say, never as proven. Say nothing about private chats.",
+    "Three to six sentences, in your voice, as one text with no list and no heading. Never anything explicit.",
+  ].join("\n");
+}
+
+export function chronicleUser(facts, titles) {
+  const lines = ["Facts of the day:", ...facts.map((f) => "- " + f)];
+  if (titles && titles.length) lines.push("", "Recent topic titles on the forum (only to tell which language to write in): " + titles.slice(0, 4).map((x) => '"' + cut(x, 60) + '"').join(", ") + ".");
+  lines.push("", "Write today's chronicle.");
+  return lines.join("\n");
+}
+
+/** The title is made by rules, so it is never a repeat: the kind of text and the day (DD.MM.YYYY), in the language of the digest. */
+export function chronicleTitle(day, text) {
+  const [y, m, d] = String(day).split("-");
+  return (/[Ѐ-ӿ]/.test(text) ? "Хроніка дня" : "Chronicle of the day") + " · " + d + "." + m + "." + y;
+}
+
+/** Files the model's chronicle as a topic by the Moderator, with the characters named in it as guests. Returns {topicId} or {error}. */
+export function fileChronicle(fsx, result, boards, now, rand, tz) {
+  const st = readEventState(fsx);
+  const r = isObj(result) ? result : {};
+  const fail = (error) => {
+    st.failedAt = now;
+    st.pendingAt = 0;
+    writeEventState(fsx, st);
+    return { error };
+  };
+  if (r.error || !str(r.text)) return fail(r.error || "the model returned nothing");
+  const text = cleanReply(r.text, "Moderator");
+  if (text.length < 30) return fail("the model returned nothing");
+  if (overCeiling(text)) return fail("the chronicle went past the ceiling and was not filed");
+  const board = eventBoard(boards, rand);
+  if (!board) return fail("there are no boards");
+  const topics = loadTopics(fsx);
+  if (topics.length >= MAX_TOPICS) return fail("too many topics");
+  const title = chronicleTitle(localDay(now, tz), text);
+  if (topics.some((t) => t.board === board.id && normal(t.title) === normal(title))) return fail("the chronicle repeats an earlier one");
+  const profiles = loadProfiles(fsx);
+  const made = chronicleFacts(fsx, profiles, topics, now, tz, Math.max(st.lastChronicle, now - CHRONICLE_WINDOW_MS));
+  const guests = profiles.filter((p) => made.people.includes(p.id) && p.forum.repliesOthers).map((p) => p.id).slice(0, EVENT_INVITES);
+  const name = modName(title, text);
+  const post = { id: "p-" + now + "-" + rid(), by: MOD, name, hue: 45, at: now, text };
+  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: board.id, title, by: MOD, name, hue: 45, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, event: { kind: "chronicle", at: now, invited: guests }, posts: [post] };
+  writeTopic(fsx, topic);
+  writeEventState(fsx, { ...st, lastChronicle: now, pendingAt: 0, failedAt: 0 });
   return { topicId: topic.id };
 }
 
@@ -2386,7 +2539,7 @@ export function onTick(_ctx, host) {
   const s = readSettings(fsx);
   const tz = s.tzOffset;
   const results = host.llm.results || {};
-  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:") || k.startsWith("ev:") || k.startsWith("mc:") || k.startsWith("mx:"));
+  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:") || k.startsWith("ev:") || k.startsWith("mc:") || k.startsWith("mx:") || k.startsWith("cr:"));
   const boards = readBoards(fsx);
   const log = readLog(fsx, now, tz);
 
@@ -2394,6 +2547,10 @@ export function onTick(_ctx, host) {
     for (const key of done) {
       if (key.startsWith("ev:")) {
         fileEventResult(fsx, results[key], boards, now, Math.random, key.slice(3));
+        continue;
+      }
+      if (key.startsWith("cr:")) {
+        fileChronicle(fsx, results[key], boards, now, Math.random, tz);
         continue;
       }
       if (key.startsWith("mc:") || key.startsWith("mx:")) {

@@ -45,6 +45,8 @@ export interface CommunitySettings {
   modComments: ModComments;
   /** The Moderator closes topics that went quiet or ran too long, and ends events. */
   modCloses: boolean;
+  /** Once a day the Moderator posts a digest of what happened between the members (issue #367); one model request, only when there is something to tell. */
+  chronicle: boolean;
   /** A story: a short post with a picture that vanishes after a day. */
   stories: boolean;
   storiesPerDay: number;
@@ -60,7 +62,7 @@ export interface CommunitySettings {
   jealousy: boolean;
 }
 
-export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true };
+export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true };
 
 export interface SettingsMock {
   autonomous: boolean;

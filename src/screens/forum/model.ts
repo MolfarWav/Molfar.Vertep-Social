@@ -51,7 +51,7 @@ export interface TopicRow {
   last: { who: string; hue?: number; when: string; whenShort: string };
   locked: boolean;
   unread: boolean;
-  /** The kind of event the moderator opened this topic for (contest, rumour, announcement, question, game); absent for a plain topic. */
+  /** The kind of event the moderator opened this topic for (contest, rumour, announcement, question, game, chronicle); absent for a plain topic. */
   event?: string;
 }
 
