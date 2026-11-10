@@ -267,7 +267,7 @@ test("profiles: the life switches are kept, default on, and merged in the settin
   expect(p.life).toEqual({ on: false, world: true });
   expect(profiles.cleanProfile({ name: "X" }, "x", 1, null).life).toEqual({ on: true, world: true });
   const s = profiles.mergeSettings(profiles.DEFAULT_SETTINGS, { life: { world: false, cats: { politics: false }, place: " Kyiv <b>city</b> " } });
-  expect(s.life).toEqual({ on: true, world: false, cats: { ...profiles.DEFAULT_SETTINGS.life.cats, politics: false }, place: "Kyiv city" });
+  expect(s.life).toEqual({ on: true, world: false, cats: { ...profiles.DEFAULT_SETTINGS.life.cats, politics: false }, place: "Kyiv city", topics: { on: [], custom: [] } });
   const s2 = profiles.mergeSettings(s, { life: { cats: { news: false } } });
   expect(s2.life.cats).toMatchObject({ news: false, politics: false });
   expect(s2.life.place).toBe("Kyiv city");

@@ -434,6 +434,8 @@ export const DEFAULT_SETTINGS = {
     world: true,
     cats: { news: true, politics: true, games: true, film: true, anime: true, science: true, culture: true, weather: true, reddit: true },
     place: "",
+    /** Subjects the outside feed keeps (issue #358): ids of the Life plugin's list, and the user's own ({id, label, words}). Empty = every category. */
+    topics: { on: [], custom: [] },
   },
   /** The browser's UTC offset in minutes (UTC minus local), stored so schedules run in the user's own time; null until known. */
   tzOffset: null,
@@ -443,6 +445,21 @@ const TIME = /^([01]\d|2[0-3]):[03]0$/;
 const bool = (v, d) => (typeof v === "boolean" ? v : d);
 const oneOf = (v, set, d) => (set.includes(v) ? v : d);
 const modelRef = (v) => (typeof v === "string" && v !== "default" && MODEL_REF.test(v.trim()) ? v.trim() : "");
+
+/** The life topics: catalog ids (the Life plugin checks them against its list) and the user's own topics, bounded. */
+function cleanTopics(raw) {
+  const r = isObj(raw) ? raw : {};
+  const on = [...new Set((Array.isArray(r.on) ? r.on : []).filter((id) => typeof id === "string" && /^[a-z0-9-]{1,30}$/.test(id)))].slice(0, 12);
+  const custom = [];
+  for (const c of Array.isArray(r.custom) ? r.custom : []) {
+    if (!isObj(c)) continue;
+    const label = plain(typeof c.label === "string" ? c.label : "", 40);
+    const list = Array.isArray(c.words) ? c.words : typeof c.words === "string" ? c.words.split(/[,;\n]/) : [];
+    const words = [...new Set(list.filter((w) => typeof w === "string").map((w) => plain(w, 30).toLowerCase()).filter((w) => w.length >= 2))].slice(0, 6);
+    if (label && words.length && custom.length < 6) custom.push({ id: typeof c.id === "string" && /^c[a-z0-9]{1,12}$/.test(c.id) ? c.id : "c" + Math.floor(Math.random() * 1e9).toString(36), label, words });
+  }
+  return { on, custom };
+}
 
 /** The settings with `patch` applied over `base`; unknown keys and bad values are dropped. */
 export function mergeSettings(base, patch) {
@@ -466,6 +483,7 @@ export function mergeSettings(base, patch) {
       world: bool(l.world, bool(bl.world, true)),
       cats,
       place: typeof l.place === "string" ? plain(l.place, 80) : typeof bl.place === "string" ? bl.place : "",
+      topics: "topics" in l ? cleanTopics(l.topics) : cleanTopics(bl.topics),
     },
     community: {
       reactions: bool(cm.reactions, bool(bcm.reactions, true)),

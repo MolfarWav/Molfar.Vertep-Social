@@ -18,6 +18,8 @@ export interface LifeSettings {
   cats: Record<LifeCat, boolean>;
   /** The place the user typed for the weather ("" = no weather). */
   place: string;
+  /** Subjects the feed keeps (issue #358): ids of the plugin's list and the user's own. Empty = every category. */
+  topics: { on: string[]; custom: { id: string; label: string; words: string[] }[] };
 }
 
 export const LIFE_DEFAULTS: LifeSettings = {
@@ -25,6 +27,7 @@ export const LIFE_DEFAULTS: LifeSettings = {
   world: true,
   cats: { news: true, politics: true, games: true, film: true, anime: true, science: true, culture: true, weather: true, reddit: true },
   place: "",
+  topics: { on: [], custom: [] },
 };
 
 export type EventsRate = "off" | "daily" | "weekly";

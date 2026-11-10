@@ -6,6 +6,7 @@ import { useT, currentLang } from "@/i18n/index";
 import { LIFE_CATS, type SettingsMock } from "@/mock/settings";
 import { Row, Switch } from "./controls";
 import { loadWorldStatus, lookUpPlace, refreshWorld, type WorldStatus } from "./life-api";
+import { TopicsPicker } from "./life-topics";
 import type { Patch } from "./parts";
 
 /** The two switches. */
@@ -96,6 +97,8 @@ export function LifeWorld({ s, set }: { s: SettingsMock; set: Patch }) {
         </div>
         <div className="k hint">{t("settings.life.cats.hint")}</div>
       </div>
+
+      <TopicsPicker s={s} set={set} off={off} status={status} />
 
       <Row title={t("settings.life.place")} hint={t("settings.life.place.hint")} className="col">
         {(id) => (
