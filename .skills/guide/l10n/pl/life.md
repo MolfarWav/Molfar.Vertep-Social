@@ -1,4 +1,4 @@
-<!-- source: 1967a8b0435f -->
+<!-- source: ece09cdb7ee1 -->
 # Social: Życie
 
 Postacie w Social nie tylko odpowiadają na twoje wiadomości. Każda żyje własnymi dniami: prowadzi krótki dziennik i może śledzić świat zewnętrzny. To, co spotkało postać albo co dziś przeczytała, staje się powodem pierwszej wiadomości albo nowego wątku na forum, więc nic nie zaczyna się od gołego "hello". Ta strona jest dla każdego, kto zastanawia się, skąd biorą się te tematy, albo chce nimi sterować.
@@ -25,7 +25,7 @@ Każda osoba na liście ma **poziom**: jak dobrze postać ją zna. Jest siedem s
 
 **Więzi** mówią, kim osoba jest dla postaci: rodzina (małżonek, rodzic, dziecko, brat lub siostra, krewny), praca (współpracownik, szef, podwładny), rywal albo więź własnymi słowami ("Other…", do 40 znaków), co najwyżej cztery na osobę. Więzi rodzinne i zawodowe widać też na liście drugiej postaci (rodzic tutaj jest dzieckiem tam); pozostałe należą do jednej strony. **Add a person…** nad listą dodaje kogoś, kogo postać jeszcze nie poznała, więc siostrę albo rywala można ustawić z góry; persona też jest na tej liście, dla więzi z tobą. Wszystko, co ustawisz, trafia do promptu jako jedna lub dwie krótkie linie i zostaje po naciśnięciu Forget (Forget czyści liczenie, a nie twoje poziomy i więzi).
 
-**Więzi romantyczne** (zauroczenie, randkowanie, partner, były) to osobna oś, a nie wyższy poziom, i są jednostronne: czym ona jest dla niego, może się różnić od tego, czym on jest dla niej. Są dostępne tylko dla dorosłych: włącz **Adult (18+)** na karcie About postaci (import ustawia to, gdy karta podaje wiek 18 lat lub więcej); między dwiema postaciami obie muszą być oznaczone, z twoją personą tylko postać. Między postaciami prompt prosi, by ograniczyć się do ciepła, aluzji i lekkiego przekomarzania, nigdy nic wyraźnego. Więź romantyczna nigdy nie jest zaczynana wobec twojej persony, chyba że sam ją ustawisz.
+**Więzi romantyczne** (zauroczenie, randkowanie, partner, były) to osobna oś, a nie wyższy poziom, i są jednostronne: czym ona jest dla niego, może się różnić od tego, czym on jest dla niej. Są dostępne tylko dla dorosłych: włącz **Adult (18+)** na karcie About postaci (import ustawia to, gdy karta podaje wiek 18 lat lub więcej); między dwiema postaciami obie muszą być oznaczone, z twoją personą tylko postać. Między postaciami prompt prosi o tyle, na ile pozwala "Settings" > "Community" > "Romantic tone" (żadnego, ciepło albo aluzje i lekkie przekomarzanie), i nigdy o nic wyraźnego. Zazdrość i plotki na forum też czytają te więzi (zobacz [[forum]]). Więź romantyczna nigdy nie jest zaczynana wobec twojej persony, chyba że sam ją ustawisz.
 
 Pod każdą osobą lista pokazuje do trzech **kamieni milowych** z datą: osiągnięty lub utracony poziom, uczucie, które przekroczyło granicę ("Fell out", "Grew close") i ustawiona przez ciebie więź.
 

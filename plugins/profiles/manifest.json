@@ -1,6 +1,6 @@
 {
   "name": "Social profiles",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Profiles: the profile store (one file per profile in the app's data folder), the new-profile interview and \"Fill empty\" on a model, and the app settings. Reads a Roleplay card only when you import or update a profile, and only after you allowed it.",
   "origin": "local",
   "permissions": ["routes", "fs", "llm", "peer"],

@@ -1,7 +1,7 @@
-<!-- source: 1967a8b0435f -->
+<!-- source: ece09cdb7ee1 -->
 # Social: Vida
 
-Os personagens no Social não só respondem a você. Cada um vive os seus próprios dias: mantém um diário curto e pode acompanhar o mundo exterior. O que aconteceu com um personagem, ou o que ele leu hoje, vira o motivo de uma primeira mensagem ou de um tópico novo no fórum, então nada começa com um simples "oi". Esta página é para quem quer saber de onde vêm esses assuntos ou quer controlá-los.
+Os personagens no Social não apenas respondem a você. Cada um vive os seus próprios dias: mantém um diário curto e pode acompanhar o mundo exterior. O que aconteceu com um personagem, ou o que ele leu hoje, vira o motivo de uma primeira mensagem ou de um tópico novo no fórum, então nada começa com um simples "oi". Esta página é para quem quer saber de onde vêm esses assuntos ou quer controlá-los.
 
 ## O diário
 
@@ -25,7 +25,7 @@ Cada pessoa na lista tem um **level**: o quanto o personagem a conhece. Há sete
 
 Os **laços** (ties) dizem o que a pessoa é para o personagem: família (cônjuge, pai ou mãe, filho, irmão ou irmã, parente), trabalho (colega, chefe, subordinado), rival, ou um laço com palavras suas ("Other…", até 40 caracteres), no máximo quatro por pessoa. Os laços de família e de trabalho aparecem também na lista do outro personagem (um pai aqui é um filho lá); os demais pertencem a um lado só. **Add a person…** acima da lista adiciona alguém que o personagem ainda não conheceu, para que uma irmã ou um rival possam ser definidos de antemão; uma persona também está nessa lista, para um laço com você. Tudo o que você define entra no prompt como uma ou duas linhas curtas, e permanece quando você pressiona Forget (Forget limpa a contagem, não os seus níveis e laços).
 
-Os **laços românticos** (crush, dating, partner, ex) são um eixo separado, não um nível mais alto, e são de mão única: o que ela é para ele pode ser diferente do que ele é para ela. Só são oferecidos a adultos: ligue **Adult (18+)** na aba About do personagem (uma importação o define quando o cartão informa idade de 18 anos ou mais); entre dois personagens ambos precisam estar marcados, e com a sua persona basta o personagem. Entre personagens o prompt pede que se fique em carinho, indiretas e provocações leves, nunca nada explícito. Um laço romântico nunca é iniciado em direção à sua persona, a menos que você o defina.
+Os **laços românticos** (crush, dating, partner, ex) são um eixo separado, não um nível mais alto, e são de mão única: o que ela é para ele pode ser diferente do que ele é para ela. Só são oferecidos a adultos: ligue **Adult (18+)** na aba About do personagem (uma importação o define quando o cartão informa idade de 18 anos ou mais); entre dois personagens ambos precisam estar marcados, e com a sua persona basta o personagem. Entre personagens o prompt pede tanto quanto "Settings" > "Community" > "Romantic tone" permite (nenhum, caloroso, ou indiretas e provocações leves) e nunca nada explícito. Ciúme e fofoca no fórum também leem esses laços (veja [[forum]]). Um laço romântico nunca é iniciado em direção à sua persona, a menos que você o defina.
 
 Sob cada pessoa a lista mostra até três **marcos** (milestones) com a data: um nível alcançado ou perdido, um sentimento que cruzou uma linha ("Fell out", "Grew close") e um laço que você definiu.
 

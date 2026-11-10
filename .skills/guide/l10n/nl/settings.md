@@ -1,5 +1,5 @@
-<!-- source: 195f614fe9dd -->
-# Social: Settings
+<!-- source: 2bece4d8b57e -->
+# Social: Instellingen
 
 De instellingen bepalen hoeveel en wanneer personages schrijven, hoe ze tussen de gesprekken door leven, welke modellen ze gebruiken en waarover je een melding krijgt. Open ze met het tandwiel naast je naam bovenaan (op een telefoon het tabblad "More" onderaan). Ze staan binnen Social, niet in de hoofdinstellingen van Molfar Vertep.
 
@@ -26,6 +26,12 @@ Wat er rond de berichten vanzelf gebeurt.
 - **Stories** (uit): korte berichten die na een dag verdwijnen. Hoeveel per dag elk.
 - **Characters talk to each other** (uit): paren die je in de Messenger kiest schrijven elkaar. Het kost meer tokens. Hoeveel berichten per dag elk paar schrijft.
 
+Daaronder is **Between members** wat de personages met elkaar doen, volgens regels uit de niveaus, banden en gevoelens die je in Life instelt (zie [[life]]). Niets daarvan kost een modelaanroep.
+
+- **Romantic tone** bepaalt hoe ver romantiek mag gaan wanneer personages elkaar schrijven: **None** (een romantische band wordt hun helemaal niet verteld), **Warm** (de standaard: genegenheid en vriendelijkheid, zonder flirten) of **Flirty** (hints en licht plagen). Het staat nooit iets expliciet toe: een bericht of een bericht tussen personages dat duidelijk expliciet is, wordt niet gepubliceerd. Het raakt je eigen chats niet; die volgen de eigen regels van elk profiel. Het is alleen van belang voor personages die als Adult (18+) zijn gemarkeerd en waarmee je een romantische band hebt.
+- **Gossip** (aan): nu en dan opent een personage een forumonderwerp over iets dat het tussen twee andere leden heeft opgemerkt (een ruzie, een nieuwe nabijheid, een verliefdheid), en een ander kan het doorvertellen, een beetje verdraaid door hoe die over die twee denkt. Het komt nooit uit privéchats en gaat nooit over jou. **Rumours a day, in all** is de limiet voor iedereen.
+- **Jealousy and rivalry** (aan): een personage antwoordt op het bericht van een rivaal om te discussiëren, geeft geen reacties aan iemand die dicht bij degene komt met wie het een romantische band heeft, en een vriend die naar zijn rivaal toe warm wordt, krijgt een koeler antwoord. Het leest de banden die je in Life instelt.
+
 ## Pictures
 
 - **Characters may send pictures** (standaard uit). Als dit aan staat, kan een personage af en toe een getekende afbeelding aan een messengerbericht of een forumbericht toevoegen. Elke afbeelding is één aanroep van je afbeeldingsmodel en kan geld kosten.
@@ -47,7 +53,7 @@ Social spreekt Engels of Oekraïens. Standaard ("Auto") volgt het de taal van de
 
 ## Roleplay access
 
-Social leest Roleplay-kaarten alleen wanneer je een profiel importeert of bijwerkt, en een Roleplay-persona alleen wanneer je die in Your profile (zie [[you]]) opneemt, en pas nadat je dat hebt toegestaan. Je geeft die toestemming op Start, niet hier: open de details van Social en kijk onder "Access to other apps" (Molfar Vertep vraagt het ook de eerste keer dat je Social opent). Hier toont de status of lezen nu werkt, "Reading cards allowed" of "Reading cards off". De kaart heeft geen toestemmingsknop, omdat alleen jij de toestemming kunt wijzigen en Social dat niet zelf kan doen; de knop "Open Home" brengt je naar Start, waar je dat doet. Staat het uit, dan vertelt het importdialoog waar je het kunt aanzetten en heeft het dezelfde knop "Open Home". (Een Molfar Vertep ouder dan 1.13.1 heeft die knop niet: de tekst zegt waar je heen moet.)
+Social leest Roleplay-kaarten alleen wanneer je een profiel importeert of bijwerkt, en een Roleplay-persona alleen wanneer je die in Your profile (zie [[you]]) opneemt, en pas nadat je dat hebt toegestaan. Je geeft die toestemming op Home, niet hier: open de details van Social en kijk onder "Access to other apps" (Molfar Vertep vraagt het ook de eerste keer dat je Social opent). Hier toont de status of lezen nu werkt, "Reading cards allowed" of "Reading cards off". De kaart heeft geen toestemmingsknop, omdat alleen jij de toestemming kunt wijzigen en Social dat niet zelf kan doen; de knop "Open Home" brengt je naar Home, waar je dat doet. Staat het uit, dan vertelt het importdialoog waar je het kunt aanzetten en heeft het dezelfde knop "Open Home". (Een Molfar Vertep ouder dan 1.13.1 heeft die knop niet: de tekst zegt waar je heen moet.)
 
 ## Start over
 

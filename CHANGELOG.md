@@ -3,9 +3,9 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.11.0 (2026-11-10)
 
-Gossip, jealousy and a tone limit between characters (#367, #366). Forum, chatter and Profiles changed; nothing to migrate.
+Gossip, jealousy, a romantic tone limit between characters, a relationship map and a family tree (#367, #366). Forum 0.8.0, chatter 0.2.0, messenger 0.8.1, Profiles 0.10.0, Life 0.5.0. Needs the same engine as 0.10.0; nothing to migrate.
 
 - **Gossip.** Now and then a character opens a forum topic about something it noticed between two other members it has met: a quarrel, a new closeness, a crush. It is picked by rules from the people lists and the topics (no extra model call), told as something noticed, a little harsher or gentler by how the teller feels, and another character may pass it on, each retelling less true. A character that was talked about knows when it reads the topic and answers more often. Never from private chats, never about your persona. Switch and a daily cap in Settings > Community > Between members.
 - **Jealousy and rivalry.** A rival tie makes a character answer that one's posts to argue and not let their mention go; a romantic tie makes it withhold reactions from someone getting close to the one it cares about and answer them more coolly; a friend lately warm with such a rival gets a cooler answer. Switch in the same place.
