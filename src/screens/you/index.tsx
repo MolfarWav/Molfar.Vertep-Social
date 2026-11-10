@@ -20,6 +20,7 @@ import { PictureDialog } from "../profiles/picture-dialog";
 import { errorText } from "../profiles/persist";
 import { deletePersona, importPersona, savePersona, setActive } from "./api";
 import { ImportDialog } from "./import-dialog";
+import { ReputationBlock } from "./Reputation";
 import { ABOUT_MAX, EMPTY_YOU, MOCK_ROLEPLAY, NAME_MAX, blankDraft, canSave, draftOf, newPersonaId, personaFrom, sameDraft, withActive, withSaved, withoutPersona, type Draft, type Persona, type YouState } from "./model";
 import { setYou, useYou } from "./store";
 
@@ -223,6 +224,7 @@ export function You() {
             </Field>
             <p className="k">{t("you.note", { n: draft.about.length, max: ABOUT_MAX })}</p>
             {error && <p className="you-err" role="alert">{t("you.failed", { message: error })}</p>}
+            {saved && <ReputationBlock personaId={saved.id} />}
             {saved && (
               <div>
                 <button type="button" className="btn you-del" disabled={busy} onClick={() => setDlg("delete")}>{t("you.delete")}</button>

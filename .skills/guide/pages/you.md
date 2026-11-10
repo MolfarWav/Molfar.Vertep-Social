@@ -11,6 +11,10 @@ You can keep a few personas, for example one for each way you like to be address
 - The picture button draws a portrait with an image model, as for a profile (see [[profiles]]).
 - "Delete persona" removes it from Social together with its chats and what the characters remember of it. A persona in Roleplay is never touched. If the active one is deleted, the next one takes its place.
 
+## How you look from outside
+
+Under a saved persona, "How you look from outside" shows what the characters think of it: how many of them have met it, who is warm or friendly, who is cool, and a one-line verdict (well liked, cool reception, mixed, or not known yet). It is read from how each character feels about the persona (the people list on each profile's Life tab), by rules, with no model call, and only you see it. It changes as you talk and post.
+
 ## Adding one
 
 "Add" offers two ways. **Write a new one** opens a blank persona; it needs a name before it can be saved. **Import from Roleplay** lists the personas Roleplay has; press "Add" next to one. Social takes its name and its picture (the persona's avatar, else the portrait you set for that name in the Soul tab of Roleplay), and the import model (Settings, Models) writes a short About from the persona's description, title, pronouns and profile, the way it does for characters: third person, a few sentences, no {{user}} macros, no sexual details or secrets. This is one model call, and it happens once: later edits in Roleplay do not follow. If the model fails, nothing is added and the dialog says why, so you can try again. A persona already brought in is marked "Already here". Reading Roleplay needs your permission, which you give once on Home (see [[settings]]); without it the dialog says so and tells where to allow it.

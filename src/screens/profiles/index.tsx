@@ -641,6 +641,7 @@ export function Profiles() {
     onRefresh: () => startRefresh(p.id),
     fill: fillPropsFor(p.id),
     onDelete: PREVIEW ? undefined : () => setDeleting(p.id),
+    onView: (v: "map" | "family") => leave(() => changeMode(v)),
   });
 
   const unsavedProfile = unsaved ? byId(unsaved.id) : undefined;

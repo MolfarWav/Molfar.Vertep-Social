@@ -1593,12 +1593,51 @@ export function graphView(fsx) {
   return { nodes: nodes.slice(0, 80), links: links.slice(0, 2000) };
 }
 
+// ---------- how a persona looks from outside (#367) ----------
+
+const FOND_LEVELS = ["friend", "close", "confidant"];
+const REPUTATION_NAMES = 6;
+
+/**
+ * What the characters think of each of the user's personas, by rules from the people lists (no model, no impressions, no quoted words):
+ * per persona {id, name, known, fond, cool, mood} where `known` counts the characters that have met it, `fond` those that are friends with it
+ * or feel warm (3 or more), `cool` those that feel cold (-3 or less, which wins over fond); each is {count, names (up to six)}.
+ * `mood` is "unknown" (nobody has met it), "liked", "cool" or "mixed". `characters` is how many characters there are.
+ */
+export function reputationView(fsx) {
+  const chars = [];
+  for (const id of profileIds(fsx)) {
+    const p = readProfile(fsx, id);
+    if (p) chars.push(p);
+  }
+  const y = readJson(fsx, "you.json", null);
+  const personas = (isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && ID.test(String(x.id)) && str(x.name));
+  const lists = chars.map((c) => ({ c, people: readPeople(fsx, c.id).people }));
+  const out = personas.map((pe) => {
+    const known = [];
+    const fond = [];
+    const cool = [];
+    for (const { c, people } of lists) {
+      const x = people.find((q) => q.key === "u:" + pe.id);
+      if (!x || !(x.seen > 0 || x.toMe > 0 || x.fromMe > 0 || (x.lvl && x.lvl !== "stranger"))) continue;
+      known.push(c.name);
+      if (x.feel <= -3) cool.push(c.name);
+      else if (x.feel >= 3 || FOND_LEVELS.includes(x.lvl)) fond.push(c.name);
+    }
+    const pack = (names) => ({ count: names.length, names: names.slice(0, REPUTATION_NAMES) });
+    const mood = !known.length ? "unknown" : cool.length > fond.length ? "cool" : fond.length >= 1 && fond.length >= cool.length * 2 ? "liked" : "mixed";
+    return { id: String(pe.id), name: cut(str(pe.name), 80), known: pack(known), fond: pack(fond), cool: pack(cool), mood };
+  });
+  return { characters: chars.length, personas: out };
+}
+
 export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   if (!path.startsWith("/life/") && path !== "/life") return null;
   const parts = path.split("/").filter(Boolean); // ["life", "diary", id, "entry", eid]
   if (parts[1] === "topics" && req.method === "GET") return ok({ groups: TOPIC_GROUPS, topics: TOPICS.map(({ id, group, en, uk }) => ({ id, group, en, uk })), max: TOPICS_ON_MAX, customMax: CUSTOM_MAX, byTopic: readWorld(host.fs).byTopic });
   if (parts[1] === "graph" && req.method === "GET") return ok(graphView(host.fs));
+  if (parts[1] === "reputation" && req.method === "GET") return ok(reputationView(host.fs));
   if (parts[1] === "people") return peopleRoute(req, host, parts);
   if (parts[1] === "diary") return diaryRoute(req, host, parts);
   if (parts[1] === "world") return worldRoute(req, host, parts);

@@ -17,8 +17,10 @@ export interface TabProps {
   fill?: FillProps;
   /** The saved profile's id; the Life tab reads its diary by it (a profile not yet saved has none). */
   profileId?: string;
+  /** Opens the relationship map or the family tree (the Relationships tab's buttons). */
+  onView?: (mode: "map" | "family") => void;
 }
 
-export type TabId = "about" | "voice" | "statuses" | "forum" | "habits" | "life" | "model";
-export const TAB_IDS: TabId[] = ["about", "voice", "statuses", "forum", "habits", "life", "model"];
+export type TabId = "about" | "relations" | "voice" | "statuses" | "forum" | "habits" | "life" | "model";
+export const TAB_IDS: TabId[] = ["about", "relations", "voice", "statuses", "forum", "habits", "life", "model"];
 export const isTab = (v: unknown): v is TabId => typeof v === "string" && (TAB_IDS as string[]).includes(v);

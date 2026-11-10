@@ -24,11 +24,15 @@
  *   GET  /forum/unread                {unread}: the number of topics with posts the user has not seen (the tab badge)
  *   GET  /forum/boards                the boards as names only: {categories: [{id, name, boards: [{id, name}]}]} (the profile editor's picker)
  *   POST /forum/boards {categories}   adds categories and boards (merged by name)
+ *   POST /forum/delete-board {board}  the user deletes a board and all its topics for good (an emptied category goes too)
  *   POST /forum/topic {board, title, text}    the user opens a topic
  *   POST /forum/reply {topic, text, quoteOf?} the user replies
  *   (topic and reply also take {image: {url, alt?, gen?}}: a picture the user attached, with or without text)
  *   GET  /forum/images                the pictures characters asked for that nobody has drawn yet: {items: [{topic, post, prompt, model}]}
  *   POST /forum/image {topic, post, url? | error?}   the page files a drawn picture (or says it failed)
+ *   GET  /forum/notices               {items, unread, seenAt}: who answered the user or reacted to their post (newest 30; `new` = not seen yet)
+ *   POST /forum/notices-read          the user opened the list: everything so far counts as seen
+ *   POST /forum/vote {topic, option}  the user votes in a poll (the same option again withdraws it); a locked topic's poll is closed
  *   POST /forum/read {topic}          clears the topic's unread mark
  *   POST /forum/lock {topic, locked}  the user closes (locked: true) or reopens a topic; a closed topic takes no
  *          new posts (the user's or the characters'), keeps its place by its last post and shows a lock
@@ -76,7 +80,9 @@ const EVENT_LIVE_MS = 2 * 24 * 3600 * 1000;
 const EVENT_GAP_MS = { daily: 20 * 3600 * 1000, weekly: 6.5 * 24 * 3600 * 1000 };
 const EVENT_INVITES = 4;
 const EVENT_FAIL_WAIT_MS = 30 * 60 * 1000;
-export const EVENT_KINDS = ["contest", "rumour", "announcement", "question", "game"];
+export const EVENT_KINDS = ["contest", "rumour", "announcement", "question", "game", "poll"];
+/** Topics the Moderator opens for other reasons than the random event (a day's chronicle); they carry `event` like the rest, so the list and the topic show the same badge. */
+export const SPECIAL_KINDS = ["chronicle"];
 const TEXT_MAX = 4000;
 const TITLE_MAX = 120;
 const FORCE_MAX = 3;
@@ -198,6 +204,11 @@ export function readSettings(fsx) {
     gossip: !isObj(r.community) || r.community.gossip !== false,
     gossipPerDay: clampInt(isObj(r.community) ? r.community.gossipPerDay : undefined, 0, 20, 2),
     jealousy: !isObj(r.community) || r.community.jealousy !== false,
+    // a character passes a post it likes on, by rules (#367)
+    reposts: !isObj(r.community) || r.community.reposts !== false,
+    repostsPerDay: clampInt(isObj(r.community) ? r.community.repostsPerDay : undefined, 0, 20, 2),
+    // the Moderator's daily digest of what happened between members (#367): one model request a day, only when there is something to say
+    chronicle: !isObj(r.community) || r.community.chronicle !== false,
     tzOffset: typeof r.tzOffset === "number" && Number.isFinite(r.tzOffset) && Math.abs(r.tzOffset) <= 840 ? r.tzOffset : null,
     model: modelRef(model),
   };
@@ -376,7 +387,7 @@ function cleanPost(p) {
   if (p.removed === true) return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: "", removed: true };
   const image = cleanImage(p.image);
   const react = cleanReact(p.react);
-  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(persona ? { persona } : {}), ...(q ? { quote: q } : {}), ...(image ? { image } : {}), ...(react ? { react } : {}) };
+  return { id: String(p.id), by, name: oneLine(p.name, 80), hue: Number.isFinite(p.hue) ? p.hue : 200, at: p.at, text: p.text, ...(persona ? { persona } : {}), ...(q ? { quote: q } : {}), ...(p.repost === true && q && by !== SELF ? { repost: true } : {}), ...(image ? { image } : {}), ...(react ? { react } : {}) };
 }
 
 export function readTopic(fsx, id) {
@@ -402,6 +413,8 @@ export function readTopic(fsx, id) {
     addressed: typeof t.addressed === "string" && ID.test(t.addressed) ? t.addressed : "",
     // an event (issue #358): what kind, when it was posted, and the characters invited to talk about it
     ...(cleanEvent(t.event) ? { event: cleanEvent(t.event) } : {}),
+    // a poll (#367): two to four options with who voted for each
+    ...(cleanPoll(t.poll) ? { poll: cleanPoll(t.poll) } : {}),
     posts,
   };
 }
@@ -1553,13 +1566,14 @@ function reactRoute(req, host) {
 }
 
 /** One chance per tick that a character reacts to a post; true when the log changed. */
-function reactTick(fsx, s, log, now, tz, rand) {
+export function reactTick(fsx, s, log, now, tz, rand) {
   if (!s.autonomous || !s.reactions || rand() >= REACT_CHANCE || inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
   const profiles = loadProfiles(fsx);
   if (!profiles.length) return false;
   const topics = loadTopics(fsx);
   const pick = pickReaction({ profiles, topics, settings: s, log, now, tz, feels: feelsOf(fsx, profiles), rel: s.jealousy ? relationsOf(fsx, profiles, topics, now, s) : null }, rand);
   if (!pick || !putReaction(fsx, pick.topic.id, pick.post.id, pick.emoji, pick.author.id, true)) return false;
+  if (pick.post.by === SELF) addNotice(fsx, { kind: "react", by: pick.author.id, name: pick.author.name, hue: pick.author.hue, topic: pick.topic.id, post: pick.post.id, emoji: pick.emoji }, now);
   log.reacts[pick.author.id] = (log.reacts[pick.author.id] || 0) + 1;
   return true;
 }
@@ -1581,14 +1595,14 @@ const MOD_CLOSE_EVENT_MS = 3 * 24 * 3600 * 1000;
 const MOD_CLOSE_LONG = 400;
 
 export function cleanEvent(e) {
-  if (!isObj(e) || !EVENT_KINDS.includes(e.kind) || !Number.isFinite(e.at)) return null;
+  if (!isObj(e) || !(EVENT_KINDS.includes(e.kind) || SPECIAL_KINDS.includes(e.kind)) || !Number.isFinite(e.at)) return null;
   return { kind: e.kind, at: e.at, invited: (Array.isArray(e.invited) ? e.invited : []).filter((x) => typeof x === "string" && ID.test(x)).slice(0, 8) };
 }
 
 function readEventState(fsx) {
   const d = readJson(fsx, EVENT_STATE, null);
   const r = isObj(d) ? d : {};
-  return { last: num(r.last), kind: EVENT_KINDS.includes(r.kind) ? r.kind : "", lastComment: num(r.lastComment), lastClose: num(r.lastClose), pendingAt: num(r.pendingAt), failedAt: num(r.failedAt) };
+  return { last: num(r.last), kind: EVENT_KINDS.includes(r.kind) ? r.kind : "", lastComment: num(r.lastComment), lastClose: num(r.lastClose), pendingAt: num(r.pendingAt), failedAt: num(r.failedAt), lastChronicle: num(r.lastChronicle), chronicleTry: num(r.chronicleTry) };
 }
 
 const writeEventState = (fsx, st) => fsx.write(EVENT_STATE, JSON.stringify(st));
@@ -1620,6 +1634,7 @@ const EVENT_BRIEF = {
   announcement: "an announcement from the moderators: a rule, a change or something to look forward to on the forum, as serious or as silly as your tone",
   question: "a question of the day that every member can answer from their own life",
   game: "a simple word game the members can play in turns (a chain of associations, finish the sentence)",
+  poll: "a poll with two to four short options that members vote on (for example: who should host the next contest, or tea against coffee), with a line in the opening post that asks the question",
 };
 
 /** Is an event due, and which kind: {kind} or null. Never the same kind twice in a row; needs two characters, a board, and no request still out. */
@@ -1652,8 +1667,11 @@ export function eventGuests(profiles, rand) {
   return out;
 }
 
-export function eventSystem(tone) {
-  return [modSystem(tone), "You open one topic to get members talking.", 'Answer with JSON only: {"title": "the topic title, at most 80 characters", "text": "the opening post, one to four sentences"}'].join("\n");
+export function eventSystem(tone, kind) {
+  const shape = kind === "poll"
+    ? 'Answer with JSON only: {"title": "the topic title, at most 80 characters", "text": "the opening post, one or two sentences that ask the question", "options": ["two to four short options, each at most 60 characters"]}'
+    : 'Answer with JSON only: {"title": "the topic title, at most 80 characters", "text": "the opening post, one to four sentences"}';
+  return [modSystem(tone), "You open one topic to get members talking.", shape].join("\n");
 }
 
 export function eventUser(kind, titles) {
@@ -1683,7 +1701,8 @@ export function pickModComment(topics, st, settings, now, rand) {
 export function modCloseReason(t, now) {
   if (t.locked) return null;
   const n = livePosts(t).length;
-  if (t.event && now - t.event.at > MOD_CLOSE_EVENT_MS) return "event";
+  // a chronicle is not an event to end with a verdict: it stays open like any topic and goes quiet by the usual rule
+  if (t.event && t.event.kind !== "chronicle" && now - t.event.at > MOD_CLOSE_EVENT_MS) return "event";
   if (n >= 4 && now - t.lastAt > MOD_CLOSE_QUIET_MS) return "quiet";
   if (n >= MOD_CLOSE_LONG) return "long";
   return null;
@@ -1709,10 +1728,15 @@ function modTick(host, s, boards, now, tz, rand) {
   if (!s.autonomous) return false;
   // the first one comes one period after the forum began to keep time, not on the first tick after an update
   if (readJson(fsx, EVENT_STATE, null) === null) {
-    writeEventState(fsx, { last: now, kind: "", lastComment: now, lastClose: now, pendingAt: 0, failedAt: 0 });
+    writeEventState(fsx, { last: now, kind: "", lastComment: now, lastClose: now, pendingAt: 0, failedAt: 0, lastChronicle: now - CHRONICLE_LEAD_MS, chronicleTry: 0 });
     return false;
   }
   const st = readEventState(fsx);
+  // a forum that kept time before the chronicle existed: its first digest comes about a day after the update, not at once
+  if (!st.lastChronicle) {
+    st.lastChronicle = now - CHRONICLE_LEAD_MS;
+    writeEventState(fsx, st);
+  }
   if (now - st.pendingAt < MOD_PENDING_MS || now - st.failedAt < EVENT_FAIL_WAIT_MS) return false;
   const ask = (key, tone, content, maxTokens, system) => {
     st.pendingAt = now;
@@ -1730,16 +1754,25 @@ function modTick(host, s, boards, now, tz, rand) {
   if (due) {
     const tone = modTone(rand);
     const titles = loadTopics(fsx).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title);
-    return ask("ev:" + due.kind, tone, eventUser(due.kind, titles), 400, eventSystem(tone));
+    return ask("ev:" + due.kind, tone, eventUser(due.kind, titles), 400, eventSystem(tone, due.kind));
   }
   if (inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
+  if (chronicleDue(s, st, profiles, boards, now)) {
+    st.chronicleTry = now;
+    const made = chronicleFacts(fsx, profiles, loadTopics(fsx), now, tz, Math.max(st.lastChronicle, now - CHRONICLE_WINDOW_MS));
+    if (made.strong >= CHRONICLE_MIN) {
+      const tone = modTone(rand);
+      return ask("cr:" + localDay(now, tz), tone, chronicleUser(made.facts, loadTopics(fsx).sort((a, b) => b.lastAt - a.lastAt).map((t) => t.title)), 450, chronicleSystem(tone));
+    }
+    writeEventState(fsx, st);
+  }
   const wantsComment = s.modComments !== "off" && now - st.lastComment >= MOD_GAP_MS[s.modComments];
   const wantsClose = s.modCloses && now - st.lastClose >= MOD_CLOSE_GAP_MS;
   if (!(wantsComment || wantsClose) || rand() >= MOD_COMMENT_CHANCE) return false;
   const topics = loadTopics(fsx);
   const close = wantsClose ? pickModClose(topics, st, s, now) : null;
   if (close) {
-    return ask("mx:" + close.topic.id, modTone(rand), 'Topic: "' + cut(close.topic.title, 100) + '"\nRecent posts:\n' + postsBlock(close.topic, 6) + "\n\n" + CLOSE_LINE[close.reason] + " Write the last post of the topic: one or two sentences.", 200);
+    return ask("mx:" + close.topic.id, modTone(rand), 'Topic: "' + cut(close.topic.title, 100) + '"\nRecent posts:\n' + postsBlock(close.topic, 6) + (close.topic.poll ? "\n" + pollResultLine(close.topic) : "") + "\n\n" + CLOSE_LINE[close.reason] + " Write the last post of the topic: one or two sentences.", 200);
   }
   const target = wantsComment ? pickModComment(topics, st, s, now, rand) : null;
   if (target) {
@@ -1801,12 +1834,448 @@ export function fileEventResult(fsx, result, boards, now, rand, kindKey) {
   if (topics.length >= MAX_TOPICS) return fail("too many topics");
   const profiles = loadProfiles(fsx);
   const kind = EVENT_KINDS.includes(kindKey) ? kindKey : "announcement";
+  const poll = kind === "poll" ? newPoll(j.options) : null;
+  if (kind === "poll" && !poll) return fail("the model's poll had fewer than two options");
   const name = modName(title, text);
   const post = { id: "p-" + now + "-" + rid(), by: MOD, name, hue: 45, at: now, text };
-  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: board.id, title, by: MOD, name, hue: 45, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, event: { kind, at: now, invited: eventGuests(profiles, rand) }, posts: [post] };
+  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: board.id, title, by: MOD, name, hue: 45, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, event: { kind, at: now, invited: eventGuests(profiles, rand) }, ...(poll ? { poll } : {}), posts: [post] };
   writeTopic(fsx, topic);
   writeEventState(fsx, { ...st, last: now, kind, pendingAt: 0, failedAt: 0 });
   return { topicId: topic.id };
+}
+
+// ---------- the chronicle (#367): the Moderator's daily digest ----------
+// Once a day (after a gap of CHRONICLE_GAP_MS, outside quiet hours) the Moderator posts what happened between the members: who made friends, who
+// fell out (the milestones in the people lists, characters only), what rumours were told, the Moderator's own events, the busiest topic.
+// The facts are collected by rules; the model only words them (one request, key `cr:<day>`). Nothing is posted when there are fewer than
+// CHRONICLE_MIN strong facts, and nothing from a private chat or about the user's persona is ever in the list. Settings > Community > Chronicle.
+
+const CHRONICLE_GAP_MS = 22 * 3600 * 1000;
+const CHRONICLE_LEAD_MS = 2 * 3600 * 1000;
+const CHRONICLE_WINDOW_MS = 30 * 3600 * 1000;
+const CHRONICLE_RETRY_MS = 30 * 60 * 1000;
+const CHRONICLE_MIN = 2;
+const CHRONICLE_FACTS = 8;
+const CHRONICLE_LEVEL_UP = { acquaintance: "got to know each other", penfriend: "became pen friends", friend: "became friends", close: "became close friends", confidant: "became confidants" };
+const CHRONICLE_FEEL = { cold: " has cooled toward ", hostile: " is now openly at odds with " };
+
+export function chronicleDue(settings, st, profiles, boards, now) {
+  if (!settings.autonomous || !settings.chronicle || profiles.length < 2) return false;
+  if (!boards.categories.some((c) => c.boards.length)) return false;
+  return now - st.lastChronicle >= CHRONICLE_GAP_MS && now - st.chronicleTry >= CHRONICLE_RETRY_MS;
+}
+
+/**
+ * The facts of the day, one short English sentence each: {facts, strong, people}. `strong` counts the ones that carry the digest (milestones,
+ * rumours, events); `people` are the characters named, for the guests of the topic. `since` is the start of the window.
+ */
+export function chronicleFacts(fsx, profiles, topics, now, tz, since) {
+  const ids = new Map(profiles.map((p) => [p.id, p]));
+  const level = communityLevel(fsx);
+  const strong = [];
+  const seen = new Set();
+  const people = new Set();
+  const add = (key, text, who) => {
+    if (seen.has(key) || strong.length >= CHRONICLE_FACTS) return;
+    seen.add(key);
+    strong.push(text);
+    for (const w of who) people.add(w);
+  };
+  const pairKey = (kind, a, b) => kind + "|" + [a, b].sort().join("|");
+  for (const a of profiles) {
+    const d = readJson(fsx, "life/people/" + a.id + ".json", null);
+    for (const x of isObj(d) && Array.isArray(d.people) ? d.people : []) {
+      if (!isObj(x) || typeof x.key !== "string" || !x.key.startsWith("c:")) continue;
+      const b = ids.get(x.key.slice(2));
+      if (!b || b.id === a.id) continue;
+      const an = cut(a.name, 60);
+      const bn = cut(b.name, 60);
+      for (const m of Array.isArray(x.marks) ? x.marks : []) {
+        if (!isObj(m) || !(num(m.at) > since)) continue;
+        if (m.k === "level" && m.up === true && CHRONICLE_LEVEL_UP[m.v]) add(pairKey("up:" + m.v, a.id, b.id), an + " and " + bn + " " + CHRONICLE_LEVEL_UP[m.v], [a.id, b.id]);
+        else if (m.k === "level" && m.up !== true) add(pairKey("down", a.id, b.id), an + " and " + bn + " drifted apart", [a.id, b.id]);
+        else if (m.k === "feel" && CHRONICLE_FEEL[m.v]) add("feel|" + a.id + "|" + b.id, an + CHRONICLE_FEEL[m.v] + bn, [a.id, b.id]);
+        else if (m.k === "tie" && m.v === "rival") add(pairKey("rival", a.id, b.id), an + " and " + bn + " became rivals", [a.id, b.id]);
+        else if (m.k === "tie" && (m.v === "dating" || m.v === "partner") && level !== "none" && a.adult && b.adult) add(pairKey("couple", a.id, b.id), an + " and " + bn + " are seeing each other now", [a.id, b.id]);
+      }
+    }
+  }
+  for (const it of readGossip(fsx).items) {
+    if (it.at <= since || (it.kind === "sweet" && level === "none")) continue;
+    const p = ids.get(it.about[0]);
+    const q = ids.get(it.about[1]);
+    const by = ids.get(it.by);
+    if (!p || !q || !by) continue;
+    add("gossip|" + it.id, cut(by.name, 60) + " has been telling people (an unconfirmed rumour) that " + GOSSIP_FACT[it.kind](cut(p.name, 60), cut(q.name, 60)), [by.id]);
+  }
+  for (const t of topics) {
+    if (t.by !== MOD || !t.event || t.event.kind === "chronicle" || t.createdAt <= since) continue;
+    add("event|" + t.id, "The Moderator opened a topic (" + t.event.kind + ') "' + cut(t.title, 80) + '", with ' + Math.max(0, livePosts(t).length - 1) + " answers so far", t.event.invited);
+  }
+  for (const t of topics) {
+    if (t.poll && t.locked && t.lastAt > since && pollTotal(t.poll) > 0) add("poll|" + t.id, pollResultLine(t).replace("results: ", "ended with: "), t.event ? t.event.invited : []);
+  }
+  const extra = [];
+  const busy = topics
+    .filter((t) => !(t.by === MOD && t.event))
+    .map((t) => ({ t, n: livePosts(t).filter((p) => p.at > since).length }))
+    .filter((x) => x.n >= 4)
+    .sort((x, y) => y.n - x.n)[0];
+  if (busy) extra.push('The busiest topic was "' + cut(busy.t.title, 80) + '" (' + busy.n + " new posts)");
+  const posts = topics.reduce((n, t) => n + livePosts(t).filter((p) => p.at > since).length, 0);
+  const opened = topics.filter((t) => t.createdAt > since).length;
+  if (strong.length && posts) extra.push("In all, " + posts + " new posts and " + opened + " new topics on the forum");
+  return { facts: [...strong, ...extra], strong: strong.length, people: [...people].filter((id) => ids.has(id)) };
+}
+
+export function chronicleSystem(tone) {
+  return [
+    modSystem(tone),
+    "You write the forum's daily chronicle: a short digest of what happened between the members since yesterday.",
+    "Use only the facts given. Add no names, places, dates or events of your own. A rumour is a rumour: pass it on as something people say, never as proven. Say nothing about private chats.",
+    "Three to six sentences, in your voice, as one text with no list and no heading. Never anything explicit.",
+  ].join("\n");
+}
+
+export function chronicleUser(facts, titles) {
+  const lines = ["Facts of the day:", ...facts.map((f) => "- " + f)];
+  if (titles && titles.length) lines.push("", "Recent topic titles on the forum (only to tell which language to write in): " + titles.slice(0, 4).map((x) => '"' + cut(x, 60) + '"').join(", ") + ".");
+  lines.push("", "Write today's chronicle.");
+  return lines.join("\n");
+}
+
+/** The title is made by rules, so it is never a repeat: the kind of text and the day (DD.MM.YYYY), in the language of the digest. */
+export function chronicleTitle(day, text) {
+  const [y, m, d] = String(day).split("-");
+  return (/[Ѐ-ӿ]/.test(text) ? "Хроніка дня" : "Chronicle of the day") + " · " + d + "." + m + "." + y;
+}
+
+/** Files the model's chronicle as a topic by the Moderator, with the characters named in it as guests. Returns {topicId} or {error}. */
+export function fileChronicle(fsx, result, boards, now, rand, tz) {
+  const st = readEventState(fsx);
+  const r = isObj(result) ? result : {};
+  const fail = (error) => {
+    st.failedAt = now;
+    st.pendingAt = 0;
+    writeEventState(fsx, st);
+    return { error };
+  };
+  if (r.error || !str(r.text)) return fail(r.error || "the model returned nothing");
+  const text = cleanReply(r.text, "Moderator");
+  if (text.length < 30) return fail("the model returned nothing");
+  if (overCeiling(text)) return fail("the chronicle went past the ceiling and was not filed");
+  const board = eventBoard(boards, rand);
+  if (!board) return fail("there are no boards");
+  const topics = loadTopics(fsx);
+  if (topics.length >= MAX_TOPICS) return fail("too many topics");
+  const title = chronicleTitle(localDay(now, tz), text);
+  if (topics.some((t) => t.board === board.id && normal(t.title) === normal(title))) return fail("the chronicle repeats an earlier one");
+  const profiles = loadProfiles(fsx);
+  const made = chronicleFacts(fsx, profiles, topics, now, tz, Math.max(st.lastChronicle, now - CHRONICLE_WINDOW_MS));
+  const guests = profiles.filter((p) => made.people.includes(p.id) && p.forum.repliesOthers).map((p) => p.id).slice(0, EVENT_INVITES);
+  const name = modName(title, text);
+  const post = { id: "p-" + now + "-" + rid(), by: MOD, name, hue: 45, at: now, text };
+  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: board.id, title, by: MOD, name, hue: 45, createdAt: now, lastAt: now, locked: false, unread: true, owe: 0, event: { kind: "chronicle", at: now, invited: guests }, posts: [post] };
+  writeTopic(fsx, topic);
+  writeEventState(fsx, { ...st, lastChronicle: now, pendingAt: 0, failedAt: 0 });
+  return { topicId: topic.id };
+}
+
+// ---------- notices (#367): who answered you or reacted to your post ----------
+// A short list for the user, written when it happens (a reaction has no time of its own, so it cannot be found afterwards): forum/notices.json
+// {items: [{id, kind: "reply"|"react"|"repost", by, name, hue, topic, post, at, emoji?, excerpt?}], seenAt}. At most NOTICES_KEEP, two weeks.
+// The page opens the list and says it was seen (`POST /forum/notices-read`); the number that has not been seen rides on `/forum/home`.
+
+const NOTICES_FILE = "forum/notices.json";
+const NOTICES_KEEP = 60;
+const NOTICES_LIVE_MS = 14 * 24 * 3600 * 1000;
+const NOTICE_KINDS = ["reply", "react", "repost"];
+
+function readNotices(fsx, now) {
+  const d = readJson(fsx, NOTICES_FILE, null);
+  const r = isObj(d) ? d : {};
+  const items = (Array.isArray(r.items) ? r.items : [])
+    .filter((i) => isObj(i) && NOTICE_KINDS.includes(i.kind) && typeof i.id === "string" && typeof i.by === "string" && ID.test(i.by) && typeof i.topic === "string" && ID.test(i.topic) && typeof i.post === "string" && Number.isFinite(i.at) && now - i.at < NOTICES_LIVE_MS)
+    .map((i) => ({ id: i.id, kind: i.kind, by: i.by, name: oneLine(i.name, 80), hue: Number.isFinite(i.hue) ? i.hue : 200, topic: i.topic, post: i.post, at: i.at, ...(typeof i.emoji === "string" && REACTIONS.includes(i.emoji) ? { emoji: i.emoji } : {}), ...(typeof i.excerpt === "string" && i.excerpt ? { excerpt: cut(i.excerpt, 140) } : {}) }));
+  return { items, seenAt: num(r.seenAt) };
+}
+
+/** One notice about a post of the user's; a character's repeat of the same thing on the same post is not told twice. */
+function addNotice(fsx, n, now) {
+  const d = readNotices(fsx, now);
+  if (d.items.some((i) => i.kind === n.kind && i.by === n.by && i.post === n.post && i.emoji === n.emoji && n.kind !== "reply")) return;
+  d.items.push({ id: "n-" + now.toString(36) + "-" + rid(), at: now, ...n });
+  fsx.write(NOTICES_FILE, JSON.stringify({ items: d.items.slice(-NOTICES_KEEP), seenAt: d.seenAt }));
+}
+
+function noticesRoute(host) {
+  const fsx = host.fs;
+  const now = Date.now();
+  const d = readNotices(fsx, now);
+  const items = [];
+  for (const i of d.items.slice().sort((a, b) => b.at - a.at)) {
+    const topic = readTopic(fsx, i.topic);
+    const post = topic ? topic.posts.find((p) => p.id === i.post && !p.removed) : null;
+    if (!topic || !post) continue;
+    const prof = readProfile(fsx, i.by);
+    items.push({ ...i, name: prof ? prof.name : i.name, hue: prof ? prof.hue : i.hue, picture: prof ? prof.picture : "", title: topic.title, new: i.at > d.seenAt });
+    if (items.length >= 30) break;
+  }
+  return ok({ items, unread: items.filter((i) => i.new).length, seenAt: d.seenAt });
+}
+
+function noticesReadRoute(host) {
+  const now = Date.now();
+  const d = readNotices(host.fs, now);
+  host.fs.write(NOTICES_FILE, JSON.stringify({ items: d.items, seenAt: now }));
+  return ok({ ok: true });
+}
+
+/** How many notices the user has not seen, counting only those whose post still exists. */
+function noticesUnread(fsx, now) {
+  const d = readNotices(fsx, now);
+  let n = 0;
+  for (const i of d.items) {
+    if (i.at <= d.seenAt) continue;
+    const topic = readTopic(fsx, i.topic);
+    if (topic && topic.posts.some((p) => p.id === i.post && !p.removed)) n++;
+  }
+  return n;
+}
+
+// ---------- polls (#367): the Moderator's, or the user's; characters vote by rules ----------
+// `topic.poll` = {options: [{id: "o1".."o4", text, votes: [who]}]}: two to four options, one vote each ("me" is the user, otherwise a profile id).
+// A vote can be changed or withdrawn while the topic is open; a locked topic (the Moderator ends an event after three days) closes the poll. A character
+// votes in `pollTick` with no model call: it leans to options that touch its interests, to a named member it likes (a friend, a warm feeling), away
+// from one it is cold to, set against or jealous of, and a little toward one with a romantic tie that is allowed (`romanticTo`).
+
+const POLL_MIN = 2;
+const POLL_MAX = 4;
+const POLL_TEXT = 60;
+const POLL_VOTERS_MAX = 100;
+const POLL_LIVE_MS = 3 * 24 * 3600 * 1000;
+const POLL_VOTE_CHANCE = 0.25;
+
+/** A poll cleaned from storage, or null when it has fewer than two options. A voter counts once, in the first option that lists them. */
+export function cleanPoll(p) {
+  if (!isObj(p) || !Array.isArray(p.options)) return null;
+  const seen = new Set();
+  const options = [];
+  for (const o of p.options) {
+    if (!isObj(o) || typeof o.id !== "string" || !/^o[1-4]$/.test(o.id) || options.some((x) => x.id === o.id)) continue;
+    const text = oneLine(o.text, POLL_TEXT);
+    if (!text) continue;
+    const votes = [];
+    for (const v of Array.isArray(o.votes) ? o.votes : []) {
+      if ((v === SELF || (typeof v === "string" && ID.test(v))) && !seen.has(v) && votes.length < POLL_VOTERS_MAX) {
+        seen.add(v);
+        votes.push(v);
+      }
+    }
+    options.push({ id: o.id, text, votes });
+    if (options.length >= POLL_MAX) break;
+  }
+  return options.length >= POLL_MIN ? { options } : null;
+}
+
+/** A new poll from option texts (two to four, no repeats), or null. */
+export function newPoll(texts) {
+  const out = [];
+  for (const raw of Array.isArray(texts) ? texts : []) {
+    const text = oneLine(typeof raw === "string" ? raw : "", POLL_TEXT);
+    if (text && !out.some((o) => normal(o.text) === normal(text)) && out.length < POLL_MAX) out.push({ id: "o" + (out.length + 1), text, votes: [] });
+  }
+  return out.length >= POLL_MIN ? { options: out } : null;
+}
+
+/** `who` votes for an option; the same option again withdraws the vote, another one moves it. Returns the new poll, or null for an unknown option. */
+export function pollVote(poll, who, optionId) {
+  if (!poll.options.some((o) => o.id === optionId)) return null;
+  const had = poll.options.find((o) => o.votes.includes(who));
+  return { options: poll.options.map((o) => ({ ...o, votes: o.votes.filter((v) => v !== who).concat(o.id === optionId && !(had && had.id === optionId) ? [who] : []) })) };
+}
+
+export const pollTotal = (poll) => poll.options.reduce((n, o) => n + o.votes.length, 0);
+
+/** The result as one line for the Moderator's verdict and the chronicle. */
+export function pollResultLine(topic) {
+  if (!topic.poll) return "";
+  const total = pollTotal(topic.poll);
+  if (!total) return 'Poll "' + cut(topic.title, 80) + '": nobody voted.';
+  return 'Poll "' + cut(topic.title, 80) + '" results: ' + topic.poll.options.map((o) => '"' + o.text + '" ' + o.votes.length).join(", ") + ".";
+}
+
+/**
+ * How much a character wants each option, by rules: every option starts at 1; a word of the character's interests in the option adds 2; an option
+ * that names another member (their name in the text) adds 2 when the character likes them (feeling 3 or more) and 1.5 for a friend or closer,
+ * 1 for self, and falls to a fifth when the character is cold to them, set against them or jealous of them; a romantic tie that is allowed adds 2.
+ * `rel` is `relationsOf` (or null: only interests and self count). Returns [{id, w}].
+ */
+export function pollWeights(author, poll, profiles, rel) {
+  const mine = new Set((Array.isArray(author.interests) ? author.interests : []).flatMap((i) => lifeWords(i)));
+  return poll.options.map((o) => {
+    const low = o.text.toLowerCase();
+    let w = 1;
+    if (lifeWords(o.text).some((x) => mine.has(x))) w += 2;
+    if (author.name.length >= 2 && low.includes(author.name.toLowerCase())) w += 1;
+    for (const p of profiles) {
+      if (p.id === author.id || p.name.length < 2 || !low.includes(p.name.toLowerCase())) continue;
+      const feel = rel ? pair(rel.feel, author.id, p.id) || 0 : 0;
+      const lvl = rel ? pair(rel.lvl, author.id, p.id) : "";
+      if (feel >= 3) w += 2;
+      if (CLOSE_LEVELS.includes(lvl)) w += 1.5;
+      if (rel && romanticTo(rel, author.id, p.id)) w += 2;
+      if (feel <= -3 || (rel && jealousOf(rel, author.id, p.id))) w *= 0.2;
+    }
+    return { id: o.id, w };
+  });
+}
+
+/** One vote a character could cast now: {topic, author, option} or null. Open polls only; a character votes once and may vote where it was invited, else only now and then. */
+export function pickVote(c, rand) {
+  const { profiles, topics, now, tz } = c;
+  const open = topics.filter((t) => t.poll && !t.locked && now - t.createdAt < POLL_LIVE_MS);
+  if (!open.length) return null;
+  const cands = [];
+  for (const t of open) {
+    const invited = t.event ? t.event.invited : [];
+    for (const p of profiles) {
+      if (!["online", "away"].includes(statusAt(p.schedule, new Date(now), tz)) || !p.forum.repliesOthers) continue;
+      if (t.poll.options.some((o) => o.votes.includes(p.id))) continue;
+      cands.push({ topic: t, author: p, w: invited.includes(p.id) ? 3 : 1 });
+    }
+  }
+  const hit = weightedPick(cands, (x) => x.w, rand);
+  if (!hit) return null;
+  const weights = pollWeights(hit.author, hit.topic.poll, profiles, c.rel || null);
+  const pick = weightedPick(weights, (x) => x.w, rand);
+  return pick ? { topic: hit.topic, author: hit.author, option: pick.id } : null;
+}
+
+/** One chance per tick that a character votes (free, no model call); true when a vote was written. */
+function pollTick(fsx, s, now, tz, rand) {
+  if (!s.autonomous || rand() >= POLL_VOTE_CHANCE || inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
+  const topics = loadTopics(fsx).filter((t) => t.poll);
+  if (!topics.length) return false;
+  const profiles = loadProfiles(fsx);
+  if (!profiles.length) return false;
+  const rel = relationsOf(fsx, profiles, loadTopics(fsx), now, s);
+  const pick = pickVote({ profiles, topics, now, tz, rel }, rand);
+  if (!pick) return false;
+  const topic = readTopic(fsx, pick.topic.id);
+  if (!topic || !topic.poll || topic.locked) return false;
+  const next = pollVote(topic.poll, pick.author.id, pick.option);
+  if (!next) return false;
+  topic.poll = next;
+  writeTopic(fsx, topic);
+  return true;
+}
+
+/** The user votes: `POST /forum/vote {topic, option}`; the same option again withdraws it. */
+function voteRoute(req, host) {
+  const b = isObj(req.body) ? req.body : {};
+  const topic = readTopic(host.fs, String(b.topic || ""));
+  if (!topic || !topic.poll) return ok({ error: "no such poll" }, 404);
+  if (topic.locked) return ok({ error: "the poll is closed" }, 409);
+  const next = pollVote(topic.poll, SELF, String(b.option || ""));
+  if (!next) return ok({ error: "no such option" }, 400);
+  topic.poll = next;
+  writeTopic(host.fs, topic);
+  return ok({ ok: true, poll: pollView(host.fs, topic) });
+}
+
+/** What the page draws: each option with its count, whether the user chose it and who voted (names), and whether the poll is closed. */
+function pollView(fsx, topic) {
+  const name = (who) => {
+    if (who === SELF) return "";
+    const p = readProfile(fsx, who);
+    return p ? p.name : "";
+  };
+  return {
+    closed: topic.locked,
+    total: pollTotal(topic.poll),
+    options: topic.poll.options.map((o) => ({ id: o.id, text: o.text, n: o.votes.length, mine: o.votes.includes(SELF), who: o.votes.map(name).filter(Boolean).slice(0, 12) })),
+  };
+}
+
+// ---------- reposts (#367): a character passes on a post it likes, by rules, with no model call ----------
+// A repost is a post by the character with `repost: true`, no words of its own beyond a stock line, and the quote of the original. It is how a
+// rumour or a good post travels (the opening post of a rumour that someone passes on counts as told), a signal that the character likes the
+// author, and a notice for the user when their post is passed on. Only posts of people the character likes (a feeling of 3 or more, or a friend
+// level), never one it is jealous of, never its own, not among the last three posts of a topic. At most `repostsPerDay` a day in all.
+
+const REPOST_CHANCE = 0.08;
+const REPOST_MIN_AGE_MS = 3600 * 1000;
+const REPOST_WINDOW_MS = 3 * 24 * 3600 * 1000;
+
+/** How many reposts were made today (local day), counted from what is stored. */
+export function repostsToday(topics, now, tz) {
+  const day = localDay(now, tz);
+  let n = 0;
+  for (const t of topics) for (const p of t.posts) if (p.repost && localDay(p.at, tz) === day) n++;
+  return n;
+}
+
+/** One repost a character could make now: {author, topic, post} or null. */
+export function pickRepost(c, rand) {
+  const { profiles, topics, settings, now, tz } = c;
+  const rel = isObj(c.rel) ? c.rel : null;
+  if (!settings.reposts || settings.repostsPerDay <= 0 || repostsToday(topics, now, tz) >= settings.repostsPerDay) return null;
+  const free = profiles.filter((p) => ["online", "away"].includes(statusAt(p.schedule, new Date(now), tz)) && p.forum.repliesOthers);
+  if (!free.length) return null;
+  const author = free[Math.floor(rand() * free.length)];
+  const feels = isObj(c.feels) ? c.feels : {};
+  const gossipTopics = new Set(rel ? rel.items.map((i) => i.topic).filter(Boolean) : []);
+  const cands = [];
+  for (const t of topics) {
+    if (t.locked || now - t.lastAt > REPOST_WINDOW_MS) continue;
+    const ps = livePosts(t);
+    ps.slice(0, -3).forEach((p, i) => {
+      if (p.by === author.id || p.by === MOD || p.repost || !p.text.trim() || now - p.at < REPOST_MIN_AGE_MS || now - p.at > REPOST_WINDOW_MS) return;
+      if (ps.some((x) => x.by === author.id && x.repost && x.quote && x.quote.by === p.by && x.quote.text === quoteOf(p).text)) return;
+      const feel = feelAbout(feels, author, p);
+      const lvl = p.by === SELF ? "" : (rel && pair(rel.lvl, author.id, p.by)) || "";
+      if (!(feel >= 3 || CLOSE_LEVELS.includes(lvl))) return;
+      if (rel && rel.jealousy && p.by !== SELF && jealousOf(rel, author.id, p.by)) return;
+      cands.push({ topic: t, post: p, w: 1 + Math.max(0, feel) / 4 + (p.by === SELF ? 1 : 0) + (i === 0 && gossipTopics.has(t.id) ? 2 : 0) });
+    });
+  }
+  const hit = weightedPick(cands, (x) => x.w, rand);
+  return hit ? { author, topic: hit.topic, post: hit.post } : null;
+}
+
+/** The stock line of a repost, in the language of the original. */
+export const repostLine = (post) => (/[Ѐ-ӿ]/.test(post.text) ? "↻ Поширено допис: " : "↻ Reposted ") + cut(post.name, 60);
+
+/** Writes the repost into the topic; the gossip it carries counts as passed on. Returns the post, or null when the topic or the post is gone. */
+function putRepost(fsx, pick, now) {
+  const topic = readTopic(fsx, pick.topic.id);
+  const orig = topic ? topic.posts.find((p) => p.id === pick.post.id && !p.removed) : null;
+  if (!topic || topic.locked || !orig) return null;
+  const post = { id: "p-" + now + "-" + rid(), by: pick.author.id, name: pick.author.name, hue: pick.author.hue, at: now, text: repostLine(orig), repost: true, quote: quoteOf(orig) };
+  topic.posts.push(post);
+  topic.lastAt = now;
+  topic.unread = true;
+  writeTopic(fsx, topic);
+  const g = readGossip(fsx);
+  const item = g.items.find((i) => i.topic === topic.id);
+  if (item && orig.id === topic.posts[0].id && !item.told.includes(pick.author.id)) {
+    item.told.push(pick.author.id);
+    writeGossip(fsx, g);
+  }
+  if (orig.by === SELF) addNotice(fsx, { kind: "repost", by: pick.author.id, name: pick.author.name, hue: pick.author.hue, topic: topic.id, post: orig.id }, now);
+  return post;
+}
+
+/** One chance per tick that a character passes a post on (it does not use the day's post budget); true when one was written. */
+export function repostTick(fsx, s, now, tz, rand) {
+  if (!s.autonomous || !s.reposts || rand() >= REPOST_CHANCE || inQuiet(now, tz, s.quietFrom, s.quietTo)) return false;
+  const profiles = loadProfiles(fsx);
+  if (!profiles.length) return false;
+  const topics = loadTopics(fsx);
+  const rel = relationsOf(fsx, profiles, topics, now, s);
+  const pick = pickRepost({ profiles, topics, settings: s, now, tz, feels: feelsOf(fsx, profiles), rel }, rand);
+  return !!pick && !!putRepost(fsx, pick, now);
 }
 
 // ---------- requests and filing ----------
@@ -1914,6 +2383,10 @@ export function fileResult(fsx, f, result, now, boards) {
     topic.unread = true;
     if (target && target.by === SELF) topic.owe = Math.max(0, topic.owe - 1);
     writeTopic(fsx, topic);
+    if (toUser) {
+      const own = target && target.by === SELF ? target : lastPost && lastPost.by === SELF ? lastPost : null;
+      if (own) addNotice(fsx, { kind: "reply", by: author.id, name: author.name, hue: author.hue, topic: topic.id, post: post.id, excerpt: oneLine(text, 140) }, now);
+    }
     return { topicId: topic.id, post };
   }
   const hit = boardMap(boards).get(f.board);
@@ -1998,6 +2471,7 @@ function homeRoute(host) {
     },
     online: profiles.filter((p) => ["online", "away"].includes(statusAt(p.schedule, new Date(now), tz))).map((p) => ({ id: p.id, name: p.name })),
     unread: topics.filter((t) => t.unread).length,
+    notices: noticesUnread(fsx, now),
     stats: { posts: topics.reduce((n, t) => n + livePosts(t).length, 0), topics: topics.length, members: profiles.length + 1, newest: newest ? newest.name : "" },
     now,
   });
@@ -2072,6 +2546,7 @@ function topicRoute(req, host) {
       locked: topic.locked,
       unread: topic.unread,
       ...(topic.event ? { event: topic.event.kind } : {}),
+      ...(topic.poll ? { poll: pollView(fsx, topic) } : {}),
       posts: shown.map((p) => (p.by === SELF ? { ...p, as: personaFor(you, p) } : p)),
     },
     paging: { page, pages, size: PAGE_SIZE, total, from, live: livePosts(topic).length },
@@ -2194,6 +2669,27 @@ function boardsRoute(req, host) {
 }
 
 /**
+ * The user deletes a board for good: `POST /forum/delete-board {board}`. Its topics go with it; a category left with no boards is dropped
+ * (the "Add a board" form makes it again). Notices and rumours that point at the removed topics are filtered out where they are read.
+ */
+function deleteBoardRoute(req, host) {
+  const fsx = host.fs;
+  const b = isObj(req.body) ? req.body : {};
+  const id = String(b.board || "");
+  const current = readBoards(fsx);
+  if (!boardMap(current).has(id)) return ok({ error: "no such board" }, 404);
+  let topics = 0;
+  for (const t of loadTopics(fsx)) {
+    if (t.board !== id) continue;
+    fsx.remove(topicPath(t.id));
+    topics++;
+  }
+  const next = { categories: current.categories.map((c) => ({ ...c, boards: c.boards.filter((x) => x.id !== id) })).filter((c) => c.boards.length) };
+  fsx.write("forum/boards.json", JSON.stringify(next));
+  return ok({ ok: true, deleted: id, topics });
+}
+
+/**
  * The character the user's post is aimed at: the author of the post it quotes, else the first character whose name it mentions, else the
  * author of the post right above it when that is a character (`above`); "" for nobody.
  * That character answers before the others (`targetsFor`, `planAction`). `profiles` are the readable profiles.
@@ -2232,8 +2728,10 @@ function newTopicRoute(req, host) {
   if (loadTopics(fsx).length >= MAX_TOPICS) return ok({ error: "too many topics (" + MAX_TOPICS + ")" }, 400);
   const now = Date.now();
   const me = meNow(fsx);
+  const poll = Array.isArray(b.poll) ? newPoll(b.poll) : null;
+  if (Array.isArray(b.poll) && b.poll.some((x) => oneLine(typeof x === "string" ? x : "", POLL_TEXT)) && !poll) return ok({ error: "a poll needs two to four different options" }, 400);
   const post = { id: "p-" + now + "-" + rid(), ...meFields(me), at: now, text, ...(picked ? { image: picked } : {}) };
-  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: hit.board.id, title, by: SELF, name: me ? me.name : "", hue: me ? me.hue : 200, createdAt: now, lastAt: now, locked: false, unread: false, owe: 1 + Math.floor(Math.random() * 3), addressed: addresseeOf(loadProfiles(fsx), null, text), posts: [post] };
+  const topic = { id: "t-" + now.toString(36) + "-" + rid(), board: hit.board.id, title, by: SELF, name: me ? me.name : "", hue: me ? me.hue : 200, createdAt: now, lastAt: now, locked: false, unread: false, owe: 1 + Math.floor(Math.random() * 3), addressed: addresseeOf(loadProfiles(fsx), null, text), ...(poll ? { poll } : {}), posts: [post] };
   writeTopic(fsx, topic);
   userPosted(fsx, now);
   return ok({ ok: true, topic: topic.id });
@@ -2386,7 +2884,7 @@ export function onTick(_ctx, host) {
   const s = readSettings(fsx);
   const tz = s.tzOffset;
   const results = host.llm.results || {};
-  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:") || k.startsWith("ev:") || k.startsWith("mc:") || k.startsWith("mx:"));
+  const done = Object.keys(results).filter((k) => k.startsWith("ar:") || k.startsWith("an:") || k.startsWith("ev:") || k.startsWith("mc:") || k.startsWith("mx:") || k.startsWith("cr:"));
   const boards = readBoards(fsx);
   const log = readLog(fsx, now, tz);
 
@@ -2394,6 +2892,10 @@ export function onTick(_ctx, host) {
     for (const key of done) {
       if (key.startsWith("ev:")) {
         fileEventResult(fsx, results[key], boards, now, Math.random, key.slice(3));
+        continue;
+      }
+      if (key.startsWith("cr:")) {
+        fileChronicle(fsx, results[key], boards, now, Math.random, tz);
         continue;
       }
       if (key.startsWith("mc:") || key.startsWith("mx:")) {
@@ -2412,6 +2914,9 @@ export function onTick(_ctx, host) {
 
   // reactions are free (no model), so they do not wait for the post limits
   if (reactTick(fsx, s, log, now, tz, Math.random)) writeLog(fsx, log);
+  // votes and reposts are free too, and have caps of their own
+  pollTick(fsx, s, now, tz, Math.random);
+  repostTick(fsx, s, now, tz, Math.random);
   if (modTick(host, s, boards, now, tz, Math.random)) return;
   if (autoBlock(log, s, now, tz)) return;
   const profiles = loadProfiles(fsx);
@@ -2434,8 +2939,11 @@ export function handleRoute(req, host) {
   if (path === "/forum/topic" && method === "GET") return topicRoute(req, host);
   if (path === "/forum/search" && method === "GET") return searchRoute(req, host);
   if (path === "/forum/unread" && method === "GET") return unreadRoute(host);
+  if (path === "/forum/notices" && method === "GET") return noticesRoute(host);
+  if (path === "/forum/notices-read" && method === "POST") return noticesReadRoute(host);
   if (path === "/forum/boards" && method === "GET") return boardNamesRoute(host);
   if (path === "/forum/boards" && method === "POST") return boardsRoute(req, host);
+  if (path === "/forum/delete-board" && method === "POST") return deleteBoardRoute(req, host);
   if (path === "/forum/topic" && method === "POST") return newTopicRoute(req, host);
   if (path === "/forum/reply" && method === "POST") return replyRoute(req, host);
   if (path === "/forum/images" && method === "GET") return imagesRoute(host);
@@ -2443,6 +2951,7 @@ export function handleRoute(req, host) {
   if (path === "/forum/read" && method === "POST") return readRoute(req, host);
   if (path === "/forum/lock" && method === "POST") return lockRoute(req, host);
   if (path === "/forum/react" && method === "POST") return reactRoute(req, host);
+  if (path === "/forum/vote" && method === "POST") return voteRoute(req, host);
   if (path === "/forum/remove-post" && method === "POST") return removePostRoute(req, host);
   if (path === "/forum/delete-topic" && method === "POST") return deleteTopicRoute(req, host);
   if (path === "/forum/force" && method === "POST") return forceRoute(req, host);

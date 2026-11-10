@@ -2,7 +2,7 @@ import { useT } from "@/i18n/index";
 import { LIMITS, type SettingsMock } from "@/mock/settings";
 import type { ModelChoice } from "@/lib/api";
 import { Row, Segmented, Slider, Stepper, Switch, TimeRange, type Opt } from "./controls";
-import { CommunityRows } from "./community";
+import { CommunityRows, MembersRows } from "./community";
 import { LifeMain, LifeWorld } from "./life";
 import { PicturesRows } from "./pictures";
 import { ResetRows } from "./reset";
@@ -86,27 +86,13 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
             {() => <TimeRange from={s.quietFrom} to={s.quietTo} onFrom={(v) => set({ quietFrom: v })} onTo={(v) => set({ quietTo: v })} />}
           </Row>
 
-          <Row title={t("settings.writers")} hint={t("settings.writers.hint")}>
+          <Row className="stack" title={t("settings.writers")} hint={t("settings.writers.hint")}>
             {(id) => <Segmented labelledBy={id} options={writers} value={s.writers} onChange={(v) => set({ writers: v })} />}
           </Row>
 
           <Summary s={s} phone={false} />
         </Card>
 
-        <Card title={t("settings.section.pictures")} glyph="pictures">
-          <PicturesRows s={s} set={set} />
-        </Card>
-
-        <Card title={t("settings.section.models")} glyph="models">
-          <ModelRows s={s} set={set} choices={choices} />
-          <div className="k hint">{t("settings.models.hint")}</div>
-        </Card>
-
-        <Card title={t("settings.section.language")} glyph="language">
-          <LanguageRows />
-        </Card>
-      </div>
-      <div className="col">
         <Card title={t("settings.section.messenger")} glyph="messenger">
           <Row title={t("settings.messenger.first")} hint={t("settings.messenger.first.hint")}>
             {(id) => <Switch labelledBy={id} checked={s.messengerFirst} onChange={(v) => set({ messengerFirst: v })} />}
@@ -124,14 +110,36 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
           <Row title={t("settings.messenger.summary")} hint={t("settings.messenger.summary.hint")}>
             {(id) => <Switch labelledBy={id} checked={s.messengerSummary} onChange={(v) => set({ messengerSummary: v })} />}
           </Row>
-          <Row title={t("settings.messenger.knows")} hint={t("settings.messenger.knows.hint")}>
+          <Row className="stack" title={t("settings.messenger.knows")} hint={t("settings.messenger.knows.hint")}>
             {(id) => <Segmented labelledBy={id} options={knows} value={s.messengerKnows} onChange={(v) => set({ messengerKnows: v })} />}
           </Row>
-          <Row title={t("settings.quiet")} hint={t("settings.messenger.quiet.hint")}>
+          <Row className="stack" title={t("settings.quiet")} hint={t("settings.messenger.quiet.hint")}>
             {(id) => <Segmented labelledBy={id} options={chat} value={s.messengerQuiet} onChange={(v) => set({ messengerQuiet: v })} />}
           </Row>
         </Card>
 
+        <Card title={t("settings.section.pictures")} glyph="pictures">
+          <PicturesRows s={s} set={set} />
+        </Card>
+
+        <Card title={t("settings.section.models")} glyph="models">
+          <ModelRows s={s} set={set} choices={choices} />
+          <div className="k hint">{t("settings.models.hint")}</div>
+        </Card>
+
+        <Card title={t("settings.section.language")} glyph="language">
+          <LanguageRows />
+        </Card>
+
+        <Card title={t("settings.section.notify")} glyph="notify">
+          <NotifyRows s={s} set={set} />
+        </Card>
+
+        <Card title={t("settings.section.access")} glyph="access">
+          <AccessControl granted={s.roleplayAccess} onToggle={() => set({ roleplayAccess: !s.roleplayAccess })} />
+        </Card>
+      </div>
+      <div className="col">
         <Card title={t("settings.section.life")} glyph="life">
           <LifeMain s={s} set={set} />
           <LifeWorld s={s} set={set} />
@@ -141,12 +149,8 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
           <CommunityRows s={s} set={set} />
         </Card>
 
-        <Card title={t("settings.section.notify")} glyph="notify">
-          <NotifyRows s={s} set={set} />
-        </Card>
-
-        <Card title={t("settings.section.access")} glyph="access">
-          <AccessControl granted={s.roleplayAccess} onToggle={() => set({ roleplayAccess: !s.roleplayAccess })} />
+        <Card title={t("settings.section.members")} glyph="members">
+          <MembersRows s={s} set={set} />
         </Card>
 
         <Card title={t("settings.section.reset")} glyph="reset">

@@ -20,14 +20,17 @@ import {
   onlineNames,
   postsFromEngine,
   rowsFromEngine,
+  noticeRowsFromEngine,
   searchRowsFromEngine,
   stripFromEngine,
   type EngineBoardPage,
   type EngineHome,
+  type EngineNotices,
   type EngineSearch,
   type EngineTopicPage,
 } from "./model";
 import { NewTopic } from "./NewTopic";
+import { NoticesPage } from "./NoticesPage";
 import { SearchPage } from "./SearchPage";
 import { TopicView } from "./TopicView";
 
@@ -38,7 +41,8 @@ type Route =
   | { view: "board"; id: string }
   | { view: "topic"; id: string; page: Page; post?: number }
   | { view: "new"; board: string }
-  | { view: "search"; q: string };
+  | { view: "search"; q: string }
+  | { view: "notices" };
 
 const isText = (v: unknown, max = 200): v is string => typeof v === "string" && v.length <= max;
 /** A route read back from the browser's history is checked before it is used. */
@@ -47,6 +51,7 @@ function isRoute(r: unknown): r is Route {
   const o = r as Record<string, unknown>;
   switch (o.view) {
     case "home":
+    case "notices":
       return true;
     case "board":
       return isText(o.id);
@@ -79,6 +84,9 @@ export function ForumLive() {
   const searching = query.length >= 2;
   const found = useGet<EngineSearch>(searching ? `/forum/search?q=${encodeURIComponent(query)}` : null);
 
+  // the list of replies is read once per visit: what was new stays marked while it is open
+  const notices = useGet<EngineNotices>(route.view === "notices" ? "/forum/notices" : null);
+
   useChrome(phone ? { bar: route.view === "home", tabs: route.view === "home" || route.view === "board" } : {});
 
   // the tab badge counts the topics with posts the user has not seen
@@ -86,6 +94,13 @@ export function ForumLive() {
   useEffect(() => {
     if (unread !== undefined) nav.setBadges({ forum: unread });
   }, [unread, nav]);
+
+  // opening the list of replies counts everything so far as seen
+  const toSee = route.view === "notices" ? (notices.data?.unread ?? 0) : 0;
+  const reloadHome0 = home.reload;
+  useEffect(() => {
+    if (toSee > 0) void call("POST", "/forum/notices-read", {}).catch(() => undefined).then(() => void reloadHome0());
+  }, [toSee, reloadHome0]);
 
   // a picture a character asked for waits for the page to draw it: wake the worker
   const waiting = topic.data?.topic.posts.some((x) => x.image?.state === "pending") ?? false;
@@ -139,9 +154,10 @@ export function ForumLive() {
         boardId={route.board}
         onCancel={() => go(route.board ? { view: "board", id: route.board } : { view: "home" })}
         pictures
-        onSubmit={async (boardId, title, text, image) => {
+        polls
+        onSubmit={async (boardId, title, text, image, poll) => {
           try {
-            const r = await call<{ topic: string }>("POST", "/forum/topic", { board: boardId, title, text, ...(image ? { image: imageBody(image) } : {}) });
+            const r = await call<{ topic: string }>("POST", "/forum/topic", { board: boardId, title, text, ...(image ? { image: imageBody(image) } : {}), ...(poll && poll.length ? { poll } : {}) });
             void home.reload();
             go({ view: "topic", id: r.topic, page: 1 }, { replace: true });
             return null;
@@ -149,6 +165,19 @@ export function ForumLive() {
             return messageOf(e);
           }
         }}
+      />
+    );
+  }
+
+  if (route.view === "notices") {
+    return (
+      <NoticesPage
+        phone={phone}
+        rows={notices.data ? noticeRowsFromEngine(notices.data, now, lang, t) : null}
+        error={notices.error}
+        onOpen={(r) => go({ view: "topic", id: r.topic, page: "last" })}
+        onHome={home_}
+        onRetry={() => void notices.reload()}
       />
     );
   }
@@ -188,6 +217,17 @@ export function ForumLive() {
         onNew={() => go({ view: "new", board: route.id })}
         onSearch={() => openSearch("")}
         onRetry={() => void board.reload()}
+        onDelete={async () => {
+          try {
+            await call("POST", "/forum/delete-board", { board: route.id });
+            void home.reload();
+            refreshBadges();
+            go(HOME, { replace: true });
+            return null;
+          } catch (e) {
+            return messageOf(e);
+          }
+        }}
       />
     );
   }
@@ -206,6 +246,15 @@ export function ForumLive() {
         error={topic.error}
         locked={info?.locked ?? false}
         event={info?.event}
+        poll={info?.poll}
+        onVote={async (option) => {
+          try {
+            await call("POST", "/forum/vote", { topic: route.id, option });
+          } catch {
+            // the counts come back from the server on the reload; a failed click leaves them as they were
+          }
+          await topic.reload();
+        }}
         writing={write.busy}
         notice={write.notice}
         onCloseNotice={write.dismiss}
@@ -312,6 +361,8 @@ export function ForumLive() {
       onBoard={(id) => go({ view: "board", id })}
       onTopic={(id) => go(id ? { view: "topic", id, page: "last" } : HOME)}
       onSearch={openSearch}
+      notices={data.notices ?? 0}
+      onNotices={() => go({ view: "notices" })}
       onNewTopic={() => go({ view: "new", board: "" })}
       onDefaults={() => {
         void call("POST", "/forum/boards", { categories: defaultBoards(t) })

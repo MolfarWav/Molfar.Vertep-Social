@@ -68,8 +68,8 @@ export interface MapScreenProps {
   /** The characters (hue and picture come from here). */
   profiles: Known[];
   onView: (v: ProfilesView) => void;
-  /** Open a character's profile; with `tab` "life" it opens the Life tab, where the ties are edited. */
-  onOpen: (id: string, tab: "about" | "life") => void;
+  /** Open a character's profile; with `tab` "relations" it opens the Relationships tab, where the ties are edited. */
+  onOpen: (id: string, tab: "about" | "relations") => void;
   onOpenYou: () => void;
   onNew?: () => void;
   /** Preview: the person picked at the start (a key). */
@@ -328,7 +328,7 @@ function MapPanel({ person, model, onSelect, onOpen, onOpenYou, onClose, phone }
         {isChar ? (
           <>
             <button type="button" className="btn cta" onClick={() => onOpen(id, "about")}>{t("profiles.map.open")}</button>
-            <button type="button" className="btn" onClick={() => onOpen(id, "life")}>{t("profiles.map.edit")}</button>
+            <button type="button" className="btn" onClick={() => onOpen(id, "relations")}>{t("profiles.map.edit")}</button>
           </>
         ) : (
           <>

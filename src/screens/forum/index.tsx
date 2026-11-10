@@ -7,6 +7,7 @@
  *   view=board          a board's page: its topics, latest activity first
  *   view=topic          the topic page
  *   view=new            the new topic form
+ *   view=notices        "Replies to you" (state=nonotices: the empty page and no number on the bell)
  *   state=noboards      home without boards: the empty state
  *   state=notopics      home where the first board has no topics (the board page is empty too)
  *   state=autonomyoff   the strip says autonomy is off, with a switch (the switch turns it on)
@@ -17,6 +18,8 @@
  *   state=nomodel       the line under the strip after "Write now" found no model
  *   state=locked        topic: a lock note instead of the reply box (use with view=topic)
  *   state=moderated     topic: post 2 is a moderator's placeholder (use with view=topic)
+ *   state=poll          topic: a poll under the opening post, tap to vote (state=pollclosed: ended); view=new has the poll form
+ *   state=repost        topic: a character's repost at the end
  *
  * Mock only: the search, preview, more, "ask Molfar" and "Write now" buttons do nothing. "Close topic" / "Reopen topic"
  * work on the page only (nothing is saved).

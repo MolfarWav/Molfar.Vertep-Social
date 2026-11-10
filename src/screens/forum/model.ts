@@ -51,7 +51,7 @@ export interface TopicRow {
   last: { who: string; hue?: number; when: string; whenShort: string };
   locked: boolean;
   unread: boolean;
-  /** The kind of event the moderator opened this topic for (contest, rumour, announcement, question, game); absent for a plain topic. */
+  /** The kind of event the moderator opened this topic for (contest, rumour, announcement, question, game, chronicle); absent for a plain topic. */
   event?: string;
 }
 
@@ -80,6 +80,8 @@ export interface ShownPost {
   removed?: boolean;
   /** Reactions as drawn: emoji, how many, whether the user gave one, and who (names, for the tooltip). */
   react?: { emoji: string; n: number; mine: boolean; who: string }[];
+  /** A repost: drawn quieter (issue #367). */
+  repost?: boolean;
 }
 
 /** The autonomy strip: the engine's state and the numbers. */
@@ -128,6 +130,8 @@ export interface EngineHome {
     boards: number;
   };
   online: { id: string; name: string }[];
+  /** Replies and reactions to the user's posts not seen yet. */
+  notices?: number;
   stats: { posts: number; topics: number; members: number; newest: string };
   unread: number;
   now: number;
@@ -168,6 +172,14 @@ export interface EnginePost {
   removed?: boolean;
   /** Reactions: emoji to who ("me" is the user; a character's profile id). */
   react?: Record<string, string[]>;
+  /** A character passed the quoted post on (issue #367). */
+  repost?: boolean;
+}
+/** A poll as the page draws it: each option with its count, whether the user chose it and who voted (names). */
+export interface PollData {
+  closed: boolean;
+  total: number;
+  options: { id: string; text: string; n: number; mine: boolean; who: string[] }[];
 }
 export interface EngineAuthor {
   name: string;
@@ -189,6 +201,7 @@ export interface EngineTopicPage {
     locked: boolean;
     unread: boolean;
     event?: string;
+    poll?: PollData;
     posts: EnginePost[];
   };
   /** Which page of the topic this is; absent from an engine that does not page. */
@@ -238,6 +251,46 @@ export interface ForceAnswer {
   error?: string;
   code?: string;
   errors?: { error: string; code?: string }[];
+}
+
+// ---------- notices: who answered you or reacted to your post (#367) ----------
+
+export interface EngineNotice {
+  id: string;
+  kind: "reply" | "react" | "repost";
+  by: string;
+  name: string;
+  hue: number;
+  picture?: string;
+  topic: string;
+  post: string;
+  at: number;
+  emoji?: string;
+  excerpt?: string;
+  title: string;
+  new: boolean;
+}
+export interface EngineNotices {
+  items: EngineNotice[];
+  unread: number;
+  seenAt: number;
+}
+export interface NoticeRow {
+  id: string;
+  kind: EngineNotice["kind"];
+  topic: string;
+  who: string;
+  hue: number;
+  picture: string;
+  emoji: string;
+  excerpt: string;
+  title: string;
+  when: string;
+  isNew: boolean;
+}
+
+export function noticeRowsFromEngine(n: EngineNotices, now: number, lang: string, t: Translate): NoticeRow[] {
+  return n.items.map((i) => ({ id: i.id, kind: i.kind, topic: i.topic, who: i.name, hue: i.hue, picture: i.picture ?? "", emoji: i.emoji ?? "", excerpt: i.excerpt ?? "", title: i.title, when: whenLabel(i.at, now, lang, t), isNew: i.new }));
 }
 
 // ---------- times ----------
@@ -372,6 +425,7 @@ export function postsFromEngine(page: EngineTopicPage, now: number, lang: string
       text: p.text,
       ...(p.image && !p.removed ? { image: p.image } : {}),
       ...(p.removed ? { removed: true } : {}),
+      ...(p.repost && !p.removed ? { repost: true } : {}),
       ...(p.react && !p.removed ? { react: reactionsOf(p.react, page.reactors ?? {}, t("shell.me")) } : {}),
       ...(p.quote ? { quote: { who: p.quote.by === "me" ? p.quote.name || t("shell.me") : p.quote.name, text: p.quote.text } } : {}),
       ...(a?.signature ? { sig: a.signature } : {}),

@@ -429,10 +429,10 @@ export const DEFAULT_SETTINGS = {
    * them talking (`events`: "off", "daily", "weekly"), a story is a short post with a picture that vanishes after a day, and characters may
    * chat with each other in the messenger (`chats`, off by default: about twice the tokens). Each cap counts per character per day.
    * `tone` is the ceiling for what characters write to each other (#366): none (no romance between them), warm (affection only, the default),
-   * flirty (hints and teasing); never anything explicit. `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
+   * flirty (hints and teasing); never anything explicit. `chronicle` is the Moderator's daily digest (one model request a day, only when there is something to tell). `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
    * and a sharper answer from the characters' own ties (#367); neither costs a model call.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -499,6 +499,7 @@ export function mergeSettings(base, patch) {
       events: oneOf(cm.events, ["off", "daily", "weekly"], oneOf(bcm.events, ["off", "daily", "weekly"], "weekly")),
       modComments: oneOf(cm.modComments, ["off", "rare", "often"], oneOf(bcm.modComments, ["off", "rare", "often"], "rare")),
       modCloses: bool(cm.modCloses, bool(bcm.modCloses, true)),
+      chronicle: bool(cm.chronicle, bool(bcm.chronicle, true)),
       stories: bool(cm.stories, bool(bcm.stories, false)),
       storiesPerDay: clampInt(cm.storiesPerDay, 0, 10, Number.isInteger(bcm.storiesPerDay) ? bcm.storiesPerDay : 1),
       chats: bool(cm.chats, bool(bcm.chats, false)),
@@ -507,6 +508,8 @@ export function mergeSettings(base, patch) {
       gossip: bool(cm.gossip, bool(bcm.gossip, true)),
       gossipPerDay: clampInt(cm.gossipPerDay, 0, 20, Number.isInteger(bcm.gossipPerDay) ? bcm.gossipPerDay : 2),
       jealousy: bool(cm.jealousy, bool(bcm.jealousy, true)),
+      reposts: bool(cm.reposts, bool(bcm.reposts, true)),
+      repostsPerDay: clampInt(cm.repostsPerDay, 0, 20, Number.isInteger(bcm.repostsPerDay) ? bcm.repostsPerDay : 2),
     },
     autonomous: bool(p.autonomous, b.autonomous),
     activity: oneOf(p.activity, ["quiet", "moderate", "lively", "chaotic"], b.activity),

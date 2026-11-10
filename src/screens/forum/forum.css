@@ -196,6 +196,54 @@
 /* The quote chip above the reply box */
 .s-forum .qchip { display: flex; align-items: center; gap: 8px; align-self: flex-start; max-width: 100%; padding: 2px 4px 2px 12px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; background: var(--base); color: var(--muted); font-size: 13px; }
 
+/* Delete a board (foot of its page) */
+.s-forum .board-del { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 24px; }
+.s-forum .board-del .post-ask { width: 100%; justify-content: space-between; }
+.s-forum.is-phone .board-del .btn { min-height: 44px; }
+
+/* Polls and reposts (#367) */
+.s-forum .poll { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; margin: 8px 0; }
+.s-forum .poll-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.s-forum .poll-state { font-size: 12px; color: var(--muted); }
+.s-forum .poll-opts { display: flex; flex-direction: column; gap: 6px; }
+.s-forum .poll-opt { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px; padding: 10px 12px; min-height: 44px; border: 1px solid var(--line); border-radius: 8px; background: var(--base); color: var(--ink); font: inherit; text-align: left; cursor: pointer; overflow: hidden; }
+.s-forum .poll-opt:hover:not(:disabled) { border-color: var(--accent); }
+.s-forum .poll-opt:disabled { cursor: default; }
+.s-forum .poll-opt.is-mine { border-color: var(--accent); }
+.s-forum .poll-bar { position: absolute; inset: 0 auto 0 0; background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.s-forum .poll-opt.is-lead .poll-bar { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.s-forum .poll-text, .s-forum .poll-n, .s-forum .poll-who { position: relative; }
+.s-forum .poll-text { font-size: 14px; overflow-wrap: anywhere; }
+.s-forum .poll-mark { margin-right: 8px; color: var(--accent); }
+.s-forum .poll-lead { font-size: 12px; font-weight: 700; color: var(--acct); }
+.s-forum .poll-n { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.s-forum .poll-who { grid-column: 1 / -1; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.s-forum .poll-f { font-size: 12px; }
+.s-forum .npoll { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.s-forum .npoll .field-top { width: 100%; }
+.s-forum .npoll-row { display: flex; gap: 8px; width: 100%; }
+.s-forum .npoll-row .line { flex: 1; min-width: 0; }
+.s-forum .post.is-repost .post-text { color: var(--muted); font-size: 13px; }
+.s-forum.is-phone .poll-opt { min-height: 48px; }
+
+/* Replies to you (#367) */
+.s-forum .nbell { position: relative; }
+.s-forum .nbadge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; line-height: 18px; text-align: center; }
+.s-forum .nbell .nbadge { margin-left: 2px; }
+.s-forum .nbell-ib { position: relative; }
+.s-forum .nbell-ib .nbadge { position: absolute; top: 2px; right: 0; }
+.s-forum .nrow { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px 16px; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.s-forum .nrow:first-child { border-top: 0; }
+.s-forum .nrow:hover { background: var(--raised); }
+.s-forum .nrow.is-new { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+.s-forum .nrow .av { flex: none; }
+.s-forum .nrow-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.s-forum .nrow-line { font-size: 14px; overflow-wrap: anywhere; }
+.s-forum .nrow-new { font-size: 12px; font-weight: 700; color: var(--acct); }
+.s-forum .nrow-excerpt { font-size: 14px; color: var(--ink); overflow-wrap: anywhere; }
+.s-forum .nrow-meta { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.s-forum.is-phone .nrow { padding: 14px; min-height: 44px; }
+
 /* Search (#320) */
 .s-forum .home-search { display: flex; align-items: center; gap: 6px; }
 .s-forum .sform { display: flex; gap: 8px; align-items: center; }

@@ -41,6 +41,9 @@
 .s-settings .ln { display: flex; align-items: center; gap: 12px; min-height: 40px; }
 .s-settings .ln .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .s-settings .ln .grow { flex: 1; }
+/* a wide control (a segmented choice) goes under its title and hint instead of squeezing them into a narrow column */
+.s-settings .ln.stack { flex-direction: column; align-items: flex-start; gap: 8px; padding: 2px 0; }
+.s-settings .ln.stack .t { width: 100%; }
 .s-settings .k { color: var(--muted); font-size: 12px; }
 .s-settings .hint { margin-top: 0; }
 .s-settings .blk { display: flex; flex-direction: column; }

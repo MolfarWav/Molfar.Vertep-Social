@@ -30,7 +30,9 @@ The smiley button next to the message box ("Emoji") opens a picker with a search
 
 Social carries its own emoji font, so emoji look the same on Windows, Android and Linux; Safari draws its own. Characters write emoji too: how often is set per character, see "Writing manner" in [[profiles]].
 
-On a desktop the card on the right shows the schedule (when the character is online next), how fast the character answers. A character may also write first: an online character with something from its own days or from the outside world opens the chat with it (see [[life]]), within the daily limit in Settings. That message is unread until you open the chat. Whether a character writes first is not shown on the card. "Open profile" goes to their profile. On a phone a chat takes the whole screen; the arrow at the top returns to the list.
+On a desktop the card on the right shows the schedule (when the character is online next), how fast the character answers. A character may also write first: an online character with something from its own days or from the outside world opens the chat with it (see [[life]]), within the daily limit in Settings. How close the character feels to your active persona (see [[life]], the people list) leans who opens a chat: a stranger rarely does, a close friend often, and a close friend (or a friend who feels warm) that has not heard from you for three days may write just to see how you are, with no news of its own. That message is unread until you open the chat.
+
+Now and then a character may also bring up something from the forum in a chat with you, in its own words and not as proven fact: a rumour it told or heard in the last three days (never one about itself, never anything from another private chat). Settings > Community > Gossip switches this with the forum's gossip. Whether a character writes first is not shown on the card. "Open profile" goes to their profile. On a phone a chat takes the whole screen; the arrow at the top returns to the list.
 
 ### Stickers and custom emoji
 

@@ -202,6 +202,43 @@ export function relationBits(fsx, p, key, x) {
 }
 // </relation-shared>
 
+// <chat-life-shared>
+// What a character may bring up in a chat from the community's own life (#367): a rumour it told or heard on the forum lately (the forum plugin
+// keeps forum/gossip.json). By rules, with no extra model call: one more line in the prompt, now and then. Never about the character itself,
+// never from a private chat, and a romantic rumour only while Settings > Community > Romantic tone is not "none". A copy lives in each plugin that needs it.
+const CHAT_GOSSIP_MS = 3 * 24 * 3600 * 1000;
+const CHAT_GOSSIP_SHARE = 0.25;
+const CHAT_GOSSIP_FACT = {
+  rift: (a, b) => a + " and " + b + " have been at odds lately",
+  close: (a, b) => a + " and " + b + " have grown close lately",
+  sweet: (a, b) => a + " seems to be sweet on " + b,
+};
+
+/** One line for the prompt, or "": the newest rumour `p` told or heard in the last days, not about `p` or about anyone in `skip` (the one it is talking to), with the Settings switch on, on a share of the replies. */
+export function chatGossipLine(fsx, p, now, rand, skip) {
+  const s = readJson(fsx, "settings.json", null);
+  const c = isObj(s) && isObj(s.community) ? s.community : {};
+  if (c.gossip === false || rand() >= CHAT_GOSSIP_SHARE) return "";
+  const g = readJson(fsx, "forum/gossip.json", null);
+  const level = communityLevel(fsx);
+  const avoid = Array.isArray(skip) ? skip : [];
+  const hit = (isObj(g) && Array.isArray(g.items) ? g.items : [])
+    .filter((i) => isObj(i) && CHAT_GOSSIP_FACT[i.kind] && Array.isArray(i.about) && i.about.length === 2 && i.about.every((x) => typeof x === "string" && ID.test(x)) && Number.isFinite(i.at) && now - i.at < CHAT_GOSSIP_MS)
+    .filter((i) => (i.by === p.id || (Array.isArray(i.told) && i.told.includes(p.id))) && !i.about.includes(p.id) && !avoid.some((x) => i.about.includes(x)) && !(i.kind === "sweet" && level === "none"))
+    .sort((x, y) => y.at - x.at)[0];
+  if (!hit) return "";
+  const names = hit.about.map((id) => {
+    const d = readJson(fsx, "profiles/" + id + ".json", null);
+    return isObj(d) ? cut(str(d.name), 80) : "";
+  });
+  if (!names[0] || !names[1]) return "";
+  return (
+    "On the forum you have lately talked about this: " + CHAT_GOSSIP_FACT[hit.kind](names[0], names[1]) + ". If it comes up in this chat you may mention it, in your own words, as something you noticed or heard and are not sure of; add no details you were not given, and never reveal anything from anyone's private chats." +
+    (hit.kind === "sweet" ? " " + ROMANCE_CEILING[level === "flirty" ? "flirty" : "warm"] : "")
+  );
+}
+// </chat-life-shared>
+
 // <ceiling-shared>
 // Between characters the app asks for nothing explicit (Settings > Community, #366). A post that is plainly explicit is not filed: a check by
 // word stems in English and Ukrainian, like the OOC and sticker markers. The prompt line is the hint, this is the net; it does not catch
@@ -226,6 +263,40 @@ export function relationLine(fsx, speakerId, otherId) {
   else if (feel <= -7) bits.push("You are in open conflict with them: you may be sharp or pointed with them, in your own way.");
   else if (feel <= -3) bits.push("You do not get on with them: you tend to be cool with them.");
   return bits.concat(relationBits(fsx, { id: speakerId }, "c:" + otherId, x)).join(" ");
+}
+
+/**
+ * Jealousy in a chat between two characters (#367): `a` has an allowed romantic tie to someone (not `b`) and `b` has been getting close to them
+ * (a romantic tie of its own, or a friend or closer that it feels warm toward). A line for `a`'s prompt, or "". Both must be adult, the tone not "none";
+ * the ceiling of the level is stated. A rival tie is already told by `relationBits`.
+ */
+export function jealousChatLine(fsx, a, b) {
+  const level = communityLevel(fsx);
+  if (level === "none") return "";
+  const profile = (id) => readJson(fsx, "profiles/" + id + ".json", null);
+  const list = (id) => {
+    const d = readJson(fsx, "life/people/" + id + ".json", null);
+    return isObj(d) && Array.isArray(d.people) ? d.people.filter(isObj) : [];
+  };
+  const pa = profile(a);
+  const pb = profile(b);
+  if (!isObj(pa) || pa.adult !== true || !isObj(pb)) return "";
+  const romantic = (x) => (Array.isArray(x.ties) ? x.ties : []).some((t) => isObj(t) && ["crush", "dating", "partner"].includes(t.type));
+  const mineB = list(b);
+  for (const x of list(a)) {
+    if (typeof x.key !== "string" || !x.key.startsWith("c:") || !romantic(x)) continue;
+    const id = x.key.slice(2);
+    const loved = profile(id);
+    if (id === a || id === b || !isObj(loved) || loved.adult !== true) continue;
+    const theirs = mineB.find((y) => y.key === "c:" + id);
+    if (!theirs) continue;
+    const feel = typeof theirs.feel === "number" && Number.isFinite(theirs.feel) ? theirs.feel : 0;
+    const close = (pb.adult === true && romantic(theirs)) || (["friend", "close", "confidant"].includes(theirs.lvl) && feel >= 3);
+    if (!close) continue;
+    const name = cut(str(loved.name) || str(x.name), 80);
+    return "You are a little jealous: " + str(pb.name) + " has been getting close to " + name + ", whom you care about. Let it show a little, in your own way: a cooler tone or a dry remark, never cruel. " + ROMANCE_CEILING[level === "flirty" ? "flirty" : "warm"];
+  }
+  return "";
 }
 
 export function chatSystem(me, other, relation) {
@@ -385,7 +456,7 @@ export function onTick(_ctx, host) {
   const seed = pick.pair.messages.length ? "" : diarySeed(fsx, pick.speaker.id, pick.pair.day);
   host.llm.request("ch:" + pick.key + ":" + pick.speaker.id, {
     ...(model ? { model } : {}),
-    systemPrompt: chatSystem(pick.speaker, pick.other, relationLine(fsx, pick.speaker.id, pick.other.id)),
+    systemPrompt: chatSystem(pick.speaker, pick.other, [relationLine(fsx, pick.speaker.id, pick.other.id), jealousChatLine(fsx, pick.speaker.id, pick.other.id), chatGossipLine(fsx, pick.speaker, now, Math.random, [pick.other.id])].filter(Boolean).join(" ")),
     messages: [{ role: "user", content: chatUser(pick.speaker, pick.other, pick.pair.messages, seed) }],
     presetParams: { temperature: 0.9, max_tokens: 220 },
   });

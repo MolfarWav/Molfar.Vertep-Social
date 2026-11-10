@@ -25,6 +25,13 @@
 .s-you .you-area { min-height: 140px; resize: vertical; }
 .s-you .you-err { color: var(--warn); font-size: 13px; }
 .s-you .you-del { height: 36px; }
+.s-you .you-rep { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); min-width: 0; }
+.s-you .you-rep-h { margin: 0; font: 700 12px/1.3 Inter, sans-serif; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.s-you .you-rep-mood { margin: 0; font: 18px/1.35 Kurale, Georgia, serif; }
+.s-you .you-rep-mood.is-liked::before { content: "\2665"; margin-right: 8px; color: var(--accent); }
+.s-you .you-rep-mood.is-cool::before { content: "\2744"; margin-right: 8px; color: var(--muted); }
+.s-you .you-rep-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; overflow-wrap: anywhere; }
+.s-you .you-rep .k { margin: 0; }
 
 .s-you .you-empty { display: flex; flex-direction: column; gap: 14px; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; }
 .s-you .you-empty-btns { display: flex; flex-wrap: wrap; gap: 10px; }
