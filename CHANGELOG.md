@@ -3,6 +3,16 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+Profiles redesign (Molfar.Vertep#369). Profiles screen, Settings. Nothing to migrate; the Life plugin's candidate list now carries one line of About.
+
+- **One pattern for every tab.** Each tab of a profile has a coloured icon in the strip and a menu of its sections beside the content (a strip of icons on a phone); the sections are stacked under headings with an outlined icon in the section's colour, and the menu follows the scroll. About, Writing manner, Status schedule, Forum, Habits, Life and Model were moved onto it; every control stays.
+- **Relationships.** A people list with search, groups by the seven levels (the two lowest start folded), "Person", "Relative", "Map" and "Tree" buttons, and the editor of the chosen person beside it (a bottom sheet on a phone).
+- **Person picker.** Search, a line about each person (two characters of one name are told apart), groups Already known, Characters and Your personas. "Relative" shows the family first (tap to open) and asks the kind of tie once for a new relative; the answer is saved as a tie.
+- Settings, Messenger, "Characters know you" no longer squeezes its choice next to the title on a phone.
+- Not in this change: signature words with "Invent with the model" (Molfar.Vertep#375).
+
 ## 0.13.0 (2026-11-11)
 
 What was left of #366 and #367, built (#368): clubs, follows and recall of older messages. New plugin clubs 0.1.0; forum 0.10.0, life 0.7.0, messenger 0.10.0, Profiles 0.12.0. Needs the same engine as 0.12.0; nothing to migrate. Clubs and recall are off by default.

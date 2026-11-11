@@ -1,7 +1,8 @@
 // The editor for one person's level and ties (#366), opened inside the people list. The level is a floor (the meetings may take it higher)
 // unless it is pinned; family and work ties show on the other character's list too, a romantic tie belongs to this side and needs adults.
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useT } from "@/i18n/index";
+import { SectionHead } from "../sections";
 import { Chip, Switch } from "../ui";
 import { LEVELS, TIE_GROUPS, type Follow, type Level, type RelationEdit, type Tie, type TieType } from "../people-api";
 
@@ -31,7 +32,7 @@ export function useTieWord() {
   return (tie: Tie) => (tie.type === "other" && tie.label ? tie.label : t(("profiles.people.tie." + tie.type) as never));
 }
 
-export function RelationEditor({ target, busy, onSave, onCancel }: { target: EditTarget; busy: boolean; onSave: (edit: RelationEdit) => void; onCancel: () => void }) {
+export function RelationEditor({ target, busy, onSave, onCancel, levelNote, extra, side }: { target: EditTarget; busy: boolean; onSave: (edit: RelationEdit) => void; onCancel: () => void; /** Lines under the level hint (why it is what it is). */ levelNote?: ReactNode; /** More fields of the same person, above the buttons. */ extra?: ReactNode; /** A button beside Save and Cancel. */ side?: ReactNode }) {
   const t = useT();
   const word = useTieWord();
   const [level, setLevel] = useState<Level | "">(target.level);
@@ -52,21 +53,23 @@ export function RelationEditor({ target, busy, onSave, onCancel }: { target: Edi
   };
 
   return (
-    <div className="life-edit rel-edit" role="group" aria-label={t("profiles.people.relFor", { name: target.name })}>
+    <div className="rel-edit" role="group" aria-label={t("profiles.people.relFor", { name: target.name })}>
       <div className="rel-field">
-        <label className="lb" htmlFor="rel-level">{t("profiles.people.level")}</label>
-        <select id="rel-level" className="inp" value={level} onChange={(e) => setLevel(e.target.value as Level | "")}>
+        <SectionHead id="rel-level-h" tone="rose" icon="heart" title={t("profiles.people.level")} />
+        <select id="rel-level" aria-labelledby="rel-level-h" className="inp" value={level} onChange={(e) => setLevel(e.target.value as Level | "")}>
           <option value="">{target.auto ? t("profiles.people.level.autoNow", { level: t(("profiles.people.level." + target.auto) as never) }) : t("profiles.people.level.auto")}</option>
           {LEVELS.map((l) => (
             <option key={l} value={l}>{t(("profiles.people.level." + l) as never)}</option>
           ))}
         </select>
         <p className="k">{level === "" ? t("profiles.people.level.autoHint") : t("profiles.people.level.floorHint")}</p>
+        {levelNote}
         {level !== "" && <Switch on={pinned} onChange={setPinned}>{t("profiles.people.pin")}</Switch>}
         {level !== "" && character && <Switch on={mirror} onChange={setMirror}>{t("profiles.people.mirror", { name: target.name })}</Switch>}
       </div>
 
       <div className="rel-field">
+        <SectionHead tone="teal" icon="eye" title={t("profiles.people.followsHead")} />
         <Switch on={follow === "yes" ? true : follow === "no" ? false : target.fol === true} onChange={(v) => setFollow(v ? "yes" : "no")}>{t("profiles.people.follows", { name: target.name })}</Switch>
         <p className="k">
           {follow === "" ? t("profiles.people.follows.auto") : t("profiles.people.follows.byYou")}
@@ -80,7 +83,7 @@ export function RelationEditor({ target, busy, onSave, onCancel }: { target: Edi
       </div>
 
       <div className="rel-field">
-        <span className="lb" id="rel-ties">{t("profiles.people.ties")}</span>
+        <SectionHead id="rel-ties" tone="sky" icon="users" title={t("profiles.people.ties")} />
         {ties.length > 0 && (
           <div className="chips" role="list" aria-labelledby="rel-ties">
             {ties.map((x) => (
@@ -114,11 +117,13 @@ export function RelationEditor({ target, busy, onSave, onCancel }: { target: Edi
         {!target.romance && <p className="k">{t("profiles.people.tie.adultHint")}</p>}
       </div>
 
+      {extra}
       <div className="life-actions">
         <button type="button" className="btn cta" disabled={busy} onClick={() => onSave({ level, pinned: level !== "" && pinned, ties, mirror: level !== "" && character && mirror, follow })}>
           {t("profiles.life.save")}
         </button>
         <button type="button" className="btn" disabled={busy} onClick={onCancel}>{t("profiles.life.cancel")}</button>
+        {side}
       </div>
     </div>
   );

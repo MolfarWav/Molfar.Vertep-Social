@@ -1442,11 +1442,11 @@ function candidates(fsx, id, pf) {
   const out = [];
   for (const other of profileIds(fsx)) {
     const p = other === id ? null : readProfile(fsx, other);
-    if (p && !have.has("c:" + other)) out.push({ key: "c:" + other, name: p.name, kind: "character", romance: romanceFor(me, "c:" + other, p) });
+    if (p && !have.has("c:" + other)) out.push({ key: "c:" + other, name: p.name, kind: "character", romance: romanceFor(me, "c:" + other, p), about: cut(p.about.replace(/\s+/g, " "), 60) });
   }
   const y = readJson(fsx, "you.json", null);
   for (const x of isObj(y) && Array.isArray(y.personas) ? y.personas : []) {
-    if (isObj(x) && ID.test(String(x.id)) && str(x.name) && !have.has("u:" + x.id)) out.push({ key: "u:" + x.id, name: cut(str(x.name), 80), kind: "user", romance: romanceFor(me, "u:" + x.id, null) });
+    if (isObj(x) && ID.test(String(x.id)) && str(x.name) && !have.has("u:" + x.id)) out.push({ key: "u:" + x.id, name: cut(str(x.name), 80), kind: "user", romance: romanceFor(me, "u:" + x.id, null), about: cut(str(x.about).replace(/\s+/g, " "), 60) });
   }
   return out.slice(0, 80);
 }

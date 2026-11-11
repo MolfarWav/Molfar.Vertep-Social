@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { ModelPick } from "@/screens/settings/model-pick";
 import { modelOptions } from "@/screens/settings/real";
 import { Field } from "../ui";
+import { SectionPage } from "../sections";
 import type { TabProps } from "./types";
 
 /** Preview only: `?picker=1` draws the searchable picker the installed app uses, over a few mock models. */
@@ -47,28 +48,52 @@ export function ModelTab({ form, set, name }: TabProps) {
   const previewOptions = [{ value: "", label: appLabel }, ...MODEL_IDS.filter((id) => id !== "default").map((id) => ({ value: id, label: t(`settings.model.${id}`) }))];
 
   return (
-    <div className="tab-stack tab-model">
-      <Field label={t("profiles.model.label")} wide>
-        {(id) =>
-          !searchable ? (
-            <Pick labelledBy={id} value={own} options={previewOptions} onChange={(model) => set({ model })} />
-          ) : (
-            <ModelPick labelledBy={id} value={own} options={modelOptions(choices, own, appLabel)} onChange={(model) => set({ model })} />
-          )
-        }
-      </Field>
-      <div className="k hint">{own ? t("profiles.model.hintOwn", { name }) : t("profiles.model.hintApp", { name })}</div>
-      <div className="k hint">{t("profiles.model.scope")}</div>
-      <Field label={t("profiles.model.imageLabel")} wide>
-        {(id) =>
-          !searchable ? (
-            <Pick labelledBy={id} value={imageOwn} options={imageOpts} onChange={(imageModel) => set({ imageModel })} />
-          ) : (
-            <ModelPick labelledBy={id} value={imageOwn} options={imageOpts} onChange={(imageModel) => set({ imageModel })} />
-          )
-        }
-      </Field>
-      <div className="k hint">{t("profiles.model.imageHint", { name })}</div>
-    </div>
+    <SectionPage
+      tab="model"
+      label={t("profiles.sec.menu")}
+      sections={[
+        {
+          id: "text",
+          title: t("profiles.sec.modelText"),
+          icon: "cpu",
+          tone: "orange",
+          children: (
+            <div className="tab-stack tab-model">
+              <Field label={t("profiles.model.label")} wide>
+                {(id) =>
+                  !searchable ? (
+                    <Pick labelledBy={id} value={own} options={previewOptions} onChange={(model) => set({ model })} />
+                  ) : (
+                    <ModelPick labelledBy={id} value={own} options={modelOptions(choices, own, appLabel)} onChange={(model) => set({ model })} />
+                  )
+                }
+              </Field>
+              <div className="k hint">{own ? t("profiles.model.hintOwn", { name }) : t("profiles.model.hintApp", { name })}</div>
+              <div className="k hint">{t("profiles.model.scope")}</div>
+            </div>
+          ),
+        },
+        {
+          id: "image",
+          title: t("profiles.sec.modelImage"),
+          icon: "img",
+          tone: "sky",
+          children: (
+            <div className="tab-stack tab-model">
+              <Field label={t("profiles.model.imageLabel")} wide>
+                {(id) =>
+                  !searchable ? (
+                    <Pick labelledBy={id} value={imageOwn} options={imageOpts} onChange={(imageModel) => set({ imageModel })} />
+                  ) : (
+                    <ModelPick labelledBy={id} value={imageOwn} options={imageOpts} onChange={(imageModel) => set({ imageModel })} />
+                  )
+                }
+              </Field>
+              <div className="k hint">{t("profiles.model.imageHint", { name })}</div>
+            </div>
+          ),
+        },
+      ]}
+    />
   );
 }

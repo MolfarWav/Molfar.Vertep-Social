@@ -21,6 +21,7 @@ import { ActionMenu, type MenuItem } from "./menu";
 import type { FillProps } from "./fill-ui";
 import { cardDateLabel } from "./import-api";
 import { PictureDialog } from "./picture-dialog";
+import { Gl, type GlyphName, type Tone } from "./glyphs";
 
 export interface EditorProps {
   profile: MockProfile;
@@ -54,6 +55,18 @@ const TAB_LABEL: Record<TabId, { desk: string; phone: string }> = {
   habits: { desk: "profiles.tab.habits", phone: "profiles.tab.habits" },
   life: { desk: "profiles.tab.life", phone: "profiles.tab.life" },
   model: { desk: "profiles.tab.model", phone: "profiles.tab.model" },
+};
+
+/** Each tab's icon and tone (the strip, and the section menu inside it uses its own per section). */
+const TAB_LOOK: Record<TabId, { icon: GlyphName; tone: Tone }> = {
+  about: { icon: "user", tone: "cyan" },
+  relations: { icon: "heart", tone: "rose" },
+  voice: { icon: "mic", tone: "violet" },
+  statuses: { icon: "pulse", tone: "teal" },
+  forum: { icon: "chat", tone: "sky" },
+  habits: { icon: "sprout", tone: "amber" },
+  life: { icon: "book", tone: "emerald" },
+  model: { icon: "cpu", tone: "orange" },
 };
 
 /** The editable part of a profile (everything except identity and source). */
@@ -152,9 +165,12 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
           role="tab"
           aria-selected={tab === id}
           className={`${phone ? "pill" : "et"}${tab === id ? " on" : ""}`}
+          data-tone={TAB_LOOK[id].tone}
+          aria-label={t(TAB_LABEL[id].desk)}
           onClick={() => onTab(id)}
         >
-          {t(TAB_LABEL[id][phone ? "phone" : "desk"])}
+          <Gl name={TAB_LOOK[id].icon} size={phone ? 20 : 19} />
+          <span className={phone ? "pill-t" : undefined}>{t(TAB_LABEL[id][phone ? "phone" : "desk"])}</span>
         </button>
       ))}
     </div>
@@ -179,7 +195,7 @@ export function ProfileEditor({ profile, form, dirty, tab, onTab, phone, onSet, 
         {tabs}
         <div className="pg">{body}</div>
         <div className="sv">
-          <span className="warn">{dirty ? t("profiles.save.unsaved") : ""}</span>
+          <span className={dirty ? "warn" : "warn none"}>{dirty ? t("profiles.save.unsaved") : t("profiles.save.none")}</span>
           <button type="button" className="btn" disabled={!dirty} onClick={onDiscard}>{t("profiles.save.cancel")}</button>
           <button type="button" className="btn cta" disabled={!dirty} onClick={onSave}>{t("profiles.save.save")}</button>
         </div>
