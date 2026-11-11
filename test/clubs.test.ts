@@ -312,7 +312,7 @@ test("the user's message is filed at once and the first reply is asked in the sa
   expect(second.json.ok).toBe(true);
   expect(second.json.chat.messages.map((m: any) => [m.by, m.mine, m.text, m.name])).toEqual([["me", true, "Hello, everyone!", "Ann"], [speaker, false, "Welcome, Ann.", expect.any(String)]]);
   expect(second.json.chat.messages[0].as).toBeUndefined(); // one persona: nothing about "as"
-  expect(file(w, id)).toMatchObject({ pending: 0, today: 1 });
+  expect(file(w, id)).toMatchObject({ pending: 0, today: 0, answered: 1 }); // an answer to the user has its own count
 });
 
 test("a reply owed to the user comes first: no chance, no gap, no cap; the second member answers on the next tick, then it is idle talk again", () => {
@@ -335,6 +335,7 @@ test("a reply owed to the user comes first: no chance, no gap, no cap; the secon
   w.requests.length = 0;
   at(noon + 34 * 1000, () => clubs.onTick({}, w.host), 0);
   expect(w.requests).toHaveLength(0);
+  expect(file(w, id)).toMatchObject({ today: 1, answered: 2 }); // the idle line counts in `today`, the two answers in `answered`
 });
 
 test("the user's message waits when nobody is around, the club is off or the global switch is off; no request, no error", () => {
@@ -405,6 +406,70 @@ test("the list and the chat: the last line, the newest club first, sender names 
   w.files.set(`clubs/${b}.json`, JSON.stringify({ ...file(w, b), pending: noon + MIN, failedAt: noon + MIN }));
   const flags = at(noon + 2 * MIN, () => w.route("GET", "/clubs/chat", undefined, { id: b }).json);
   expect(flags).toMatchObject({ pending: true, failed: true });
+});
+
+test("answers to the user have their own cap per club per day: asked below it, not at it, reset next day, idle talk unaffected", () => {
+  const w = world({ community: { clubs: true, clubsPerDay: 5, clubsAnswers: 2, clubsMod: false } });
+  const id = make(w);
+  const send = (ms: number, text: string) => {
+    const first = at(ms, () => w.route("POST", "/clubs/send", { id, text }));
+    if (!first.__llmPending) return first;
+    w.setResults({ reply: { text: "Answer to: " + text } });
+    const done = at(ms + 1000, () => w.route("POST", "/clubs/send", { id, text }, undefined, first.stash));
+    w.setResults({});
+    return done;
+  };
+  send(noon, "One");
+  expect(file(w, id)).toMatchObject({ answered: 1, today: 0 });
+  // the second owed answer comes from the tick and uses the second of two
+  w.requests.length = 0;
+  at(noon + 2000, () => clubs.onTick({}, w.host), 0.99);
+  expect(w.requests).toHaveLength(1);
+  say(w, id, w.requests[0]!.key.split(":")[2]!, "Second.", noon + 3000);
+  expect(file(w, id)).toMatchObject({ answered: 2, today: 0 });
+  // the limit is reached: a new message is filed, nobody is asked, and the view says so
+  w.requests.length = 0;
+  const third = send(noon + 10 * MIN, "Three");
+  expect(third.json).toMatchObject({ ok: true, queued: true });
+  expect(third.json.chat.limited).toBe(true);
+  expect(third.json.chat.answersMax).toBe(2);
+  expect(w.requests).toHaveLength(0);
+  at(noon + 10 * MIN + 5000, () => clubs.onTick({}, w.host), 0.99); // a bad chance draw: only owed talk would come
+  expect(w.requests).toHaveLength(0);
+  expect(at(noon + 10 * MIN + 6000, () => w.route("GET", "/clubs/chat", undefined, { id })).json.limited).toBe(true);
+  // idle talk is unaffected: with a good draw the club writes on its own, and it does not see the user's lines
+  at(noon + 20 * MIN, () => clubs.onTick({}, w.host), 0);
+  expect(w.requests).toHaveLength(1);
+  expect(w.requests[0]!.key.startsWith("cl:")).toBe(true);
+  expect(w.requests[0]!.req.messages[0].content).not.toContain("Three");
+  expect(w.requests[0]!.req.systemPrompt).not.toContain("real person");
+  say(w, id, w.requests[0]!.key.split(":")[2]!, "Chatting among us.", noon + 21 * MIN);
+  expect(file(w, id)).toMatchObject({ answered: 2, today: 1 });
+  // the next day the count starts again and the user is answered
+  w.requests.length = 0;
+  const next = send(noon + DAYMS, "Good morning");
+  expect(next.__llmPending ?? next.json.ok).toBeTruthy();
+  expect(file(w, id).answered).toBe(1);
+  expect(w.requests).toHaveLength(1);
+  expect(w.requests[0]!.req.messages[0].content).toContain("Good morning");
+  expect(at(noon + DAYMS + 5000, () => w.route("GET", "/clubs/chat", undefined, { id })).json.limited).toBe(false);
+});
+
+test("a limit of 0 means the members never answer the user, and the club says so; it still talks among itself", () => {
+  const w = world({ community: { clubs: true, clubsPerDay: 5, clubsAnswers: 0, clubsMod: false } });
+  const id = make(w);
+  const r = at(noon, () => w.route("POST", "/clubs/send", { id, text: "Anyone there?" }));
+  expect(r.json).toMatchObject({ ok: true, queued: true });
+  expect(r.json.chat).toMatchObject({ limited: true, answersMax: 0 });
+  expect(w.requests).toHaveLength(0);
+  at(noon + 5000, () => clubs.onTick({}, w.host), 0.99);
+  expect(w.requests).toHaveLength(0);
+  at(noon + 10 * MIN, () => clubs.onTick({}, w.host), 0);
+  expect(w.requests).toHaveLength(1);
+  expect(w.requests[0]!.req.messages[0].content).not.toContain("Anyone there?");
+  expect(w.requests[0]!.req.messages[0].content).toContain("Open the chat");
+  // a message that is not owed any more (two members answered, or 3 hours passed) does not show the limit line
+  expect(clubs.readSettings(w.host.fs).answers).toBe(0);
 });
 
 // ---------- the prompt ----------
@@ -610,7 +675,11 @@ test("the tick starts the Moderator's club now and then, and it talks like any c
 
 test("the settings have the club switches, with the defaults and the clamps", () => {
   const d = profilesPlugin.DEFAULT_SETTINGS.community;
-  expect(d).toMatchObject({ clubs: false, clubsPerDay: 12, clubsMod: true });
+  expect(d).toMatchObject({ clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true });
+  expect(profilesPlugin.mergeSettings(profilesPlugin.DEFAULT_SETTINGS, { community: { clubsAnswers: 500 } }).community.clubsAnswers).toBe(100);
+  expect(profilesPlugin.mergeSettings(profilesPlugin.DEFAULT_SETTINGS, { community: { clubsAnswers: -1 } }).community.clubsAnswers).toBe(0);
+  expect(profilesPlugin.mergeSettings(profilesPlugin.DEFAULT_SETTINGS, { community: { clubsAnswers: 0 } }).community.clubsAnswers).toBe(0);
+  expect(profilesPlugin.mergeSettings(profilesPlugin.DEFAULT_SETTINGS, { community: { clubsAnswers: "x" } }).community.clubsAnswers).toBe(20);
   const m = profilesPlugin.mergeSettings(profilesPlugin.DEFAULT_SETTINGS, { community: { clubs: true, clubsPerDay: 500, clubsMod: false } });
   expect(m.community).toMatchObject({ clubs: true, clubsPerDay: 40, clubsMod: false });
   expect(profilesPlugin.mergeSettings(m, { community: { clubsPerDay: 0 } }).community.clubsPerDay).toBe(1);
@@ -620,6 +689,11 @@ test("the settings have the club switches, with the defaults and the clamps", ()
   const w = world({ community: { clubs: true, clubsPerDay: 99 } });
   expect(clubs.readSettings(w.host.fs)).toMatchObject({ on: true, perDay: 40, mod: true, model: "prov/chat" });
   expect(clubs.readSettings(world({ community: { clubsPerDay: -4 } }).host.fs).perDay).toBe(1);
+  expect(clubs.readSettings(world({ community: {} }).host.fs).answers).toBe(20);
+  expect(clubs.readSettings(world({ community: { clubsAnswers: 500 } }).host.fs).answers).toBe(100);
+  expect(clubs.readSettings(world({ community: { clubsAnswers: -3 } }).host.fs).answers).toBe(0);
+  expect(clubs.readSettings(world({ community: { clubsAnswers: 0 } }).host.fs).answers).toBe(0);
+  expect(clubs.readSettings(world({ community: { clubsAnswers: "lots" } }).host.fs).answers).toBe(20);
   expect(clubs.readSettings(world({ community: {} }).host.fs)).toMatchObject({ on: false, perDay: 12, mod: true });
 });
 
@@ -629,6 +703,6 @@ test("the manifest asks only for what the plugin uses; the strings exist in both
   expect(m.priority).toBeGreaterThan(40);
   for (const lang of ["en", "uk"] as const) {
     const keys = Object.keys(dictionary[lang]);
-    for (const k of ["messenger.clubs.title", "messenger.clubs.new", "messenger.clubs.create", "messenger.clubs.search", "messenger.clubs.counter", "messenger.clubs.offLine", "settings.community.clubs", "settings.community.clubs.limit", "settings.community.clubsMod"]) expect(keys).toContain(k);
+    for (const k of ["messenger.clubs.title", "messenger.clubs.new", "messenger.clubs.create", "messenger.clubs.search", "messenger.clubs.counter", "messenger.clubs.offLine", "settings.community.clubs", "settings.community.clubs.limit", "settings.community.clubsMod", "settings.community.clubs.answers", "settings.community.clubs.answers.hint", "settings.community.clubs.answers.phone.hint", "messenger.clubs.limited", "messenger.clubs.limitedZero"]) expect(keys).toContain(k);
   }
 });

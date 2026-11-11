@@ -52,6 +52,10 @@ export interface ClubChat {
   club: Club;
   messages: ClubMessage[];
   multi: boolean;
+  /** The user's message gets no answer today: the day's answers (Settings > Community > Clubs) are used up, or the limit is 0. */
+  limited: boolean;
+  /** That limit. */
+  answersMax: number;
   /** A reply is being written. */
   pending: boolean;
   /** The last request failed lately; the club waits half an hour. */

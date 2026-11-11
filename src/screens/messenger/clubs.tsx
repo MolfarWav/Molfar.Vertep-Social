@@ -243,6 +243,12 @@ function ClubLog({ chat, busy, queued, err, globalOn, phone, onSettings }: { cha
         ),
       )}
       {club && !club.on && <div className="note"><span>{t("messenger.clubs.offLine")}</span></div>}
+      {chat?.limited && club?.on && globalOn && !busy && (
+        <div className="note">
+          <span>{t(chat.answersMax === 0 ? "messenger.clubs.limitedZero" : "messenger.clubs.limited")}</span>
+          <button type="button" className="link" onClick={onSettings}>{t("messenger.clubs.openSettings")}</button>
+        </div>
+      )}
       {club && club.on && !globalOn && (
         <div className="note">
           <span>{t("messenger.clubs.globalLine")}</span>
@@ -250,7 +256,7 @@ function ClubLog({ chat, busy, queued, err, globalOn, phone, onSettings }: { cha
         </div>
       )}
       {(busy || chat?.pending) && !err && <div className="sys">{t("messenger.clubs.writing")}</div>}
-      {queued && !busy && <div className="note"><span>{t("messenger.clubs.queued")}</span></div>}
+      {queued && !busy && !chat?.limited && <div className="note"><span>{t("messenger.clubs.queued")}</span></div>}
       {(err || chat?.failed) && !busy && (
         <div className="note">
           <span>{t("messenger.clubs.failed")}</span>

@@ -31,7 +31,7 @@ export async function loadClubChat(id: string): Promise<ClubChat | null> {
   if (PREVIEW) {
     const club = clubs().find((c) => c.id === id);
     if (!club) return null;
-    return { club, messages: id === "cl-1" ? MOCK_CLUB_LOG : [], multi: id === "cl-1", pending: false, failed: false };
+    return { club, messages: id === "cl-1" ? MOCK_CLUB_LOG : [], multi: id === "cl-1", limited: previewState() === "limited", answersMax: 20, pending: false, failed: false };
   }
   try {
     return await call<ClubChat>("GET", `/clubs/chat?id=${encodeURIComponent(id)}`);

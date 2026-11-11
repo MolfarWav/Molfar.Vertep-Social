@@ -434,7 +434,7 @@ export const DEFAULT_SETTINGS = {
    * flirty (hints and teasing); never anything explicit. `chronicle` is the Moderator's daily digest (one model request a day, only when there is something to tell). `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
    * and a sharper answer from the characters' own ties (#367); neither costs a model call.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -508,6 +508,7 @@ export function mergeSettings(base, patch) {
       chatsPerDay: clampInt(cm.chatsPerDay, 0, 30, Number.isInteger(bcm.chatsPerDay) ? bcm.chatsPerDay : 4),
       clubs: bool(cm.clubs, bool(bcm.clubs, false)),
       clubsPerDay: clampInt(cm.clubsPerDay, 1, 40, Number.isInteger(bcm.clubsPerDay) ? bcm.clubsPerDay : 12),
+      clubsAnswers: clampInt(cm.clubsAnswers, 0, 100, Number.isInteger(bcm.clubsAnswers) ? bcm.clubsAnswers : 20),
       clubsMod: bool(cm.clubsMod, bool(bcm.clubsMod, true)),
       tone: oneOf(cm.tone, ["none", "warm", "flirty"], oneOf(bcm.tone, ["none", "warm", "flirty"], "warm")),
       gossip: bool(cm.gossip, bool(bcm.gossip, true)),

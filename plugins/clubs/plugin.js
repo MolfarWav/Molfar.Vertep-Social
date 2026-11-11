@@ -6,11 +6,12 @@
  * Off by default (Settings > Community > "Clubs", then a switch per club): one model call per message, on the messenger model (the
  * profile's own wins), so it costs tokens and free models are a risk. At most 3 clubs in all. A club writes at most `clubsPerDay`
  * messages a day (default 12) on its own, a 3 minute gap, only while two members are around by their schedules (online or away).
- * A reply owed to the user (the user wrote last) is not held back by the gap, the cap or the chance: the user asked for it. The
+ * A reply owed to the user (the user wrote last) is not held back by the gap, the idle cap or the chance: the user asked for it. It has
+ * its own cap, `clubsAnswers` answers a day per club (counted in `answered`, not in `today`; 0 = members never answer the user). The
  * character's card is never read; the prompt carries the profile, what each remembers of the others (the Life plugin's list), and
  * what the club said lately.
  *
- * Data: clubs/<id>.json {id, name, interest, by: "user" | "mod", members: [profile ids], on, created, day, today,
+ * Data: clubs/<id>.json {id, name, interest, by: "user" | "mod", members: [profile ids], on, created, day, today, answered,
  *   messages: [{id, by: profile id | "me", persona?, at, text}] (300), pending, failedAt}; clubs/state.json {lastAuto, removed: {interest: at}}
  *   (the Moderator's: when it last made a club, and the interests of clubs of its making that the user deleted, not proposed again for 14 days).
  *
@@ -98,10 +99,12 @@ export function readSettings(fsx) {
   const c = isObj(raw.community) ? raw.community : {};
   const m = isObj(raw.models) ? raw.models : {};
   const n = c.clubsPerDay;
+  const a = c.clubsAnswers;
   return {
     on: c.clubs === true,
     mod: c.clubsMod !== false,
     perDay: Number.isFinite(n) ? Math.min(40, Math.max(1, Math.floor(n))) : 12,
+    answers: Number.isFinite(a) ? Math.min(100, Math.max(0, Math.floor(a))) : 20,
     model: modelRef(m.messenger),
     tz: typeof raw.tzOffset === "number" && Number.isFinite(raw.tzOffset) && Math.abs(raw.tzOffset) <= 840 ? raw.tzOffset : null,
   };
@@ -196,6 +199,7 @@ export function readClub(fsx, id, now, tz) {
     created: num(d.created),
     day,
     today: d.day === day ? Math.max(0, Math.floor(num(d.today))) : 0,
+    answered: d.day === day ? Math.max(0, Math.floor(num(d.answered))) : 0,
     messages: (Array.isArray(d.messages) ? d.messages : [])
       .filter((x) => isObj(x) && typeof x.id === "string" && ID.test(x.id) && typeof x.by === "string" && (x.by === "me" || ID.test(x.by)) && typeof x.text === "string" && str(x.text) && Number.isFinite(x.at))
       .map((x) => ({ id: x.id, by: x.by, ...(x.by === "me" && typeof x.persona === "string" && ID.test(x.persona) ? { persona: x.persona } : {}), at: x.at, text: cut(noControls(x.text).trim(), x.by === "me" ? USER_TEXT_MAX : TEXT_MAX) }))
@@ -207,7 +211,7 @@ export function readClub(fsx, id, now, tz) {
 }
 
 function writeClub(fsx, c) {
-  fsx.write(clubPath(c.id), JSON.stringify({ id: c.id, name: c.name, interest: c.interest, by: c.by, members: c.members, on: c.on, created: c.created, day: c.day, today: c.today, messages: c.messages.slice(-KEEP), pending: c.pending, failedAt: c.failedAt }));
+  fsx.write(clubPath(c.id), JSON.stringify({ id: c.id, name: c.name, interest: c.interest, by: c.by, members: c.members, on: c.on, created: c.created, day: c.day, today: c.today, answered: c.answered, messages: c.messages.slice(-KEEP), pending: c.pending, failedAt: c.failedAt }));
 }
 
 /** Reads a club and, when its members changed (a character was deleted), writes the cleaned file back. */
@@ -404,11 +408,14 @@ export function buildRequest(fsx, settings, club, speaker) {
     if (p) profiles.set(id, p);
   }
   const others = club.members.filter((id) => id !== speaker.id && profiles.has(id)).map((id) => ({ id, name: profiles.get(id).name, relation: relationLine(fsx, speaker.id, id) }));
-  const userMsgs = club.messages.slice(-CONTEXT).filter((m) => m.by === "me");
+  // with the day's answers to the user used up (or 0) the club talks among itself: the user's lines are not in what it sees
+  const muted = club.answered >= settings.answers;
+  const talk = muted ? club.messages.filter((m) => m.by !== "me") : club.messages;
+  const userMsgs = talk.slice(-CONTEXT).filter((m) => m.by === "me");
   const lastUser = userMsgs[userMsgs.length - 1];
   const userName = lastUser ? (personaOf(fsx, lastUser.persona) || { name: "The user" }).name : "";
   const nameOf = (m) => (m.by === "me" ? (personaOf(fsx, m.persona) || { name: "The user" }).name : profiles.has(m.by) ? profiles.get(m.by).name : (readProfile(fsx, m.by) || { name: "Someone" }).name);
-  const last = club.messages[club.messages.length - 1];
+  const last = talk[talk.length - 1];
   const answered = last && last.by !== "me" && last.by !== speaker.id ? last.by : "";
   const jealous = answered ? jealousChatLine(fsx, speaker.id, answered) : "";
   const asked = answered && profiles.has(answered) ? profiles.get(answered).name : "";
@@ -416,7 +423,7 @@ export function buildRequest(fsx, settings, club, speaker) {
   return {
     ...(model ? { model } : {}),
     systemPrompt: clubSystem(speaker, club, others, { userName, jealous, level: communityLevel(fsx) }),
-    messages: [{ role: "user", content: clubUser(club, club.messages, nameOf, userName, asked) }],
+    messages: [{ role: "user", content: clubUser(club, talk, nameOf, userName, asked) }],
     presetParams: { temperature: 0.9, max_tokens: 220 },
   };
 }
@@ -468,7 +475,7 @@ export function pickTurn(fsx, settings, now, rand) {
     const last = c.messages[c.messages.length - 1];
     const pool = here.filter((p) => !last || p.id !== last.by);
     if (!pool.length) continue;
-    if (owedState(c, now)) {
+    if (owedState(c, now) && c.answered < settings.answers) {
       owed.push({ club: c, speaker: weightedPick(pool, weightOf, rand), owed: true });
       continue;
     }
@@ -508,8 +515,11 @@ export function fileClubResult(fsx, key, result, now, tz) {
     return { error: "the club was switched off" };
   }
   const message = { id: "m-" + now + "-" + rid(), by: m[2], at: now, text };
+  // an answer to the user has its own count; the club's own talk is counted in `today` (decided before the message is added)
+  // (with the day's answers used up a line is the club's own talk, whatever came before it)
+  if (owedState(club, now) && club.answered < readSettings(fsx).answers) club.answered += 1;
+  else club.today += 1;
   club.messages.push(message);
-  club.today += 1;
   club.failedAt = 0;
   writeClub(fsx, club);
   return { message };
@@ -593,7 +603,7 @@ export function modClub(fsx, settings, now, rand) {
   if (!groups.length) return null;
   const g = groups[Math.floor(rand() * groups.length)][1];
   const members = closest(fsx, [...g.ids], rand);
-  const club = { id: "cl-" + now.toString(36) + "-" + rid(), name: autoName(g.label), interest: cut(g.label, INTEREST_MAX), by: "mod", members, on: true, created: now, day: localDay(now, settings.tz), today: 0, messages: [], pending: 0, failedAt: 0 };
+  const club = { id: "cl-" + now.toString(36) + "-" + rid(), name: autoName(g.label), interest: cut(g.label, INTEREST_MAX), by: "mod", members, on: true, created: now, day: localDay(now, settings.tz), today: 0, answered: 0, messages: [], pending: 0, failedAt: 0 };
   writeClub(fsx, club);
   writeState(fsx, { lastAuto: now, removed: state.removed });
   return club;
@@ -617,7 +627,7 @@ function view(fsx, c) {
   };
 }
 
-function chatView(fsx, c, now) {
+function chatView(fsx, c, now, answers) {
   const multi = personaCount(fsx) > 1;
   const cache = new Map();
   const person = (id) => {
@@ -635,7 +645,9 @@ function chatView(fsx, c, now) {
     if (!p) continue;
     messages.push({ id: m.id, by: m.by, name: p.name, hue: p.hue, picture: p.picture, at: m.at, text: m.text, mine: false });
   }
-  return { club: view(fsx, c), messages, multi, pending: now - c.pending < PENDING_MS && c.pending > 0, failed: now - c.failedAt < FAIL_WAIT_MS && c.failedAt > 0 };
+  // the user's message gets no answer today: the limit of Settings > Community > Clubs is used up (or is 0)
+  const limited = Number.isFinite(answers) && !!owedState(c, now) && c.answered >= answers;
+  return { club: view(fsx, c), messages, multi, limited, answersMax: Number.isFinite(answers) ? answers : 0, pending: now - c.pending < PENDING_MS && c.pending > 0, failed: now - c.failedAt < FAIL_WAIT_MS && c.failedAt > 0 };
 }
 
 const cleanMembers = (fsx, raw) => {
@@ -654,7 +666,7 @@ function sendRoute(req, host, settings, now) {
     // second pass: the model has answered the first reply
     const res = fileClubResult(fsx, "cl:" + id + ":" + String(stash.speaker || ""), host.llm && host.llm.results ? host.llm.results.reply : null, now, settings.tz);
     const after = readClub(fsx, id, now, settings.tz) || club;
-    return ok({ ok: !res.error, ...(res.error ? { error: res.error } : {}), chat: chatView(fsx, after, now) });
+    return ok({ ok: !res.error, ...(res.error ? { error: res.error } : {}), chat: chatView(fsx, after, now, settings.answers) });
   }
   const text = cut(noControls(String(typeof b.text === "string" ? b.text : "")).trim(), USER_TEXT_MAX);
   if (!text) return ok({ error: "a message needs text" }, 400);
@@ -663,9 +675,9 @@ function sendRoute(req, host, settings, now) {
   club.failedAt = 0;
   const members = club.members.map((x) => readProfile(fsx, x)).filter(Boolean);
   const here = members.filter((p) => around(p, now, settings.tz));
-  if (!settings.on || !club.on || !here.length || (club.pending && now - club.pending < PENDING_MS) || !host.llm) {
+  if (!settings.on || !club.on || !here.length || club.answered >= settings.answers || (club.pending && now - club.pending < PENDING_MS) || !host.llm) {
     writeClub(fsx, club);
-    return ok({ ok: true, queued: true, chat: chatView(fsx, club, now) });
+    return ok({ ok: true, queued: true, chat: chatView(fsx, club, now, settings.answers) });
   }
   const speaker = weightedPick(here, weightOf, Math.random);
   club.pending = now;
@@ -689,7 +701,7 @@ export function handleRoute(req, host) {
   if (path === "/clubs/chat" && req.method === "GET") {
     const c = loadClub(fsx, String(q.id || ""), now, settings.tz);
     if (!c) return ok({ error: "no such club" }, 404);
-    return ok(chatView(fsx, c, now));
+    return ok(chatView(fsx, c, now, settings.answers));
   }
   if (path === "/clubs/club" && req.method === "POST") {
     const name = cut(noControls(str(b.name)).trim(), NAME_MAX);
@@ -697,7 +709,7 @@ export function handleRoute(req, host) {
     const members = cleanMembers(fsx, b.members);
     if (!members) return ok({ error: "pick three or four different characters" }, 400);
     if (clubIds(fsx).length >= MAX_CLUBS) return ok({ error: "the most clubs at once is " + MAX_CLUBS }, 409);
-    const club = { id: "cl-" + now.toString(36) + "-" + rid(), name, interest: cut(noControls(str(b.interest)).trim(), INTEREST_MAX), by: "user", members, on: b.on !== false, created: now, day: localDay(now, settings.tz), today: 0, messages: [], pending: 0, failedAt: 0 };
+    const club = { id: "cl-" + now.toString(36) + "-" + rid(), name, interest: cut(noControls(str(b.interest)).trim(), INTEREST_MAX), by: "user", members, on: b.on !== false, created: now, day: localDay(now, settings.tz), today: 0, answered: 0, messages: [], pending: 0, failedAt: 0 };
     writeClub(fsx, club);
     return ok({ ok: true, club: view(fsx, club) });
   }

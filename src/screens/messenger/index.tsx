@@ -33,12 +33,13 @@ import { dayLabel } from "./real";
 //   view=club                         the club "Вишивка і рушники" open: its log, the header with the Active switch, the members column
 //   state=noclubs                     no clubs yet (the Clubs group explains what a club is)
 //   state=clubsoff                    the global switch (Settings > Community > Clubs) is off: the group and an open club say so
+//   state=limited                     the open club says the day's answers to you are used up
 //   dialog=newclub | editclub         opens the "New club" dialog, or "Edit club" for the open club (use with view=club)
 // Combine with the theme and language: ?screen=messenger&view=chat&theme=dark&lang=uk
 // The state flags are preview only: they show on whichever chat is open, and "Try again" just hides the line.
 
-type State = "empty" | "nohits" | "offline" | "failed" | "nomodel" | "noclubs" | "clubsoff";
-const STATES: State[] = ["empty", "nohits", "offline", "failed", "nomodel", "noclubs", "clubsoff"];
+type State = "empty" | "nohits" | "offline" | "failed" | "nomodel" | "noclubs" | "clubsoff" | "limited";
+const STATES: State[] = ["empty", "nohits", "offline", "failed", "nomodel", "noclubs", "clubsoff", "limited"];
 const NOHITS_QUERY = "Русалка";
 
 function readPreview(): { view: string | null; state: State | null; dialog: string | null } {

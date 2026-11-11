@@ -56,6 +56,8 @@ export interface CommunitySettings {
   /** Clubs: group chats of three or four characters (issue #368); one model call per message, off by default. */
   clubs: boolean;
   clubsPerDay: number;
+  /** Answers to your own messages, a day in each club; 0 = members never answer you. On top of `clubsPerDay`. */
+  clubsAnswers: number;
   /** The Moderator starts a club from characters who share an interest (by rules, no model call). */
   clubsMod: boolean;
   /** The ceiling for what characters write to each other (issue #366): no romance, affection only, or hints and teasing. Never explicit. */
@@ -70,7 +72,7 @@ export interface CommunitySettings {
   repostsPerDay: number;
 }
 
-export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 };
+export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 };
 
 export interface SettingsMock {
   autonomous: boolean;
@@ -141,6 +143,7 @@ export const LIMITS = {
   storiesPerDay: { min: 0, max: 10 },
   chatsPerDay: { min: 0, max: 30 },
   clubsPerDay: { min: 1, max: 40 },
+  clubsAnswers: { min: 0, max: 100 },
   gossipPerDay: { min: 0, max: 20 },
   repostsPerDay: { min: 0, max: 20 },
   messengerContext: { min: 4, max: 500 },
