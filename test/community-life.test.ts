@@ -104,10 +104,11 @@ test("overCeiling stops plainly explicit text in both languages and leaves ordin
   expect(chatter.overCeiling("blowjob")).toBe(true);
 });
 
-test("the ceiling blocks are the same in the forum and the characters' chats", () => {
+test("the ceiling blocks are the same in the forum, the characters' chats and the clubs", () => {
   const block = (f: string) => /\/\/ <ceiling-shared>[\s\S]*?\/\/ <\/ceiling-shared>/.exec(fs.readFileSync(path.join(root, f), "utf8").replaceAll("\r\n", "\n"))?.[0];
   expect(block("plugins/forum/plugin.js")).toBeTruthy();
   expect(block("plugins/chatter/plugin.js")).toBe(block("plugins/forum/plugin.js"));
+  expect(block("plugins/clubs/plugin.js")).toBe(block("plugins/forum/plugin.js"));
 });
 
 test("a post between characters that goes past the ceiling is not filed, an answer to the user is the character's own matter", () => {

@@ -5,6 +5,13 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+Clubs (#368, "Clubs and group chats"). New clubs plugin (0.1.0), Profiles plugin (new settings, deleting a character, Start over), Messenger screen, Settings screen. Nothing to migrate; clubs are off until you switch them on.
+
+- **Clubs.** Group chats of three or four characters around an interest. A "Clubs" group sits at the top of the contact list: a row per club, "New club" (a name, an interest, and a member picker with a search box), an open club with its log (the sender's avatar and name on each line, your own lines marked), the Active switch and "Edit club". You can write in a club at once: one member answers, another may follow a minute later, then they talk among themselves. Members write only while online or away by their schedules, with a gap of three minutes and a daily cap per club; one model call per message.
+- **Settings > Community > Clubs** (off by default): the global switch, "Messages a day, per club" (12; answers to your own messages come on top) and "The Moderator starts clubs" (on): when three characters share an interest the Moderator makes a club of them, by rules, at most one in three days, never more than three clubs in all. You can rename, change or delete any club; a deleted Moderator club is not proposed again for two weeks.
+- **Rules.** The prompt carries what each member remembers of the others (impression, feeling, level, ties), the tone ceiling of Settings > Community, the last 14 messages; a message that goes past the ceiling is not filed. A deleted character leaves its clubs; with fewer than three members a club switches itself off. Start over's "Chats" removes the clubs.
+- **Not checked:** a real model, real play (how the members talk, how often the ceiling net cuts one), a real engine and a real phone.
+
 Follows (#368, item 4). Life plugin, forum plugin, Profiles screen, forum screen. Nothing to migrate: lists written before get the new field when they are read, without announcing anything.
 
 - **Follows.** A character can follow another character or one of your personas, one way. It changes only whose posts the character notices first on the forum (a followed author's topics and posts draw its reply about 1.6 times as often, its reactions and reposts about twice as often); it adds nothing to what the character is told.

@@ -434,7 +434,7 @@ export const DEFAULT_SETTINGS = {
    * flirty (hints and teasing); never anything explicit. `chronicle` is the Moderator's daily digest (one model request a day, only when there is something to tell). `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
    * and a sharper answer from the characters' own ties (#367); neither costs a model call.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -506,6 +506,9 @@ export function mergeSettings(base, patch) {
       storiesPerDay: clampInt(cm.storiesPerDay, 0, 10, Number.isInteger(bcm.storiesPerDay) ? bcm.storiesPerDay : 1),
       chats: bool(cm.chats, bool(bcm.chats, false)),
       chatsPerDay: clampInt(cm.chatsPerDay, 0, 30, Number.isInteger(bcm.chatsPerDay) ? bcm.chatsPerDay : 4),
+      clubs: bool(cm.clubs, bool(bcm.clubs, false)),
+      clubsPerDay: clampInt(cm.clubsPerDay, 1, 40, Number.isInteger(bcm.clubsPerDay) ? bcm.clubsPerDay : 12),
+      clubsMod: bool(cm.clubsMod, bool(bcm.clubsMod, true)),
       tone: oneOf(cm.tone, ["none", "warm", "flirty"], oneOf(bcm.tone, ["none", "warm", "flirty"], "warm")),
       gossip: bool(cm.gossip, bool(bcm.gossip, true)),
       gossipPerDay: clampInt(cm.gossipPerDay, 0, 20, Number.isInteger(bcm.gossipPerDay) ? bcm.gossipPerDay : 2),
@@ -605,6 +608,33 @@ function removeRecall(fsx, { profile, persona }) {
   }
 }
 
+/**
+ * A character that was deleted leaves the clubs it was in (`clubs/<id>.json`, written by the clubs plugin): out of the member list, its
+ * messages gone with it; a club left with fewer than three members is switched off, not deleted. A file that cannot be read is left alone.
+ */
+export function dropFromClubs(fsx, id) {
+  let names = [];
+  try {
+    names = fsx.list("clubs");
+  } catch {
+    return 0;
+  }
+  let n = 0;
+  for (const name of names) {
+    if (!/^[A-Za-z0-9_-]{1,60}.json$/.test(name) || name === "state.json") continue;
+    const d = readJson(fsx, "clubs/" + name, null);
+    if (!isObj(d) || !Array.isArray(d.members) || !d.members.includes(id)) continue;
+    const members = d.members.filter((x) => x !== id);
+    try {
+      fsx.write("clubs/" + name, JSON.stringify({ ...d, members, on: d.on === true && members.length >= 3, messages: (Array.isArray(d.messages) ? d.messages : []).filter((x) => !(isObj(x) && x.by === id)) }));
+      n++;
+    } catch {
+      /* left as it was */
+    }
+  }
+  return n;
+}
+
 /** A persona that was deleted takes its chats with it, and the character's list entries for it. */
 export function forgetPersona(fsx, id) {
   removeChats(fsx, { persona: id });
@@ -629,7 +659,7 @@ export function forgetPersona(fsx, id) {
  */
 export const RESET_PARTS = {
   forum: ["forum/topics", "forum/boards.json", "forum/events.json", "forum/life-used.json", "forum/gossip.json", "forum/log.json"],
-  chats: ["chats", "chatter", "firstlog.json", ".cache/recall"],
+  chats: ["chats", "chatter", "clubs", "firstlog.json", ".cache/recall"],
   diaries: ["life/diary", "life/people", "life/people-meta.json", "stories"],
   personas: ["you.json"],
   profiles: ["profiles"],
@@ -1741,6 +1771,7 @@ export function handleRoute(req, host) {
       /* no chat file */
     }
     removeChats(host.fs, { profile: m[1] });
+    dropFromClubs(host.fs, m[1]);
     return ok({ ok: true });
   }
   return ok({ error: "not found" }, 404);

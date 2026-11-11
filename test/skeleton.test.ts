@@ -21,7 +21,7 @@ test("manifest engine names the app contract, not the engine release", () => {
 });
 
 test("each plugin has a manifest and answers only its own paths", async () => {
-  for (const id of ["profiles", "messenger", "forum", "stickers"]) {
+  for (const id of ["profiles", "messenger", "forum", "stickers", "clubs"]) {
     const m = JSON.parse(fs.readFileSync(path.join(root, "plugins", id, "manifest.json"), "utf8"));
     expect(m.permissions).toContain("routes");
     const mod = await import(path.join(root, "plugins", id, "plugin.js"));

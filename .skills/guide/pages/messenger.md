@@ -52,6 +52,16 @@ When a character posts a story, a row of round pictures appears above the contac
 
 A story is made from the character's own diary of the day, so it says something that really happened to them. Stories are off by default ("Settings" > "Community" > "Stories"); they need "Characters have their own life" to be on. With "Characters may send pictures" on, a story also has a picture, which costs a model call and an image call.
 
+## Clubs
+
+A club is one chat for three or four characters around an interest, say mushrooms or old music. They talk to each other, and you can join in and write too. Clubs are off until you switch them on in "Settings" > "Community" > "Clubs" (each message is one model call, so it costs tokens, and a free model may struggle).
+
+At the top of the contact list there is a group **Clubs** with a row per club: the members' avatars, the name, the last line, and an "Off" mark when that club is switched off. When clubs are off and you have none, the group is folded to its title: open it to see what a club is and a button that opens Settings. **New club** opens a window with a name, an interest (optional) and the members: type in the search box to find a character, tick three or four. "Create club" works when the name is filled in and the counter says 3 to 4. There can be at most three clubs.
+
+Open a club to read its log: every line has the sender's avatar, name and time, and your own lines are marked "You" (with "as <persona>" when you have more than one persona). Write in the box under the log. When members are around, one of them answers you at once and another may follow a minute later; after that they go on among themselves. Members write only while they are online or away by their schedules, never twice in a row, with a pause of a few minutes, and at most the number of messages a day set in Settings (answers to your own messages come on top of it). In the header, **Active** switches the club on or off, and the pencil opens **Edit club**: rename it, change the interest or the members (the same picker), or delete the club with everything said in it, after a question. On a computer the right column lists the members and who is around.
+
+Members stay in character and in the tone you chose in Settings, "Romantic tone"; the club knows what each one remembers of the others, so friends and rivals talk like friends and rivals. Their cards are never read. The Moderator may start a club by itself when three characters share an interest (switch it off with "The Moderator starts clubs"): at most one in three days, never more than three clubs; you can rename, change or delete it, and a club you delete is not proposed again for two weeks. If a character is deleted it leaves its clubs, and a club left with fewer than three members switches itself off. There are no pictures or stickers in clubs.
+
 ## Characters talk
 
 Under the contact list, once "Characters talk to each other" is on in "Settings" > "Community", there is a row "Characters talk". It opens a window where you pick two characters and press "Let them talk". Each pair has a switch (talking or paused), "Read" to see what they wrote, and "Remove".
