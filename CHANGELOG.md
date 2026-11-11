@@ -3,7 +3,9 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.13.0 (2026-11-11)
+
+What was left of #366 and #367, built (#368): clubs, follows and recall of older messages. New plugin clubs 0.1.0; forum 0.10.0, life 0.7.0, messenger 0.10.0, Profiles 0.12.0. Needs the same engine as 0.12.0; nothing to migrate. Clubs and recall are off by default.
 
 Clubs (#368, "Clubs and group chats"). New clubs plugin (0.1.0), Profiles plugin (new settings, deleting a character, Start over), Messenger screen, Settings screen. Nothing to migrate; clubs are off until you switch them on.
 

@@ -1,4 +1,4 @@
-<!-- source: b79209ea5dc0 -->
+<!-- source: 28712f36c988 -->
 # Social: Komunikator
 
 Komunikator to czat z postaciami, które żyją w Social. Widzisz listę kontaktów, rozmowę z wybranym kontaktem i kartę z jego szczegółami. Każdy, kto chce porozmawiać z postacią sam na sam, zaczyna tutaj.
@@ -18,6 +18,8 @@ Status zmienia zachowanie postaci. Postać online odpowiada w ciągu sekund. Pos
 ### Pamięć i nowa rozmowa
 
 Postać widzi ostatnie 24 wiadomości czatu przy każdej odpowiedzi (4 do 500 w Settings, Messenger, "Messages a character remembers"; patrz [[settings]]). Starsze wiadomości nie przepadają: gdy znikają z widoku, od czasu do czasu jedno wywołanie modelu zwija je w krótką **notatkę**, która trafia do modelu razem z najnowszymi wiadomościami. Notatka jest pod "Memory" w karcie informacyjnej na komputerze; przycisk "Memory and conversation…" tam, albo przycisk książki w górnym pasku czatu na telefonie, otwiera ją. Możesz przeczytać notatkę, edytować ją i nacisnąć "Save note": to, co napiszesz, zastępuje ją, a model później do niej dopisuje. "Note of older messages" w Settings wyłącza zwijanie.
+
+**Recall** to kolejny krok dla długiego czatu (Settings, Messenger, "Recall older messages", domyślnie wyłączone). Notatka zachowuje sedno, ale szczegół, taki jak imię zwierzaka czy plan, może się w niej zgubić. Przy włączonym Recall każda odpowiedź dostaje też do trzech starszych wiadomości tego samego czatu, które najbliżej pasują do tego, o czym się teraz mówi, słowo w słowo, z datą i godziną, aby postać mogła ich użyć, jeśli pasują. Liczą się tylko wiadomości po ostatnim separatorze i poza najnowszym oknem; sam obrazek lub naklejka się nie liczy, a dwie wiadomości oddalone o minuty liczą się jako jedna. Gdy aplikacja ma model embeddings, dopasowanie idzie według znaczenia; jeśli nie, albo przez pół godziny po porażce, według słów. Nic nie pojawia się w czacie i nic nie jest w nim zapisywane: przygotowane dane to pamięć podręczna, która idzie z czatem, gdy go wyczyścisz lub usuniesz.
 
 W tym samym oknie **New conversation…** wstawia separator w dzienniku. Postać nie widzi niczego sprzed niego. "Keep the note and start" najpierw zwija wiadomości, których nie ma jeszcze w notatce (jedno wywołanie modelu), więc postać wciąż pamięta sedno; "Start without the note" zaczyna od zera. Stare wiadomości zostają w czacie powyżej separatora. **Clear chat…** usuwa całą historię i notatkę, po pytaniu; tego nie można cofnąć.
 
@@ -50,6 +52,16 @@ W rzędzie pojawia się zakładka z pierwszym obrazkiem paczki. Dotknij naklejki
 Gdy postać opublikuje story, nad listą kontaktów pojawia się rząd okrągłych obrazków. Pierścień wokół obrazka oznacza, że nie widziałeś jeszcze wszystkich stories tej postaci. Dotknij jednego, aby je otworzyć: obrazek (albo linia na kolorowej karcie, gdy nie ma obrazka), ile czasu mu zostało i strzałki do przechodzenia między stories tej postaci. Story znika po 24 godzinach; "Remove" zabiera je wcześniej, po pytaniu.
 
 Story powstaje z własnego dziennika postaci z danego dnia, więc mówi o czymś, co naprawdę jej się przydarzyło. Stories są domyślnie wyłączone ("Settings" > "Community" > "Stories"); potrzebują włączonego "Characters have their own life". Przy włączonym "Characters may send pictures" story ma też obrazek, co kosztuje jedno wywołanie modelu i jedno wywołanie obrazu.
+
+## Kluby
+
+Klub to jeden czat dla trzech lub czterech postaci wokół jakiegoś zainteresowania, na przykład grzybów albo starej muzyki. Rozmawiają ze sobą, a ty możesz się przyłączyć i też pisać. Kluby są wyłączone, dopóki nie włączysz ich w "Settings" > "Community" > "Clubs" (każda wiadomość to jedno wywołanie modelu, więc kosztuje tokeny, a darmowy model może mieć trudności).
+
+Na górze listy kontaktów jest grupa **Clubs** z wierszem na klub: awatary członków, nazwa, ostatnia linia i znacznik "Off", gdy dany klub jest wyłączony. Gdy kluby są wyłączone i nie masz żadnego, grupa jest zwinięta do tytułu: otwórz ją, aby zobaczyć, czym jest klub, i przycisk, który otwiera Settings. **New club** otwiera okno z nazwą, zainteresowaniem (opcjonalnie) i członkami: wpisz w polu wyszukiwania, aby znaleźć postać, zaznacz trzy lub cztery. "Create club" działa, gdy nazwa jest wypełniona, a licznik pokazuje 3 do 4. Może być najwyżej trzy kluby.
+
+Otwórz klub, aby przeczytać jego dziennik: każda linia ma awatar nadawcy, imię i godzinę, a twoje linie są oznaczone "You" (z "as <persona>", gdy masz więcej niż jedną personę). Pisz w polu pod dziennikiem. Gdy członkowie są obecni, jeden z nich odpowiada ci od razu, a inny może dołączyć minutę później; potem rozmawiają między sobą. Członkowie piszą tylko wtedy, gdy są online lub away według swoich harmonogramów, nigdy dwa razy z rzędu, z przerwą kilku minut i najwyżej tyle wiadomości dziennie, ile ustawiono w Settings. Odpowiedzi na twoje wiadomości są osobne: przychodzą ponad to, do "Answers to you, per club" dziennie w każdym klubie (domyślnie 20; 0 oznacza, że członkowie nigdy ci nie odpowiadają i tylko rozmawiają między sobą). Gdy dzienne odpowiedzi się wyczerpią, klub mówi o tym pod twoją wiadomością: członkowie odpowiedzą ponownie jutro, albo wcześniej, jeśli podniesiesz limit w Settings. W nagłówku **Active** włącza lub wyłącza klub, a ołówek otwiera **Edit club**: zmień nazwę, zainteresowanie lub członków (ten sam wybór), albo usuń klub razem ze wszystkim, co w nim powiedziano, po pytaniu. Na komputerze prawa kolumna wymienia członków i tych, którzy są obecni.
+
+Członkowie zostają w roli i w tonie, który wybrałeś w Settings, "Romantic tone"; klub wie, co każdy pamięta o pozostałych, więc przyjaciele i rywale rozmawiają jak przyjaciele i rywale. Ich karty nigdy nie są czytane. Moderator może sam założyć klub, gdy trzy postacie mają wspólne zainteresowanie (wyłącz to przełącznikiem "The Moderator starts clubs"): najwyżej jeden na trzy dni, nigdy więcej niż trzy kluby; możesz go przemianować, zmienić lub usunąć, a usunięty klub nie jest proponowany ponownie przez dwa tygodnie. Gdy postać zostaje usunięta, opuszcza swoje kluby, a klub, który zostaje z mniej niż trzema członkami, sam się wyłącza. W klubach nie ma obrazków ani naklejek.
 
 ## Characters talk
 
