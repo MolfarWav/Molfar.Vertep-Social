@@ -417,6 +417,8 @@ export const DEFAULT_SETTINGS = {
   messengerContext: 24,
   /** Older messages of a chat are folded into a short note for the model (issue #333). */
   messengerSummary: true,
+  /** The few older messages closest in meaning to the talk are quoted in a reply's prompt (issue #368): off by default, it adds up to about 450 tokens to a reply. */
+  messengerRecall: false,
   /** How well a character knows the user when its profile does not say: "knows", "name" or "stranger". */
   messengerKnows: "knows",
   models: { messenger: "", forum: "", import: "", image: "" },
@@ -524,6 +526,7 @@ export function mergeSettings(base, patch) {
     messengerQuiet: oneOf(p.messengerQuiet, ["same", "own"], b.messengerQuiet),
     messengerContext: clampInt(p.messengerContext, 4, 500, Number.isInteger(b.messengerContext) ? b.messengerContext : 24),
     messengerSummary: bool(p.messengerSummary, typeof b.messengerSummary === "boolean" ? b.messengerSummary : true),
+    messengerRecall: bool(p.messengerRecall, typeof b.messengerRecall === "boolean" ? b.messengerRecall : false),
     messengerKnows: oneOf(p.messengerKnows, ["knows", "name", "stranger"], oneOf(b.messengerKnows, ["knows", "name", "stranger"], "knows")),
     models: {
       messenger: "messenger" in m ? modelRef(m.messenger) : b.models.messenger,
@@ -577,7 +580,29 @@ export function removeChats(fsx, { profile, persona } = {}) {
       /* gone already */
     }
   }
+  removeRecall(fsx, { profile, persona });
   return n;
+}
+
+/** The recall vectors of chats (`.cache/recall/meta/<chat>.json` and `.cache/recall/vec/<chat>.json`, derived by the messenger): same filter as `removeChats`. */
+function removeRecall(fsx, { profile, persona }) {
+  for (const dir of ["meta", "vec"]) {
+    let names = [];
+    try {
+      names = fsx.list(".cache/recall/" + dir);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      const m = /^([A-Za-z0-9_-]{1,60})(?:\.([A-Za-z0-9_-]{1,60}))?\.json$/.exec(name);
+      if (!m || (profile && m[1] !== profile) || (persona && m[2] !== persona) || (!profile && !persona && !m[2])) continue;
+      try {
+        fsx.remove(".cache/recall/" + dir + "/" + name);
+      } catch {
+        /* gone already */
+      }
+    }
+  }
 }
 
 /** A persona that was deleted takes its chats with it, and the character's list entries for it. */
@@ -599,12 +624,12 @@ export function forgetPersona(fsx, id) {
 
 /**
  * What "Start over" can clear, by part. A part is a list of paths under the app's data folder (`fs.remove` takes a folder with
- * everything in it). Not touched on purpose: the sticker packs (the user's own pictures), the outside-news feed (`.cache`, rebuilt
- * by itself) and the Roleplay access grant (the engine's). A part that is not asked for stays exactly as it is.
+ * everything in it). Not touched on purpose: the sticker packs (the user's own pictures), the outside-news feed (`.cache/life`, rebuilt
+ * by itself; the recall vectors in `.cache/recall` are made from the chats, so they go with them) and the Roleplay access grant (the engine's). A part that is not asked for stays exactly as it is.
  */
 export const RESET_PARTS = {
   forum: ["forum/topics", "forum/boards.json", "forum/events.json", "forum/life-used.json", "forum/gossip.json", "forum/log.json"],
-  chats: ["chats", "chatter", "firstlog.json"],
+  chats: ["chats", "chatter", "firstlog.json", ".cache/recall"],
   diaries: ["life/diary", "life/people", "life/people-meta.json", "stories"],
   personas: ["you.json"],
   profiles: ["profiles"],

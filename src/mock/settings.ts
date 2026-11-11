@@ -83,6 +83,8 @@ export interface SettingsMock {
   messengerContext: number;
   /** Older messages are folded into a short note that goes with the latest ones (one model call each time). */
   messengerSummary: boolean;
+  /** The few older messages closest in meaning to the talk are quoted to the model word for word (off by default). */
+  messengerRecall: boolean;
   /** The default for characters that have no choice of their own. */
   messengerKnows: Knows;
   /** Model choices: preview uses the four ids below; real mode uses "provider/model" or "" (engine default). */
@@ -111,6 +113,7 @@ export const SETTINGS_MOCK: SettingsMock = {
   messengerQuiet: "same",
   messengerContext: 24,
   messengerSummary: true,
+  messengerRecall: false,
   messengerKnows: "knows",
   models: { messenger: "default", forum: "default", import: "default", image: "" },
   notify: { tab: true, system: true, sound: false },

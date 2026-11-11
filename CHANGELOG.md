@@ -13,6 +13,12 @@ Follows (#368, item 4). Life plugin, forum plugin, Profiles screen, forum screen
 - **Replies to you.** "Mavka started following your persona ..." appears in the list and in its count.
 - **Not checked:** a real engine with real data, a real phone, the share in real play (whether followed authors are noticed too often or too little).
 
+Recall (#368, item 4). Messenger plugin, Profiles plugin (a new setting), Settings screen.
+
+- **Recall older messages** (Settings > Messenger, off by default). With each reply the character is given up to three older messages of the chat that are closest to what you are talking about now, word for word with their date and time (after the note, before the latest messages). It adds up to about 450 tokens to a reply. Only messages after the last divider and outside the latest window; a picture or sticker alone never; two messages a few minutes apart count as one.
+- **By meaning or by words.** With an embeddings model in the app the Messenger prepares the older messages in the background (a cache in `.cache`, removed with the chat) and a reply takes one extra step to embed what it is about; without one, or for half an hour after a failure, the match is by words in English and Ukrainian. A failure never delays or stops a reply.
+- **Not checked:** a real embeddings model (the thresholds are guesses; `scripts/recall-check.mjs` is there for a try), a real long chat, a real engine.
+
 ## 0.12.0 (2026-11-10)
 
 The community's own life, continued (#367, #366): chronicle, replies to you, reputation, polls, reposts, and the chats. Forum 0.9.0, chatter 0.3.0, messenger 0.9.0, Profiles 0.11.0, Life 0.6.0. Needs the same engine as 0.11.0; nothing to migrate.

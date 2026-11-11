@@ -52,6 +52,8 @@ const world = () => ({
   "settings.json": "{}",
   "stickers/packs.json": '{"packs":[]}',
   ".cache/life/world.json": "{}",
+  ".cache/recall/meta/rp-a.json": "{}",
+  ".cache/recall/vec/rp-a.json": "{}",
 });
 
 const left = (files: Map<string, string>) => [...files.keys()].sort();
@@ -78,6 +80,9 @@ test("chats take the characters' talks and the first-message log, not the diarie
   POST(host, ["chats"]);
   expect(files.has("chats/rp-a.json") || files.has("chatter/a--b.json") || files.has("firstlog.json")).toBe(false);
   expect(files.has("life/diary/rp-a.json")).toBe(true);
+  // the recall vectors are made from the chats: they go with them
+  expect(left(files).filter((k) => k.startsWith(".cache/recall"))).toEqual([]);
+  expect(files.has(".cache/life/world.json")).toBe(true);
 });
 
 test("diaries take people and stories, not the weather place", () => {
