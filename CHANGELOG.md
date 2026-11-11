@@ -3,15 +3,16 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
-## Unreleased
+## 0.14.0 (2026-11-11)
 
-Profiles redesign (Molfar.Vertep#369). Profiles screen, Settings. Nothing to migrate; the Life plugin's candidate list now carries one line of About.
+Profiles redesign (Molfar.Vertep#369) and signature words (Molfar.Vertep#375). App 0.14.0; Profiles plugin 0.13.0, Life 0.7.1, Messenger 0.10.1, Forum 0.10.1, Clubs 0.1.1. Nothing to migrate: a profile without words reads as an empty list; the Life plugin's candidate list now carries one line of About.
 
 - **One pattern for every tab.** Each tab of a profile has a coloured icon in the strip and a menu of its sections beside the content (a strip of icons on a phone); the sections are stacked under headings with an outlined icon in the section's colour, and the menu follows the scroll. About, Writing manner, Status schedule, Forum, Habits, Life and Model were moved onto it; every control stays.
 - **Relationships.** A people list with search, groups by the seven levels (the two lowest start folded), "Person", "Relative", "Map" and "Tree" buttons, and the editor of the chosen person beside it (a bottom sheet on a phone).
 - **Person picker.** Search, a line about each person (two characters of one name are told apart), groups Already known, Characters and Your personas. "Relative" shows the family first (tap to open) and asks the kind of tie once for a new relative; the answer is saved as a tie.
 - Settings, Messenger, "Characters know you" no longer squeezes its choice next to the title on a phone.
-- Not in this change: signature words with "Invent with the model" (Molfar.Vertep#375).
+- **Signature words** (Writing manner > Words). A profile may carry up to 12 words and turns of speech that are its own (`voice.words`, each up to 40 characters). **Invent with the model** (new route `POST /profiles/words`) reads the saved profile and proposes about six new words in a review with a checkbox each, using the import model like "Fill empty"; words the profile already has or never writes are left out. Up to eight go into the Messenger, forum and club prompts as one line (about 45 tokens), "use one now and then where it fits, never in every message".
+- **Not checked:** a real model on the words prompt and on the new prompt line, a real engine with real data, a real phone, the Ukrainian strings read by a native speaker, the other tabs in the light theme.
 
 ## 0.13.0 (2026-11-11)
 

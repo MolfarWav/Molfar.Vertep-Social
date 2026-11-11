@@ -216,3 +216,45 @@ test("fill: the model's no-answer and a no-model error are reported, not thrown"
   expect(mk({ text: "{}" })).toMatchObject({ ok: true, proposal: {} });
   expect(mk({ error: "The model \"x\" is not available: its connection is missing" })).toMatchObject({ ok: false, code: "no-model" });
 });
+
+// ---------- signature words (#375) ----------
+
+test("words: kept on the profile, cut to 12 of 40 characters, no repeats", () => {
+  const { host } = makeHost();
+  const put = route(host, "PUT", "/profiles/own-1", { name: "Ярина", voice: { text: "x", words: ["бережанка", "бережанка", "  ", "а".repeat(60), ...Array.from({ length: 20 }, (_, i) => "w" + i)] } }).json;
+  expect(put.profile.voice.words.length).toBe(12);
+  expect(put.profile.voice.words[0]).toBe("бережанка");
+  expect(put.profile.voice.words[1].length).toBeLessThanOrEqual(40);
+  expect(route(host, "GET", "/profiles").json.profiles[0].voice.words[0]).toBe("бережанка");
+});
+
+test("words: the route asks from the stored profile and proposes new words only", () => {
+  const { host, requests } = makeHost();
+  route(host, "PUT", "/profiles/own-1", { name: "Ярина", about: "Господиня хутора", voice: { text: "Коротко.", words: ["бережанка"], never: ["окей"] } });
+  const pending = route(host, "POST", "/profiles/words", { profileId: "own-1" });
+  expect(pending.__llmPending).toBe(true);
+  expect(requests[0].key).toBe("words");
+  expect(requests[0].req.messages[0].content).toContain("Господиня хутора");
+  expect(requests[0].req.messages[0].content).toContain("Words it already has: бережанка");
+  expect(requests[0].req.messages[0].content).toContain("Never writes: окей");
+  const done = makeHost({ words: { text: JSON.stringify({ words: ["Водичка", "бережанка", "ОКЕЙ", "тихіше, річка слухає", "", "водичка"] }) } });
+  route(done.host, "PUT", "/profiles/own-1", { name: "Ярина", about: "Господиня хутора", voice: { text: "Коротко.", words: ["бережанка"], never: ["окей"] } });
+  const out = route(done.host, "POST", "/profiles/words", { profileId: "own-1" }).json;
+  expect(out).toEqual({ ok: true, words: ["Водичка", "тихіше, річка слухає"] });
+});
+
+test("words: a bad id, a missing profile, a full list, a cut or empty reply and a missing model are answered, not thrown", () => {
+  const { host } = makeHost();
+  expect(route(host, "POST", "/profiles/words", { profileId: "../x" }).status).toBe(400);
+  expect(route(host, "POST", "/profiles/words", { profileId: "nope" }).status).toBe(404);
+  route(host, "PUT", "/profiles/full", { name: "A", voice: { words: Array.from({ length: 12 }, (_, i) => "w" + i) } });
+  expect(route(host, "POST", "/profiles/words", { profileId: "full" }).status).toBe(400);
+  const mk = (res: unknown) => {
+    const m = makeHost({ words: res });
+    route(m.host, "PUT", "/profiles/p", { name: "A" });
+    return route(m.host, "POST", "/profiles/words", { profileId: "p" }).json;
+  };
+  expect(mk({ text: '{"words":["a' }).error).toContain("cut off");
+  expect(mk({ text: "{}" })).toEqual({ ok: true, words: [] });
+  expect(mk({ error: 'The model "x" is not available: its connection is missing' })).toMatchObject({ ok: false, code: "no-model" });
+});

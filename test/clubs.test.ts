@@ -479,7 +479,7 @@ test("the prompt carries who the member is, the others with what it remembers of
   w.files.set("life/people/anna.json", JSON.stringify({ people: [{ key: "c:boris", name: "Boris", seen: 3, toMe: 1, fromMe: 1, said: [], note: "Gruff but kind.", feel: -8, lvl: "friend", ties: [{ type: "sibling" }] }] }));
   const id = make(w);
   const club = clubs.readClub(w.host.fs, id, noon, 0);
-  const speaker = { id: "anna", name: "Anna", about: "A weaver.", interests: ["weaving", "tea"], voice: { text: "Dry and short.", emoji: 0, never: ["darling"] }, model: "", freq: 35 };
+  const speaker = { id: "anna", name: "Anna", about: "A weaver.", interests: ["weaving", "tea"], voice: { text: "Dry and short.", emoji: 0, never: ["darling"], words: ["bless my soul", "pshaw"] }, model: "", freq: 35 };
   const req = clubs.buildRequest(w.host.fs, clubs.readSettings(w.host.fs), club, speaker);
   const sys = req.systemPrompt as string;
   expect(sys).toContain('You are Anna, a character, in a group chat called "Weavers" about weaving. The other members are Boris, Clara.');
@@ -487,6 +487,7 @@ test("the prompt carries who the member is, the others with what it remembers of
   expect(sys).toContain("How you write: Dry and short.");
   expect(sys).toContain("Never use emoji.");
   expect(sys).toContain("Never write: darling.");
+  expect(sys).toContain("Words and turns of speech that are yours: bless my soul, pshaw.");
   expect(sys).toContain("About Boris: Your impression of them: Gruff but kind. You are in open conflict with them");
   expect(sys).toContain("You are friends.");
   expect(sys).toContain("Boris is your brother or sister.");

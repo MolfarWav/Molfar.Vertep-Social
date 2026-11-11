@@ -522,6 +522,7 @@ export function systemPromptFor(p, you, recent, opts) {
   }
   lines.push(LENGTH_WORDS[length] + " " + EMOJI_WORDS[emoji] + " " + (formality >= 66 ? "Formal, polite address." : formality <= 33 ? "Informal, on first-name terms." : "Neutral tone."));
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
+  if (Array.isArray(v.words) && v.words.length) lines.push("Words and turns of speech that are yours: " + v.words.slice(0, 8).join(", ") + ". Use one now and then where it fits, never in every message.");
   lines.push("Write only your next message, as plain chat text: no quotation marks around it, no stage directions or narration, no name label.");
   lines.push(OOC_HINT);
   lines.push("Answer in the language the user writes in. If you do not know something about the real world, say so in your own voice instead of inventing facts.");

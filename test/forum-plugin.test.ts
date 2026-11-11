@@ -90,6 +90,12 @@ const at = (iso: string) => Date.parse(iso);
 
 // ---------- time helpers ----------
 
+test("signature words go into a forum post's prompt (#375)", () => {
+  const p = { name: "Анна", about: "A.", interests: [], habits: [], voice: { text: "Q.", length: 1, emoji: 1, formality: 30, never: [], words: ["бережанка", "водичка"] }, forum: { rank: "", signature: "" } };
+  expect(plugin.systemPromptFor(p, "")).toContain("Words and turns of speech that are yours: бережанка, водичка.");
+  expect(plugin.systemPromptFor({ ...p, voice: { ...p.voice, words: [] } }, "")).not.toContain("Words and turns of speech");
+});
+
 test("quiet hours wrap past midnight and follow the user's offset", () => {
   const t = at("2026-11-10T00:30:00Z");
   expect(plugin.inQuiet(t, 0, "23:00", "07:00")).toBe(true);

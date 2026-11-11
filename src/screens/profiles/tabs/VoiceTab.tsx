@@ -4,12 +4,14 @@ import { useT } from "@/i18n/index";
 import { ProfilePacks } from "@/stickers/ProfilePacks";
 import { AddChip, Chip, Field, Seg, Slider, withItem } from "../ui";
 import { SectionPage } from "../sections";
+import { WORDS_MAX, WordsInvent } from "./WordsInvent";
 import type { TabProps } from "./types";
 
-export function VoiceTab({ form, set, name }: TabProps) {
+export function VoiceTab({ form, set, name, profileId }: TabProps) {
   const t = useT();
   const v = form.voice;
   const setVoice = (patch: Partial<typeof v>) => set({ voice: { ...v, ...patch } });
+  const words = v.words ?? [];
 
   return (
     <SectionPage
@@ -106,15 +108,28 @@ export function VoiceTab({ form, set, name }: TabProps) {
           icon: "tag",
           tone: "amber",
           children: (
-            <div className="f">
-              <span className="lb">{t("profiles.voice.neverWrites")}</span>
-              <div className="chips">
-                {v.never.map((x) => (
-                  <Chip key={x} onRemove={() => setVoice({ never: v.never.filter((y) => y !== x) })} removeLabel={t("profiles.chip.remove", { name: x })}>{x}</Chip>
-                ))}
-                <AddChip label={t("profiles.about.addChip")} inputLabel={t("profiles.chip.new")} onAdd={(x) => setVoice({ never: withItem(v.never, x) })} />
+            <>
+              <div className="f">
+                <span className="lb">{t("profiles.voice.words")}</span>
+                <div className="chips">
+                  {words.map((x) => (
+                    <Chip key={x} hued={x} onRemove={() => setVoice({ words: words.filter((y) => y !== x) })} removeLabel={t("profiles.chip.remove", { name: x })}>{x}</Chip>
+                  ))}
+                  {words.length < WORDS_MAX && <AddChip label={t("profiles.about.addChip")} inputLabel={t("profiles.chip.new")} onAdd={(x) => setVoice({ words: withItem(words, x.slice(0, 40), WORDS_MAX) })} />}
+                </div>
+                <WordsInvent name={name} profileId={profileId} have={words} onAdd={(add) => setVoice({ words: add.reduce((acc, w) => withItem(acc, w.slice(0, 40), WORDS_MAX), words) })} />
+                <p className="k">{t("profiles.voice.wordsHint")}</p>
               </div>
-            </div>
+              <div className="f">
+                <span className="lb">{t("profiles.voice.neverWrites")}</span>
+                <div className="chips">
+                  {v.never.map((x) => (
+                    <Chip key={x} onRemove={() => setVoice({ never: v.never.filter((y) => y !== x) })} removeLabel={t("profiles.chip.remove", { name: x })}>{x}</Chip>
+                  ))}
+                  <AddChip label={t("profiles.about.addChip")} inputLabel={t("profiles.chip.new")} onAdd={(x) => setVoice({ never: withItem(v.never, x) })} />
+                </div>
+              </div>
+            </>
           ),
         },
         {

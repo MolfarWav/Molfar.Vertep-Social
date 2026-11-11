@@ -926,6 +926,7 @@ export function systemPromptFor(p, recent, opts) {
   if (user && user.note) lines.push("What you remember from your private chats with them (your own notes): " + cut(user.note, NOTE_FOR_FORUM) + "\nThat stays between the two of you: do not quote it or reveal it on the forum, let it only shape how you speak to them.");
   lines.push(LENGTH_WORDS[length] + " " + EMOJI_WORDS[emoji] + " " + (formality >= 66 ? "Formal, polite address." : formality <= 33 ? "Informal, on first-name terms." : "Neutral tone."));
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
+  if (Array.isArray(v.words) && v.words.length) lines.push("Words and turns of speech that are yours: " + v.words.slice(0, 8).join(", ") + ". Use one now and then where it fits, never in every message.");
   lines.push("Write plain forum text: no quotation marks around the whole post, no stage directions or narration, no name label, no signature.");
   lines.push("Write in the language of the recent posts. When there are none, write in the language of your description above. If you do not know something about the real world, say so in your own voice instead of inventing facts.");
   if (isObj(opts) && opts.images) lines.push(IMAGE_HINT);

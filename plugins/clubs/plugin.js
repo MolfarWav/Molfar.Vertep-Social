@@ -387,6 +387,7 @@ export function clubSystem(me, club, others, opts) {
   const emoji = [0, 1, 2].includes(me.voice.emoji) ? me.voice.emoji : 1;
   lines.push(EMOJI_WORDS[emoji]);
   if (Array.isArray(me.voice.never) && me.voice.never.length) lines.push("Never write: " + me.voice.never.slice(0, 12).join(", ") + ".");
+  if (Array.isArray(me.voice.words) && me.voice.words.length) lines.push("Words and turns of speech that are yours: " + me.voice.words.slice(0, 8).join(", ") + ". Use one now and then where it fits, never in every message.");
   lines.push("Write one short message in your voice for the club chat: one to three sentences, plain text, no name label, no stage directions. Stay near the interest, but talk like people do: react to what was just said, ask, joke, disagree. Do not repeat what was said. Write in the language of the chat so far; when there is none, in the language of your description above. Do not invent big events.");
   if (o.userName) lines.push(OOC_HINT);
   return lines.join("\n");

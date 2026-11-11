@@ -715,3 +715,7 @@
 /* touch targets on a phone: a chip is a button too */
 .s-profiles.is-phone .chip, .s-profiles.is-phone .chip-rm .chip-x { min-height: 40px; }
 .s-profiles.is-phone .pgroup-h { min-height: 44px; }
+
+/* #375: signature words */
+.s-profiles .words-invent { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.s-profiles.is-phone .words-invent .btn { min-height: 44px; }

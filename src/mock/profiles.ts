@@ -24,6 +24,8 @@ export interface VoiceForm {
   /** 0 informal ("на «ти»") .. 100 formal ("церемонно") */
   formality: number;
   never: string[];
+  /** (#375) Words and turns of speech that are hers; up to 8 go into a prompt. */
+  words: string[];
 }
 
 export interface ForumForm {
@@ -96,7 +98,7 @@ const MAVKA_WEEKDAY: Status[] = ["off", "off", "off", "na", "na", "away", "onlin
 const MAVKA_SAT: Status[] = ["off", "off", "off", "away", "online", "online", "online", "dnd"];
 const MAVKA_SUN: Status[] = ["off", "off", "off", "away", "away", "online", "online", "online"];
 
-const DEFAULT_VOICE: VoiceForm = { text: "", length: 1, emoji: 1, formality: 30, never: [] };
+const DEFAULT_VOICE: VoiceForm = { text: "", length: 1, emoji: 1, formality: 30, never: [], words: [] };
 const DEFAULT_FORUM: ForumForm = {
   rank: "",
   signature: "",
@@ -125,7 +127,7 @@ export function plain(id: string, name: string, hue: number, source: ProfileSour
     imageModel: "",
     picture: "",
     tags: [],
-    voice: { ...DEFAULT_VOICE, never: [] },
+    voice: { ...DEFAULT_VOICE, never: [], words: [] },
     forum: { ...DEFAULT_FORUM, favourites: [] },
     // a week of its own, from the text and the id (the same code the engine runs for imports)
     schedule: scheduleFor(id, about),
@@ -160,6 +162,7 @@ export const PROFILES: MockProfile[] = [
       emoji: 0,
       formality: 30,
       never: ["капслок", "«ну типу»"],
+      words: ["бережанка", "водичка"],
     },
     forum: {
       rank: "Мешканка озера",
