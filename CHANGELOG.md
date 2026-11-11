@@ -3,6 +3,10 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## Unreleased
+
+- Docs: the README lists what Social does today and its status table; `docs/DECISIONS.md` says the security tests it names are the engine repo's.
+
 ## 0.14.0 (2026-11-11)
 
 Profiles redesign (Molfar.Vertep#369) and signature words (Molfar.Vertep#375). App 0.14.0; Profiles plugin 0.13.0, Life 0.7.1, Messenger 0.10.1, Forum 0.10.1, Clubs 0.1.1. Nothing to migrate: a profile without words reads as an empty list; the Life plugin's candidate list now carries one line of About.
