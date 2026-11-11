@@ -417,6 +417,8 @@ export const DEFAULT_SETTINGS = {
   messengerContext: 24,
   /** Older messages of a chat are folded into a short note for the model (issue #333). */
   messengerSummary: true,
+  /** The few older messages closest in meaning to the talk are quoted in a reply's prompt (issue #368): off by default, it adds up to about 450 tokens to a reply. */
+  messengerRecall: false,
   /** How well a character knows the user when its profile does not say: "knows", "name" or "stranger". */
   messengerKnows: "knows",
   models: { messenger: "", forum: "", import: "", image: "" },
@@ -432,7 +434,7 @@ export const DEFAULT_SETTINGS = {
    * flirty (hints and teasing); never anything explicit. `chronicle` is the Moderator's daily digest (one model request a day, only when there is something to tell). `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
    * and a sharper answer from the characters' own ties (#367); neither costs a model call.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -504,6 +506,10 @@ export function mergeSettings(base, patch) {
       storiesPerDay: clampInt(cm.storiesPerDay, 0, 10, Number.isInteger(bcm.storiesPerDay) ? bcm.storiesPerDay : 1),
       chats: bool(cm.chats, bool(bcm.chats, false)),
       chatsPerDay: clampInt(cm.chatsPerDay, 0, 30, Number.isInteger(bcm.chatsPerDay) ? bcm.chatsPerDay : 4),
+      clubs: bool(cm.clubs, bool(bcm.clubs, false)),
+      clubsPerDay: clampInt(cm.clubsPerDay, 1, 40, Number.isInteger(bcm.clubsPerDay) ? bcm.clubsPerDay : 12),
+      clubsAnswers: clampInt(cm.clubsAnswers, 0, 100, Number.isInteger(bcm.clubsAnswers) ? bcm.clubsAnswers : 20),
+      clubsMod: bool(cm.clubsMod, bool(bcm.clubsMod, true)),
       tone: oneOf(cm.tone, ["none", "warm", "flirty"], oneOf(bcm.tone, ["none", "warm", "flirty"], "warm")),
       gossip: bool(cm.gossip, bool(bcm.gossip, true)),
       gossipPerDay: clampInt(cm.gossipPerDay, 0, 20, Number.isInteger(bcm.gossipPerDay) ? bcm.gossipPerDay : 2),
@@ -524,6 +530,7 @@ export function mergeSettings(base, patch) {
     messengerQuiet: oneOf(p.messengerQuiet, ["same", "own"], b.messengerQuiet),
     messengerContext: clampInt(p.messengerContext, 4, 500, Number.isInteger(b.messengerContext) ? b.messengerContext : 24),
     messengerSummary: bool(p.messengerSummary, typeof b.messengerSummary === "boolean" ? b.messengerSummary : true),
+    messengerRecall: bool(p.messengerRecall, typeof b.messengerRecall === "boolean" ? b.messengerRecall : false),
     messengerKnows: oneOf(p.messengerKnows, ["knows", "name", "stranger"], oneOf(b.messengerKnows, ["knows", "name", "stranger"], "knows")),
     models: {
       messenger: "messenger" in m ? modelRef(m.messenger) : b.models.messenger,
@@ -577,6 +584,55 @@ export function removeChats(fsx, { profile, persona } = {}) {
       /* gone already */
     }
   }
+  removeRecall(fsx, { profile, persona });
+  return n;
+}
+
+/** The recall vectors of chats (`.cache/recall/meta/<chat>.json` and `.cache/recall/vec/<chat>.json`, derived by the messenger): same filter as `removeChats`. */
+function removeRecall(fsx, { profile, persona }) {
+  for (const dir of ["meta", "vec"]) {
+    let names = [];
+    try {
+      names = fsx.list(".cache/recall/" + dir);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      const m = /^([A-Za-z0-9_-]{1,60})(?:\.([A-Za-z0-9_-]{1,60}))?\.json$/.exec(name);
+      if (!m || (profile && m[1] !== profile) || (persona && m[2] !== persona) || (!profile && !persona && !m[2])) continue;
+      try {
+        fsx.remove(".cache/recall/" + dir + "/" + name);
+      } catch {
+        /* gone already */
+      }
+    }
+  }
+}
+
+/**
+ * A character that was deleted leaves the clubs it was in (`clubs/<id>.json`, written by the clubs plugin): out of the member list, its
+ * messages gone with it; a club left with fewer than three members is switched off, not deleted. A file that cannot be read is left alone.
+ */
+export function dropFromClubs(fsx, id) {
+  let names = [];
+  try {
+    names = fsx.list("clubs");
+  } catch {
+    return 0;
+  }
+  let n = 0;
+  for (const name of names) {
+    if (!/^[A-Za-z0-9_-]{1,60}.json$/.test(name) || name === "state.json") continue;
+    const d = readJson(fsx, "clubs/" + name, null);
+    if (!isObj(d) || !Array.isArray(d.members) || !d.members.includes(id)) continue;
+    const members = d.members.filter((x) => x !== id);
+    try {
+      fsx.write("clubs/" + name, JSON.stringify({ ...d, members, on: d.on === true && members.length >= 3, messages: (Array.isArray(d.messages) ? d.messages : []).filter((x) => !(isObj(x) && x.by === id)) }));
+      n++;
+    } catch {
+      /* left as it was */
+    }
+  }
   return n;
 }
 
@@ -599,12 +655,12 @@ export function forgetPersona(fsx, id) {
 
 /**
  * What "Start over" can clear, by part. A part is a list of paths under the app's data folder (`fs.remove` takes a folder with
- * everything in it). Not touched on purpose: the sticker packs (the user's own pictures), the outside-news feed (`.cache`, rebuilt
- * by itself) and the Roleplay access grant (the engine's). A part that is not asked for stays exactly as it is.
+ * everything in it). Not touched on purpose: the sticker packs (the user's own pictures), the outside-news feed (`.cache/life`, rebuilt
+ * by itself; the recall vectors in `.cache/recall` are made from the chats, so they go with them) and the Roleplay access grant (the engine's). A part that is not asked for stays exactly as it is.
  */
 export const RESET_PARTS = {
   forum: ["forum/topics", "forum/boards.json", "forum/events.json", "forum/life-used.json", "forum/gossip.json", "forum/log.json"],
-  chats: ["chats", "chatter", "firstlog.json"],
+  chats: ["chats", "chatter", "clubs", "firstlog.json", ".cache/recall"],
   diaries: ["life/diary", "life/people", "life/people-meta.json", "stories"],
   personas: ["you.json"],
   profiles: ["profiles"],
@@ -1716,6 +1772,7 @@ export function handleRoute(req, host) {
       /* no chat file */
     }
     removeChats(host.fs, { profile: m[1] });
+    dropFromClubs(host.fs, m[1]);
     return ok({ ok: true });
   }
   return ok({ error: "not found" }, 404);

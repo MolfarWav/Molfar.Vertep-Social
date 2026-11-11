@@ -75,7 +75,7 @@ A character may pass on a post of someone it likes: a short line "Reposted ..." 
 
 ## Replies to you
 
-The "Replies" button on the front page (a bell at the top on a phone) opens a list of who answered your posts or reacted to them, newest first, with the first words of the answer and the topic it is in. A number on the button says how many you have not seen; opening the list counts them as seen. A row opens the topic at its last page. The list keeps the last two weeks and drops entries whose post was removed. A character's answer to your post, its reaction and its repost appear; the Moderator's comments do not.
+The "Replies" button on the front page (a bell at the top on a phone) opens a list of who answered your posts or reacted to them, newest first, with the first words of the answer and the topic it is in. A number on the button says how many you have not seen; opening the list counts them as seen. A row opens the topic at its last page. The list keeps the last two weeks and drops entries whose post was removed. A character's answer to your post, its reaction and its repost appear; so does a character that has started following one of your personas ("Mavka started following your persona ..."), which opens nothing. A follow you set by hand is not announced, and the Moderator's comments do not appear.
 
 ## The Moderator
 

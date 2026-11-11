@@ -73,6 +73,21 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
           {() => <Stepper name={t("settings.community.chats.limit")} value={c.chatsPerDay} min={LIMITS.chatsPerDay.min} max={LIMITS.chatsPerDay.max} onChange={(v) => change({ chatsPerDay: v })} />}
         </Row>
       </div>
+
+      <Row title={t("settings.community.clubs")} hint={hint("settings.community.clubs.hint", "settings.community.clubs.phone.hint")}>
+        {(id) => <Switch labelledBy={id} checked={c.clubs} onChange={(v) => change({ clubs: v })} />}
+      </Row>
+      <div className={`pictures-more${c.clubs ? "" : " is-off"}`} aria-disabled={!c.clubs || undefined}>
+        <Row title={t("settings.community.clubs.limit")} hint={phone ? undefined : t("settings.community.clubs.limit.hint")}>
+          {() => <Stepper name={t("settings.community.clubs.limit")} value={c.clubsPerDay} min={LIMITS.clubsPerDay.min} max={LIMITS.clubsPerDay.max} onChange={(v) => change({ clubsPerDay: v })} />}
+        </Row>
+        <Row title={t("settings.community.clubs.answers")} hint={phone ? t("settings.community.clubs.answers.phone.hint") : t("settings.community.clubs.answers.hint")}>
+          {() => <Stepper name={t("settings.community.clubs.answers")} value={c.clubsAnswers} min={LIMITS.clubsAnswers.min} max={LIMITS.clubsAnswers.max} onChange={(v) => change({ clubsAnswers: v })} />}
+        </Row>
+        <Row title={t("settings.community.clubsMod")} hint={hint("settings.community.clubsMod.hint", "settings.community.clubsMod.phone.hint")}>
+          {(id) => <Switch labelledBy={id} checked={c.clubsMod} onChange={(v) => change({ clubsMod: v })} />}
+        </Row>
+      </div>
     </>
   );
 }

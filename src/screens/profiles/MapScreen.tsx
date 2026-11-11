@@ -3,7 +3,7 @@
 // person: their lines light up and the panel says how each side sees the other, with "Open profile" and "Edit ties" (the ties are edited in
 // the profile's Life tab, as before: the map never draws or drags a link). The same facts can be read as a list (also the text version for
 // screen readers and for a big community). Preview parameters: see the Profiles header (`view=map`, `select`, `maplist`, `n`, `mapstate`).
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/i18n/index";
 import { useYou } from "@/screens/you/store";
@@ -11,7 +11,7 @@ import { Dialog } from "./dialog";
 import { loadGraph } from "./map-api";
 import { FamilyOutline, FamilyTree } from "./FamilyTree";
 import { familyOf } from "./family-model";
-import { crowd, edgesOf, pairKey, ringOrder, type Edge, type GLink, type Graph } from "./map-model";
+import { crowd, edgesOf, followsOf, pairKey, ringOrder, type Edge, type GLink, type Graph } from "./map-model";
 import { RelationMap, type MapPerson } from "./RelationMap";
 import { useTieWord } from "./tabs/RelationEditor";
 import { Seg } from "./ui";
@@ -225,6 +225,7 @@ function Legend() {
       <li><svg width="28" height="14" aria-hidden="true"><line className="pm-lg pm-lg-romance" x1="1" y1="9" x2="27" y2="9" strokeWidth="2.5" /><path className="pm-heart" d="M14 12 C8 8 10 3 14 6 C18 3 20 8 14 12Z" /></svg>{t("profiles.map.legend.romance")}</li>
       <li><svg width="28" height="14" aria-hidden="true"><line className="pm-lg pm-lg-rival" x1="1" y1="7" x2="27" y2="7" strokeWidth="2.5" /></svg>{t("profiles.map.legend.rival")}</li>
       <li><svg width="28" height="14" aria-hidden="true"><line className="pm-lg pm-lg-family" x1="1" y1="5" x2="27" y2="5" strokeWidth="1.6" /><line className="pm-lg pm-lg-family" x1="1" y1="9" x2="27" y2="9" strokeWidth="1.6" /></svg>{t("profiles.map.legend.family")}</li>
+      <li><svg width="28" height="14" aria-hidden="true"><line className="pm-lg pm-lg-plain" x1="1" y1="7" x2="19" y2="7" strokeWidth="1.6" /><path className="pm-lg-arrow" d="M27 7L19 3.5V10.5Z" /></svg>{t("profiles.map.legend.follow")}</li>
       <li><svg width="28" height="14" aria-hidden="true"><line className="pm-lg pm-lg-plain" x1="1" y1="7" x2="27" y2="7" strokeWidth="3.5" /></svg>{t("profiles.map.legend.plain")}</li>
     </ul>
   );
@@ -259,12 +260,15 @@ function useLinkWords() {
 function MapList({ people, edges, order, selected, onSelect }: { people: MapPerson[]; edges: Edge[]; order: string[]; selected: string | null; onSelect: (k: string | null) => void }) {
   const t = useT();
   const byKey = new Map(people.map((x) => [x.key, x]));
+  const links = edges.flatMap((e) => e.links);
+  const nameList = (keys: string[]) => keys.slice(0, 3).map((k) => byKey.get(k)?.name ?? "").join(", ") + (keys.length > 3 ? " +" + (keys.length - 3) : "");
   return (
     <ul className="pm-list">
       {order.map((k) => {
         const x = byKey.get(k);
         if (!x) return null;
         const mine = edges.filter((e) => e.a === k || e.b === k).sort((a, b) => b.weight - a.weight);
+        const fl = followsOf(k, links);
         return (
           <li key={k}>
             <button type="button" className={`pm-li${selected === k ? " on" : ""}`} aria-pressed={selected === k} onClick={() => onSelect(selected === k ? null : k)}>
@@ -276,6 +280,8 @@ function MapList({ people, edges, order, selected, onSelect }: { people: MapPers
                     ? t("profiles.map.none")
                     : mine.slice(0, 3).map((e) => byKey.get(e.a === k ? e.b : e.a)?.name ?? "").join(", ") + (mine.length > 3 ? " +" + (mine.length - 3) : "")}
                 </span>
+                {fl.follows.length > 0 && <span className="k">{t("profiles.map.listFollows", { names: nameList(fl.follows) })}</span>}
+                {fl.followedBy.length > 0 && <span className="k">{t("profiles.map.listFollowedBy", { names: nameList(fl.followedBy) })}</span>}
               </span>
               <span className="fn">{t("profiles.map.links", { n: mine.length })}</span>
             </button>
@@ -294,13 +300,14 @@ function MapPanel({ person, model, onSelect, onOpen, onOpenYou, onClose, phone }
   const mine = model.edges.filter((e) => e.a === person.key || e.b === person.key).sort((a, b) => b.weight - a.weight);
   const isChar = person.kind === "character";
   const id = person.key.slice(2);
+  const followers = followsOf(person.key, model.edges.flatMap((e) => e.links)).followedBy.length;
   return (
     <section className="pm-panel">
       <div className="pm-ph">
         <Avatar name={person.name} hue={person.hue} size={40} picture={person.picture} />
         <span className="t">
           <b>{person.name}</b>
-          <span className="k">{t("profiles.map.links", { n: mine.length })}{person.kind === "user" ? " · " + t("profiles.people.you") : ""}</span>
+          <span className="k">{t("profiles.map.links", { n: mine.length })}{followers > 0 ? " · " + t("profiles.map.followedBy", { n: followers }) : ""}{person.kind === "user" ? " · " + t("profiles.people.you") : ""}</span>
         </span>
         {!phone && <button type="button" className="hbtn x" aria-label={t("profiles.map.close")} onClick={onClose}>×</button>}
       </div>
@@ -316,9 +323,12 @@ function MapPanel({ person, model, onSelect, onOpen, onOpenYou, onClose, phone }
                 <b>{other.name}</b>
               </button>
               {[...e.links].sort((x, y) => (x.from === person.key ? -1 : 1) - (y.from === person.key ? -1 : 1)).map((l) => (
-                <p key={l.from} className="k">
-                  <span className="pm-dir">{t("profiles.map.about", { from: byKey.get(l.from)?.name ?? "", to: byKey.get(l.to)?.name ?? "" })}</span> {words(l)}
-                </p>
+                <Fragment key={l.from}>
+                  <p className="k">
+                    <span className="pm-dir">{t("profiles.map.about", { from: byKey.get(l.from)?.name ?? "", to: byKey.get(l.to)?.name ?? "" })}</span> {words(l)}
+                  </p>
+                  {l.follow === true && <p className="k pm-follow">{t("profiles.map.follows", { from: byKey.get(l.from)?.name ?? "", to: byKey.get(l.to)?.name ?? "" })}</p>}
+                </Fragment>
               ))}
             </li>
           );

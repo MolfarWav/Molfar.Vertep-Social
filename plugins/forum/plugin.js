@@ -1083,6 +1083,9 @@ const GOSSIP_KINDS = ["rift", "close", "sweet"];
 const GOSSIP_TONES = ["plain", "sharp", "kind"];
 /** The share of new topics that may be gossip when there is some and the day's cap is not used up. */
 export const GOSSIP_SHARE = 0.25;
+// (#368) how much more a post by someone the character follows weighs: x1.6 in `planAction`'s `lean`, about twice for a reaction or a repost
+export const FOLLOW_LEAN = 1.6;
+export const FOLLOW_PICK = 2;
 
 const GOSSIP_FACT = {
   rift: (a, b) => a + " and " + b + " have been at odds lately",
@@ -1098,12 +1101,12 @@ const bump = (m, a, b) => {
 
 /**
  * What the rules read: `names`, `adult`, and per character (a) toward another (b): `ties` (types), `lvl`, `feel`, `talk` (how often they
- * dealt with each other, counted by the Life plugin from the forum), `known` (a has met b), and `near` (b answered or reacted to x in the
- * last days, from the topics). `s` is the forum's settings (`jealousy`, `gossip`, `gossipPerDay`); `items` is the gossip so far.
+ * dealt with each other, counted by the Life plugin from the forum), `known` (a has met b), `follows` (a follows b: the Life plugin's `fol`,
+ * #368), and `near` (b answered or reacted to x in the last days, from the topics). `s` is the forum's settings (`jealousy`, `gossip`, `gossipPerDay`); `items` is the gossip so far.
  */
 export function relationsOf(fsx, profiles, topics, now, s) {
   const set = isObj(s) ? s : {};
-  const rel = { level: communityLevel(fsx), jealousy: set.jealousy !== false, gossip: set.gossip !== false, perDay: Number.isFinite(set.gossipPerDay) ? set.gossipPerDay : 2, tz: set.tzOffset === undefined ? null : set.tzOffset, names: {}, adult: {}, ties: {}, lvl: {}, feel: {}, talk: {}, known: {}, near: {}, items: readGossip(fsx).items };
+  const rel = { level: communityLevel(fsx), jealousy: set.jealousy !== false, gossip: set.gossip !== false, perDay: Number.isFinite(set.gossipPerDay) ? set.gossipPerDay : 2, tz: set.tzOffset === undefined ? null : set.tzOffset, names: {}, adult: {}, ties: {}, lvl: {}, feel: {}, talk: {}, known: {}, follows: {}, near: {}, items: readGossip(fsx).items };
   const ids = new Set(profiles.map((p) => p.id));
   for (const p of profiles) {
     rel.names[p.id] = p.name;
@@ -1124,6 +1127,7 @@ export function relationsOf(fsx, profiles, topics, now, s) {
       const talk = num(x.toMe) + num(x.fromMe);
       if (talk > 0) put(rel.talk, talk);
       if (talk > 0 || num(x.seen) > 0 || (typeof x.lvl === "string" && x.lvl !== "stranger")) put(rel.known, true);
+      if (x.fol === true) put(rel.follows, true);
     }
   }
   for (const t of topics) {
@@ -1394,6 +1398,8 @@ export function planAction(c, rand) {
   // a liked person's post draws a reply up to twice as often, a disliked one's as little as a sixth
   // (#367) a rival's, or one's the character is jealous of, draws an answer to argue; a friend lately warm with such a one a little less; a topic where
   // someone talked about the character draws its answer twice as often
+  // (#368) a post by someone the character follows weighs x1.6 on top of all that, after the caps, so no cap erases it: the follower notices
+  // that post's topic first. Never the Moderator's, never the user's (those are the "owed" tiers' business).
   const lean = (a, h) => {
     const ps = livePosts(h.topic);
     const post = h.target || ps[ps.length - 1];
@@ -1402,6 +1408,7 @@ export function planAction(c, rand) {
       if (jealous(a, post)) l = Math.max(l, 1.5);
       else if (rel.jealousy && post && post.by !== SELF && hurtBy(rel, a.id, post.by)) l *= 0.6;
       if (rel.gossip && gossipAbout(rel, a.id, h.topic, now).length) l = Math.min(3, l * 2);
+      if (post && post.by !== SELF && post.by !== MOD && pair(rel.follows, a.id, post.by) === true) l *= FOLLOW_LEAN;
     }
     return l;
   };
@@ -1515,6 +1522,7 @@ export function pickReaction(c, rand) {
   const { profiles, topics, settings, log, now, tz } = c;
   const feels = isObj(c.feels) ? c.feels : {};
   const rel = isObj(c.rel) && c.rel.jealousy ? c.rel : null;
+  const followRel = isObj(c.rel) ? c.rel : null;
   if (!settings.reactions || settings.reactionsPerDay <= 0) return null;
   const free = profiles.filter((p) => ["online", "away"].includes(statusAt(p.schedule, new Date(now), tz)) && (log.reacts[p.id] || 0) < settings.reactionsPerDay);
   if (!free.length) return null;
@@ -1530,7 +1538,8 @@ export function pickReaction(c, rand) {
       if (feel <= -3) continue;
       // (#367) no reaction for someone the character is jealous of or set against
       if (rel && p.by !== SELF && jealousOf(rel, author.id, p.by)) continue;
-      cands.push({ topic: t, post: p, w: 1 + Math.max(0, feel) / 4 + (p.by === SELF ? 1 : 0) + (lifeWords(p.text).some((w) => mine.has(w)) ? 2 : 0) });
+      const fol = followRel && p.by !== SELF && p.by !== MOD && pair(followRel.follows, author.id, p.by) === true;
+      cands.push({ topic: t, post: p, w: (1 + Math.max(0, feel) / 4 + (p.by === SELF ? 1 : 0) + (lifeWords(p.text).some((w) => mine.has(w)) ? 2 : 0)) * (fol ? FOLLOW_PICK : 1) });
     }
   }
   const hit = weightedPick(cands, (x) => x.w, rand);
@@ -1571,7 +1580,7 @@ export function reactTick(fsx, s, log, now, tz, rand) {
   const profiles = loadProfiles(fsx);
   if (!profiles.length) return false;
   const topics = loadTopics(fsx);
-  const pick = pickReaction({ profiles, topics, settings: s, log, now, tz, feels: feelsOf(fsx, profiles), rel: s.jealousy ? relationsOf(fsx, profiles, topics, now, s) : null }, rand);
+  const pick = pickReaction({ profiles, topics, settings: s, log, now, tz, feels: feelsOf(fsx, profiles), rel: relationsOf(fsx, profiles, topics, now, s) }, rand);
   if (!pick || !putReaction(fsx, pick.topic.id, pick.post.id, pick.emoji, pick.author.id, true)) return false;
   if (pick.post.by === SELF) addNotice(fsx, { kind: "react", by: pick.author.id, name: pick.author.name, hue: pick.author.hue, topic: pick.topic.id, post: pick.post.id, emoji: pick.emoji }, now);
   log.reacts[pick.author.id] = (log.reacts[pick.author.id] || 0) + 1;
@@ -1985,6 +1994,8 @@ export function fileChronicle(fsx, result, boards, now, rand, tz) {
 // A short list for the user, written when it happens (a reaction has no time of its own, so it cannot be found afterwards): forum/notices.json
 // {items: [{id, kind: "reply"|"react"|"repost", by, name, hue, topic, post, at, emoji?, excerpt?}], seenAt}. At most NOTICES_KEEP, two weeks.
 // The page opens the list and says it was seen (`POST /forum/notices-read`); the number that has not been seen rides on `/forum/home`.
+// (#368) Rows of kind "follow" (a character started following one of the user's personas) are not stored here: they are read from the milestones
+// (`k: "follow"`) in the characters' people lists when the list is asked for, and join the others by time.
 
 const NOTICES_FILE = "forum/notices.json";
 const NOTICES_KEEP = 60;
@@ -2008,6 +2019,29 @@ function addNotice(fsx, n, now) {
   fsx.write(NOTICES_FILE, JSON.stringify({ items: d.items.slice(-NOTICES_KEEP), seenAt: d.seenAt }));
 }
 
+/**
+ * Who started following one of the user's personas lately, newest first: [{id, kind: "follow", by, name, hue, picture, persona, at}]. By rule only
+ * (a follow set by hand leaves no milestone), and only while the character still follows: the milestone is in the character's people list (the
+ * Life plugin writes it), the persona is the `u:` entry.
+ */
+export function followNotices(fsx, now) {
+  const y = readJson(fsx, "you.json", null);
+  const personas = new Map((isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && typeof x.id === "string" && ID.test(x.id) && str(x.name)).map((x) => [x.id, cut(str(x.name), 80)]));
+  const out = [];
+  if (!personas.size) return out;
+  for (const p of loadProfiles(fsx)) {
+    const d = readJson(fsx, "life/people/" + p.id + ".json", null);
+    for (const x of isObj(d) && Array.isArray(d.people) ? d.people : []) {
+      if (!isObj(x) || typeof x.key !== "string" || !x.key.startsWith("u:") || x.fol !== true || !personas.has(x.key.slice(2))) continue;
+      for (const m of Array.isArray(x.marks) ? x.marks : []) {
+        if (!isObj(m) || m.k !== "follow" || !Number.isFinite(m.at) || now - m.at >= NOTICES_LIVE_MS) continue;
+        out.push({ id: "f-" + p.id + "-" + x.key.slice(2) + "-" + m.at, kind: "follow", by: p.id, name: p.name, hue: p.hue, picture: p.picture, persona: personas.get(x.key.slice(2)), at: m.at });
+      }
+    }
+  }
+  return out.sort((a, b) => b.at - a.at);
+}
+
 function noticesRoute(host) {
   const fsx = host.fs;
   const now = Date.now();
@@ -2021,7 +2055,9 @@ function noticesRoute(host) {
     items.push({ ...i, name: prof ? prof.name : i.name, hue: prof ? prof.hue : i.hue, picture: prof ? prof.picture : "", title: topic.title, new: i.at > d.seenAt });
     if (items.length >= 30) break;
   }
-  return ok({ items, unread: items.filter((i) => i.new).length, seenAt: d.seenAt });
+  for (const f of followNotices(fsx, now)) items.push({ ...f, topic: "", post: "", title: "", new: f.at > d.seenAt });
+  const list = items.sort((a, b) => b.at - a.at).slice(0, 30);
+  return ok({ items: list, unread: list.filter((i) => i.new).length, seenAt: d.seenAt });
 }
 
 function noticesReadRoute(host) {
@@ -2040,7 +2076,7 @@ function noticesUnread(fsx, now) {
     const topic = readTopic(fsx, i.topic);
     if (topic && topic.posts.some((p) => p.id === i.post && !p.removed)) n++;
   }
-  return n;
+  return n + followNotices(fsx, now).filter((f) => f.at > d.seenAt).length;
 }
 
 // ---------- polls (#367): the Moderator's, or the user's; characters vote by rules ----------
@@ -2237,7 +2273,8 @@ export function pickRepost(c, rand) {
       const lvl = p.by === SELF ? "" : (rel && pair(rel.lvl, author.id, p.by)) || "";
       if (!(feel >= 3 || CLOSE_LEVELS.includes(lvl))) return;
       if (rel && rel.jealousy && p.by !== SELF && jealousOf(rel, author.id, p.by)) return;
-      cands.push({ topic: t, post: p, w: 1 + Math.max(0, feel) / 4 + (p.by === SELF ? 1 : 0) + (i === 0 && gossipTopics.has(t.id) ? 2 : 0) });
+      const fol = rel && p.by !== SELF && p.by !== MOD && pair(rel.follows, author.id, p.by) === true;
+      cands.push({ topic: t, post: p, w: (1 + Math.max(0, feel) / 4 + (p.by === SELF ? 1 : 0) + (i === 0 && gossipTopics.has(t.id) ? 2 : 0)) * (fol ? FOLLOW_PICK : 1) });
     });
   }
   const hit = weightedPick(cands, (x) => x.w, rand);
@@ -2845,7 +2882,7 @@ function forceRoute(req, host) {
     const topics = loadTopics(fsx);
     const taken = new Set();
     const plans = [];
-    const rel = s.jealousy || s.gossip ? relationsOf(fsx, profiles, topics, now, s) : null;
+    const rel = relationsOf(fsx, profiles, topics, now, s);
     for (let i = 0; i < count; i++) {
       const plan = withSubject(fsx, planAction({ profiles, topics: topics.filter((t) => !taken.has(t.id)), boards, settings: s, log, now, tz, mode: "force", scope, feels: feelsOf(fsx, profiles), rel }, Math.random), topics, now, Math.random, rel);
       if (!plan) break;
@@ -2922,7 +2959,7 @@ export function onTick(_ctx, host) {
   const profiles = loadProfiles(fsx);
   if (!profiles.length || !boards.categories.some((c) => c.boards.length)) return;
   const topics = loadTopics(fsx);
-  const rel = s.jealousy || s.gossip ? relationsOf(fsx, profiles, topics, now, s) : null;
+  const rel = relationsOf(fsx, profiles, topics, now, s);
   const plan = withSubject(fsx, planAction({ profiles, topics, boards, settings: s, log, now, tz, mode: "auto", feels: feelsOf(fsx, profiles), rel }, Math.random), topics, now, Math.random, rel);
   if (!plan) return;
   requestPlan(host, tickKey(filingOf(plan)), s, plan, boards, topics, Math.random, rel);

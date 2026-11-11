@@ -20,6 +20,8 @@ export interface GLink {
   band: Band;
   talks: number;
   ties: Tie[];
+  /** (#368) `from` follows `to` (the Life plugin's derived `fol`): the arrow on the map, nothing about the prompt. */
+  follow?: boolean;
 }
 
 export interface Graph {
@@ -39,6 +41,9 @@ export interface Edge {
   weight: number;
   /** The links of this pair, one or two (a to b and b to a). */
   links: GLink[];
+  /** (#368) `a` follows `b`, and `b` follows `a`: an arrowhead toward the followed one (both at once is a mutual follow). */
+  fa: boolean;
+  fb: boolean;
 }
 
 const ROMANTIC = ["crush", "dating", "partner"];
@@ -66,8 +71,37 @@ export function edgesOf(g: Graph): Edge[] {
   }
   return [...by.entries()].map(([k, links]) => {
     const [a, b] = k.split("|");
-    return { a, b, kind: kindOf(links), weight: Math.max(...links.map((l) => levelIndex(l.level))), links };
+    return { a, b, kind: kindOf(links), weight: Math.max(...links.map((l) => levelIndex(l.level))), links, fa: links.some((l) => l.from === a && l.follow === true), fb: links.some((l) => l.from === b && l.follow === true) };
   });
+}
+
+/** How many characters follow `key` (the page counts it from the links; the plugin sends no total). */
+export const followersOf = (key: string, links: GLink[]): number => links.filter((l) => l.to === key && l.follow === true && l.from !== key).length;
+
+/** Who `key` follows and who follows `key`, as keys, in the order of the links. */
+export function followsOf(key: string, links: GLink[]): { follows: string[]; followedBy: string[] } {
+  return {
+    follows: links.filter((l) => l.from === key && l.follow === true).map((l) => l.to),
+    followedBy: links.filter((l) => l.to === key && l.follow === true && l.from !== key).map((l) => l.from),
+  };
+}
+
+/**
+ * The arrowhead of a follow, as an SVG path: a small triangle whose tip sits `gap` before the point `to` on the way from `from` (so it
+ * stands just outside the followed person's picture) and points at it. Empty when the two points coincide.
+ */
+export function arrowPath(from: { x: number; y: number }, to: { x: number; y: number }, gap: number, len = 11, wid = 6.5): string {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const d = Math.hypot(dx, dy);
+  if (d < gap + len) return "";
+  const ux = dx / d;
+  const uy = dy / d;
+  const tip = { x: to.x - ux * gap, y: to.y - uy * gap };
+  const bx = tip.x - ux * len;
+  const by = tip.y - uy * len;
+  const f = (n: number) => Math.round(n * 10) / 10;
+  return `M${f(tip.x)} ${f(tip.y)}L${f(bx - uy * wid)} ${f(by + ux * wid)}L${f(bx + uy * wid)} ${f(by - ux * wid)}Z`;
 }
 
 /** The other people a person has an edge with. */

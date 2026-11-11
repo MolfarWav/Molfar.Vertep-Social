@@ -40,6 +40,8 @@ const world = () => ({
   "chats/rp-a.json": "{}",
   "chats/rp-b.json": "{}",
   "chatter/a--b.json": "{}",
+  "clubs/cl-1.json": "{}",
+  "clubs/state.json": "{}",
   "firstlog.json": "{}",
   "life/diary/rp-a.json": "{}",
   "life/people/rp-a.json": "{}",
@@ -52,6 +54,8 @@ const world = () => ({
   "settings.json": "{}",
   "stickers/packs.json": '{"packs":[]}',
   ".cache/life/world.json": "{}",
+  ".cache/recall/meta/rp-a.json": "{}",
+  ".cache/recall/vec/rp-a.json": "{}",
 });
 
 const left = (files: Map<string, string>) => [...files.keys()].sort();
@@ -73,11 +77,14 @@ test("clearing the forum leaves everything else, with no boards", () => {
   expect(files.has("settings.json")).toBe(true);
 });
 
-test("chats take the characters' talks and the first-message log, not the diaries", () => {
+test("chats take the characters' talks, the clubs and the first-message log, not the diaries", () => {
   const { host, files } = makeHost(world());
   POST(host, ["chats"]);
-  expect(files.has("chats/rp-a.json") || files.has("chatter/a--b.json") || files.has("firstlog.json")).toBe(false);
+  expect(files.has("chats/rp-a.json") || files.has("chatter/a--b.json") || files.has("clubs/cl-1.json") || files.has("clubs/state.json") || files.has("firstlog.json")).toBe(false);
   expect(files.has("life/diary/rp-a.json")).toBe(true);
+  // the recall vectors are made from the chats: they go with them
+  expect(left(files).filter((k) => k.startsWith(".cache/recall"))).toEqual([]);
+  expect(files.has(".cache/life/world.json")).toBe(true);
 });
 
 test("diaries take people and stories, not the weather place", () => {
@@ -91,7 +98,7 @@ test("clearing the characters takes their chats and diaries too", () => {
   const { host, files } = makeHost(world());
   const r = POST(host, ["profiles"]);
   expect(r.json.cleared).toEqual(["chats", "diaries", "profiles"]);
-  expect(left(files).filter((k) => /^(profiles|chats|chatter|life\/diary|life\/people|stories)/.test(k))).toEqual([]);
+  expect(left(files).filter((k) => /^(profiles|chats|chatter|clubs|life\/diary|life\/people|stories)/.test(k))).toEqual([]);
   expect(files.has("forum/topics/t1.json")).toBe(true);
   expect(files.has("you.json")).toBe(true);
 });

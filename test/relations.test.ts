@@ -233,12 +233,13 @@ test("a person with a tie is never dropped by the list cap", () => {
 
 const listOf = (h: H, id: string, people: object[]) => put(h, `life/people/${id}.json`, { scanned: 0, noteDay: "", failedAt: 0, people });
 
-test("the three plugins carry the same relation reader", () => {
+test("the four plugins carry the same relation reader", () => {
   const block = (f: string) => /\/\/ <relation-shared>[\s\S]*?\/\/ <\/relation-shared>/.exec(fs.readFileSync(path.join(root, f), "utf8").replaceAll("\r\n", "\n"))?.[0];
   const m = block("plugins/messenger/plugin.js");
   expect(m).toBeTruthy();
   expect(block("plugins/forum/plugin.js")).toBe(m);
   expect(block("plugins/chatter/plugin.js")).toBe(m);
+  expect(block("plugins/clubs/plugin.js")).toBe(m);
 });
 
 test("metLine tells the level and the ties, with no diary and no meetings", () => {

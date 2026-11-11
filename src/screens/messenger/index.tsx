@@ -15,6 +15,8 @@ import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./part
 import { PhoneChat, PhoneList } from "./phone";
 import { MemoryDialog } from "./memory";
 import { ChatterEntry, StoriesBar } from "./community";
+import { ClubDialog, ClubInfo, ClubView, ClubsGroup, useClubs } from "./clubs";
+import type { Pickable } from "./clubs-model";
 import { dayLabel } from "./real";
 
 // Real mode (no `?screen=`): the contacts and chats come from the engine (live.ts, real.ts), and the
@@ -27,20 +29,26 @@ import { dayLabel } from "./real";
 //   state=offline                     the open chat is with Горпина (offline): the "will be delivered" line
 //   state=failed                      the open chat ends with a failed reply and a "Try again" button
 //   state=nomodel                     the open chat has the "no model chosen" line with a link to Settings
+//   view=clubs                        the contact list with the Clubs group open (phone: the list; desktop: the list beside a chat)
+//   view=club                         the club "Вишивка і рушники" open: its log, the header with the Active switch, the members column
+//   state=noclubs                     no clubs yet (the Clubs group explains what a club is)
+//   state=clubsoff                    the global switch (Settings > Community > Clubs) is off: the group and an open club say so
+//   state=limited                     the open club says the day's answers to you are used up
+//   dialog=newclub | editclub         opens the "New club" dialog, or "Edit club" for the open club (use with view=club)
 // Combine with the theme and language: ?screen=messenger&view=chat&theme=dark&lang=uk
 // The state flags are preview only: they show on whichever chat is open, and "Try again" just hides the line.
 
-type State = "empty" | "nohits" | "offline" | "failed" | "nomodel";
-const STATES: State[] = ["empty", "nohits", "offline", "failed", "nomodel"];
+type State = "empty" | "nohits" | "offline" | "failed" | "nomodel" | "noclubs" | "clubsoff" | "limited";
+const STATES: State[] = ["empty", "nohits", "offline", "failed", "nomodel", "noclubs", "clubsoff", "limited"];
 const NOHITS_QUERY = "Русалка";
 
-function readPreview(): { view: string | null; state: State | null } {
+function readPreview(): { view: string | null; state: State | null; dialog: string | null } {
   try {
     const q = new URLSearchParams(location.search);
     const s = q.get("state");
-    return { view: q.get("view"), state: STATES.includes(s as State) ? (s as State) : null };
+    return { view: q.get("view"), state: STATES.includes(s as State) ? (s as State) : null, dialog: q.get("dialog") };
   } catch {
-    return { view: null, state: null };
+    return { view: null, state: null, dialog: null };
   }
 }
 
@@ -61,13 +69,17 @@ export function Messenger() {
 
   const [query, setQuery] = useState(pv.state === "nohits" ? NOHITS_QUERY : "");
   const [sel, setSel] = useState(() => (PREVIEW ? (pv.state === "offline" ? "horpyna" : pv.view === "chat" ? "pereles" : "mavka") : ""));
-  const [open, setOpen] = useState(() => pv.view === "chat"); // phone: is the chat screen showing
+  const [open, setOpen] = useState(() => pv.view === "chat" || pv.view === "club"); // phone: is the chat screen showing
   const [searchOpen, setSearchOpen] = useState(() => pv.state === "nohits"); // phone: the search row
   const [folded, setFolded] = useState<Record<string, boolean>>({});
   const [logs, setLogs] = useState<Record<string, LogItem[]>>(LOGS);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState(pv.state === "failed");
   const [memOpen, setMemOpen] = useState(false);
+  // clubs (#368): the open club, and the "New club" / "Edit club" dialog
+  const [clubId, setClubId] = useState(() => (PREVIEW && (pv.view === "club" || pv.dialog === "editclub") ? "cl-1" : ""));
+  const [clubDlg, setClubDlg] = useState<"new" | "edit" | null>(() => (PREVIEW ? (pv.dialog === "newclub" ? "new" : pv.dialog === "editclub" ? "edit" : null) : null));
+  const { list: clubList, reload: reloadClubs } = useClubs();
 
   // Real mode: the engine's contacts and the open chat (inert in preview, where the mock is used).
   const live = useLiveMessenger(sel, phone ? open : true);
@@ -98,8 +110,37 @@ export function Messenger() {
 
   const pick = (id: string) => {
     setSel(id);
+    setClubId("");
     setOpen(true);
   };
+  const pickClub = (id: string) => {
+    setClubId(id);
+    setOpen(true);
+  };
+  const openClub = clubId ? clubList?.clubs.find((c) => c.id === clubId) : undefined;
+  // a club that was deleted (here or elsewhere) is not shown any more
+  useEffect(() => {
+    if (clubId && clubList && !clubList.clubs.some((c) => c.id === clubId)) setClubId("");
+  }, [clubId, clubList]);
+  const people: Pickable[] = contacts.map((c) => ({ id: c.id, name: c.name, hue: c.hue, picture: c.picture, status: c.status }));
+  const clubsGroup = (ph: boolean) => (
+    <ClubsGroup list={clubList} phone={ph} selId={ph ? "" : clubId} people={people.length} needle={needle} onPick={pickClub} onNew={() => setClubDlg("new")} onSettings={() => go("settings")} />
+  );
+  const clubDialog =
+    clubDlg && (clubDlg === "new" || openClub) ? (
+      <ClubDialog
+        club={clubDlg === "edit" ? openClub : undefined}
+        people={people}
+        phone={phone}
+        onClose={() => setClubDlg(null)}
+        onDone={(made) => {
+          setClubDlg(null);
+          if (made === "removed") setClubId("");
+          else if (made) pickClub(made);
+          reloadClubs();
+        }}
+      />
+    ) : null;
   const toggleGroup = (s: Status) => setFolded((f) => ({ ...f, [s]: !f[s] }));
   const setDraft = (v: string) => setDrafts((d) => ({ ...d, [curId]: v }));
   const send = () => {
@@ -151,7 +192,15 @@ export function Messenger() {
   const toProfileOfCur = real && cur ? () => openProfile(cur.id) : undefined;
 
   if (phone) {
-    const chat = open && !empty ? cur : undefined;
+    const chat = open && !empty && !openClub ? cur : undefined;
+    if (open && openClub) {
+      return (
+        <div className="s-messenger">
+          <ClubView id={openClub.id} phone globalOn={clubList?.on ?? false} onBack={() => setOpen(false)} onEdit={() => setClubDlg("edit")} onSettings={toSettings} onChanged={reloadClubs} />
+          {clubDialog}
+        </div>
+      );
+    }
     return (
       <div className="s-messenger">
         {chat ? (
@@ -194,11 +243,13 @@ export function Messenger() {
             onToggleGroup={toggleGroup}
             onPick={pick}
             onProfiles={toProfiles}
+            head={clubsGroup(true)}
             top={real || PREVIEW ? <StoriesBar phone /> : null}
             bottom={real || PREVIEW ? <ChatterEntry contacts={contacts} phone /> : null}
           />
         )}
         {memory}
+        {clubDialog}
       </div>
     );
   }
@@ -206,6 +257,7 @@ export function Messenger() {
   return (
     <div className="s-messenger">
       {memory}
+      {clubDialog}
       <div className="desk">
         <aside className="col list">
           <div className="tbar">{t("messenger.title")}</div>
@@ -221,6 +273,7 @@ export function Messenger() {
           )}
           {!empty && <StoriesBar phone={false} />}
           <div className="plist">
+            {!empty && !loading && clubsGroup(false)}
             {empty ? (
               <EmptyBlock
                 title={t(real ? "messenger.empty.noProfiles" : "messenger.empty.title")}
@@ -233,7 +286,7 @@ export function Messenger() {
                 <button type="button" className="btn" onClick={() => setQuery("")}>{t("messenger.nohits.clear")}</button>
               </EmptyBlock>
             ) : (
-              <ContactGroups list={list} phone={false} sel={curId} folded={folded} onToggle={toggleGroup} onPick={pick} />
+              <ContactGroups list={list} phone={false} sel={clubId ? "" : curId} folded={folded} onToggle={toggleGroup} onPick={pick} />
             )}
           </div>
           {!empty && <ChatterEntry contacts={contacts} phone={false} />}
@@ -250,7 +303,14 @@ export function Messenger() {
           )}
         </aside>
 
-        {empty || !cur ? (
+        {openClub ? (
+          <>
+            <section className="col chat">
+              <ClubView id={openClub.id} phone={false} globalOn={clubList?.on ?? false} onBack={() => setClubId("")} onEdit={() => setClubDlg("edit")} onSettings={toSettings} onChanged={reloadClubs} />
+            </section>
+            <ClubInfo club={openClub} statusOf={(id) => contacts.find((c) => c.id === id)?.status} onEdit={() => setClubDlg("edit")} />
+          </>
+        ) : empty || !cur ? (
           <>
             <section className="col chat" />
             <aside className="col info" />

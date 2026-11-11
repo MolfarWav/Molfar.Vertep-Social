@@ -3,6 +3,31 @@
 Social is an optional app of [Molfar Vertep](https://github.com/MolfarWav/Molfar.Vertep). The Store and the
 Updates dialog install it from this repository.
 
+## 0.13.0 (2026-11-11)
+
+What was left of #366 and #367, built (#368): clubs, follows and recall of older messages. New plugin clubs 0.1.0; forum 0.10.0, life 0.7.0, messenger 0.10.0, Profiles 0.12.0. Needs the same engine as 0.12.0; nothing to migrate. Clubs and recall are off by default.
+
+Clubs (#368, "Clubs and group chats"). New clubs plugin (0.1.0), Profiles plugin (new settings, deleting a character, Start over), Messenger screen, Settings screen. Nothing to migrate; clubs are off until you switch them on.
+
+- **Clubs.** Group chats of three or four characters around an interest. A "Clubs" group sits at the top of the contact list: a row per club, "New club" (a name, an interest, and a member picker with a search box), an open club with its log (the sender's avatar and name on each line, your own lines marked), the Active switch and "Edit club". You can write in a club at once: one member answers, another may follow a minute later, then they talk among themselves. Members write only while online or away by their schedules, with a gap of three minutes and a daily cap per club; one model call per message.
+- **Settings > Community > Clubs** (off by default): the global switch, "Messages a day, per club" (12), "Answers to you, per club" (20 a day in each club, on top of the messages; 0 = the members never answer you, and when the day's answers are used up the club says so) and "The Moderator starts clubs" (on): when three characters share an interest the Moderator makes a club of them, by rules, at most one in three days, never more than three clubs in all. You can rename, change or delete any club; a deleted Moderator club is not proposed again for two weeks.
+- **Rules.** The prompt carries what each member remembers of the others (impression, feeling, level, ties), the tone ceiling of Settings > Community, the last 14 messages; a message that goes past the ceiling is not filed. A deleted character leaves its clubs; with fewer than three members a club switches itself off. Start over's "Chats" removes the clubs.
+- **Not checked:** a real model, real play (how the members talk, how often the ceiling net cuts one), a real engine and a real phone.
+
+Follows (#368, item 4). Life plugin, forum plugin, Profiles screen, forum screen. Nothing to migrate: lists written before get the new field when they are read, without announcing anything.
+
+- **Follows.** A character can follow another character or one of your personas, one way. It changes only whose posts the character notices first on the forum (a followed author's topics and posts draw its reply about 1.6 times as often, its reactions and reposts about twice as often); it adds nothing to what the character is told.
+- **Automatic or by hand.** The character starts following a person once their level reaches pen friend and the feeling is not cold, and stops if a quarrel or a cold feeling pulls the level down. In a person's Relationship editor the **Follows** switch decides it yourself, and **Back to automatic** hands it back. A "Follows" mark shows on the person in the Relationships tab, with the counts "Follows N · Followed by M".
+- **On the map.** A small arrowhead on a line points at the person followed (both ends for a mutual follow), the panel and the list say who follows whom, and the legend has one more entry.
+- **Replies to you.** "Mavka started following your persona ..." appears in the list and in its count.
+- **Not checked:** a real engine with real data, a real phone, the share in real play (whether followed authors are noticed too often or too little).
+
+Recall (#368, item 4). Messenger plugin, Profiles plugin (a new setting), Settings screen.
+
+- **Recall older messages** (Settings > Messenger, off by default). With each reply the character is given up to three older messages of the chat that are closest to what you are talking about now, word for word with their date and time (after the note, before the latest messages). It adds up to about 450 tokens to a reply. Only messages after the last divider and outside the latest window; a picture or sticker alone never; two messages a few minutes apart count as one.
+- **By meaning or by words.** With an embeddings model in the app the Messenger prepares the older messages in the background (a cache in `.cache`, removed with the chat) and a reply takes one extra step to embed what it is about; without one, or for half an hour after a failure, the match is by words in English and Ukrainian. A failure never delays or stops a reply.
+- **Not checked:** a real embeddings model (the thresholds are guesses; `scripts/recall-check.mjs` is there for a try), a real long chat, a real engine.
+
 ## 0.12.0 (2026-11-10)
 
 The community's own life, continued (#367, #366): chronicle, replies to you, reputation, polls, reposts, and the chats. Forum 0.9.0, chatter 0.3.0, messenger 0.9.0, Profiles 0.11.0, Life 0.6.0. Needs the same engine as 0.11.0; nothing to migrate.

@@ -29,6 +29,8 @@ export interface PhoneListProps {
   /** Under the status bar (the stories) and under the contacts (characters talk). */
   top?: ReactNode;
   bottom?: ReactNode;
+  /** The first thing in the contact list (the Clubs group). */
+  head?: ReactNode;
 }
 
 export function PhoneList(p: PhoneListProps) {
@@ -73,6 +75,7 @@ export function PhoneList(p: PhoneListProps) {
         </div>
       )}
       <div className="plist">
+        {!p.empty && !p.loading && p.head}
         {p.empty ? (
           <EmptyBlock
             title={t(p.real ? "messenger.empty.noProfiles" : "messenger.empty.title")}

@@ -493,6 +493,16 @@
 .s-profiles .pm-e-family line { stroke: var(--rel-family); opacity: 0.75; }
 .s-profiles .pm-e-romance line { stroke: var(--rel-romance); opacity: 0.85; }
 .s-profiles .pm-heart { fill: var(--rel-romance); }
+.s-profiles .pm-arrow { stroke: none; transition: opacity 0.15s; }
+.s-profiles .pm-e-plain .pm-arrow { fill: var(--muted); opacity: 0.8; }
+.s-profiles .pm-e-rival .pm-arrow { fill: var(--bad); }
+.s-profiles .pm-e-family .pm-arrow { fill: var(--rel-family); }
+.s-profiles .pm-e-romance .pm-arrow { fill: var(--rel-romance); }
+.s-profiles .pm-e.lit .pm-arrow { opacity: 1; }
+.s-profiles .pm-e.dim .pm-arrow { opacity: 0.08; }
+.s-profiles .pm-lg-arrow { fill: var(--muted); stroke: none; }
+.s-profiles .pm-follow { color: var(--ink); }
+.s-profiles .people-follows { margin: 0; }
 .s-profiles .pm-e.lit line { opacity: 1; }
 .s-profiles .pm-e.dim line, .s-profiles .pm-e.dim .pm-heart { opacity: 0.08; }
 .s-profiles .pm-n { cursor: pointer; outline: none; transition: opacity 0.15s; }
@@ -562,3 +572,6 @@
 /* Relationships tab (#366): the two buttons that open the map and the family tree */
 .s-profiles .relations-views { display: flex; flex-wrap: wrap; gap: 8px; }
 .s-profiles.is-phone .relations-views .btn { flex: 1; min-height: 44px; justify-content: center; }
+.s-profiles .rel-auto { text-decoration: underline; }
+.s-profiles.is-phone .rel-edit .tg { min-height: 44px; }
+.s-profiles.is-phone .rel-auto { padding-block: 14px; margin-block: -14px; }

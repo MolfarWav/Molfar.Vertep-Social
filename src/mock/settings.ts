@@ -53,6 +53,13 @@ export interface CommunitySettings {
   /** Characters chat with each other in the messenger (about twice the tokens of a normal chat). */
   chats: boolean;
   chatsPerDay: number;
+  /** Clubs: group chats of three or four characters (issue #368); one model call per message, off by default. */
+  clubs: boolean;
+  clubsPerDay: number;
+  /** Answers to your own messages, a day in each club; 0 = members never answer you. On top of `clubsPerDay`. */
+  clubsAnswers: number;
+  /** The Moderator starts a club from characters who share an interest (by rules, no model call). */
+  clubsMod: boolean;
   /** The ceiling for what characters write to each other (issue #366): no romance, affection only, or hints and teasing. Never explicit. */
   tone: CommunityTone;
   /** Characters sometimes open a topic about what they noticed between two others (issue #367); by rules, no model call. */
@@ -65,7 +72,7 @@ export interface CommunitySettings {
   repostsPerDay: number;
 }
 
-export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 };
+export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 };
 
 export interface SettingsMock {
   autonomous: boolean;
@@ -83,6 +90,8 @@ export interface SettingsMock {
   messengerContext: number;
   /** Older messages are folded into a short note that goes with the latest ones (one model call each time). */
   messengerSummary: boolean;
+  /** The few older messages closest in meaning to the talk are quoted to the model word for word (off by default). */
+  messengerRecall: boolean;
   /** The default for characters that have no choice of their own. */
   messengerKnows: Knows;
   /** Model choices: preview uses the four ids below; real mode uses "provider/model" or "" (engine default). */
@@ -111,6 +120,7 @@ export const SETTINGS_MOCK: SettingsMock = {
   messengerQuiet: "same",
   messengerContext: 24,
   messengerSummary: true,
+  messengerRecall: false,
   messengerKnows: "knows",
   models: { messenger: "default", forum: "default", import: "default", image: "" },
   notify: { tab: true, system: true, sound: false },
@@ -132,6 +142,8 @@ export const LIMITS = {
   reactionsPerDay: { min: 0, max: 50 },
   storiesPerDay: { min: 0, max: 10 },
   chatsPerDay: { min: 0, max: 30 },
+  clubsPerDay: { min: 1, max: 40 },
+  clubsAnswers: { min: 0, max: 100 },
   gossipPerDay: { min: 0, max: 20 },
   repostsPerDay: { min: 0, max: 20 },
   messengerContext: { min: 4, max: 500 },

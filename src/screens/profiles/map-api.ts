@@ -8,7 +8,7 @@ export async function loadGraph(): Promise<Graph> {
   return call<Graph>("GET", "/life/graph");
 }
 
-const link = (from: string, to: string, level: GLink["level"], band: GLink["band"] = "", ties: GLink["ties"] = [], talks = 4): GLink => ({ from: "c:" + from, to, level, band, talks, ties });
+const link = (from: string, to: string, level: GLink["level"], band: GLink["band"] = "", ties: GLink["ties"] = [], talks = 4, follow = false): GLink => ({ from: "c:" + from, to, level, band, talks, ties, ...(follow ? { follow: true } : {}) });
 
 function mockGraph(): Graph {
   let n = 0;
@@ -35,15 +35,16 @@ function mockGraph(): Graph {
     { key: "u:u-yaroslav", name: "Ярослав", kind: "user" },
   ];
   const links: GLink[] = [
-    link("mavka", "c:lisovyk", "close", "close", [{ type: "sibling" }], 14),
-    link("lisovyk", "c:mavka", "close", "warm", [{ type: "sibling" }], 12),
+    // follows (#368): Mavka and Lisovyk follow each other, Mavka follows the persona, Yaryna follows Pereles (he does not follow back)
+    link("mavka", "c:lisovyk", "close", "close", [{ type: "sibling" }], 14, true),
+    link("lisovyk", "c:mavka", "close", "warm", [{ type: "sibling" }], 12, true),
     link("mavka", "c:yaryna", "acquaintance", "cold", [{ type: "rival" }], 5),
     link("yaryna", "c:mavka", "acquaintance", "hostile", [{ type: "rival" }], 5),
-    link("mavka", "u:u-yaroslav", "friend", "warm", [{ type: "crush" }], 9),
-    link("yaryna", "c:pereles", "friend", "warm", [{ type: "dating" }], 11),
+    link("mavka", "u:u-yaroslav", "friend", "warm", [{ type: "crush" }], 9, true),
+    link("yaryna", "c:pereles", "friend", "warm", [{ type: "dating" }], 11, true),
     link("pereles", "c:yaryna", "friend", "close", [{ type: "partner" }], 11),
     // a family: Berehynia and Domovyk are a couple, Mavka and Lisovyk their children; Chugaister is a relative of Domovyk
-    link("berehynia", "c:domovyk", "close", "warm", [{ type: "spouse" }], 6),
+    link("berehynia", "c:domovyk", "close", "warm", [{ type: "spouse" }], 6, true),
     link("domovyk", "c:berehynia", "close", "warm", [{ type: "spouse" }], 4),
     link("lisovyk", "c:berehynia", "close", "", [{ type: "parent" }], 3),
     link("lisovyk", "c:domovyk", "friend", "", [{ type: "parent" }], 3),
@@ -52,6 +53,7 @@ function mockGraph(): Graph {
     // a single parent and her child, who has the user's persona as a sibling
     link("pereles", "c:horpyna", "friend", "", [{ type: "parent" }], 5),
     link("pereles", "u:u-yaroslav", "slight", "", [{ type: "sibling" }], 2),
+    link("lisovyk", "u:u-yaroslav", "penfriend", "warm", [], 6, true),
   ];
   if (empty === "nofamily") return { nodes, links: links.map((l) => ({ ...l, ties: l.ties.filter((t) => !["spouse", "parent", "child", "sibling", "relative"].includes(t.type)) })) };
   if (empty === "famconflict") {
@@ -72,7 +74,7 @@ function crowd(n: number): Graph {
     for (const d of [1, 3]) {
       const j = (i + d) % n;
       if (j === i) continue;
-      links.push(link("p" + i, "c:p" + j, levels[(i + d) % levels.length], i % 7 === 0 ? "cold" : "", i % 5 === 0 ? [{ type: "sibling" }] : i % 9 === 0 ? [{ type: "dating" }] : []));
+      links.push(link("p" + i, "c:p" + j, levels[(i + d) % levels.length], i % 7 === 0 ? "cold" : "", i % 5 === 0 ? [{ type: "sibling" }] : i % 9 === 0 ? [{ type: "dating" }] : [], 4, d === 1 && i % 3 !== 0));
     }
   }
   return { nodes, links };

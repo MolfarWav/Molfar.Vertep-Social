@@ -23,6 +23,7 @@ export const REAL_DEFAULTS: SettingsMock = {
   messengerQuiet: "same",
   messengerContext: 24,
   messengerSummary: true,
+  messengerRecall: false,
   messengerKnows: "knows",
   models: { messenger: "", forum: "", import: "", image: "" },
   notify: { tab: true, system: true, sound: false },

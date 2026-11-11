@@ -1,0 +1,9 @@
+{
+  "name": "Social clubs",
+  "version": "0.1.0",
+  "description": "Clubs: group chats of three or four characters around an interest. They talk to each other and you may join and write: a model writes one message at a time on the messenger model, within a daily cap per club, only when members are around. The Moderator can start a club from characters who share an interest. Files live in the app's data folder (clubs/).",
+  "origin": "local",
+  "permissions": ["routes", "fs", "llm", "schedule"],
+  "schedule": { "intervalMs": 60000 },
+  "priority": 46
+}
