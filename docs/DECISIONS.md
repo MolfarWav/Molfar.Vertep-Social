@@ -51,7 +51,7 @@ MolfarWav/Molfar.Vertep#309; follow-up work: MolfarWav/Molfar.Vertep#310. Read `
 ## Owner review, round 1 (2026-11-08, late evening)
 The owner installed the app from the PR branch and sent screenshots.
 - **Engine permission granted** for read-only access to Roleplay data and for app notifications (tab count + bottom-right popup).
-  It is still security code: no cheap models, tests in `test/security.test.ts` and `test/malicious-plugin.test.ts`, and an
+  It is still security code: no cheap models, tests in the engine repo's `test/security.test.ts` and `test/malicious-plugin.test.ts` (engine repo, not here), and an
   engine PR of its own (not in the Social repo).
 - **Next order: the forum** (`docs/FORUM-PLAN.md`), then the engine work. Small layout fixes were put into PR #3 first.
 - Fixed in PR #3: settings cards no longer cut off their content on a short window (rows were shrinking to the window,
