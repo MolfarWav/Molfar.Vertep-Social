@@ -5,6 +5,7 @@ import { useT, currentLang } from "@/i18n/index";
 import { ApiError } from "@/lib/api";
 import { Switch } from "../ui";
 import { deleteEntry, forgetDiary, loadDiary, saveEntry, saveState, writeDay, type DiaryEntry, type DiaryView } from "../life-api";
+import { SectionPage, type Section } from "../sections";
 import type { TabProps } from "./types";
 
 type Ask = { kind: "edit"; id: string; text: string } | { kind: "new"; text: string } | { kind: "delete"; id: string } | { kind: "forget" } | null;
@@ -93,112 +94,136 @@ export function LifeTab({ form, set, profileId }: TabProps) {
     </div>
   );
 
-  return (
-    <div className="tab-stack tab-life">
-      <div className="life-flags">
-        <Switch on={form.life.on} onChange={(on) => set({ life: { ...form.life, on } })}>{t("profiles.life.on")}</Switch>
-        <div className="k">{t(appOff ? "profiles.life.appOff" : "profiles.life.onNote")}</div>
-        <Switch on={form.life.world} onChange={(world) => set({ life: { ...form.life, world } })}>{t("profiles.life.world")}</Switch>
-        <div className="k">{t(worldOff && !appOff ? "profiles.life.worldAppOff" : "profiles.life.worldNote")}</div>
-      </div>
-
-      <div className="pv">
-        <div className="pvh">{t("profiles.life.diary")}</div>
-        <div className="log">
-          <div className="k">{t("profiles.life.savedAtOnce")}</div>
-          {!profileId && <div className="k">{t("profiles.life.unsaved")}</div>}
-          {failed && <div className="k life-bad" role="alert">{t("profiles.life.loadFailed", { message: failed })}</div>}
-          {profileId && !view && !failed && <div className="k">{t("profiles.life.loading")}</div>}
+  const sections: Section[] = [
+    {
+      id: "on",
+      title: t("profiles.sec.lifeOn"),
+      icon: "sprout",
+      tone: "emerald",
+      children: (
+        <div className="life-flags">
+          <Switch on={form.life.on} onChange={(on) => set({ life: { ...form.life, on } })}>{t("profiles.life.on")}</Switch>
+          <div className="k">{t(appOff ? "profiles.life.appOff" : "profiles.life.onNote")}</div>
+          <Switch on={form.life.world} onChange={(world) => set({ life: { ...form.life, world } })}>{t("profiles.life.world")}</Switch>
+          <div className="k">{t(worldOff && !appOff ? "profiles.life.worldAppOff" : "profiles.life.worldNote")}</div>
         </div>
-      </div>
+      ),
+    },
+  ];
 
-      {view && (
-        <>
-          <div className="life-state">
-            <label className="life-f">
-              <span className="lb">{t("profiles.life.mood")}</span>
-              <input
-                className="inp"
-                value={mood}
-                maxLength={24}
-                onChange={(e) => setMood(e.target.value)}
-                onBlur={() => mood !== view.diary.mood && run(() => saveState(profileId!, { mood }))}
-              />
-            </label>
-            <label className="life-f life-f-wide">
-              <span className="lb">{t("profiles.life.plan")}</span>
-              <input
-                className="inp"
-                value={plan}
-                maxLength={200}
-                onChange={(e) => setPlan(e.target.value)}
-                onBlur={() => plan !== view.diary.plan && run(() => saveState(profileId!, { plan }))}
-              />
-            </label>
-          </div>
+  // the mood and the plan exist only once the diary is loaded; until then the diary section carries the unsaved, failed and loading notes
+  if (view) {
+    sections.push({
+      id: "state",
+      title: t("profiles.sec.lifeState"),
+      icon: "pulse",
+      tone: "amber",
+      children: (
+        <div className="life-state">
+          <label className="life-f">
+            <span className="lb">{t("profiles.life.mood")}</span>
+            <input
+              className="inp"
+              value={mood}
+              maxLength={24}
+              onChange={(e) => setMood(e.target.value)}
+              onBlur={() => mood !== view.diary.mood && run(() => saveState(profileId!, { mood }))}
+            />
+          </label>
+          <label className="life-f life-f-wide">
+            <span className="lb">{t("profiles.life.plan")}</span>
+            <input
+              className="inp"
+              value={plan}
+              maxLength={200}
+              onChange={(e) => setPlan(e.target.value)}
+              onBlur={() => plan !== view.diary.plan && run(() => saveState(profileId!, { plan }))}
+            />
+          </label>
+        </div>
+      ),
+    });
+  }
 
-          <div className="life-actions">
-            <button type="button" className="btn cta" disabled={busy} onClick={() => setAsk({ kind: "new", text: "" })}>{t("profiles.life.add")}</button>
-            <button type="button" className="btn" disabled={busy || appOff || !form.life.on} onClick={write}>{busy ? t("profiles.life.writing") : t("profiles.life.writeNow")}</button>
-          </div>
-          {note && <div className="k life-bad" role="alert">{note}</div>}
+  sections.push({
+    id: "diary",
+    title: t("profiles.life.diary"),
+    icon: "book",
+    tone: "violet",
+    children: (
+      <>
+        <div className="k">{t("profiles.life.savedAtOnce")}</div>
+        {!profileId && <div className="k">{t("profiles.life.unsaved")}</div>}
+        {failed && <div className="k life-bad" role="alert">{t("profiles.life.loadFailed", { message: failed })}</div>}
+        {profileId && !view && !failed && <div className="k">{t("profiles.life.loading")}</div>}
 
-          {ask?.kind === "new" && editor(ask.text, (text) => setAsk({ kind: "new", text }), () => run(() => saveEntry(profileId!, "new", ask.text)))}
-
-          {entries.length === 0 && ask?.kind !== "new" && (
-            <div className="life-empty">
-              <h3 className="empty-h">{t("profiles.life.emptyTitle")}</h3>
-              <p className="k empty-text">{t("profiles.life.emptyText")}</p>
-            </div>
-          )}
-
-          <ul className="life-list">
-            {entries.map((e) => (
-              <li key={e.id} className="life-entry">
-                {ask?.kind === "edit" && ask.id === e.id ? (
-                  editor(ask.text, (text) => setAsk({ kind: "edit", id: e.id, text }), () => run(() => saveEntry(profileId!, e.id, ask.text)))
-                ) : (
-                  <>
-                    <div className="life-meta">
-                      <span>{dayLabel(e, lang)}</span>
-                      {e.by === "you" && <span className="life-you">{t("profiles.life.byYou")}</span>}
-                    </div>
-                    <p className="life-text">{e.text}</p>
-                    {ask?.kind === "delete" && ask.id === e.id ? (
-                      <div className="life-actions" role="group" aria-label={t("profiles.life.deleteAsk")}>
-                        <span className="k">{t("profiles.life.deleteAsk")}</span>
-                        <button type="button" className="btn life-danger" disabled={busy} onClick={() => run(() => deleteEntry(profileId!, e.id))}>{t("profiles.life.delete")}</button>
-                        <button type="button" className="btn" disabled={busy} onClick={() => setAsk(null)}>{t("profiles.life.keep")}</button>
-                      </div>
-                    ) : (
-                      <div className="life-actions">
-                        <button type="button" className="btn" disabled={busy} onClick={() => setAsk({ kind: "edit", id: e.id, text: e.text })}>{t("profiles.life.edit")}</button>
-                        <button type="button" className="btn" disabled={busy} onClick={() => setAsk({ kind: "delete", id: e.id })}>{t("profiles.life.delete")}</button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-
-          {entries.length > 0 && (
+        {view && (
+          <>
             <div className="life-actions">
-              {ask?.kind === "forget" ? (
-                <>
-                  <span className="k">{t("profiles.life.forgetAsk")}</span>
-                  <button type="button" className="btn life-danger" disabled={busy} onClick={() => run(() => forgetDiary(profileId!))}>{t("profiles.life.forget")}</button>
-                  <button type="button" className="btn" disabled={busy} onClick={() => setAsk(null)}>{t("profiles.life.keep")}</button>
-                </>
-              ) : (
-                <button type="button" className="btn" disabled={busy} onClick={() => setAsk({ kind: "forget" })}>{t("profiles.life.forget")}</button>
-              )}
+              <button type="button" className="btn cta" disabled={busy} onClick={() => setAsk({ kind: "new", text: "" })}>{t("profiles.life.add")}</button>
+              <button type="button" className="btn" disabled={busy || appOff || !form.life.on} onClick={write}>{busy ? t("profiles.life.writing") : t("profiles.life.writeNow")}</button>
             </div>
-          )}
-        </>
-      )}
+            {note && <div className="k life-bad" role="alert">{note}</div>}
 
-      <p className="k">{t("profiles.life.peopleMoved")}</p>
-    </div>
-  );
+            {ask?.kind === "new" && editor(ask.text, (text) => setAsk({ kind: "new", text }), () => run(() => saveEntry(profileId!, "new", ask.text)))}
+
+            {entries.length === 0 && ask?.kind !== "new" && (
+              <div className="life-empty">
+                <h3 className="empty-h">{t("profiles.life.emptyTitle")}</h3>
+                <p className="k empty-text">{t("profiles.life.emptyText")}</p>
+              </div>
+            )}
+
+            <ul className="life-list">
+              {entries.map((e) => (
+                <li key={e.id} className="life-entry">
+                  {ask?.kind === "edit" && ask.id === e.id ? (
+                    editor(ask.text, (text) => setAsk({ kind: "edit", id: e.id, text }), () => run(() => saveEntry(profileId!, e.id, ask.text)))
+                  ) : (
+                    <>
+                      <div className="life-meta">
+                        <span>{dayLabel(e, lang)}</span>
+                        {e.by === "you" && <span className="life-you">{t("profiles.life.byYou")}</span>}
+                      </div>
+                      <p className="life-text">{e.text}</p>
+                      {ask?.kind === "delete" && ask.id === e.id ? (
+                        <div className="life-actions" role="group" aria-label={t("profiles.life.deleteAsk")}>
+                          <span className="k">{t("profiles.life.deleteAsk")}</span>
+                          <button type="button" className="btn life-danger" disabled={busy} onClick={() => run(() => deleteEntry(profileId!, e.id))}>{t("profiles.life.delete")}</button>
+                          <button type="button" className="btn" disabled={busy} onClick={() => setAsk(null)}>{t("profiles.life.keep")}</button>
+                        </div>
+                      ) : (
+                        <div className="life-actions">
+                          <button type="button" className="btn" disabled={busy} onClick={() => setAsk({ kind: "edit", id: e.id, text: e.text })}>{t("profiles.life.edit")}</button>
+                          <button type="button" className="btn" disabled={busy} onClick={() => setAsk({ kind: "delete", id: e.id })}>{t("profiles.life.delete")}</button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            {entries.length > 0 && (
+              <div className="life-actions">
+                {ask?.kind === "forget" ? (
+                  <>
+                    <span className="k">{t("profiles.life.forgetAsk")}</span>
+                    <button type="button" className="btn life-danger" disabled={busy} onClick={() => run(() => forgetDiary(profileId!))}>{t("profiles.life.forget")}</button>
+                    <button type="button" className="btn" disabled={busy} onClick={() => setAsk(null)}>{t("profiles.life.keep")}</button>
+                  </>
+                ) : (
+                  <button type="button" className="btn" disabled={busy} onClick={() => setAsk({ kind: "forget" })}>{t("profiles.life.forget")}</button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        <p className="k">{t("profiles.life.peopleMoved")}</p>
+      </>
+    ),
+  });
+
+  return <SectionPage tab="life" label={t("profiles.sec.menu")} sections={sections} />;
 }

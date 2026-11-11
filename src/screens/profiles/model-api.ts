@@ -59,6 +59,9 @@ export type FillResult =
   | { ok: true; proposal: Partial<Record<FieldKey, string | string[]>> }
   | { ok: false; error: string; code?: "no-model" };
 
+/** New signature words from the model (#375): only words the profile does not have yet. */
+export type WordsResult = { ok: true; words: string[] } | { ok: false; error: string; code?: "no-model" };
+
 /** A text file as the screen reads it: the cap and the cut are the Roleplay limits. */
 export interface PickedText {
   name: string;
@@ -67,22 +70,27 @@ export interface PickedText {
 }
 
 type Outcome = "ok" | "fail" | "none" | "no-model";
-type Kind = "suggest" | "fill";
+type Kind = "suggest" | "fill" | "words";
 
-const once: Record<Kind, Outcome[]> = { suggest: [], fill: [] };
+const once: Record<Kind, Outcome[]> = { suggest: [], fill: [], words: [] };
 const sticky: Partial<Record<Kind, Outcome>> = {};
 
 /** Sets the outcomes for the preview state (called once when the screen opens). */
 export function mockScript(state: string | null): void {
   once.suggest = [];
   once.fill = [];
+  once.words = [];
   delete sticky.suggest;
   delete sticky.fill;
+  delete sticky.words;
   if (state === "newfail") once.suggest = ["fail"];
   if (state === "newnomodel") sticky.suggest = "no-model";
   if (state === "fillfail") once.fill = ["fail"];
   if (state === "fillnone") once.fill = ["none"];
   if (state === "fillnomodel") sticky.fill = "no-model";
+  if (state === "wordsfail") once.words = ["fail"];
+  if (state === "wordsnone") once.words = ["none"];
+  if (state === "wordsnomodel") sticky.words = "no-model";
 }
 
 const next = (kind: Kind): Outcome => sticky[kind] ?? once[kind].shift() ?? "ok";
@@ -131,6 +139,24 @@ export async function fillEmpty(input: FillInput): Promise<FillResult> {
   if (outcome === "fail") return { ok: false, error: "model did not answer" };
   if (outcome === "none") return { ok: true, proposal: {} };
   return { ok: true, proposal: previewProposal(input.fields) };
+}
+
+/** Signature words proposed from the saved profile (#375). The preview answers with canned words. */
+export async function inventWords(profileId: string): Promise<WordsResult> {
+  if (!PREVIEW) {
+    try {
+      await flushProfile(profileId);
+      return await call<WordsResult>("POST", "/profiles/words", { profileId });
+    } catch (e) {
+      return { ok: false, error: errorText(e) };
+    }
+  }
+  await wait(1500);
+  const outcome = next("words");
+  if (outcome === "no-model") return { ok: false, error: "no model is chosen", code: "no-model" };
+  if (outcome === "fail") return { ok: false, error: "model did not answer" };
+  if (outcome === "none") return { ok: true, words: [] };
+  return { ok: true, words: ["тихіше, річка слухає", "хвиля шепоче", "мла лягла", "на бережанці", "водичка"] };
 }
 
 /** The app: the suggest route. A failed call becomes a failed result, as the fake returns one. */

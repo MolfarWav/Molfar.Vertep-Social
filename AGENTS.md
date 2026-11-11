@@ -34,6 +34,9 @@ Status flower: five petals around the Vertep eye; colour, centre mark and a word
 - The approved screens are the reference: `/mnt/project-files/social/screens/` in the Molfar Vertep project
   (not in this repo). Compare at 1280x800 and 390x844 in all three themes.
 
+## The profile editor (#369)
+Every tab but Relationships is a `SectionPage` (`src/screens/profiles/sections.tsx`): a menu of sections (a column on a desktop, a strip of icons on a phone) and the sections stacked under headings with an outlined icon square in one tone each (`glyphs.tsx`: `Gl` icons, `Tone`; the hues are `[data-tone]` under `.s-profiles` in `profiles.css`). A new control goes into a section of its tab, never loose; a new section gets an icon, a tone and a title string. Relationships is the people list (`tabs/PeopleSection.tsx`) beside the editor of the chosen person (a bottom sheet on a phone) and the person picker (`tabs/PersonPicker.tsx`). The seven levels have a hue each (`--l-<level>`). Nothing the original tab had may be dropped for the look: the owner caught that once. Signature words (#375): `voice.words` (12 of 40 characters), `POST /profiles/words`, one prompt line in the messenger, forum and clubs plugins (at most eight words).
+
 ## Settings blocks
 Each settings block has a tone and an icon (`src/screens/settings/tone.tsx`: `LOOK` maps a block name to a hue, `BlockIcon` draws its icon). The hues and their text colours per theme are in `settings.css` (`[data-tone]`). A desktop `Card` and a phone `GroupHead` take the block name (`glyph`). The desktop page is two `.col` columns, not grid rows: a tall card in a shared grid leaves a hole under its neighbour. A new block gets a name in `tone.tsx` first.
 

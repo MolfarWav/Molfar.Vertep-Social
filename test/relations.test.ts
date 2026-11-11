@@ -134,8 +134,8 @@ test("the list offers the characters and personas not in it yet, with whether ro
   const h = seed(true, false);
   const list = call(h, "GET", "/life/people/anna").json;
   expect(list.candidates).toEqual([
-    { key: "c:boris", name: "Boris", kind: "character", romance: false },
-    { key: "u:me1", name: "Serhiy", kind: "user", romance: true },
+    { key: "c:boris", name: "Boris", kind: "character", romance: false, about: "x" },
+    { key: "u:me1", name: "Serhiy", kind: "user", romance: true, about: "" },
   ]);
   expect(list.adult).toBe(true);
 });

@@ -74,6 +74,8 @@ export interface Candidate {
   name: string;
   kind: "character" | "user";
   romance: boolean;
+  /** One line of their About, to tell two people of one name apart. */
+  about?: string;
 }
 
 /** Another character whose list holds this one. */
@@ -121,8 +123,9 @@ const fakePeople = (): Person[] =>
   ]);
 const fakeCandidates = (): Candidate[] =>
   ([
-    { key: "c:rp-yaryna", name: "Ярина", kind: "character", romance: true },
-    { key: "u:you2", name: "Оксана", kind: "user", romance: true },
+    { key: "c:rp-yaryna", name: "Ярина", kind: "character", romance: true, about: "знахарка з хутора" },
+    { key: "c:rp-yaryna2", name: "Ярина", kind: "character", romance: false, about: "студентка, 19" },
+    { key: "u:you2", name: "Оксана", kind: "user", romance: true, about: "" },
   ] as Candidate[]).filter((c) => !fakePeople().some((p) => p.key === c.key));
 const fakeKnownBy: KnownBy[] = [{ id: "rp-yaryna", name: "Ярина", seen: 9, note: "Тиха, але завжди відповідає по суті." }];
 

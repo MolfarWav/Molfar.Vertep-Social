@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useT } from "@/i18n/index";
 import type { Habit } from "@/mock/profiles";
 import { Switch } from "../ui";
+import { SectionPage, type Section } from "../sections";
 import { Cross } from "./AboutTab";
 import type { TabProps } from "./types";
 
@@ -29,60 +30,62 @@ export function HabitsTab({ form, set }: TabProps) {
   };
   const remove = (id: string) => set({ habits: form.habits.filter((h) => h.id !== id) });
 
-  const auto = (
-    <>
-      <Switch on={form.habitsAuto} onChange={(habitsAuto) => set({ habitsAuto })}>{t("profiles.habits.auto")}</Switch>
-      <div className="k">{t("profiles.habits.autoNote")}</div>
-    </>
-  );
+  const empty = form.habits.length === 0 && !adding;
 
-  if (form.habits.length === 0 && !adding) {
-    return (
-      <div className="tab-stack">
+  const sections: Section[] = [
+    {
+      id: "list",
+      title: t("profiles.tab.habits"),
+      icon: "sprout",
+      tone: "amber",
+      children: empty ? (
         <div className="habits-empty">
           <h3 className="empty-h">{t("profiles.habits.emptyTitle")}</h3>
           <p className="k empty-text">{t("profiles.habits.emptyText")}</p>
           <button type="button" className="btn" onClick={() => setAdding(true)}>{t("profiles.habits.emptyAdd")}</button>
         </div>
-        {auto}
-      </div>
-    );
-  }
+      ) : (
+        <>
+          {form.habits.map((h) => (
+            <div key={h.id} className="hab hab-lg">
+              <span className="hab-text">{h.text}</span>
+              <span className="src">{h.by === "you" ? t("profiles.habit.you") : t("profiles.habit.self", { date: h.date ?? "" })}</span>
+              <button type="button" className="x" aria-label={t("profiles.habit.remove")} onClick={() => remove(h.id)}>
+                <Cross />
+              </button>
+            </div>
+          ))}
+          <form
+            className="add-row"
+            onSubmit={(e) => {
+              e.preventDefault();
+              add();
+            }}
+          >
+            <input
+              className="inp inp-flex"
+              value={draft}
+              placeholder={t("profiles.habit.placeholder")}
+              aria-label={t("profiles.habit.placeholder")}
+              autoFocus={adding}
+              onChange={(e) => setDraft(e.target.value)}
+            />
+            <button type="submit" className="btn cta" disabled={!draft.trim()}>{t("profiles.habit.add")}</button>
+          </form>
+        </>
+      ),
+    },
+  ];
 
-  return (
-    <div className="cols">
-      <div className="tab-stack">
-        {form.habits.map((h) => (
-          <div key={h.id} className="hab hab-lg">
-            <span className="hab-text">{h.text}</span>
-            <span className="src">{h.by === "you" ? t("profiles.habit.you") : t("profiles.habit.self", { date: h.date ?? "" })}</span>
-            <button type="button" className="x" aria-label={t("profiles.habit.remove")} onClick={() => remove(h.id)}>
-              <Cross />
-            </button>
-          </div>
-        ))}
-        <form
-          className="add-row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            add();
-          }}
-        >
-          <input
-            className="inp inp-flex"
-            value={draft}
-            placeholder={t("profiles.habit.placeholder")}
-            aria-label={t("profiles.habit.placeholder")}
-            autoFocus={adding}
-            onChange={(e) => setDraft(e.target.value)}
-          />
-          <button type="submit" className="btn cta" disabled={!draft.trim()}>{t("profiles.habit.add")}</button>
-        </form>
-      </div>
-
-      <div className="tab-stack">
+  // the limits only mean something once there are habits (or one is being added), as before
+  if (!empty) {
+    sections.push({
+      id: "limits",
+      title: t("profiles.habits.limits"),
+      icon: "clock",
+      tone: "sky",
+      children: (
         <div className="pv">
-          <div className="pvh">{t("profiles.habits.limits")}</div>
           <div className="log">
             <div>
               {t("profiles.habits.today")} <b>{TODAY_WRITTEN} {t("profiles.habits.of")} {DAILY_LIMIT}</b>
@@ -93,8 +96,22 @@ export function HabitsTab({ form, set }: TabProps) {
             <div className="k">{t("profiles.habits.yoursNote")}</div>
           </div>
         </div>
-        {auto}
-      </div>
-    </div>
-  );
+      ),
+    });
+  }
+
+  sections.push({
+    id: "auto",
+    title: t("profiles.sec.auto"),
+    icon: "spark",
+    tone: "violet",
+    children: (
+      <>
+        <Switch on={form.habitsAuto} onChange={(habitsAuto) => set({ habitsAuto })}>{t("profiles.habits.auto")}</Switch>
+        <div className="k">{t("profiles.habits.autoNote")}</div>
+      </>
+    ),
+  });
+
+  return <SectionPage tab="habits" label={t("profiles.sec.menu")} sections={sections} />;
 }

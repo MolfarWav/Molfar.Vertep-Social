@@ -54,6 +54,14 @@ test("nextOnline finds the start of the next online band", () => {
   expect(plugin.nextOnline(always("off"), from, -120)).toBeNull();
 });
 
+test("signature words go into the prompt (at most eight), and nothing is said when there are none (#375)", () => {
+  const p = { name: "Мавка", about: "Мешканка озера.", interests: [], habits: [], voice: { text: "Повільна.", length: 1, emoji: 1, formality: 30, never: [], words: ["бережанка", "водичка", "w3", "w4", "w5", "w6", "w7", "w8", "w9"] } };
+  const s = plugin.systemPromptFor(p);
+  expect(s).toContain("Words and turns of speech that are yours: бережанка, водичка, w3, w4, w5, w6, w7, w8. Use one now and then");
+  expect(s).not.toContain("w9");
+  expect(plugin.systemPromptFor({ ...p, voice: { ...p.voice, words: [] } })).not.toContain("Words and turns of speech");
+});
+
 test("the system prompt carries the profile's voice and never the card", () => {
   const p = { name: "Мавка", about: "Мешканка озера.", interests: ["очерет"], habits: [{ text: "пише вечорами" }], voice: { text: "Повільна.", length: 0, emoji: 2, formality: 80, never: ["капслок"] } };
   const s = plugin.systemPromptFor(p);

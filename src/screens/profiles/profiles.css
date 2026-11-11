@@ -575,3 +575,147 @@
 .s-profiles .rel-auto { text-decoration: underline; }
 .s-profiles.is-phone .rel-edit .tg { min-height: 44px; }
 .s-profiles.is-phone .rel-auto { padding-block: 14px; margin-block: -14px; }
+
+/* ---- #369: tones, the section page and the tab strip with icons ---- */
+/* One hue per kind of content, as in the Settings blocks: --tn is the hue, --tt the text colour on its tint (light shades on the dark themes). */
+.s-profiles [data-tone="cyan"] { --tn: #06b6d4; --tt: #67e8f9; }
+.s-profiles [data-tone="rose"] { --tn: #f43f5e; --tt: #fda4af; }
+.s-profiles [data-tone="violet"] { --tn: #8b5cf6; --tt: #c4b5fd; }
+.s-profiles [data-tone="teal"] { --tn: #14b8a6; --tt: #5eead4; }
+.s-profiles [data-tone="sky"] { --tn: #0ea5e9; --tt: #7dd3fc; }
+.s-profiles [data-tone="amber"] { --tn: #f59e0b; --tt: #fcd34d; }
+.s-profiles [data-tone="emerald"] { --tn: #10b981; --tt: #6ee7b7; }
+.s-profiles [data-tone="orange"] { --tn: #f97316; --tt: #fdba74; }
+[data-theme="light"] .s-profiles [data-tone="cyan"] { --tt: #0e7490; }
+[data-theme="light"] .s-profiles [data-tone="rose"] { --tt: #be123c; }
+[data-theme="light"] .s-profiles [data-tone="violet"] { --tt: #6d28d9; }
+[data-theme="light"] .s-profiles [data-tone="teal"] { --tt: #0f766e; }
+[data-theme="light"] .s-profiles [data-tone="sky"] { --tt: #0369a1; }
+[data-theme="light"] .s-profiles [data-tone="amber"] { --tt: #b45309; }
+[data-theme="light"] .s-profiles [data-tone="emerald"] { --tt: #047857; }
+[data-theme="light"] .s-profiles [data-tone="orange"] { --tt: #c2410c; }
+.s-profiles .gl { flex: none; }
+
+/* the tab strip: an icon in the tab's tone, the open tab tinted with an underline */
+.s-profiles .et { gap: 8px; font-size: 14px; border-radius: 8px 8px 0 0; }
+.s-profiles .et .gl { width: 19px; height: 19px; color: var(--tn); }
+.s-profiles .et:hover { background: var(--hover); }
+.s-profiles .et.on { color: var(--tt); background: color-mix(in srgb, var(--tn) 14%, transparent); box-shadow: inset 0 -2px 0 var(--tn); }
+.s-profiles .pe-phone .pills { gap: 2px; padding: 0 8px; }
+.s-profiles .pe-phone .pill { height: 44px; border: 0; border-bottom: 2px solid transparent; border-radius: 8px 8px 0 0; padding: 0 10px; gap: 8px; background: none; flex: none; }
+.s-profiles .pe-phone .pill .gl { width: 20px; height: 20px; color: var(--tn); }
+.s-profiles .pe-phone .pill.on { color: var(--tt); background: color-mix(in srgb, var(--tn) 14%, transparent); border-color: var(--tn); }
+.s-profiles .pe-phone .pill:not(.on) .pill-t { display: none; }
+
+/* the tab bodies scroll themselves now */
+.s-profiles .ed-body { overflow: hidden; }
+.s-profiles .pe-phone .pg { overflow: hidden; padding: 0; gap: 0; }
+
+/* a section heading: an outlined tinted icon square, a title, a mark and an action at the end */
+.s-profiles .sec-h { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; font-size: 16px; font-weight: 600; color: var(--tt); line-height: 1.25; scroll-margin-top: 8px; }
+.s-profiles .sec-i { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: none; font-style: normal; border: 1.5px solid var(--tn); background: color-mix(in srgb, var(--tn) 16%, transparent); color: var(--tn); }
+.s-profiles .sec-t { min-width: 0; overflow-wrap: anywhere; }
+.s-profiles .sec-badge { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--cta); color: var(--ctaink); }
+.s-profiles .sec-act { margin-left: auto; font-weight: 400; }
+
+/* the section page: a menu on the left (a strip of icons on a phone) and the sections stacked on the right */
+.s-profiles .secpage { flex: 1; min-height: 0; display: flex; }
+.s-profiles .secnav { width: 220px; flex: none; padding: 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; border-right: 1px solid var(--line); background: var(--panel); }
+.s-profiles .secnav-i { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; border: 1.5px solid transparent; border-radius: 10px; background: none; color: var(--muted); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.s-profiles .secnav-i:hover { background: var(--hover); }
+.s-profiles .secnav-i .sec-i { border: 0; background: color-mix(in srgb, var(--tn) 14%, transparent); }
+.s-profiles .secnav-i.on { color: var(--tt); font-weight: 600; border-color: var(--tn); background: color-mix(in srgb, var(--tn) 12%, transparent); }
+.s-profiles .secbody { flex: 1; min-width: 0; min-height: 0; overflow-y: auto; padding: 18px 24px; }
+.s-profiles .secstack { max-width: 760px; display: flex; flex-direction: column; gap: 26px; }
+.s-profiles .sec-b { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+/* room under the last section, so a short one can still be scrolled to the top */
+.s-profiles .sec-end { height: 40vh; flex: none; }
+.s-profiles.is-phone .secpage { flex-direction: column; }
+.s-profiles.is-phone .secnav { width: auto; flex-direction: row; gap: 4px; padding: 6px 10px; overflow-x: auto; overflow-y: hidden; border-right: 0; border-bottom: 1px solid var(--line); background: var(--base); flex: none; }
+.s-profiles.is-phone .secnav-i { flex: none; padding: 6px; gap: 8px; }
+.s-profiles.is-phone .secnav-i:not(.on) .secnav-t { display: none; }
+.s-profiles.is-phone .secbody { padding: 14px 12px; }
+
+/* section pages: Voice and Statuses (#369) */
+.s-profiles .sec .temp { margin-left: 0; }
+.s-profiles .sec .grid-scroll { padding-top: 10px; }
+.s-profiles .sec .pv .log { padding: 12px 14px; }
+.s-profiles.is-phone .sec .br,
+.s-profiles.is-phone .sec .sel,
+.s-profiles.is-phone .sec .row-wrap .btn,
+.s-profiles.is-phone .sec .pv .btn { min-height: 44px; }
+.s-profiles.is-phone .sec .check { min-height: 44px; }
+.s-profiles.is-phone .sec .cell { height: 44px; }
+.s-profiles.is-phone .sec .sel-end { margin-left: 0; }
+
+/* ---- #369: Relationships, the people list, the editor and the picker ---- */
+.s-profiles { --l-stranger: #6f7689; --l-slight: #7fa3c7; --l-acquaintance: #e3b341; --l-penfriend: #b6d85a; --l-friend: #7fd18b; --l-close: #f06fa8; --l-confidant: #c084fc; }
+[data-theme="light"] .s-profiles { --l-stranger: #8a8a94; --l-slight: #4a79a8; --l-acquaintance: #b7791f; --l-penfriend: #6b8e12; --l-friend: #2f7d3f; --l-close: #c23d78; --l-confidant: #8b3fd1; }
+.s-profiles .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.s-profiles .btn.tonal { background: color-mix(in srgb, var(--cta) 16%, transparent); border-color: color-mix(in srgb, var(--cta) 45%, var(--line)); color: var(--ink); font-weight: 600; }
+.s-profiles .btn .gl { margin-right: 6px; }
+.s-profiles .relsplit { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+.s-profiles .relsplit.single { display: block; padding: 18px 24px; }
+.s-profiles .rellist { min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid var(--line); background: var(--panel); }
+.s-profiles .reldetail { min-width: 0; min-height: 0; overflow-y: auto; padding: 18px 24px; }
+.s-profiles .rel-search { position: relative; display: flex; align-items: center; }
+.s-profiles .rel-search .gl { position: absolute; left: 10px; color: var(--faint); pointer-events: none; }
+.s-profiles .rel-search .inp { padding-left: 34px; max-width: none; }
+.s-profiles .rel-actions { display: flex; gap: 8px; }
+.s-profiles .rel-actions .btn { flex: 1; justify-content: center; }
+.s-profiles .rel-steps { margin: 0; }
+.s-profiles .pgroup { display: flex; flex-direction: column; gap: 2px; }
+.s-profiles .pgroup-h { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 4px; border: 0; background: none; color: var(--lc, var(--muted)); font: inherit; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; }
+.s-profiles .pgroup-h.static { cursor: default; color: var(--muted); margin: 0; }
+.s-profiles .pgroup-h::after { content: ""; flex: 1; order: 3; height: 1px; background: color-mix(in srgb, var(--lc, var(--muted)) 30%, var(--line)); }
+.s-profiles .pgroup-n { order: 2; color: var(--faint); font-weight: 400; }
+.s-profiles .plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.s-profiles .prow { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 8px; border: 0; border-radius: 8px; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.s-profiles .prow.static { cursor: default; align-items: flex-start; }
+.s-profiles .prow:hover { background: var(--hover); }
+.s-profiles .prow.on { background: var(--hover); box-shadow: inset 3px 0 0 var(--lc); }
+.s-profiles .prow-av .av, .s-profiles .pd-av .av { box-shadow: 0 0 0 2px var(--base), 0 0 0 4px var(--lc, var(--line)); }
+.s-profiles .prow-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.s-profiles .prow-mid .k { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-profiles .prow-feel { font-size: 12px; white-space: nowrap; }
+.s-profiles .prow-ic { display: inline-flex; color: var(--muted); }
+.s-profiles .rel-none { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; color: var(--muted); padding: 32px 12px; max-width: 520px; margin: 0 auto; }
+.s-profiles .pdetail { max-width: 640px; display: flex; flex-direction: column; gap: 16px; }
+.s-profiles .pd-head { display: flex; align-items: center; gap: 14px; }
+.s-profiles .pd-title { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.s-profiles .pd-name { margin: 0; font: 22px/1.2 Kurale, Georgia, serif; overflow-wrap: anywhere; }
+.s-profiles .row-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.s-profiles .lvchip { color: var(--lc); border-color: color-mix(in srgb, var(--lc) 45%, var(--line)); background: color-mix(in srgb, var(--lc) 16%, transparent); }
+.s-profiles .pd-said { margin: 0; font-style: italic; }
+.s-profiles .rel-edit { display: flex; flex-direction: column; gap: 22px; }
+.s-profiles .rel-edit select.inp { max-width: 560px; }
+.s-profiles .chip-family { color: var(--rel-family); }
+.s-profiles .reldetail-sheet { gap: 16px; }
+.s-profiles .pf-title { flex: 1; min-width: 0; }
+.s-profiles .pick-x { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer; }
+.s-profiles .pick-x:hover { background: var(--hover); color: var(--ink); }
+.s-profiles .pick-body { gap: 10px; }
+.s-profiles .pick-search { position: relative; display: flex; align-items: center; }
+.s-profiles .pick-search .gl { position: absolute; left: 10px; color: var(--faint); pointer-events: none; }
+.s-profiles .pick-search .inp { padding-left: 34px; max-width: none; }
+.s-profiles .pick-group { display: flex; flex-direction: column; gap: 2px; }
+.s-profiles .pick-gh { margin: 8px 0 2px; display: flex; gap: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c, var(--muted)); }
+.s-profiles .pick-gh span { color: var(--faint); font-weight: 400; }
+.s-profiles .pick-more { margin: 8px 0 0; font-weight: 600; font-size: 13px; }
+.s-profiles .pick-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 6px 8px; border: 0; border-radius: 8px; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.s-profiles .pick-row:hover, .s-profiles .pick-row:focus-visible { background: var(--hover); }
+.s-profiles .pick-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.s-profiles .pick-mid .k { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-profiles .pick-ico { color: var(--rel-family); display: inline-flex; width: 32px; justify-content: center; }
+.s-profiles.is-phone .relsplit { grid-template-columns: minmax(0, 1fr); }
+.s-profiles.is-phone .rellist { border-right: 0; background: none; padding: 12px; }
+.s-profiles.is-phone .rel-actions .btn { min-height: 44px; }
+.s-profiles.is-phone .prow { min-height: 56px; }
+.s-profiles .sv .warn.none { color: var(--faint); font-weight: 400; }
+/* touch targets on a phone: a chip is a button too */
+.s-profiles.is-phone .chip, .s-profiles.is-phone .chip-rm .chip-x { min-height: 40px; }
+.s-profiles.is-phone .pgroup-h { min-height: 44px; }
+
+/* #375: signature words */
+.s-profiles .words-invent { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.s-profiles.is-phone .words-invent .btn { min-height: 44px; }
