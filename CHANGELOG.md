@@ -5,6 +5,8 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.15.1 (2026-11-12)
+
 - Fixed: **a messenger chat whose reply failed (or is not due yet) still folds old messages into its memory note.** The tick skipped every chat that kept `pending`, so after a failed reply the note stopped growing until the user retried; now only a reply being asked for at that moment waits.
 - Fixed: the check-in after three quiet days reads `CHECKIN_AFTER_MS` (the constant was declared but a literal 3 was used).
 ## 0.15.0 (2026-11-12)
