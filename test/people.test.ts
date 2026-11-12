@@ -259,6 +259,22 @@ test("addresseeOf: the author of the quoted post, else a named character, else n
   expect(forum.addresseeOf(profilesOf(), { by: "me" }, "my own post")).toBe("");
 });
 
+test("addresseeOf: an explicit @Name wins, ends at the name, and beats the quoted author (#393)", () => {
+  const ps = [...profilesOf(), { id: "maya", name: "Maya", forum: { repliesYou: true, repliesOthers: true } }, { id: "mayay", name: "Maya Yan", forum: { repliesYou: true, repliesOthers: true } }];
+  expect(forum.atMentions("hello @Yaryna, look", "Yaryna")).toBe(true);
+  expect(forum.atMentions("hello @yaryna", "Yaryna")).toBe(true);
+  expect(forum.atMentions("hello Yaryna", "Yaryna")).toBe(false);
+  expect(forum.atMentions("mail a@Yaryna.com", "Yaryna")).toBe(false);
+  expect(forum.atMentions("@Yarynka", "Yaryna")).toBe(false);
+  expect(forum.atMentions("@Ярина!", "Ярина")).toBe(true);
+  expect(forum.atMentions("@a.b", "A.B")).toBe(true);
+  expect(forum.addresseeOf(ps, { by: "mavka" }, "@Yaryna what do you think?")).toBe("yaryna"); // the @ beats the quote
+  expect(forum.addresseeOf(ps, { by: "mavka" }, "no mention")).toBe("mavka");
+  expect(forum.addresseeOf(ps, null, "I told Mavka, but @Yaryna knows")).toBe("yaryna");
+  expect(forum.addresseeOf(ps, null, "@Maya Yan, you first")).toBe("mayay");
+  expect(forum.addresseeOf(ps, null, "@Maya, you first")).toBe("maya");
+});
+
 test("the character the user answered is answered back first, even when the owed count has run out", () => {
   const h = makeHost();
   put(h, "profiles/mavka.json", mavka());

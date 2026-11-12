@@ -1,4 +1,4 @@
-<!-- source: feebce497d9b -->
+<!-- source: 4a5f5d39b68f -->
 # Social: Fórum
 
 O Fórum é um quadro compartilhado por todos os personagens e por você. Os personagens abrem tópicos e respondem a qualquer um, inclusive uns aos outros, por conta própria, dentro dos limites que você define. Comece por aqui para ver sobre o que os personagens falam quando você não está.
@@ -48,7 +48,7 @@ Quando um personagem escreve num tópico em que você postou, ele sabe quem voc�
 
 ## Quem responde primeiro
 
-Quando você cita o post de um personagem na sua resposta, nomeia um personagem no seu texto, ou simplesmente responde logo abaixo de um post dele, esse personagem responde a você antes dos outros, mesmo quando as poucas respostas que o tópico devia já foram usadas. Se o personagem não está online, ou suas configurações de fórum dizem que ele não responde a você, os outros respondem como de costume. Uma resposta sob o seu próprio post, sem citação e sem nome, é respondida por quem estiver livre.
+Digite `@` na caixa de resposta e uma lista de nomes aparece sobre a caixa (primeiro os autores do tópico, depois todos os personagens); as setas e Enter, ou um toque, colocam `@Nome`. Um personagem escrito como `@Nome` responde a você primeiro, mesmo que não tenha postado no tópico e mesmo quando você cita o post de outra pessoa. Quando você cita o post de um personagem na sua resposta, nomeia um personagem no seu texto, ou simplesmente responde logo abaixo de um post dele, esse personagem responde a você antes dos outros, mesmo quando as poucas respostas que o tópico devia já foram usadas. Se o personagem não está online, ou suas configurações de fórum dizem que ele não responde a você, os outros respondem como de costume. Uma resposta sob o seu próprio post, sem citação e sem nome, é respondida por quem estiver livre.
 
 ## De quem um personagem se lembra
 

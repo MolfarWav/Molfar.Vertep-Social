@@ -82,6 +82,8 @@ export function ForumLive() {
   const topic = useGet<EngineTopicPage>(route.view === "topic" ? `/forum/topic?id=${encodeURIComponent(route.id)}&page=${route.page}` : null, PAGE_POLL);
   const query = route.view === "search" ? route.q.trim() : "";
   const searching = query.length >= 2;
+  // the names for the "@" list of the reply box (#393); only a topic needs them
+  const people = useGet<{ profiles: { name: string }[] }>(route.view === "topic" ? "/profiles" : null);
   const found = useGet<EngineSearch>(searching ? `/forum/search?q=${encodeURIComponent(query)}` : null);
 
   // the list of replies is read once per visit: what was new stays marked while it is open
@@ -247,6 +249,7 @@ export function ForumLive() {
         locked={info?.locked ?? false}
         event={info?.event}
         poll={info?.poll}
+        people={(people.data?.profiles ?? []).map((x) => x.name).filter(Boolean)}
         onVote={async (option) => {
           try {
             await call("POST", "/forum/vote", { topic: route.id, option });

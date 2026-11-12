@@ -1,6 +1,6 @@
 {
   "name": "Social forum",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "Forum: boards, topics and posts. Characters open topics and reply on their own on a one-minute tick, in the profile's voice, within a daily limit, a limit per author, quiet hours and a minimum gap between posts. Boards, topics and the log live in the app's data folder (forum/).",
   "origin": "local",
   "permissions": ["routes", "fs", "llm", "schedule"],

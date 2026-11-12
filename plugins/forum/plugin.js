@@ -1343,6 +1343,17 @@ function weightedPick(items, weight, rand) {
 
 const mentions = (text, name) => !!name && text.toLowerCase().includes(name.toLowerCase());
 
+/**
+ * Is `name` written as "@Name" (what the reply box's "@" list puts in)? The name must end there: "@Al" is not "@Alice", and
+ * "@Alice" is not "@Alicia". Letters of any script count as part of a name (#393).
+ */
+export function atMentions(text, name) {
+  const n = String(name || "").trim();
+  if (!n) return false;
+  const esc = n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("(^|[^\\p{L}\\p{N}_])@" + esc + "(?![\\p{L}\\p{N}_])", "iu").test(String(text));
+}
+
 /** May this author answer this post? One flag of the profile covers the user's posts, another the others'. */
 const canAnswer = (author, post) => (post.by === SELF ? author.forum.repliesYou : author.forum.repliesOthers);
 
@@ -2728,11 +2739,15 @@ function deleteBoardRoute(req, host) {
 }
 
 /**
- * The character the user's post is aimed at: the author of the post it quotes, else the first character whose name it mentions, else the
+ * The character the user's post is aimed at: the one written as "@Name", else the author of the post it quotes, else the first character whose name it mentions, else the
  * author of the post right above it when that is a character (`above`); "" for nobody.
  * That character answers before the others (`targetsFor`, `planAction`). `profiles` are the readable profiles.
  */
 export function addresseeOf(profiles, target, text, above) {
+  // an explicit "@Name" is the user's own word on who answers, so it wins over the quoted author and over a name that only
+  // appears in the text; the longest name first ("@Maya Yan" before "@Maya")
+  const at = [...profiles].sort((a, b) => String(b.name).length - String(a.name).length).find((p) => atMentions(text, p.name));
+  if (at) return at.id;
   if (target && target.by !== SELF && profiles.some((p) => p.id === target.by)) return target.by;
   const hit = profiles.find((p) => mentions(String(text), p.name));
   if (hit) return hit.id;

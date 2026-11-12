@@ -5,6 +5,10 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.15.0 (2026-11-12)
+
+- Added: **`@` in a forum reply (Molfar.Vertep#393).** Typing `@` in the reply box opens a popup list over the box with the topic's authors first and then every character (arrows and Enter, or a tap); the chosen `@Name` is what the forum reads: that character answers first, even when it has not posted in the topic and even when you quote another post, and the name must end where it is written (`@Al` is not `@Alice`). Messenger chats are one-to-one, so they need no list. The `@Name` is not highlighted in the posts yet. Checked in the design preview at desktop and phone width, dark and light; not on a real engine (there the names also come from `GET /profiles`).
+
 - Docs: the README lists what Social does today and its status table; `docs/DECISIONS.md` says the security tests it names are the engine repo's.
 
 ## 0.14.0 (2026-11-11)
