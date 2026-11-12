@@ -633,7 +633,7 @@ export function takeSticker(text, packs, may) {
 // </stickers-shared>
 
 // ---------- life: read-only access to what the `life` plugin wrote (issue #311) ----------
-// Copied into the messenger and the forum plugin (plugins cannot import each other); test/life-readers.test.ts pins that the two
+// Copied into the messenger and the forum plugin (plugins cannot import each other); test/life-surfaces.test.ts pins that the two
 // copies are identical. Only the `life` plugin writes life/*; a surface remembers what it has told in its own file.
 
 const LIFE_RECENT_MS = 3 * 24 * 3600 * 1000;

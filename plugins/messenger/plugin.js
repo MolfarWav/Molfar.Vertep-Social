@@ -403,7 +403,7 @@ export function takeSticker(text, packs, may) {
 // </stickers-shared>
 
 // ---------- life: read-only access to what the `life` plugin wrote (issue #311) ----------
-// Copied into the messenger and the forum plugin (plugins cannot import each other); test/life-readers.test.ts pins that the two
+// Copied into the messenger and the forum plugin (plugins cannot import each other); test/life-surfaces.test.ts pins that the two
 // copies are identical. Only the `life` plugin writes life/*; a surface remembers what it has told in its own file.
 
 const LIFE_RECENT_MS = 3 * 24 * 3600 * 1000;
@@ -1543,7 +1543,8 @@ export function onTick(_ctx, host) {
     const p = readProfile(fsx, id);
     if (!p) continue;
     const chat = readChat(fsx, id, persona);
-    if (chat.pending) continue;
+    // a reply that failed or is not due yet keeps `pending`; the note still grows (only a reply being asked for right now waits)
+    if (isAsking(chat, now)) continue;
     const fold = foldPlan(fsx, chat, false, now);
     if (fold) {
       requestFold(host, "sum:" + id + ":" + fold.upto + tail(persona), p, chat, fold);
@@ -1648,8 +1649,8 @@ export function checkInSubject(x, chat, now, day) {
   const feel = typeof x.feel === "number" && Number.isFinite(x.feel) ? x.feel : 0;
   if (!(x.lvl === "close" || x.lvl === "confidant" || (x.lvl === "friend" && feel >= 3))) return null;
   const last = chat.messages[chat.messages.length - 1];
+  if (now - last.at < CHECKIN_AFTER_MS) return null;
   const days = Math.floor((now - last.at) / (24 * 3600 * 1000));
-  if (days < 3) return null;
   return { text: "You have not talked for " + days + " days and you care about them. Write a short, warm message to see how they are, as a close friend would. Do not invent any news about yourself or about them.", ref: "checkin-" + day };
 }
 
