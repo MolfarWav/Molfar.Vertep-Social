@@ -256,3 +256,23 @@ test("a profile keeps its own 'knows you' choice, and the app default has bounds
   expect(merged).toMatchObject({ messengerSummary: false, messengerKnows: "name" });
   expect(profiles.mergeSettings(merged, { messengerKnows: "nonsense", messengerSummary: "yes" })).toMatchObject({ messengerSummary: false, messengerKnows: "name" });
 });
+
+// Handbook findings 2, item 10: a chat that still owes a reply (`pending`, with or without a failed reply) must not stop the note from growing
+test("the tick folds old messages of a chat whose reply failed or is still owed", () => {
+  for (const chat of [
+    { pending: { at: BASE + 29 * 60000, dueAt: null }, failed: { error: "the model returned nothing", at: BASE + 29 * 60000 } },
+    { pending: { at: BASE + 29 * 60000, dueAt: BASE + 60 * 60000 } },
+  ]) {
+    const h = makeHost();
+    seed(h, { messages: msgs(30), settings: { messengerContext: 12 }, chat });
+    plugin.onTick({}, h.host);
+    expect(h.requests.map((r) => r.key.split(":")[0])).toEqual(["sum"]);
+  }
+});
+
+test("a chat whose reply is being asked for right now is folded on a later tick", () => {
+  const h = makeHost();
+  seed(h, { messages: msgs(30), settings: { messengerContext: 12 }, chat: { pending: { at: BASE + 29 * 60000, dueAt: null, asking: Date.now() } } });
+  plugin.onTick({}, h.host);
+  expect(h.requests).toHaveLength(0);
+});
