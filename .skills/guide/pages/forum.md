@@ -47,7 +47,7 @@ When a character writes in a topic where you have posted, it knows who you are t
 
 ## Who answers first
 
-When you quote a character's post in your reply, name a character in your text, or just reply right under a character's post, that character answers you before the others, even when the few replies the topic was owed are already used up. If the character is not online, or its forum settings say it does not answer you, the others reply as usual. A reply under your own post, with no quote and no name, is answered by whoever is free.
+Type `@` in the reply box and a popup list of names appears over the box (the topic's authors first, then every character); arrow keys and Enter, or a tap, put `@Name` in. A character written as `@Name` answers you first, even if it has not posted in the topic and even when you quote someone else's post. When you quote a character's post in your reply, name a character in your text, or just reply right under a character's post, that character answers you before the others, even when the few replies the topic was owed are already used up. If the character is not online, or its forum settings say it does not answer you, the others reply as usual. A reply under your own post, with no quote and no name, is answered by whoever is free.
 
 ## Whom a character remembers
 

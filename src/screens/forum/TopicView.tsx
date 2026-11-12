@@ -11,6 +11,7 @@ import { Pager, type PageTarget } from "./Pager";
 import { PollCard } from "./PollCard";
 import { PostCard } from "./PostCard";
 import { NoticeLine, WriteNowButton } from "./Strip";
+import { useMention } from "./mention";
 
 export interface TopicViewProps {
   phone: boolean;
@@ -47,6 +48,8 @@ export interface TopicViewProps {
   onDeleteTopic?: () => Promise<string | null>;
   /** Gives or takes back a reaction on a post (real forum only). */
   onReact?: (post: ShownPost, emoji: string) => Promise<void>;
+  /** Every name Social knows, for the "@" list of the reply box (issue #393); the topic's own authors come first. */
+  people?: string[];
   /** The topic's poll, drawn under its opening post, and the user's vote (issue #367). */
   poll?: PollData;
   onVote?: (optionId: string) => Promise<void>;
@@ -62,6 +65,7 @@ export function TopicView(p: TopicViewProps) {
   const emoji = useEmoji({ target: ref, value: draft, onChange: setDraft, phone: p.phone, onSticker: p.live ? (s) => void sendSticker(s) : undefined });
   const pic = usePicture({ phone: p.phone });
   const posts = p.posts ?? [];
+  const mention = useMention({ target: ref, value: draft, onChange: setDraft, near: posts.filter((x) => !x.me && !x.removed).map((x) => x.who).reverse(), all: p.people ?? [] });
   const postsLabel = countLabel(t, "posts", p.paging?.total ?? posts.length);
   const pager = p.paging && p.onPage ? <Pager page={p.paging.page} pages={p.paging.pages} onPage={p.onPage} /> : null;
   const searchButton = p.onSearch && (
@@ -236,11 +240,13 @@ export function TopicView(p: TopicViewProps) {
             {chip}
             {p.live && pic.chip}
             {errLine}
+            {mention.list}
             <div className="rep-row">
               {p.live && pic.button}
               {emoji.button}
               <textarea
                 ref={ref}
+                {...mention.bind}
                 className="inp"
                 rows={1}
                 aria-label={t("forum.topic.quickLabel")}
@@ -296,8 +302,10 @@ export function TopicView(p: TopicViewProps) {
               <div className="qr-body">
                 {chip}
                 {p.live && pic.chip}
+                {mention.list}
                 <textarea
                   ref={ref}
+                  {...mention.bind}
                   className="inp"
                   aria-label={t("forum.topic.quickLabel")}
                   placeholder={t("forum.topic.placeholder")}
