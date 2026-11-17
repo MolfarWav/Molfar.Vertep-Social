@@ -36,10 +36,11 @@ function world(settings: object = {}) {
   const host: any = { fs: memFs(files), llm: { get results() { return results; }, request: (key: string, req: any) => void requests.push({ key, req }) } };
   return { files, requests, host, setResults: (r: Record<string, unknown>) => (results = r) };
 }
-const run = <T,>(fn: () => T): T => {
+// the whole clock is the test's: a call outside it reads the real date, and a story built on 2026-11-10 is long gone then (#385)
+const run = <T,>(fn: () => T, at = noon): T => {
   const n = Date.now;
   const r = Math.random;
-  Date.now = () => noon;
+  Date.now = () => at;
   Math.random = () => 0;
   try {
     return fn();
@@ -48,6 +49,8 @@ const run = <T,>(fn: () => T): T => {
     Math.random = r;
   }
 };
+// a route call on the mocked clock
+const route = (req: object, host: any, at = noon) => run(() => stories.handleRoute(req as any, host), at);
 const saved = (w: ReturnType<typeof world>) => JSON.parse(w.files.get("stories/items.json")!);
 
 test("captionFrom takes the first sentence of a diary line, or the line cut", () => {
@@ -108,11 +111,11 @@ test("with pictures on: one model request in the forum's model, the answer is fi
   expect(f.stories[0]).toMatchObject({ text: "The lake is calm today", image: { state: "pending", prompt: "A calm lake with reeds at dawn", gen: true } });
   expect(f.pending).toEqual({});
   // the page asks which pictures wait, draws, and files the result
-  const images = stories.handleRoute({ path: "/stories/images", method: "GET" }, w.host).json.items;
+  const images = route({ path: "/stories/images", method: "GET" }, w.host).json.items;
   expect(images).toEqual([{ id: f.stories[0].id, prompt: "A calm lake with reeds at dawn", model: "prov/img" }]);
-  expect(stories.handleRoute({ path: "/stories/image", method: "POST", body: { id: f.stories[0].id, url: "/v1/assets/abc123" } }, w.host).json.state).toBe("ready");
+  expect(route({ path: "/stories/image", method: "POST", body: { id: f.stories[0].id, url: "/v1/assets/abc123" } }, w.host).json.state).toBe("ready");
   expect(saved(w).stories[0].image).toMatchObject({ state: "ready", url: "/v1/assets/abc123" });
-  expect(stories.handleRoute({ path: "/stories/images", method: "GET" }, w.host).json.items).toEqual([]);
+  expect(route({ path: "/stories/images", method: "GET" }, w.host).json.items).toEqual([]);
 });
 
 test("a failed model call waits; a bad picture url is a failed picture", () => {
@@ -130,33 +133,27 @@ test("a failed model call waits; a bad picture url is a failed picture", () => {
   expect(saved(ok).stories).toHaveLength(1);
   const id = saved(ok).stories[0].id;
   ok.files.set("stories/items.json", JSON.stringify({ ...saved(ok), stories: [{ ...saved(ok).stories[0], image: { state: "pending", prompt: "p", gen: true } }] }));
-  expect(stories.handleRoute({ path: "/stories/image", method: "POST", body: { id, url: "https://evil.example/x.png" } }, ok.host).json.state).toBe("failed");
+  expect(route({ path: "/stories/image", method: "POST", body: { id, url: "https://evil.example/x.png" } }, ok.host).json.state).toBe("failed");
 });
 
 test("a story lives 24 hours; the user marks it seen and can remove it", () => {
   const w = world();
   run(() => stories.onTick({}, w.host));
   const id = saved(w).stories[0].id;
-  const list = () => stories.handleRoute({ path: "/stories", method: "GET" }, w.host).json;
+  const list = (at = noon) => route({ path: "/stories", method: "GET" }, w.host, at).json;
   expect(list().stories[0]).toMatchObject({ id, seen: false, by: "mavka", until: noon + DAY });
-  expect(stories.handleRoute({ path: "/stories/seen", method: "POST", body: { id } }, w.host).json.ok).toBe(true);
+  expect(route({ path: "/stories/seen", method: "POST", body: { id } }, w.host).json.ok).toBe(true);
   expect(list().stories[0].seen).toBe(true);
-  expect(stories.handleRoute({ path: "/stories/seen", method: "POST", body: { id: "nope" } }, w.host).status).toBe(404);
+  expect(route({ path: "/stories/seen", method: "POST", body: { id: "nope" } }, w.host).status).toBe(404);
   // after a day it is gone from the list, and the tick sweeps the file
   const later = noon + DAY + 1000;
-  const n = Date.now;
-  Date.now = () => later;
-  try {
-    expect(list().stories).toEqual([]);
-    stories.onTick({}, w.host);
-    expect(saved(w).stories).toEqual([]);
-  } finally {
-    Date.now = n;
-  }
+  expect(list(later).stories).toEqual([]);
+  run(() => stories.onTick({}, w.host), later);
+  expect(saved(w).stories).toEqual([]);
   const again = world();
   run(() => stories.onTick({}, again.host));
   const id2 = saved(again).stories[0].id;
-  expect(stories.handleRoute({ path: "/stories/remove", method: "POST", body: { id: id2 } }, again.host).json.ok).toBe(true);
+  expect(route({ path: "/stories/remove", method: "POST", body: { id: id2 } }, again.host).json.ok).toBe(true);
   expect(saved(again).stories).toEqual([]);
 });
 
