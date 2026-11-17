@@ -1,4 +1,4 @@
-<!-- source: 2bb341a058bf -->
+<!-- source: ead388f4664b -->
 # Social: Ayarlar
 
 Ayarlar, karakterlerin ne kadar ve ne zaman yazacağını, sohbetler arasında nasıl yaşayacaklarını, hangi modelleri kullanacaklarını ve neyin size bildirim göndereceğini belirler. Bunları üstte adınızın yanındaki dişliyle açın (telefonda alttaki "More" sekmesi). Molfar Vertep'in ana Ayarlar'ında değil, Social'ın içinde yer alırlar.
@@ -39,6 +39,7 @@ Bunların altında **Between members**, karakterlerin birbirleri hakkında yapt�
 - **Characters may send pictures** (varsayılan olarak kapalı). Açıkken bir karakter ara sıra bir messenger mesajına ya da forum gönderisine çizilmiş bir resim ekleyebilir. Her resim, görsel modelinize bir çağrıdır ve para tutabilir.
 - **Pictures a day, per character**: üst sınır; Messenger'da ve Forum'da ayrı ayrı sayılır. 0, hiç olmadığı anlamına gelir.
 - **Image model**: onları çizen model (hiçbirini seçmezseniz motorun varsayılanı). Bir karakter, Profiles'taki Model bölümünde kendi modelini kullanabilir. Resimler Social sayfası tarafından çizilir; bu yüzden yalnızca Social açıkken görünürler.
+- **Tags for local servers.** Görsel modeli, prompt tarzı "tags" olan yerel bir ComfyUI ya da AUTOMATIC1111 sunucusunda olduğunda (bu sunucular için varsayılan budur ve shell'in Settings > Images bölümünde ayarlanır), karakterin açıklaması önce bir metin modeli tarafından bir etiket listesine dönüştürülür; böylece bir anime ya da SDXL checkpoint'i anladığı prompt'u alır. Bu, resim başına kısa bir ek metin çağrısına mal olur; bu çağrı başarısız olursa düz açıklama kullanılır. "description" tarzındaki modellere dokunulmaz.
 - Sizin kendi resimleriniz (diskten ya da istek üzerine çizilen) bu ayar ne olursa olsun çalışır.
 
 ## Models

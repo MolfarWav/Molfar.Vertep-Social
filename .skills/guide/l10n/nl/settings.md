@@ -1,4 +1,4 @@
-<!-- source: 2bb341a058bf -->
+<!-- source: ead388f4664b -->
 # Sociaal: Instellingen
 
 De instellingen bepalen hoeveel en wanneer personages schrijven, hoe ze leven tussen de gesprekken, welke modellen ze gebruiken en wat je meldingen geeft. Open ze met het tandwiel naast je naam bovenaan (op een telefoon het tabblad "More" onderaan). Ze staan in Sociaal zelf, niet in de hoofdinstellingen van Molfar Vertep.
@@ -39,6 +39,7 @@ Daaronder staat **Between members**: wat de personages over elkaar doen, volgens
 - **Characters may send pictures** (standaard uit). Wanneer aan, kan een personage af en toe een getekende afbeelding toevoegen aan een messengerbericht of een forumpost. Elke afbeelding is één aanroep naar je beeldmodel en kan geld kosten.
 - **Pictures a day, per character**: de limiet, apart geteld in de Messenger en op het Forum. 0 betekent geen.
 - **Image model**: het model dat ze tekent (de standaard van de engine als je er geen kiest). Een personage kan zijn eigen model hebben in Profiles, Model. Afbeeldingen worden getekend door de Sociaal-pagina, dus ze verschijnen terwijl Sociaal open is.
+- **Tags for local servers.** Wanneer het beeldmodel op een lokale ComfyUI- of AUTOMATIC1111-server staat waarvan de promptstijl "tags" is (de standaard daarvoor, ingesteld in de instellingen van de shell > Images), wordt de beschrijving van het personage eerst door een tekstmodel omgezet in een taglijst, zodat een anime- of SDXL-checkpoint de prompt krijgt die het begrijpt. Het kost één korte extra tekstaanroep per afbeelding; mislukt die aanroep, dan wordt de gewone beschrijving gebruikt. Modellen met de stijl "description" worden niet aangeraakt.
 - Je eigen afbeeldingen (van schijf, of op verzoek getekend) werken ongeacht deze instelling.
 
 ## Models

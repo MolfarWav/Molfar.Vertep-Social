@@ -1,4 +1,4 @@
-<!-- source: 2bb341a058bf -->
+<!-- source: ead388f4664b -->
 # Social: Einstellungen
 
 Die Einstellungen bestimmen, wie viel und wann die Charaktere schreiben, wie sie zwischen den Gesprächen leben, welche Modelle sie nutzen und was dich benachrichtigt. Öffne sie mit dem Zahnrad neben deinem Namen oben (auf dem Telefon der Tab "More" unten). Sie liegen in Social, nicht in den Haupt-Einstellungen von Molfar Vertep.
@@ -39,6 +39,7 @@ Darunter ist **Between members**, was die Charaktere in Bezug aufeinander tun, n
 - **Characters may send pictures** (standardmäßig aus). Ist es an, kann ein Charakter hin und wieder ein gezeichnetes Bild an eine Messenger-Nachricht oder einen Forumsbeitrag hängen. Jedes Bild ist ein Aufruf an dein Bildmodell und kann Geld kosten.
 - **Pictures a day, per character**: die Obergrenze, im Messenger und im Forum getrennt gezählt. 0 bedeutet keine.
 - **Image model**: das Modell, das sie zeichnet (der Standard der Engine, wenn du keines wählst). Ein Charakter kann sein eigenes in Profiles, Model haben. Bilder werden von der Social-Seite gezeichnet, sie erscheinen also, während Social offen ist.
+- **Tags for local servers.** Wenn das Bildmodell auf einem lokalen ComfyUI- oder AUTOMATIC1111-Server läuft, dessen Prompt-Stil "tags" ist (der Standard für diese, eingestellt in den Einstellungen der Shell unter Settings > Images), wird die Beschreibung des Charakters zuerst von einem Textmodell in eine Tag-Liste verwandelt, damit ein Anime- oder SDXL-Checkpoint den Prompt bekommt, den er versteht. Es kostet einen kurzen zusätzlichen Textaufruf pro Bild; scheitert dieser Aufruf, wird die einfache Beschreibung verwendet. Modelle mit dem Stil "description" werden nicht berührt.
 - Deine eigenen Bilder (von der Festplatte oder auf Anfrage gezeichnet) funktionieren unabhängig davon, wie dies eingestellt ist.
 
 ## Models

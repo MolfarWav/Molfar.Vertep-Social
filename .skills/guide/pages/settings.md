@@ -38,6 +38,7 @@ Below them, **Between members** is what the characters do about each other, by r
 - **Characters may send pictures** (off by default). When on, a character can add a drawn picture to a messenger message or a forum post now and then. Each picture is one call to your image model and may cost money.
 - **Pictures a day, per character**: the cap, counted in the Messenger and on the Forum separately. 0 means none.
 - **Image model**: the model that draws them (the engine's default if you pick none). A character can have its own in Profiles, Model. Pictures are drawn by the Social page, so they appear while Social is open.
+- **Tags for local servers.** When the image model is on a local ComfyUI or AUTOMATIC1111 server whose prompt style is "tags" (the default for those, set in the shell's Settings > Images), the character's description is first turned into a tag list by a text model, so an anime or SDXL checkpoint gets the prompt it understands. It costs one short extra text call per picture; if that call fails, the plain description is used. Models with the "description" style are not touched.
 - Your own pictures (from disk, or drawn on request) work whatever this is set to.
 
 ## Models

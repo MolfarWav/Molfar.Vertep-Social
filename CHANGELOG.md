@@ -5,6 +5,10 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.16.0 (2026-11-17)
+
+- Added: **pictures for a local ComfyUI or AUTOMATIC1111 checkpoint are drawn from tags, not from a sentence (Molfar.Vertep#344).** A character writes a short English description; a model whose prompt style (Settings > Images in the shell) is "tags", which is the default for ComfyUI and A1111 servers, now gets it turned into a Danbooru-style tag list first, by one call to the text model of the part that asked (the messenger's or the forum's; the import model for a profile picture or a story). Models with the "description" style, such as OpenAI-compatible ones, are untouched. If the text model fails, the sentence goes through as before and the picture is still drawn. Costs one more short text call per picture for tags models only. Tried with a mock engine and unit tests; not with a real ComfyUI.
+
 ## 0.15.2 (2026-11-17)
 
 - Fixed: **the "Characters talk" window had no Close button, so on a phone it could not be closed (Molfar.Vertep#426).** Only Escape closed the shared dialog; the window now ends with a Close button, as the memory and clubs windows do (en and uk strings). Reported on Android with a patch in the reporter's own copy; this puts the same fix into the app so an update no longer removes it. Checked: typecheck, tests (the 3 date-fixture failures of #385 are unchanged); not opened on a phone here.
