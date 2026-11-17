@@ -5,6 +5,10 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.15.2 (2026-11-17)
+
+- Fixed: **the "Characters talk" window had no Close button, so on a phone it could not be closed (Molfar.Vertep#426).** Only Escape closed the shared dialog; the window now ends with a Close button, as the memory and clubs windows do (en and uk strings). Reported on Android with a patch in the reporter's own copy; this puts the same fix into the app so an update no longer removes it. Checked: typecheck, tests (the 3 date-fixture failures of #385 are unchanged); not opened on a phone here.
+
 ## 0.15.1 (2026-11-12)
 
 - Fixed: **a messenger chat whose reply failed (or is not due yet) still folds old messages into its memory note.** The tick skipped every chat that kept `pending`, so after a failed reply the note stopped growing until the user retried; now only a reply being asked for at that moment waits.
