@@ -330,6 +330,10 @@ function ChatterDialog({ contacts, pairs, max, phone, onChanged, onClose }: { co
           {error && <div className="k chatter-err" role="alert">{error}</div>}
         </div>
       </div>
+      <div className="pf-foot">
+        <span className="grow" />
+        <button type="button" className="btn" onClick={onClose}>{t("messenger.chatter.close")}</button>
+      </div>
     </Dialog>
   );
 }
