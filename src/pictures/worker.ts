@@ -5,7 +5,7 @@
 // picture, so one is drawn once; two devices are not covered (the second one's filing is refused and its drawing is wasted).
 import { useEffect } from "react";
 import { PREVIEW, call } from "@/lib/api";
-import { generatePicture } from "@/screens/profiles/picture-api";
+import { generatePicture, type PictureFrom } from "@/screens/profiles/picture-api";
 
 const POLL_MS = 20000;
 const EVENT = "social:images";
@@ -54,9 +54,9 @@ export function useImageWorker(): void {
     if (PREVIEW) return;
     let alive = true;
     let running = false;
-    const draw = async (prompt: string, model: string): Promise<{ url: string } | { error: string }> => {
+    const draw = async (prompt: string, model: string, from?: PictureFrom): Promise<{ url: string } | { error: string }> => {
       try {
-        return { url: await generatePicture(prompt, model, 200) };
+        return { url: await generatePicture(prompt, model, 200, from) };
       } catch (e) {
         return { error: e instanceof Error ? e.message : String(e) };
       }
@@ -73,13 +73,13 @@ export function useImageWorker(): void {
         for (const it of m.items) {
           if (!alive) break;
           if (!lock(`m:${it.id}:${it.messageId}`)) continue;
-          const r = await draw(it.prompt, it.model);
+          const r = await draw(it.prompt, it.model, "messenger");
           await call("POST", "/messenger/image", { id: it.id, ...(it.persona ? { persona: it.persona } : {}), messageId: it.messageId, ...r }).catch(() => undefined);
         }
         for (const it of f.items) {
           if (!alive) break;
           if (!lock(`f:${it.topic}:${it.post}`)) continue;
-          const r = await draw(it.prompt, it.model);
+          const r = await draw(it.prompt, it.model, "forum");
           await call("POST", "/forum/image", { topic: it.topic, post: it.post, ...r }).catch(() => undefined);
         }
         for (const it of st.items) {

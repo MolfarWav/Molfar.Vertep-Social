@@ -7,7 +7,7 @@
 //
 // Preview states: `?picture=fail` makes the generation fail, `?picture=nomodel` says no image model is set up.
 import { ANIMATION_PROBE_BYTES, isAnimatedImage } from "@/lib/animated-image";
-import { PREVIEW, ApiError } from "@/lib/api";
+import { PREVIEW, ApiError, call } from "@/lib/api";
 import type { Opt } from "@/screens/settings/controls";
 
 export interface ImageModel {
@@ -15,19 +15,21 @@ export interface ImageModel {
   ref: string;
   label: string;
   provider: string;
+  /** How the model's prompts are best written: "tags" (a local ComfyUI or A1111 checkpoint) or "description" (a sentence). */
+  style?: "tags" | "description";
 }
 
 /** The engine's answer of GET /v1/images/models (the fields this screen reads). */
 interface ModelsAnswer {
-  models?: { provider?: string; id?: string; label?: string; connectionName?: string }[];
+  models?: { provider?: string; id?: string; label?: string; connectionName?: string; style?: string }[];
   favorites?: { ref?: string; name?: string }[];
 }
 
 /** The image models as options: the user's own list (Settings > Images) first, in its order, then the rest. */
 export function imageModelsFrom(raw: ModelsAnswer): ImageModel[] {
-  const all = (raw.models ?? [])
+  const all: ImageModel[] = (raw.models ?? [])
     .filter((m) => typeof m.provider === "string" && typeof m.id === "string")
-    .map((m) => ({ ref: `${m.provider}/${m.id}`, label: m.label || m.id || "", provider: m.connectionName || m.provider || "" }));
+    .map((m): ImageModel => ({ ref: `${m.provider}/${m.id}`, label: m.label || m.id || "", provider: m.connectionName || m.provider || "", ...(m.style === "tags" || m.style === "description" ? { style: m.style } : {}) }));
   const byRef = new Map(all.map((m) => [m.ref, m]));
   const mine: ImageModel[] = [];
   const taken = new Set<string>();
@@ -71,8 +73,38 @@ function fakePicture(hue: number): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-/** Draws one picture. Resolves to its URL; throws an ApiError whose text says what went wrong. */
-export async function generatePicture(prompt: string, model: string, hue: number): Promise<string> {
+let styles: { at: number; byRef: Map<string, ImageModel["style"]>; first: ImageModel["style"] } | null = null;
+
+/** The prompt style of an image model ("" = the engine's default, the first one listed). Cached for a minute, so a run of pictures asks once. */
+export async function imageStyleOf(model: string): Promise<ImageModel["style"]> {
+  if (!styles || Date.now() - styles.at > 60_000) {
+    const list = await listImageModels();
+    styles = { at: Date.now(), byRef: new Map(list.map((m) => [m.ref, m.style])), first: list[0]?.style };
+  }
+  return model ? styles.byRef.get(model) : styles.first;
+}
+
+/** Drops the cached styles (the next picture asks the engine again). */
+export function forgetImageStyles(): void {
+  styles = null;
+}
+
+/** Which part of Social asks for the picture: its text model turns the description into tags (else the import model). */
+export type PictureFrom = "messenger" | "forum";
+
+/** A description as tags for a tags-style model, by one call to a text model. A failure keeps the description: the picture is still drawn. */
+export async function descriptionToTags(prompt: string, from?: PictureFrom): Promise<string> {
+  try {
+    const r = await call<{ ok?: boolean; tags?: string }>("POST", "/profiles/tags", { prompt, ...(from ? { from } : {}) });
+    return r.ok === true && typeof r.tags === "string" && r.tags.trim() ? r.tags.trim() : prompt;
+  } catch {
+    return prompt;
+  }
+}
+
+/** Draws one picture. Resolves to its URL; throws an ApiError whose text says what went wrong.
+ *  A model that wants tags (a local ComfyUI or A1111 checkpoint) gets the description turned into tags first (#344). */
+export async function generatePicture(prompt: string, model: string, hue: number, from?: PictureFrom): Promise<string> {
   if (PREVIEW) {
     await delay(700);
     const mode = new URLSearchParams(location.search).get("picture");
@@ -80,6 +112,7 @@ export async function generatePicture(prompt: string, model: string, hue: number
     if (mode === "fail") throw new ApiError("the image server did not answer", 502);
     return fakePicture(hue);
   }
+  if ((await imageStyleOf(model)) === "tags") prompt = await descriptionToTags(prompt, from);
   const res = await fetch("/v1/images", {
     method: "POST",
     headers: { "content-type": "application/json" },
