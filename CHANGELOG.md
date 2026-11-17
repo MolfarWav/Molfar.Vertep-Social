@@ -5,6 +5,8 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.16.0 (2026-11-17)
+
 - Added: **pictures for a local ComfyUI or AUTOMATIC1111 checkpoint are drawn from tags, not from a sentence (Molfar.Vertep#344).** A character writes a short English description; a model whose prompt style (Settings > Images in the shell) is "tags", which is the default for ComfyUI and A1111 servers, now gets it turned into a Danbooru-style tag list first, by one call to the text model of the part that asked (the messenger's or the forum's; the import model for a profile picture or a story). Models with the "description" style, such as OpenAI-compatible ones, are untouched. If the text model fails, the sentence goes through as before and the picture is still drawn. Costs one more short text call per picture for tags models only. Tried with a mock engine and unit tests; not with a real ComfyUI.
 
 ## 0.15.2 (2026-11-17)

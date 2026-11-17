@@ -1,6 +1,6 @@
 {
   "name": "Social",
-  "version": "0.15.2",
+  "version": "0.16.0",
   "engine": ">=1.0.0",
   "kind": "app",
   "settingsView": "settings",
