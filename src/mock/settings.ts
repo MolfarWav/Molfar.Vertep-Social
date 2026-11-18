@@ -51,6 +51,8 @@ export interface CommunitySettings {
   stories: boolean;
   storiesPerDay: number;
   storiesToJournal: boolean;
+  journalPosts: boolean;
+  journalPerDay: number;
   /** Characters chat with each other in the messenger (about twice the tokens of a normal chat). */
   chats: boolean;
   chatsPerDay: number;
@@ -73,7 +75,7 @@ export interface CommunitySettings {
   repostsPerDay: number;
 }
 
-export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, storiesToJournal: true, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 };
+export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, storiesToJournal: true, journalPosts: false, journalPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 };
 
 export interface SettingsMock {
   autonomous: boolean;
@@ -142,6 +144,7 @@ export const LIMITS = {
   imagesPerDay: { min: 0, max: 20 },
   reactionsPerDay: { min: 0, max: 50 },
   storiesPerDay: { min: 0, max: 10 },
+  journalPerDay: { min: 0, max: 5 },
   chatsPerDay: { min: 0, max: 30 },
   clubsPerDay: { min: 1, max: 40 },
   clubsAnswers: { min: 0, max: 100 },

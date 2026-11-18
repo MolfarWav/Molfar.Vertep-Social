@@ -133,6 +133,7 @@ test("journals go on their own, with the copy of the stories, and count the jour
   files.set("journal/rp-a.json", JSON.stringify({ posts: [] }));
   files.set("journal/you.json", JSON.stringify({ posts: [] }));
   files.set("journal/mirror.json", JSON.stringify({ stories: {}, done: [] }));
+  files.set("journal/state.json", JSON.stringify({ day: "2026-11-10", counts: {} }));
   expect(profiles.handleRoute({ method: "GET", path: "/settings/reset" }, host).json.counts.journal).toBe(2);
   expect(POST(host, ["journal"]).json).toEqual({ ok: true, cleared: ["journal"] });
   expect(left(files).filter((k) => k.startsWith("journal/"))).toEqual([]);

@@ -190,3 +190,110 @@ test("a story with no profile (deleted) is not filed", () => {
   tick(w);
   expect(w.files.has("journal/ghost.json")).toBe(false);
 });
+
+// ---------- J2: a character writes a post from its diary ----------
+
+const always = Array.from({ length: 8 }, () => Array.from({ length: 7 }, () => "online"));
+const asleep = Array.from({ length: 8 }, () => Array.from({ length: 7 }, () => "off"));
+
+function writerWorld(settings: object = {}, profile: object = {}) {
+  const w = world({ community: { stories: true, journalPosts: true, journalPerDay: 1 }, ...settings });
+  w.files.set("profiles/mavka.json", JSON.stringify({ name: "Mavka", hue: 120, about: "A mavka of the lake.", schedule: always, ...profile }));
+  w.files.set("life/diary/mavka.json", JSON.stringify({ entries: [{ id: "e1", at: noon - 3600000, day: "2026-11-10", text: "Mended the net by the reeds.", by: "model" }, { id: "e2", at: noon - 7200000, day: "2026-11-10", text: "The lake was calm.", by: "model" }, { id: "e3", at: noon - 9000000, day: "2026-11-09", text: "Yesterday's line.", by: "model" }, { id: "e4", at: noon, day: "2026-11-10", text: "my own note", by: "you" }] }));
+  const requests: { key: string; req: any }[] = [];
+  let results: Record<string, unknown> = {};
+  w.host.llm = { get results() { return results; }, request: (key: string, req: any) => void requests.push({ key, req }) };
+  return { ...w, requests, setResults: (r: Record<string, unknown>) => (results = r) };
+}
+const withRandom = <T,>(r: number, fn: () => T): T => {
+  const old = Math.random;
+  Math.random = () => r;
+  try {
+    return fn();
+  } finally {
+    Math.random = old;
+  }
+};
+const writeTick = (w: ReturnType<typeof writerWorld>, at = noon) => run(() => withRandom(0, () => journal.onTick({}, w.host)), at);
+
+test("J2: a character writes from today's own diary lines, one model call, filed once", () => {
+  const w = writerWorld();
+  writeTick(w);
+  expect(w.requests.length).toBe(1);
+  expect(w.requests[0].key).toBe("jp:mavka");
+  const user = w.requests[0].req.messages[0].content;
+  expect(user).toContain("Mended the net");
+  expect(user).toContain("The lake was calm");
+  expect(user).not.toMatch(/Yesterday|my own note/);
+  expect(w.requests[0].req.systemPrompt).toContain("A mavka of the lake.");
+  // the answer arrives on a later tick
+  w.setResults({ "jp:mavka": { text: '```json\n{"title":"By the reeds","text":"I mended the net today. The lake stayed calm.","mood":"calm","tags":["#lake","net"]}\n```' } });
+  writeTick(w, noon + 60000);
+  const list = posts(w, "mavka");
+  expect(list.length).toBe(1);
+  expect(list[0].title).toBe("By the reeds");
+  expect(list[0].mood).toBe("calm");
+  expect(list[0].tags).toEqual(["lake", "net"]);
+  expect(list[0].from).toBe("diary:e1");
+  const st = JSON.parse(w.files.get("journal/state.json")!);
+  expect(st.counts.mavka).toBe(1);
+  expect(st.used.mavka).toEqual(["e1", "e2"]);
+  expect(st.pending.mavka).toBeUndefined();
+  // under the cap of one a day: no second request, even with a diary line left over
+  w.setResults({});
+  const before = w.requests.length;
+  writeTick(w, noon + 120000);
+  expect(w.requests.length).toBe(before);
+});
+
+test("J2: nothing is asked with the switch off, Life off, the character asleep, at cap 0, or with no diary lines", () => {
+  for (const [settings, profile] of [
+    [{ community: { journalPosts: false } }, {}],
+    [{ community: { journalPosts: true }, life: { on: false } }, {}],
+    [{ community: { journalPosts: true, journalPerDay: 0 } }, {}],
+    [{}, { schedule: asleep }],
+    [{}, { life: { on: false } }],
+  ] as [object, object][]) {
+    const w = writerWorld(settings, profile);
+    writeTick(w);
+    expect(w.requests.length).toBe(0);
+  }
+  const noDiary = writerWorld();
+  noDiary.files.delete("life/diary/mavka.json");
+  writeTick(noDiary);
+  expect(noDiary.requests.length).toBe(0);
+  // the chance gates it
+  const unlucky = writerWorld();
+  run(() => withRandom(0.99, () => journal.onTick({}, unlucky.host)));
+  expect(unlucky.requests.length).toBe(0);
+});
+
+test("J2: a failed or empty answer files nothing and the character waits half an hour; a pending request is not asked twice", () => {
+  const w = writerWorld();
+  writeTick(w);
+  writeTick(w, noon + 60000); // pending
+  expect(w.requests.length).toBe(1);
+  w.setResults({ "jp:mavka": { error: "rate limit" } });
+  writeTick(w, noon + 120000);
+  expect(posts(w, "mavka")).toEqual([]);
+  w.setResults({});
+  writeTick(w, noon + 10 * 60000);
+  expect(w.requests.length).toBe(1); // still waiting
+  writeTick(w, noon + 40 * 60000);
+  expect(w.requests.length).toBe(2);
+});
+
+test("J2: an answer that is plain text becomes the post; HTML and junk are cleaned; a gone profile files nothing", () => {
+  const w = writerWorld();
+  writeTick(w);
+  w.setResults({ "jp:mavka": { text: "<b>Just</b> some plain words about the day." } });
+  writeTick(w, noon + 60000);
+  expect(posts(w, "mavka")[0].text).toBe("Just some plain words about the day.");
+  const gone = writerWorld();
+  writeTick(gone);
+  gone.files.delete("profiles/mavka.json");
+  gone.setResults({ "jp:mavka": { text: '{"text":"hello"}' } });
+  writeTick(gone, noon + 60000);
+  expect(gone.files.has("journal/mavka.json")).toBe(false);
+  expect(journal.fileWriterResult(gone.host.fs, "jp:../x", { text: "x" }, noon, 0).error).toBe("bad key");
+});

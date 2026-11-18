@@ -68,6 +68,15 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
         </Row>
       </div>
 
+      <Row title={t("settings.community.journal")} hint={hint("settings.community.journal.hint", "settings.community.journal.phone.hint")}>
+        {(id) => <Switch labelledBy={id} checked={c.journalPosts} onChange={(v) => change({ journalPosts: v })} />}
+      </Row>
+      <div className={`pictures-more${c.journalPosts ? "" : " is-off"}`} aria-disabled={!c.journalPosts || undefined}>
+        <Row title={t("settings.community.journal.limit")}>
+          {() => <Stepper name={t("settings.community.journal.limit")} value={c.journalPerDay} min={LIMITS.journalPerDay.min} max={LIMITS.journalPerDay.max} onChange={(v) => change({ journalPerDay: v })} />}
+        </Row>
+      </div>
+
       <Row title={t("settings.community.chats")} hint={hint("settings.community.chats.hint", "settings.community.chats.phone.hint")}>
         {(id) => <Switch labelledBy={id} checked={c.chats} onChange={(v) => change({ chats: v })} />}
       </Row>

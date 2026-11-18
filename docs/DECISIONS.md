@@ -358,3 +358,12 @@ Owner's plan: listen = the last lines of chatter between those present, read onl
 - **UI.** The room is listed in the Messenger's Clubs group with a "Room" tag and does not count in the "most clubs" line; its header has "Leave the room" instead of Edit. The City opens it through `nav.openClub`.
 - **Not done.** Choosing who goes into the room; a room for a place with one character; the characters' prompts knowing they are at a place (C4); a room-specific first line.
 - **Not checked.** A real engine and model, the room header in a browser (the preview has no room), a phone.
+
+## Journal, J2: characters write posts (#444, 2026-11-18)
+Owner's plan: a character writes a post now and then from its diary: a chance per tick, a cap per day, the schedule obeyed, a switch, one model call per post. Built like the stories plugin:
+- **Switch and caps.** `community.journalPosts` off by default (it costs a model call a post), `journalPerDay` 0 to 5 default 1 per character, chance 8% a tick, a character must be online or away, Life on, and have an unused diary entry of today that it wrote itself (not the user's). Failed: 30 minutes' wait; a request pending 10 minutes blocks another for that character.
+- **Material.** Up to 3 unused diary entries of today (400 characters each), marked used when the post is filed; the post's `from` is `diary:<first entry id>`. The model answers with JSON (title, text, mood, tags); a plain-text answer becomes the text. Text is cleaned like a hand-written post (tags out, control characters out, 1200 characters). The prompt asks for the character's voice and language and for nothing invented; checked only by a test of the prompt, not by a real model.
+- **Model.** The forum model (the profile's own wins), as stories do; no picture in J2.
+- **Bookkeeping.** `journal/state.json` beside `mirror.json`; both names are reserved, so a profile can not have the id `mirror` or `state` and the list of journals skips them (found by a test: the orphan cleanup had removed the state file). Start over's count of journals skips them.
+- **Not done, on purpose.** Pictures on posts, a place on a post (City, C4), comments (J3), the post's visibility other than all, the character's opinion of those who wrote under it.
+- **Not checked.** A real model (do the posts sound like the character and stay true to the diary, how often a free model returns valid JSON), a real engine over a day.
