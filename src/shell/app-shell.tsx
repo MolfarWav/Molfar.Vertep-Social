@@ -9,17 +9,19 @@ import { Forum } from "@/screens/forum";
 import { useBadgePoll } from "@/lib/badges";
 import { onShellView } from "@/lib/shell-view";
 import { useImageWorker } from "@/pictures/worker";
+import { Journal } from "@/screens/journal";
 import { Profiles } from "@/screens/profiles";
 import { Settings } from "@/screens/settings";
 import { You } from "@/screens/you";
 import { ensureYou, useYou } from "@/screens/you/store";
 
-const MAIN: Tab[] = ["messenger", "forum", "profiles"];
+const MAIN: Tab[] = ["messenger", "forum", "profiles", "journal"];
 
 function TabIcon({ tab, size = 22 }: { tab: Tab; size?: number }) {
   const p = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true } as const;
   if (tab === "messenger") return <svg {...p}><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /></svg>;
   if (tab === "forum") return <svg {...p}><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
+  if (tab === "journal") return <svg {...p}><path d="M6 4h11a1 1 0 0 1 1 1v15H7a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /><path d="M9.5 9h5M9.5 13h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
   if (tab === "profiles") return <svg {...p}><circle cx="12" cy="9" r="3.5" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
   return <svg {...p}><circle cx="5.5" cy="12" r="1.6" fill="currentColor" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /><circle cx="18.5" cy="12" r="1.6" fill="currentColor" /></svg>;
 }
@@ -41,6 +43,7 @@ function Screen() {
   const { tab } = useNav();
   if (tab === "forum") return <Forum />;
   if (tab === "profiles") return <Profiles />;
+  if (tab === "journal") return <Journal />;
   if (tab === "settings") return <Settings />;
   if (tab === "you") return <You />;
   return <Messenger />;
@@ -58,8 +61,8 @@ function Chrome() {
   useEffect(() => onShellView((v) => { if (v === "settings") go("settings"); }), [go]);
   const you = useYou();
   const me = you?.personas.find((p) => p.id === you.active);
-  // a phone has no "You" chip: Settings opens Your profile, so More stays lit while it is open
-  const lit: Tab = tab === "you" ? "settings" : tab;
+  // a phone has no "You" chip and no Journal tab: More (Settings) opens Your profile and the Journal, so it stays lit while they are open
+  const lit: Tab = tab === "you" || tab === "journal" ? "settings" : tab;
   const badgeOf = (x: Tab) => (x === "messenger" ? badges.messenger : x === "forum" ? badges.forum : 0);
 
   return (

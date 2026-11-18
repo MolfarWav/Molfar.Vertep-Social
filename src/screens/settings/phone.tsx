@@ -84,6 +84,15 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
             <span className="go" aria-hidden="true">›</span>
           </button>
         </section>
+        <section className="sec" aria-label={t("journal.title")}>
+          <button type="button" className="ln row" onClick={() => go("journal")}>
+            <span className="t">
+              <b>{t("journal.title")}</b>
+              <span className="k">{t("settings.journal.hint")}</span>
+            </span>
+            <span className="go" aria-hidden="true">›</span>
+          </button>
+        </section>
         <GroupHead title={t("settings.group.forum")} glyph="forum" />
         <section className="sec" aria-label={t("settings.group.forum")}>
           <Row title={t("settings.autonomous.phone")}>

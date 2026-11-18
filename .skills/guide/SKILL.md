@@ -12,6 +12,7 @@ Answer from these pages, not from the code. Read the page that fits:
 - `messenger`: contacts, statuses, chats
 - `forum`: boards, topics, the autonomy strip
 - `profiles`: import from Roleplay, new profiles, the editor, Fill empty
+- `journal`: the journal, expired stories filed in it, your own posts
 - `you`: your own personas, the one characters are told about
 - `life`: the characters' diaries, first messages, topics from the outside world
 - `settings`: limits, quiet hours, life, models, notifications, Roleplay access

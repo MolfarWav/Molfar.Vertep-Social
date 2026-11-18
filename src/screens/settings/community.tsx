@@ -63,6 +63,9 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
         <Row title={t("settings.community.stories.limit")}>
           {() => <Stepper name={t("settings.community.stories.limit")} value={c.storiesPerDay} min={LIMITS.storiesPerDay.min} max={LIMITS.storiesPerDay.max} onChange={(v) => change({ storiesPerDay: v })} />}
         </Row>
+        <Row title={t("settings.community.stories.journal")} hint={phone ? undefined : t("settings.community.stories.journal.hint")}>
+          {(id) => <Switch labelledBy={id} checked={c.storiesToJournal} onChange={(v) => change({ storiesToJournal: v })} />}
+        </Row>
       </div>
 
       <Row title={t("settings.community.chats")} hint={hint("settings.community.chats.hint", "settings.community.chats.phone.hint")}>

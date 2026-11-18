@@ -64,7 +64,7 @@ const POST = (host: any, parts: unknown) => profiles.handleRoute({ method: "POST
 test("counts say what each part holds", () => {
   const { host } = makeHost(world());
   const r = profiles.handleRoute({ method: "GET", path: "/settings/reset" }, host);
-  expect(r.json.counts).toEqual({ forum: 2, chats: 2, diaries: 1, personas: 1, profiles: 2, settings: null });
+  expect(r.json.counts).toEqual({ forum: 2, chats: 2, diaries: 1, journal: 0, personas: 1, profiles: 2, settings: null });
 });
 
 test("clearing the forum leaves everything else, with no boards", () => {
@@ -97,7 +97,7 @@ test("diaries take people and stories, not the weather place", () => {
 test("clearing the characters takes their chats and diaries too", () => {
   const { host, files } = makeHost(world());
   const r = POST(host, ["profiles"]);
-  expect(r.json.cleared).toEqual(["chats", "diaries", "profiles"]);
+  expect(r.json.cleared).toEqual(["chats", "diaries", "journal", "profiles"]);
   expect(left(files).filter((k) => /^(profiles|chats|chatter|clubs|life\/diary|life\/people|stories)/.test(k))).toEqual([]);
   expect(files.has("forum/topics/t1.json")).toBe(true);
   expect(files.has("you.json")).toBe(true);
@@ -126,4 +126,15 @@ test("the screen and the plugin agree on what goes with the profiles", () => {
   expect(profiles.resetParts(["profiles"])).toEqual(effectiveParts(new Set(["profiles"] as const)));
   expect(profiles.resetParts(["settings", "forum"])).toEqual(effectiveParts(new Set(["settings", "forum"] as const)));
   expect(Object.keys(profiles.RESET_PARTS)).toEqual(RESET_PARTS);
+});
+
+test("journals go on their own, with the copy of the stories, and count the journals, not the mirror", () => {
+  const { host, files } = makeHost(world());
+  files.set("journal/rp-a.json", JSON.stringify({ posts: [] }));
+  files.set("journal/you.json", JSON.stringify({ posts: [] }));
+  files.set("journal/mirror.json", JSON.stringify({ stories: {}, done: [] }));
+  expect(profiles.handleRoute({ method: "GET", path: "/settings/reset" }, host).json.counts.journal).toBe(2);
+  expect(POST(host, ["journal"]).json).toEqual({ ok: true, cleared: ["journal"] });
+  expect(left(files).filter((k) => k.startsWith("journal/"))).toEqual([]);
+  expect(files.has("stories/items.json")).toBe(true);
 });
