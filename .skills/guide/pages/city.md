@@ -24,4 +24,4 @@ By rules, with no model call, once for every three hours: a character who is off
 
 ## What it does not do yet
 
-You cannot add places or districts, characters do not talk about where they are in their chats, and the city is not told to the messenger or the forum. Workplaces and shared flats are not set up yet. Nothing in the city costs a model call.
+You cannot add places or districts, characters do not talk about where they are in their chats, and the city is not told to the messenger or the forum. Workplaces and shared flats are not set up yet. Looking and listening cost nothing; only a room you walk into costs what a club costs.
