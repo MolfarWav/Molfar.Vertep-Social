@@ -386,3 +386,13 @@ Owner's plan: `visible: friends` posts reach only friends, in the feed and in an
 - **Friends list.** `GET /journal/friends` is shown under the choice in the form, so the user sees who will be able to read it. A persona switch changes who the friends are (the key is the active persona's).
 - **Not done, on purpose.** The plan's "a post the user commented on becomes a public fact in the memory ledger": the ledger (#446, M4) is not built. A way for characters to write friends-only posts. A notice when a character stops being a friend.
 - **Not checked.** Real Life data (the `fol` of a persona key as the Life plugin writes it), a real engine.
+
+## City, C3: own places and districts (#445, 2026-11-18)
+Owner's plan: make a place (name, kind, district, hours, tags, a picture drawn through the existing worker or uploaded) and a district the same way. Built:
+- **Data.** The same `city/places.json` the stock town sits in; a place or district made or changed by the user is `by: "you"`. A stock one the user edits becomes theirs, so the page stops translating its name (the page translates `by: "stock"` only). The plugin is still the only writer of `city/*`.
+- **Picture.** The page's existing picture window (the profile's) draws with an image model or uploads and hands an asset url; the place stores that url (only `/v1/assets/...`). No pending picture and no worker route are needed because the user waits in the window; so the plan's "through the picture worker" became "through the picture window". The window got an `initialPrompt` so the prompt is about a place, not a portrait.
+- **Hours.** The form edits one block of 3-hour bands on chosen days (stored as the 8 by 7 grid). A grid that is not one block (a hand-edited file) is shown as "kept as it is" and replaced only when the user sets new hours.
+- **Rules.** At most 60 places, 12 districts; no place in Homes; one Homes district, never removed or created again; a district is removed only when empty; a place id or a district id is made by the plugin. A bad picture url is dropped.
+- **Restore.** "Restore the stock town" writes the stock file again (own places and districts go; flats and `now.json` stay, a character's place that no longer exists reads as home until the next band).
+- **Not done, on purpose.** Moving a place between towns or packs (C6), a workplace field on a profile that points to a place (the profile editor), a character's own home picture, opening hours in a graphic grid.
+- **Not checked.** A real engine, drawing and uploading a picture in this window (the window itself is the profile's, and was not changed beyond the prompt), a phone.

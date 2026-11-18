@@ -9,12 +9,24 @@ export interface CityPerson {
   status: string;
 }
 
+/** Opening hours: bands of three hours (0 to 8) and the weekdays from Monday (0). */
+export interface Hours {
+  from: number;
+  to: number;
+  days: number[];
+}
+
 export interface CityPlace {
   id: string;
   name: string;
   kind: string;
   icon: string;
   text: string;
+  picture?: string;
+  district: string;
+  tags: string[];
+  /** Null for a grid the form cannot show. */
+  hours: Hours | null;
   /** "stock" places have translated names; the others show the stored name. */
   by: "stock" | "you" | "pack";
   open: boolean;
@@ -26,6 +38,7 @@ export interface CityDistrict {
   id: string;
   name: string;
   kind: string;
+  by: "stock" | "you";
   places: CityPlace[];
 }
 
@@ -47,6 +60,8 @@ export interface CityView {
   districts: CityDistrict[];
   homes: { buildings: { id: string; n: number; doors: CityDoor[] }[] };
   homesDistrict: string;
+  homesName: string;
+  homesBy: "stock" | "you";
   empty: boolean;
 }
 
@@ -56,19 +71,22 @@ const MOCK: CityView = {
   from: 12,
   to: 15,
   homesDistrict: "homes",
+  homesName: "Homes",
+  homesBy: "stock",
   empty: false,
   districts: [
     {
       id: "centre",
       name: "Centre",
       kind: "centre",
+      by: "stock",
       places: [
-        { id: "cafe", name: "The cafe by the park", kind: "cafe", icon: "☕", text: "Coffee, cake and a table by the window.", by: "stock", open: true, seats: 6, people: [p("mavka", "Mavka", 150), p("lis", "Lis", 30)] },
-        { id: "library", name: "The library", kind: "library", icon: "📚", text: "Quiet shelves, old maps and a reading room.", by: "stock", open: true, seats: 8, people: [] },
-        { id: "cinema", name: "The small cinema", kind: "club", icon: "🎬", text: "One screen and an evening show.", by: "stock", open: false, seats: 10, people: [] },
+        { id: "cafe", name: "The cafe by the park", kind: "cafe", icon: "☕", text: "Coffee, cake and a table by the window.", by: "stock", open: true, seats: 6, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [p("mavka", "Mavka", 150), p("lis", "Lis", 30)] },
+        { id: "library", name: "The library", kind: "library", icon: "📚", text: "Quiet shelves, old maps and a reading room.", by: "stock", open: true, seats: 8, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [] },
+        { id: "cinema", name: "The small cinema", kind: "club", icon: "🎬", text: "One screen and an evening show.", by: "stock", open: false, seats: 10, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [] },
       ],
     },
-    { id: "nature", name: "Nature", kind: "nature", places: [{ id: "park", name: "The park", kind: "park", icon: "🌳", text: "Benches, old trees and a path around the pond.", by: "stock", open: true, seats: 20, people: [p("fox", "Fox", 20)] }] },
+    { id: "nature", name: "Nature", kind: "nature", by: "stock", places: [{ id: "park", name: "The park", kind: "park", icon: "🌳", text: "Benches, old trees and a path around the pond.", by: "stock", open: true, seats: 20, district: "nature", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [p("fox", "Fox", 20)] }] },
   ],
   homes: {
     buildings: [
@@ -126,4 +144,46 @@ export async function walkIn(place: string, name: string): Promise<{ error: stri
 export async function loadCity(): Promise<CityView> {
   if (PREVIEW) return MOCK;
   return call<CityView>("GET", "/city");
+}
+
+export interface PlaceInput {
+  id?: string;
+  name: string;
+  district: string;
+  kind: string;
+  icon: string;
+  text: string;
+  tags: string;
+  seats: number;
+  picture: string;
+  hours?: Hours;
+}
+
+const fail = (e: unknown): never => {
+  throw e instanceof Error ? e : new Error(String(e));
+};
+
+export async function savePlace(v: PlaceInput): Promise<void> {
+  if (PREVIEW) return;
+  await call("POST", "/city/place", v).catch(fail);
+}
+
+export async function removePlace(id: string): Promise<void> {
+  if (PREVIEW) return;
+  await call("POST", "/city/place/remove", { id }).catch(fail);
+}
+
+export async function saveDistrict(v: { id?: string; name: string; kind: string }): Promise<void> {
+  if (PREVIEW) return;
+  await call("POST", "/city/district", v).catch(fail);
+}
+
+export async function removeDistrict(id: string): Promise<void> {
+  if (PREVIEW) return;
+  await call("POST", "/city/district/remove", { id }).catch(fail);
+}
+
+export async function resetTown(): Promise<void> {
+  if (PREVIEW) return;
+  await call("POST", "/city/reset", {}).catch(fail);
 }

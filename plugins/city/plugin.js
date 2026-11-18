@@ -3,7 +3,7 @@
  * character is right now. All by rules, no model call, read-only for the user in this phase.
  *
  * Data (this plugin is the only writer of city/*):
- *   city/places.json  {districts: [{id, name, kind, order}], places: [{id, district, name, kind, icon, text, open, tags, seats, by}]}
+ *   city/places.json  {districts: [{id, name, kind, order, by}], places: [{id, district, name, kind, icon, text, picture?, open, tags, seats, by}]}
  *                     `open` is 8 bands of 3 hours by 7 days from Monday (the schedule's shape), 1 = open. The stock town is an ordinary
  *                     present-day town with no real city, country or brand: plain names. It is written once, so later phases (own places,
  *                     packs) edit records, not code.
@@ -15,7 +15,17 @@
  * places with free seats and home, weighted by the place's tags against the profile's interests and by followed or close people who are
  * already there. A profile with life switched off stays at home.
  *
+ * C3 (own places): the user makes, edits and removes places and districts, and may restore the stock town. A stock place or district the user
+ * edits becomes `by: "you"` (the page shows the stock names in the language of the page, and a stored name for anything else). A place has an
+ * optional `picture` (an asset url the page's picture dialog made or uploaded). Hours come as {from, to, days}: band numbers 0 to 8 and the days
+ * from Monday (0), stored as the 8 by 7 grid.
+ *
  * Routes (relative to /v1/apps/social):
+ *   POST /city/place {id?, name, district, kind?, icon?, text?, tags?, seats?, hours?, picture?}   makes a place, or changes the one with `id`
+ *   POST /city/place/remove {id}
+ *   POST /city/district {id?, name, kind?}   makes a district (not another Homes), or renames the one with `id`
+ *   POST /city/district/remove {id}          only an empty one, never Homes
+ *   POST /city/reset                         the stock town again (own places and districts go; homes and who is where stay)
  *   GET /city/listen?place=   {place, present, lines: [{id, by, name, hue, picture, at, text, via: "chatter" | "club"}]}: the last lines (at most 6, from
  *                             the last 3 days) that characters who are at this place now wrote to each other in chatter or in a club; read only
  *                             (the chatter and clubs files are those plugins'; the user's own lines are left out)
@@ -34,6 +44,8 @@ const FLATS_PER_BUILDING = 8;
 const LISTEN_LINES = 6;
 const LISTEN_MS = 3 * 24 * 3600 * 1000;
 const TEXT_MAX = 600;
+const rid = () => Math.floor(Math.random() * 1e9).toString(36);
+const KIND_ICONS = { cafe: "\u2615", park: "\ud83c\udf33", library: "\ud83d\udcda", shop: "\ud83d\uded2", workplace: "\ud83c\udfe2", club: "\ud83c\udfac", custom: "\ud83d\udccd" };
 const MAX_PLACES = 60;
 const MAX_DISTRICTS = 12;
 const HOME = "home";
@@ -84,10 +96,10 @@ const NOT_SUN = [0, 1, 2, 3, 4, 5];
 /** An ordinary present-day town, a place between worlds: no real city, country or brand, plain names. */
 export const stockTown = () => ({
   districts: [
-    { id: "centre", name: "Centre", kind: "centre", order: 1 },
-    { id: "nature", name: "Nature", kind: "nature", order: 2 },
-    { id: "work", name: "Work", kind: "work", order: 3 },
-    { id: "homes", name: "Homes", kind: "homes", order: 4 },
+    { id: "centre", name: "Centre", kind: "centre", order: 1, by: "stock" },
+    { id: "nature", name: "Nature", kind: "nature", order: 2, by: "stock" },
+    { id: "work", name: "Work", kind: "work", order: 3, by: "stock" },
+    { id: "homes", name: "Homes", kind: "homes", order: 4, by: "stock" },
   ],
   places: [
     { id: "cafe", district: "centre", name: "The cafe by the park", kind: "cafe", icon: "☕", text: "Coffee, cake and a table by the window.", open: grid(2, 7, ALL), tags: ["food", "coffee", "cooking", "talk", "tea", "baking"], seats: 6, by: "stock" },
@@ -124,6 +136,7 @@ function cleanPlace(x, districtIds) {
     kind: KINDS.includes(x.kind) ? x.kind : "custom",
     icon: oneLine(x.icon, 8) || "📍",
     text: oneLine(x.text, 160),
+    ...(typeof x.picture === "string" && ASSET.test(x.picture) ? { picture: x.picture } : {}),
     open,
     tags: (Array.isArray(x.tags) ? x.tags : []).map((t) => oneLine(t, 24).toLowerCase()).filter(Boolean).slice(0, 12),
     seats,
@@ -140,7 +153,7 @@ export function readTown(fsx) {
   for (const x of d.districts) {
     if (!isObj(x) || typeof x.id !== "string" || !ID.test(x.id) || seen.has(x.id) || !str(x.name)) continue;
     seen.add(x.id);
-    districts.push({ id: x.id, name: oneLine(x.name, 40), kind: DISTRICT_KINDS.includes(x.kind) ? x.kind : "custom", order: Number.isFinite(x.order) ? x.order : 99 });
+    districts.push({ id: x.id, name: oneLine(x.name, 40), kind: DISTRICT_KINDS.includes(x.kind) ? x.kind : "custom", order: Number.isFinite(x.order) ? x.order : 99, by: x.by === "you" ? "you" : "stock" });
     if (districts.length >= MAX_DISTRICTS) break;
   }
   const ids = new Set(districts.map((x) => x.id));
@@ -377,6 +390,7 @@ export function cityView(fsx, now) {
       id: d.id,
       name: d.name,
       kind: d.kind,
+      by: d.by,
       places: town.places
         .filter((p) => p.district === d.id)
         .map((p) => ({
@@ -385,7 +399,11 @@ export function cityView(fsx, now) {
           kind: p.kind,
           icon: p.icon,
           text: p.text,
+          ...(p.picture ? { picture: p.picture } : {}),
           by: p.by,
+          district: p.district,
+          tags: p.tags,
+          hours: hoursOf(p.open),
           open: isOpen(p, band, weekday),
           seats: p.seats,
           people: profiles.filter((x) => at(x) === p.id).map((x) => ({ id: x.id, name: x.name, hue: x.hue, picture: x.picture, status: statusOf(x) })),
@@ -418,8 +436,89 @@ export function cityView(fsx, now) {
     districts,
     homes: { buildings: hasHomesDistrict ? buildings : [] },
     homesDistrict: hasHomesDistrict ? town.districts.find((d) => d.kind === "homes").id : "",
+    homesName: hasHomesDistrict ? town.districts.find((d) => d.kind === "homes").name : "",
+    homesBy: hasHomesDistrict ? town.districts.find((d) => d.kind === "homes").by : "stock",
     empty: profiles.length === 0,
   };
+}
+
+// ---------- own places (C3) ----------
+
+/** The 8 by 7 grid for {from, to, days}: band numbers 0 to 8 (from < to) and the weekdays from Monday (0). Null for a bad input. */
+export function gridFromHours(h) {
+  if (!isObj(h) || !Number.isInteger(h.from) || !Number.isInteger(h.to) || h.from < 0 || h.to > 8 || h.from >= h.to || !Array.isArray(h.days)) return null;
+  const days = [...new Set(h.days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))];
+  return days.length ? grid(h.from, h.to, days) : null;
+}
+
+/** {from, to, days} for a grid that is one block of bands on some days (what the form can show), else null (kept as it is). */
+export function hoursOf(open) {
+  const days = [];
+  for (let d = 0; d < 7; d++) if (open.some((row) => row[d] === 1)) days.push(d);
+  if (!days.length) return null;
+  const rows = open.map((row) => row[days[0]]);
+  const from = rows.indexOf(1);
+  const to = rows.lastIndexOf(1) + 1;
+  for (const d of days) for (let b = 0; b < 8; b++) if (open[b][d] !== (b >= from && b < to ? 1 : 0)) return null;
+  for (let b = 0; b < 8; b++) for (let d = 0; d < 7; d++) if (open[b][d] === 1 && !days.includes(d)) return null;
+  return { from, to, days };
+}
+
+const writeTown = (fsx, town) => fsx.write("city/places.json", JSON.stringify(town));
+const tagList = (v) => [...new Set((Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : []).map((t) => oneLine(t, 24).toLowerCase().replace(/^#+/, "")).filter(Boolean))].slice(0, 12);
+
+function placeRoute(fsx, b) {
+  const town = readTown(fsx);
+  const old = typeof b.id === "string" && b.id ? town.places.find((p) => p.id === b.id) : null;
+  if (typeof b.id === "string" && b.id && !old) return ok({ error: "no such place" }, 404);
+  const name = oneLine("name" in b ? b.name : old ? old.name : "", 60);
+  if (!name) return ok({ error: "a place needs a name" }, 400);
+  const dId = "district" in b ? String(b.district || "") : old ? old.district : "";
+  const district = town.districts.find((d) => d.id === dId);
+  if (!district || district.kind === "homes") return ok({ error: "pick a district for the place (not Homes)" }, 400);
+  if (!old && town.places.length >= MAX_PLACES) return ok({ error: "the town has the most places there can be: " + MAX_PLACES }, 409);
+  let open = old ? old.open : grid(2, 7, ALL);
+  if ("hours" in b) {
+    const g = gridFromHours(b.hours);
+    if (!g) return ok({ error: "the hours need a start before the end and at least one day" }, 400);
+    open = g;
+  }
+  const kind = KINDS.includes(b.kind) && b.kind !== "home" ? b.kind : old ? old.kind : "custom";
+  const seats = Number.isInteger(b.seats) && b.seats >= 1 && b.seats <= 200 ? b.seats : old ? old.seats : 6;
+  const picture = "picture" in b ? (typeof b.picture === "string" && ASSET.test(b.picture) ? b.picture : "") : old && old.picture ? old.picture : "";
+  const place = {
+    id: old ? old.id : "p-" + Date.now().toString(36) + rid(),
+    district: district.id,
+    name,
+    kind,
+    icon: oneLine("icon" in b ? b.icon : old ? old.icon : "", 8) || KIND_ICONS[kind] || KIND_ICONS.custom,
+    text: oneLine("text" in b ? b.text : old ? old.text : "", 160),
+    ...(picture ? { picture } : {}),
+    open,
+    tags: "tags" in b ? tagList(b.tags) : old ? old.tags : [],
+    seats,
+    by: "you",
+  };
+  town.places = old ? town.places.map((p) => (p.id === old.id ? place : p)) : [...town.places, place];
+  writeTown(fsx, town);
+  return ok({ ok: true, id: place.id });
+}
+
+function districtRoute(fsx, b) {
+  const town = readTown(fsx);
+  const old = typeof b.id === "string" && b.id ? town.districts.find((d) => d.id === b.id) : null;
+  if (typeof b.id === "string" && b.id && !old) return ok({ error: "no such district" }, 404);
+  const name = oneLine("name" in b ? b.name : old ? old.name : "", 40);
+  if (!name) return ok({ error: "a district needs a name" }, 400);
+  if (old) {
+    town.districts = town.districts.map((d) => (d.id === old.id ? { ...d, name, by: "you", ...(d.kind !== "homes" && DISTRICT_KINDS.includes(b.kind) && b.kind !== "homes" ? { kind: b.kind } : {}) } : d));
+  } else {
+    if (town.districts.length >= MAX_DISTRICTS) return ok({ error: "the town has the most districts there can be: " + MAX_DISTRICTS }, 409);
+    const kind = DISTRICT_KINDS.includes(b.kind) && b.kind !== "homes" ? b.kind : "custom";
+    town.districts.push({ id: "d-" + Date.now().toString(36) + rid(), name, kind, order: town.districts.reduce((m, d) => Math.max(m, d.order), 0) + 1, by: "you" });
+  }
+  writeTown(fsx, town);
+  return ok({ ok: true, id: old ? old.id : town.districts[town.districts.length - 1].id });
 }
 
 /** The last lines the characters at `place` wrote to each other (chatter pairs and clubs), read only. */
@@ -474,6 +573,32 @@ export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   if (path !== "/city" && !path.startsWith("/city/")) return null;
   if (path === "/city" && req.method === "GET") return ok(cityView(host.fs, Date.now()));
+  if (req.method === "POST") {
+    const b = isObj(req.body) ? req.body : {};
+    if (path === "/city/place") return placeRoute(host.fs, b);
+    if (path === "/city/place/remove") {
+      const town = readTown(host.fs);
+      if (!town.places.some((p) => p.id === String(b.id || ""))) return ok({ error: "no such place" }, 404);
+      town.places = town.places.filter((p) => p.id !== String(b.id));
+      writeTown(host.fs, town);
+      return ok({ ok: true });
+    }
+    if (path === "/city/district") return districtRoute(host.fs, b);
+    if (path === "/city/district/remove") {
+      const town = readTown(host.fs);
+      const d = town.districts.find((x) => x.id === String(b.id || ""));
+      if (!d) return ok({ error: "no such district" }, 404);
+      if (d.kind === "homes") return ok({ error: "Homes cannot be removed" }, 409);
+      if (town.places.some((p) => p.district === d.id)) return ok({ error: "move or remove the places of this district first" }, 409);
+      town.districts = town.districts.filter((x) => x.id !== d.id);
+      writeTown(host.fs, town);
+      return ok({ ok: true });
+    }
+    if (path === "/city/reset") {
+      writeTown(host.fs, stockTown());
+      return ok({ ok: true });
+    }
+  }
   if (path === "/city/listen" && req.method === "GET") {
     const place = isObj(req.query) && typeof req.query.place === "string" ? req.query.place : "";
     if (!ID.test(place)) return ok({ error: "no such place" }, 400);

@@ -12,7 +12,8 @@ import { useIsPhone } from "@/lib/use-phone";
 import { useChrome, useNav } from "@/shell/nav";
 import { useYou } from "../you/store";
 import { loadClubs } from "@/screens/messenger/clubs-api";
-import { loadCity, loadListen, walkIn, type CityDoor, type CityPlace, type CityView, type ListenLine } from "./api";
+import { loadCity, loadListen, removeDistrict, removePlace, resetTown, saveDistrict, savePlace, walkIn, type CityDoor, type CityPlace, type CityView, type ListenLine } from "./api";
+import { DistrictForm, PlaceForm, draftOf, type PlaceDraft } from "./editors";
 
 const param = (k: string): string => {
   if (!PREVIEW) return "";
@@ -37,7 +38,7 @@ function Tile({ p, name, text, on, onToggle }: { p: CityPlace; name: string; tex
   return (
     <button type="button" className={`ct-tile${on ? " on" : ""}${p.open ? "" : " is-closed"}`} aria-expanded={on} onClick={onToggle}>
       <span className="ct-top">
-        <span className="ct-ico" aria-hidden="true">{p.icon}</span>
+        {p.picture ? <img className="ct-thumb" src={p.picture} alt="" /> : <span className="ct-ico" aria-hidden="true">{p.icon}</span>}
         <span className="ct-nm">{name}</span>
         <span className="chip">{t(p.open ? "city.open" : "city.closed")}</span>
       </span>
@@ -52,12 +53,21 @@ function Tile({ p, name, text, on, onToggle }: { p: CityPlace; name: string; tex
 }
 
 /** An open place: who is here, what they say to each other (listen), and the way into a room with them (walk in). */
-function Detail({ p, name, clubsOn, onOpenPerson }: { p: CityPlace; name: string; clubsOn: boolean | null; onOpenPerson: (id: string) => void }) {
+function Detail({ p, name, clubsOn, onOpenPerson, onEdit, onRemoved }: { p: CityPlace; name: string; clubsOn: boolean | null; onOpenPerson: (id: string) => void; onEdit: () => void; onRemoved: () => void }) {
   const t = useT();
   const { go, openClub } = useNav();
   const [lines, setLines] = useState<ListenLine[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [asking, setAsking] = useState(false);
+  const drop = async () => {
+    try {
+      await removePlace(p.id);
+      onRemoved();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    }
+  };
   useEffect(() => {
     let alive = true;
     setLines(null);
@@ -108,6 +118,18 @@ function Detail({ p, name, clubsOn, onOpenPerson }: { p: CityPlace; name: string
         )}
         {err && <span className="jr-err" role="alert">{err}</span>}
       </div>
+      {asking ? (
+        <div className="ct-ask" role="alertdialog" aria-label={t("city.place.removeAsk")}>
+          <span>{t("city.place.removeAsk")}</span>
+          <button type="button" className="btn danger" onClick={() => void drop()}>{t("city.form.remove.yes")}</button>
+          <button type="button" className="btn" onClick={() => setAsking(false)}>{t("city.form.keep")}</button>
+        </div>
+      ) : (
+        <div className="ct-btns">
+          <button type="button" className="btn" onClick={onEdit}>{t("city.place.edit")}</button>
+          <button type="button" className="btn" onClick={() => setAsking(true)}>{t("city.place.remove")}</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -124,6 +146,10 @@ export function City() {
   const [error, setError] = useState("");
   const [district, setDistrict] = useState(() => param("district"));
   const [open, setOpen] = useState(() => param("place"));
+  // the form that is open: a place (new, or this one), a district (new, or this one), or none
+  const [editor, setEditor] = useState<null | { kind: "place"; id: string } | { kind: "district"; id: string }>(() => (param("edit") === "place" ? { kind: "place", id: "" } : param("edit") === "district" ? { kind: "district", id: "" } : null));
+  const [restoring, setRestoring] = useState(false);
+  const [restoreErr, setRestoreErr] = useState("");
   // walking in needs the global Clubs switch; null while it is not known
   const [clubsOn, setClubsOn] = useState<boolean | null>(null);
   useEffect(() => {
@@ -153,14 +179,24 @@ export function City() {
     const v = t(key);
     return v === key ? fallback : v;
   };
-  const districtName = (id: string, name: string) => tr(`city.district.${id}`, name);
+  const districtName = (d: { id: string; name: string; by?: string }) => (d.by === "you" ? d.name : tr(`city.district.${d.id}`, d.name));
   const placeName = (p: CityPlace) => (p.by === "stock" ? tr(`city.place.${p.id}`, p.name) : p.name);
   const placeText = (p: CityPlace) => (p.by === "stock" ? tr(`city.place.${p.id}.text`, p.text) : p.text);
 
-  const tabs = view ? [...view.districts.map((d) => ({ id: d.id, name: districtName(d.id, d.name) })), ...(view.homesDistrict ? [{ id: view.homesDistrict, name: districtName(view.homesDistrict, "Homes") }] : [])] : [];
+  const tabs = view ? [...view.districts.map((d) => ({ id: d.id, name: districtName(d) })), ...(view.homesDistrict ? [{ id: view.homesDistrict, name: districtName({ id: view.homesDistrict, name: view.homesName || "Homes", by: view.homesBy }) }] : [])] : [];
   const current = tabs.some((x) => x.id === district) ? district : (tabs[0]?.id ?? "");
   const isHomes = !!view && current === view.homesDistrict;
+  const currentDistrict = view?.districts.find((d) => d.id === current);
   const placeById = new Map((view?.districts ?? []).flatMap((d) => d.places).map((p) => [p.id, p]));
+
+  const afterSave = async (placeId?: string, districtId?: string) => {
+    await load();
+    setEditor(null);
+    if (districtId) setDistrict(districtId);
+    if (placeId) setOpen(placeId);
+  };
+  const editedPlace = editor?.kind === "place" && editor.id ? view?.districts.flatMap((d) => d.places).find((p) => p.id === editor.id) ?? null : null;
+  const pickDistricts = (view?.districts ?? []).map((d) => ({ id: d.id, name: districtName(d) }));
 
   const doorText = (d: CityDoor): string => {
     if (d.state === "lit") return t("city.state.lit");
@@ -210,17 +246,50 @@ export function City() {
               <div className="ct-now">{t("city.now", { from: hh(view.from), to: hh(view.to) })}</div>
               <div className="ct-strip" role="group" aria-label={t("city.districts")}>
                 {tabs.map((x) => (
-                  <button key={x.id} type="button" className={`chip${x.id === current ? " on" : ""}`} aria-pressed={x.id === current} onClick={() => { setDistrict(x.id); setOpen(""); }}>{x.name}</button>
+                  <button key={x.id} type="button" className={`chip${x.id === current ? " on" : ""}`} aria-pressed={x.id === current} onClick={() => { setDistrict(x.id); setOpen(""); setEditor(null); }}>{x.name}</button>
                 ))}
+                <button type="button" className="chip" aria-label={t("city.district.add")} title={t("city.district.add")} onClick={() => setEditor({ kind: "district", id: "" })}>+</button>
               </div>
+              {editor?.kind === "district" && (
+                <DistrictForm
+                  key={editor.id || "new"}
+                  initial={editor.id && currentDistrict ? { id: currentDistrict.id, name: districtName(currentDistrict), kind: currentDistrict.kind } : { name: "", kind: "custom" }}
+                  canRemove={!!currentDistrict && currentDistrict.places.length === 0}
+                  onSave={async (v) => { await saveDistrict(v); await afterSave(undefined, v.id); }}
+                  onRemove={editor.id ? async () => { await removeDistrict(editor.id); setDistrict(""); await afterSave(); } : undefined}
+                  onCancel={() => setEditor(null)}
+                />
+              )}
+              {editor?.kind === "place" && (
+                <PlaceForm
+                  key={editor.id || "new"}
+                  initial={editedPlace ? draftOf(editedPlace, editedPlace.district, placeName(editedPlace), placeText(editedPlace)) : draftOf(null, !isHomes ? current : (pickDistricts[0]?.id ?? ""), "", "")}
+                  existingHours={editedPlace?.hours}
+                  districts={pickDistricts}
+                  phone={phone}
+                  onSave={async (v: PlaceDraft) => {
+                    const { hours, ...rest } = v;
+                    await savePlace({ ...rest, ...(hours ? { hours } : {}) });
+                    await afterSave(v.id, v.district);
+                  }}
+                  onCancel={() => setEditor(null)}
+                />
+              )}
+              {!isHomes && !editor && (
+                <div className="ct-btns">
+                  <button type="button" className="btn" onClick={() => setEditor({ kind: "place", id: "" })}>{t("city.place.add")}</button>
+                  {currentDistrict && <button type="button" className="btn" onClick={() => setEditor({ kind: "district", id: currentDistrict.id })}>{t("city.district.edit")}</button>}
+                </div>
+              )}
               {!isHomes && (
                 <div className="ct-tiles">
-                  {(view.districts.find((d) => d.id === current)?.places ?? []).map((p) => (
+                  {(currentDistrict?.places ?? []).map((p) => (
                     <div key={p.id} className="ct-cell">
                       <Tile p={p} name={placeName(p)} text={placeText(p)} on={open === p.id} onToggle={() => setOpen(open === p.id ? "" : p.id)} />
-                      {open === p.id && <Detail p={p} name={placeName(p)} clubsOn={clubsOn} onOpenPerson={openProfile} />}
+                      {open === p.id && <Detail p={p} name={placeName(p)} clubsOn={clubsOn} onOpenPerson={openProfile} onEdit={() => setEditor({ kind: "place", id: p.id })} onRemoved={() => { setOpen(""); void load(); }} />}
                     </div>
                   ))}
+                  {(currentDistrict?.places.length ?? 0) === 0 && <p className="k">{t("city.district.empty")}</p>}
                 </div>
               )}
               {isHomes && (
@@ -250,6 +319,18 @@ export function City() {
                   ))}
                 </>
               )}
+              <div className="ct-foot">
+                {restoring ? (
+                  <div className="ct-ask" role="alertdialog" aria-label={t("city.restore.ask")}>
+                    <span>{t("city.restore.ask")}</span>
+                    <button type="button" className="btn danger" onClick={() => void resetTown().then(() => { setRestoring(false); setDistrict(""); setOpen(""); setEditor(null); return load(); }).catch((e) => setRestoreErr(e instanceof Error ? e.message : String(e)))}>{t("city.restore.yes")}</button>
+                    <button type="button" className="btn" onClick={() => setRestoring(false)}>{t("city.form.keep")}</button>
+                  </div>
+                ) : (
+                  <button type="button" className="link" onClick={() => setRestoring(true)}>{t("city.restore")}</button>
+                )}
+                {restoreErr && <span className="jr-err" role="alert">{restoreErr}</span>}
+              </div>
             </>
           )}
         </div>

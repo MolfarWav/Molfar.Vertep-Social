@@ -57,3 +57,20 @@
 .s-city .ct-empty h2 { margin: 0; font: 700 16px/1.3 Inter, sans-serif; }
 .s-city .ct-empty p { margin: 0; }
 .s-city .ct-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.s-city .ct-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex: none; border: 1px solid var(--line); }
+.s-city .ct-form { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.s-city .ct-fh { margin: 0; font: 700 16px/1.3 Inter, sans-serif; }
+.s-city .ct-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.s-city.is-phone .ct-two { grid-template-columns: 1fr; }
+.s-city .ct-sel { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.s-city .ct-area { min-height: 64px; }
+.s-city .ct-days { display: flex; flex-wrap: wrap; gap: 6px; }
+.s-city .ct-days .chip { height: 36px; padding: 0 12px; }
+.s-city.is-phone .ct-days .chip { height: 40px; }
+.s-city .ct-icon { max-width: 120px; }
+.s-city .ct-picrow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.s-city .ct-pic { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
+.s-city .ct-ask { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.s-city .ct-foot { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.s-city .ct-foot .link, .s-city .ct-detail .link, .s-city .ct-who .link { align-self: flex-start; min-height: 40px; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-decoration: underline; cursor: pointer; }

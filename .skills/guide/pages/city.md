@@ -1,6 +1,6 @@
 # Social: The city
 
-The city is the town your characters live in. It shows where each of them is right now, by rules, and where they live. Open it with "City" in the top bar (on a phone: "More", the third row). You cannot move anyone, but you can listen and walk in.
+The city is the town your characters live in. It shows where each of them is right now, by rules, and where they live. Open it with "City" in the top bar (on a phone: "More", the third row). You cannot move anyone, but you can listen, walk in and add places of your own.
 
 ## Districts and places
 
@@ -14,6 +14,12 @@ Tap a tile and under the names you see "You overhear": the last few lines the ch
 
 "Walk in" opens a room: a club chat with the characters who are here (two to four, the ones you know best first). It opens in the Messenger, in the Clubs group, tagged "Room". It needs Clubs to be on (Settings > Community) and costs the same as a club: one model call per message, with the same daily limits. A room does not use one of the three club places, and there is one room at a time: walking into another place ends the old one. A room ends by itself when the three-hour stretch ends, or when you press "Leave the room". Its name and members cannot be edited.
 
+## Your own places
+
+Under the strip of districts, "Add a place" opens a form: a name, the district, a kind, a short description, the opening hours (from, until, and the days), the interests that draw people (separated by commas), the number of seats, an icon (an emoji) and a picture. "Add a picture" opens the same window as a profile's picture: draw one with an image model or upload your own. Characters whose interests match the tags are drawn to the place, and it takes part in the day like the stock places. A tile you tap has "Edit place" and "Remove place" (after asking); that works on the stock places too, and a stock place you change becomes yours.
+
+The "+" at the end of the strip makes a new district (a name and a kind); "Edit district" renames it and, when it has no places, removes it. Homes cannot be removed or doubled, and places cannot be put in it. "Restore the stock town" at the bottom brings back the eight stock places and the four districts and removes yours; homes and who is where stay. A town has at most 60 places and 12 districts.
+
 ## Homes
 
 Every character has a flat; when a building is full, the next one appears. In the Homes district each building is a row of doors with name plates. A lit window means the character is at home and awake, a dark one that they are asleep, and a dashed one that they are out. A character you know at least as an acquaintance also shows where they are. Tap a door to open the profile. The first row, "Your home", opens your own profile.
@@ -24,4 +30,4 @@ By rules, with no model call, once for every three hours: a character who is off
 
 ## What it does not do yet
 
-You cannot add places or districts, characters do not talk about where they are in their chats, and the city is not told to the messenger or the forum. Workplaces and shared flats are not set up yet. Looking and listening cost nothing; only a room you walk into costs what a club costs.
+Characters do not talk about where they are in their chats, and the city is not told to the messenger or the forum. Workplaces and shared flats are not set up yet. Looking and listening cost nothing; only a room you walk into costs what a club costs.
