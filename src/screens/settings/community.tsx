@@ -63,6 +63,27 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
         <Row title={t("settings.community.stories.limit")}>
           {() => <Stepper name={t("settings.community.stories.limit")} value={c.storiesPerDay} min={LIMITS.storiesPerDay.min} max={LIMITS.storiesPerDay.max} onChange={(v) => change({ storiesPerDay: v })} />}
         </Row>
+        <Row title={t("settings.community.stories.journal")} hint={phone ? undefined : t("settings.community.stories.journal.hint")}>
+          {(id) => <Switch labelledBy={id} checked={c.storiesToJournal} onChange={(v) => change({ storiesToJournal: v })} />}
+        </Row>
+      </div>
+
+      <Row title={t("settings.community.journal")} hint={hint("settings.community.journal.hint", "settings.community.journal.phone.hint")}>
+        {(id) => <Switch labelledBy={id} checked={c.journalPosts} onChange={(v) => change({ journalPosts: v })} />}
+      </Row>
+      <div className={`pictures-more${c.journalPosts ? "" : " is-off"}`} aria-disabled={!c.journalPosts || undefined}>
+        <Row title={t("settings.community.journal.limit")}>
+          {() => <Stepper name={t("settings.community.journal.limit")} value={c.journalPerDay} min={LIMITS.journalPerDay.min} max={LIMITS.journalPerDay.max} onChange={(v) => change({ journalPerDay: v })} />}
+        </Row>
+      </div>
+
+      <Row title={t("settings.community.journalComments")} hint={hint("settings.community.journalComments.hint", "settings.community.journalComments.phone.hint")}>
+        {(id) => <Switch labelledBy={id} checked={c.journalComments} onChange={(v) => change({ journalComments: v })} />}
+      </Row>
+      <div className={`pictures-more${c.journalComments ? "" : " is-off"}`} aria-disabled={!c.journalComments || undefined}>
+        <Row title={t("settings.community.journalComments.limit")}>
+          {() => <Stepper name={t("settings.community.journalComments.limit")} value={c.journalCommentsPerDay} min={LIMITS.journalCommentsPerDay.min} max={LIMITS.journalCommentsPerDay.max} onChange={(v) => change({ journalCommentsPerDay: v })} />}
+        </Row>
       </div>
 
       <Row title={t("settings.community.chats")} hint={hint("settings.community.chats.hint", "settings.community.chats.phone.hint")}>

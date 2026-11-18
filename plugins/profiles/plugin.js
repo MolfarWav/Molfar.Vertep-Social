@@ -19,8 +19,8 @@
  *   GET    /settings                  the app settings (settings.json merged over the defaults)
  *   PUT    /settings                  save a partial patch of them; the reply is the full settings
  *   GET    /settings/reset            {counts}: what each part of "Start over" holds now
- *   POST   /settings/reset {parts}    clears parts (forum, chats, diaries, personas, profiles, settings) for good: {ok, cleared}
- *          (clearing the profiles also clears their chats and diaries)
+ *   POST   /settings/reset {parts}    clears parts (forum, chats, diaries, journal, personas, profiles, settings) for good: {ok, cleared}
+ *          (clearing the profiles also clears their chats, diaries and journals)
  *   GET    /profiles/roleplay/status  {state: "ready" | "closed"}: may Social read Roleplay right now
  *   GET    /profiles/roleplay         what can be imported: {state, characters, hidden, truncated}
  *   POST   /profiles/import {kind: "card", id, key?, model?}   one card -> one profile (the one-time digest)
@@ -423,6 +423,7 @@ export const DEFAULT_SETTINGS = {
   messengerSummary: true,
   /** The few older messages closest in meaning to the talk are quoted in a reply's prompt (issue #368): off by default, it adds up to about 450 tokens to a reply. */
   messengerRecall: false,
+  messengerPlace: false,
   /** How well a character knows the user when its profile does not say: "knows", "name" or "stranger". */
   messengerKnows: "knows",
   models: { messenger: "", forum: "", import: "", image: "" },
@@ -438,7 +439,7 @@ export const DEFAULT_SETTINGS = {
    * flirty (hints and teasing); never anything explicit. `chronicle` is the Moderator's daily digest (one model request a day, only when there is something to tell). `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
    * and a sharper answer from the characters' own ties (#367); neither costs a model call.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, storiesToJournal: true, journalPosts: false, journalPerDay: 1, journalComments: false, journalCommentsPerDay: 2, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -508,6 +509,11 @@ export function mergeSettings(base, patch) {
       chronicle: bool(cm.chronicle, bool(bcm.chronicle, true)),
       stories: bool(cm.stories, bool(bcm.stories, false)),
       storiesPerDay: clampInt(cm.storiesPerDay, 0, 10, Number.isInteger(bcm.storiesPerDay) ? bcm.storiesPerDay : 1),
+      storiesToJournal: bool(cm.storiesToJournal, bool(bcm.storiesToJournal, true)),
+      journalPosts: bool(cm.journalPosts, bool(bcm.journalPosts, false)),
+      journalPerDay: clampInt(cm.journalPerDay, 0, 5, Number.isInteger(bcm.journalPerDay) ? bcm.journalPerDay : 1),
+      journalComments: bool(cm.journalComments, bool(bcm.journalComments, false)),
+      journalCommentsPerDay: clampInt(cm.journalCommentsPerDay, 0, 10, Number.isInteger(bcm.journalCommentsPerDay) ? bcm.journalCommentsPerDay : 2),
       chats: bool(cm.chats, bool(bcm.chats, false)),
       chatsPerDay: clampInt(cm.chatsPerDay, 0, 30, Number.isInteger(bcm.chatsPerDay) ? bcm.chatsPerDay : 4),
       clubs: bool(cm.clubs, bool(bcm.clubs, false)),
@@ -535,6 +541,7 @@ export function mergeSettings(base, patch) {
     messengerContext: clampInt(p.messengerContext, 4, 500, Number.isInteger(b.messengerContext) ? b.messengerContext : 24),
     messengerSummary: bool(p.messengerSummary, typeof b.messengerSummary === "boolean" ? b.messengerSummary : true),
     messengerRecall: bool(p.messengerRecall, typeof b.messengerRecall === "boolean" ? b.messengerRecall : false),
+    messengerPlace: bool(p.messengerPlace, typeof b.messengerPlace === "boolean" ? b.messengerPlace : false),
     messengerKnows: oneOf(p.messengerKnows, ["knows", "name", "stranger"], oneOf(b.messengerKnows, ["knows", "name", "stranger"], "knows")),
     models: {
       messenger: "messenger" in m ? modelRef(m.messenger) : b.models.messenger,
@@ -666,15 +673,16 @@ export const RESET_PARTS = {
   forum: ["forum/topics", "forum/boards.json", "forum/events.json", "forum/life-used.json", "forum/gossip.json", "forum/log.json"],
   chats: ["chats", "chatter", "clubs", "firstlog.json", ".cache/recall"],
   diaries: ["life/diary", "life/people", "life/people-meta.json", "stories"],
+  journal: ["journal"],
   personas: ["you.json"],
   profiles: ["profiles"],
   settings: ["settings.json", "life/place.json"],
 };
 
 /** Parts that only make sense with their profile: without it they would sit orphaned on disk and come back with a reused id. */
-const RESET_WITH_PROFILES = ["chats", "diaries"];
+const RESET_WITH_PROFILES = ["chats", "diaries", "journal"];
 
-/** The asked parts, known ones only, in a fixed order; clearing the profiles clears their chats and diaries too. */
+/** The asked parts, known ones only, in a fixed order; clearing the profiles clears their chats, diaries and journals too. */
 export function resetParts(asked) {
   const want = new Set(Array.isArray(asked) ? asked.map(String).filter((k) => Object.prototype.hasOwnProperty.call(RESET_PARTS, k)) : []);
   if (want.has("profiles")) for (const k of RESET_WITH_PROFILES) want.add(k);
@@ -682,6 +690,15 @@ export function resetParts(asked) {
 }
 
 /** How many things each part holds now (null: nothing to count), so the dialog can say what goes. */
+/** How many journals there are: the files of journal/ that are not the plugin's own bookkeeping. */
+const journalCount = (fsx) => {
+  try {
+    return fsx.list("journal").filter((n) => String(n).endsWith(".json") && n !== "mirror.json" && n !== "state.json" && n !== "follows.json").length;
+  } catch {
+    return 0;
+  }
+};
+
 export function resetCounts(fsx) {
   const count = (dir) => {
     try {
@@ -695,6 +712,7 @@ export function resetCounts(fsx) {
     forum: count("forum/topics"),
     chats: count("chats"),
     diaries: count("life/diary"),
+    journal: journalCount(fsx),
     personas: isObj(you) && Array.isArray(you.personas) ? you.personas.length : 0,
     profiles: listProfiles(fsx).length,
     settings: null,

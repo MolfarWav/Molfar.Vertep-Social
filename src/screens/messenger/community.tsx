@@ -138,7 +138,7 @@ function StoryViewer({ who, start, phone, onClose }: { who: Who; start: number; 
           <Avatar name={who.name} hue={who.hue} size={36} picture={who.picture || undefined} />
           <div className="story-meta">
             <b style={{ color: themColor(who.hue) }}>{who.name}</b>
-            <span className="k">{t("messenger.stories.meta", { time: when, n: left })}</span>
+            <span className="k">{t("messenger.stories.meta", { time: when, n: left })}{s.place ? ` · ${t("messenger.stories.at", { place: s.place })}` : ""}</span>
           </div>
           <span className="k story-count" aria-live="polite">{i + 1} / {list.length}</span>
         </div>

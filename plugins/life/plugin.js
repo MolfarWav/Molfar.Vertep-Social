@@ -443,6 +443,7 @@ export function dayUser(p, diary, shape, now, tz) {
   if (diary.mood) lines.push("Your mood lately: " + diary.mood + ".");
   if (diary.plan && shape.kind.kind === "plan") lines.push("Your plan from yesterday: " + diary.plan);
   lines.push("The shape of today: " + shape.kind.line);
+  if (shape.place) lines.push(shape.place);
   if (shape.interest) lines.push("An interest you may touch on: " + shape.interest + ".");
   if (shape.item) lines.push("The item: " + outsideBlock(shape.item));
   lines.push("Write 1 to 3 short diary entries about your last day (yesterday evening and today so far): first person, past tense, concrete things, " + LENGTH[1] + " each. Do not start every entry the same way.");
@@ -1744,6 +1745,12 @@ export function onTick(_ctx, host) {
     const d = readDiary(fsx, id);
     if (!dayDue(settings, p, d, now, settings.tz)) continue;
     const shape = shapeOf(settings, p, d, items, Math.random);
+    // C4: a day of "seen" may name where the character is now (the city's file, read only)
+    const here = shape.kind.kind === "seen" ? cityNow(fsx, id, now, settings.tz) : null;
+    if (here) {
+      const names = here.here.map((x) => readProfile(fsx, x)).filter(Boolean).map((x) => x.name).slice(0, 3);
+      shape.place = "Where you are as you write this: " + here.place.name + (names.length ? ", with " + names.join(", ") : "") + ". The unexpected thing you noticed may have been here.";
+    }
     requestDay(host, dayKey(id, shape), settings, p, d, shape, now);
     if (++asked >= TICK_DAYS) break;
   }
@@ -1761,3 +1768,27 @@ export function onTick(_ctx, host) {
   }
   if (!asked && Math.floor(now / 60000) % 60 === 0) sweep(fsx);
 }
+
+// <city-shared>
+/** Where character `id` is now, from the city's file (read only): {place: {id, name}, here: [profile ids]}, or null (at home, no city, a file of another band). Identical in every plugin that reads it: test/city-readers.test.ts pins the copies. */
+function cityNow(fsx, id, now, tz) {
+  try {
+    const off = Number.isFinite(tz) ? tz : new Date(now).getTimezoneOffset();
+    const local = new Date(now - off * 60000);
+    const band = local.toISOString().slice(0, 10) + "#" + Math.floor(local.getUTCHours() / 3);
+    const d = JSON.parse(fsx.read("city/now.json"));
+    if (!d || typeof d !== "object" || d.id !== band || !d.where || typeof d.where !== "object") return null;
+    const ok = (s) => typeof s === "string" && /^[A-Za-z0-9_-]{1,60}$/.test(s);
+    const at = d.where[id];
+    if (!ok(at) || at === "home") return null;
+    const town = JSON.parse(fsx.read("city/places.json"));
+    const place = town && Array.isArray(town.places) ? town.places.find((p) => p && p.id === at) : null;
+    if (!place || typeof place.name !== "string") return null;
+    const name = place.name.replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+    if (!name) return null;
+    return { place: { id: at, name }, here: Object.keys(d.where).filter((k) => k !== id && d.where[k] === at && ok(k)) };
+  } catch {
+    return null;
+  }
+}
+// </city-shared>

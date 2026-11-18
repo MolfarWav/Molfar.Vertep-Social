@@ -4,7 +4,7 @@
  * says something true about the day; the picture goes through the same worker as the pictures in messages and posts: a plugin can
  * only write text, so the story is filed with a `pending` image and the Social page draws it (src/pictures/worker.ts).
  *
- * Data: stories/items.json {day, counts: {profileId: n today}, stories: [{id, by, name, hue, picture?, at, text, image?}],
+ * Data: stories/items.json {day, counts: {profileId: n today}, stories: [{id, by, name, hue, picture?, place?, at, text, image?}] (`place` is the name of where the character was when it posted, from the city's file),
  * seen: [ids], used: {profileId: [diary entry ids]}, pending: {profileId: at}, failedAt: {profileId: at}}.
  * Settings (settings.json `community`): stories (switch, off by default), storiesPerDay per character; `images.on` decides
  * whether a story has a picture (without it, one model-free text story from the diary line).
@@ -137,7 +137,7 @@ export function cleanImage(raw) {
 function cleanStory(x) {
   if (!isObj(x) || typeof x.id !== "string" || !ID.test(x.id) || typeof x.by !== "string" || !ID.test(x.by) || !Number.isFinite(x.at) || !str(x.text)) return null;
   const image = cleanImage(x.image);
-  return { id: x.id, by: x.by, name: oneLine(x.name, 80), hue: Number.isFinite(x.hue) ? x.hue : 200, ...(typeof x.picture === "string" && ASSET.test(x.picture) ? { picture: x.picture } : {}), at: x.at, text: oneLine(x.text, CAPTION_MAX), ...(image ? { image } : {}) };
+  return { id: x.id, by: x.by, name: oneLine(x.name, 80), hue: Number.isFinite(x.hue) ? x.hue : 200, ...(typeof x.picture === "string" && ASSET.test(x.picture) ? { picture: x.picture } : {}), ...(str(x.place) ? { place: oneLine(x.place, 60) } : {}), at: x.at, text: oneLine(x.text, CAPTION_MAX), ...(image ? { image } : {}) };
 }
 
 const idMap = (v, cap) => {
@@ -223,8 +223,8 @@ export function captionFrom(text) {
   return cut(m ? m[1] : t, CAPTION_MAX);
 }
 
-function addStory(file, p, text, image, entryId, now) {
-  const story = { id: "s-" + now + "-" + rid(), by: p.id, name: p.name, hue: p.hue, ...(p.picture ? { picture: p.picture } : {}), at: now, text, ...(image ? { image } : {}) };
+function addStory(file, p, text, image, entryId, now, place) {
+  const story = { id: "s-" + now + "-" + rid(), by: p.id, name: p.name, hue: p.hue, ...(p.picture ? { picture: p.picture } : {}), ...(place ? { place } : {}), at: now, text, ...(image ? { image } : {}) };
   file.stories.push(story);
   file.counts[p.id] = (file.counts[p.id] || 0) + 1;
   file.used[p.id] = [...(file.used[p.id] || []), entryId].slice(-30);
@@ -251,14 +251,15 @@ export function fileStoryResult(fsx, key, result, now, tz) {
   const caption = j ? oneLine(j.caption, CAPTION_MAX) : oneLine(r.text, CAPTION_MAX);
   const prompt = j ? oneLine(j.image, 300) : "";
   if (!caption) return fail("the model returned no caption");
-  const story = addStory(file, p, caption, prompt ? { state: "pending", prompt, gen: true } : null, m[2], now);
+  const here = cityNow(fsx, p.id, now, tz);
+  const story = addStory(file, p, caption, prompt ? { state: "pending", prompt, gen: true } : null, m[2], now, here ? here.place.name : "");
   writeFile(fsx, file);
   return { story };
 }
 
 // ---------- routes ----------
 
-const view = (s, seen) => ({ id: s.id, by: s.by, name: s.name, hue: s.hue, picture: s.picture || "", at: s.at, until: s.at + STORY_MS, text: s.text, ...(s.image ? { image: s.image } : {}), seen: seen.includes(s.id) });
+const view = (s, seen) => ({ id: s.id, by: s.by, name: s.name, hue: s.hue, picture: s.picture || "", ...(s.place ? { place: s.place } : {}), at: s.at, until: s.at + STORY_MS, text: s.text, ...(s.image ? { image: s.image } : {}), seen: seen.includes(s.id) });
 
 function imageModelFor(fsx, profile, settings) {
   const own = profile ? profile.imageModel : "";
@@ -330,7 +331,8 @@ export function onTick(_ctx, host) {
   if (!pick) return;
   if (!settings.pictures) {
     // no pictures: the story is the diary line itself, no model call
-    addStory(file, pick.profile, captionFrom(pick.entry.text), null, pick.entry.id, now);
+    const here = cityNow(fsx, pick.profile.id, now, settings.tz);
+    addStory(file, pick.profile, captionFrom(pick.entry.text), null, pick.entry.id, now, here ? here.place.name : "");
     writeFile(fsx, file);
     return;
   }
@@ -344,3 +346,27 @@ export function onTick(_ctx, host) {
     presetParams: { temperature: 0.9, max_tokens: 200 },
   });
 }
+
+// <city-shared>
+/** Where character `id` is now, from the city's file (read only): {place: {id, name}, here: [profile ids]}, or null (at home, no city, a file of another band). Identical in every plugin that reads it: test/city-readers.test.ts pins the copies. */
+function cityNow(fsx, id, now, tz) {
+  try {
+    const off = Number.isFinite(tz) ? tz : new Date(now).getTimezoneOffset();
+    const local = new Date(now - off * 60000);
+    const band = local.toISOString().slice(0, 10) + "#" + Math.floor(local.getUTCHours() / 3);
+    const d = JSON.parse(fsx.read("city/now.json"));
+    if (!d || typeof d !== "object" || d.id !== band || !d.where || typeof d.where !== "object") return null;
+    const ok = (s) => typeof s === "string" && /^[A-Za-z0-9_-]{1,60}$/.test(s);
+    const at = d.where[id];
+    if (!ok(at) || at === "home") return null;
+    const town = JSON.parse(fsx.read("city/places.json"));
+    const place = town && Array.isArray(town.places) ? town.places.find((p) => p && p.id === at) : null;
+    if (!place || typeof place.name !== "string") return null;
+    const name = place.name.replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+    if (!name) return null;
+    return { place: { id: at, name }, here: Object.keys(d.where).filter((k) => k !== id && d.where[k] === at && ok(k)) };
+  } catch {
+    return null;
+  }
+}
+// </city-shared>

@@ -2,13 +2,13 @@
 // (`GET`/`POST /settings/reset`). In the design preview (`?screen=`) the same calls work on a fake and clear nothing.
 import { PREVIEW, call } from "@/lib/api";
 
-export type ResetPart = "forum" | "chats" | "diaries" | "personas" | "profiles" | "settings";
+export type ResetPart = "forum" | "chats" | "diaries" | "journal" | "personas" | "profiles" | "settings";
 
 /** The parts in the order the screen lists them. */
-export const RESET_PARTS: ResetPart[] = ["forum", "chats", "diaries", "personas", "profiles", "settings"];
+export const RESET_PARTS: ResetPart[] = ["forum", "chats", "diaries", "journal", "personas", "profiles", "settings"];
 
 /** Parts that go with the profiles: without a profile their chat and diary would be orphans. Mirrors the plugin. */
-export const WITH_PROFILES: ResetPart[] = ["chats", "diaries"];
+export const WITH_PROFILES: ResetPart[] = ["chats", "diaries", "journal"];
 
 /** How many things each part holds now; null for a part that is not a list (settings). */
 export type ResetCounts = Record<ResetPart, number | null>;
@@ -21,7 +21,7 @@ export function effectiveParts(chosen: ReadonlySet<ResetPart>): ResetPart[] {
 }
 
 export async function loadCounts(): Promise<ResetCounts> {
-  if (PREVIEW) return { forum: 14, chats: 6, diaries: 6, personas: 2, profiles: 6, settings: null };
+  if (PREVIEW) return { forum: 14, chats: 6, diaries: 6, journal: 8, personas: 2, profiles: 6, settings: null };
   const r = await call<{ counts: ResetCounts }>("GET", "/settings/reset");
   return r.counts;
 }

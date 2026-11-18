@@ -60,7 +60,7 @@ function hhmm(): string {
 export function Messenger() {
   const t = useT();
   const phone = useIsPhone();
-  const { go, openProfile } = useNav();
+  const { go, openProfile, clubFocus, clearClubFocus } = useNav();
   const [pv] = useState(readPreview);
   const real = !PREVIEW;
   // with more than one persona every chat is one persona's: say whose
@@ -118,6 +118,13 @@ export function Messenger() {
     setOpen(true);
   };
   const openClub = clubId ? clubList?.clubs.find((c) => c.id === clubId) : undefined;
+  // the City's "Walk in" opens the room it made
+  useEffect(() => {
+    if (!clubFocus) return;
+    pickClub(clubFocus);
+    clearClubFocus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubFocus]);
   // a club that was deleted (here or elsewhere) is not shown any more
   useEffect(() => {
     if (clubId && clubList && !clubList.clubs.some((c) => c.id === clubId)) setClubId("");

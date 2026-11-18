@@ -50,6 +50,11 @@ export interface CommunitySettings {
   /** A story: a short post with a picture that vanishes after a day. */
   stories: boolean;
   storiesPerDay: number;
+  storiesToJournal: boolean;
+  journalPosts: boolean;
+  journalPerDay: number;
+  journalComments: boolean;
+  journalCommentsPerDay: number;
   /** Characters chat with each other in the messenger (about twice the tokens of a normal chat). */
   chats: boolean;
   chatsPerDay: number;
@@ -72,7 +77,7 @@ export interface CommunitySettings {
   repostsPerDay: number;
 }
 
-export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 };
+export const COMMUNITY_DEFAULTS: CommunitySettings = { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, storiesToJournal: true, journalPosts: false, journalPerDay: 1, journalComments: false, journalCommentsPerDay: 2, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 };
 
 export interface SettingsMock {
   autonomous: boolean;
@@ -92,6 +97,7 @@ export interface SettingsMock {
   messengerSummary: boolean;
   /** The few older messages closest in meaning to the talk are quoted to the model word for word (off by default). */
   messengerRecall: boolean;
+  messengerPlace: boolean;
   /** The default for characters that have no choice of their own. */
   messengerKnows: Knows;
   /** Model choices: preview uses the four ids below; real mode uses "provider/model" or "" (engine default). */
@@ -121,6 +127,7 @@ export const SETTINGS_MOCK: SettingsMock = {
   messengerContext: 24,
   messengerSummary: true,
   messengerRecall: false,
+  messengerPlace: false,
   messengerKnows: "knows",
   models: { messenger: "default", forum: "default", import: "default", image: "" },
   notify: { tab: true, system: true, sound: false },
@@ -141,6 +148,8 @@ export const LIMITS = {
   imagesPerDay: { min: 0, max: 20 },
   reactionsPerDay: { min: 0, max: 50 },
   storiesPerDay: { min: 0, max: 10 },
+  journalPerDay: { min: 0, max: 5 },
+  journalCommentsPerDay: { min: 0, max: 10 },
   chatsPerDay: { min: 0, max: 30 },
   clubsPerDay: { min: 1, max: 40 },
   clubsAnswers: { min: 0, max: 100 },

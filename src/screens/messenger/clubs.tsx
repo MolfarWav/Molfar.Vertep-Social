@@ -102,6 +102,7 @@ function ClubRow({ c, phone, on, onPick }: { c: Club; phone: boolean; on: boolea
         <span className="n">{c.name}</span>
         <span className="s">{line || t("messenger.clubs.noLines")}</span>
       </span>
+      {c.room && <span className="clb-tag">{t("messenger.clubs.room")}</span>}
       {!c.on && <span className="clb-tag">{t("messenger.clubs.off")}</span>}
     </button>
   );
@@ -136,7 +137,7 @@ export function ClubsGroup({
   if (needle && shown.length === 0) return null;
   // off and empty: only the header, so the feature does not push the contacts down for those who never use it; one tap teaches it
   const closed = fold ?? (!on && clubs.length === 0);
-  const block = newClubBlock(clubs.length, max, people);
+  const block = newClubBlock(clubs.filter((c) => !c.room).length, max, people);
   return (
     <div className="ggroup clubs" role="group" aria-label={t("messenger.clubs.list")}>
       <button type="button" className={`grp${phone ? " p" : ""}`} aria-expanded={!closed} onClick={() => setFold(!closed)}>
@@ -176,7 +177,7 @@ export function ClubsGroup({
 
 // ---------- an open club ----------
 
-function ClubHead({ club, phone, busy, onBack, onEdit, onToggle }: { club: Club; phone: boolean; busy: boolean; onBack: () => void; onEdit: () => void; onToggle: (on: boolean) => void }) {
+function ClubHead({ club, phone, busy, onBack, onEdit, onLeave, onToggle }: { club: Club; phone: boolean; busy: boolean; onBack: () => void; onEdit: () => void; onLeave: () => void; onToggle: (on: boolean) => void }) {
   const t = useT();
   return (
     <div className={phone ? "hd" : "tbar chat-tbar"}>
@@ -193,9 +194,13 @@ function ClubHead({ club, phone, busy, onBack, onEdit, onToggle }: { club: Club;
         <span className="hsub clb-sub">{[club.interest, memberNames(club)].filter(Boolean).join(" · ")}</span>
       </div>
       <ClubSwitch on={club.on} label={t("messenger.clubs.active")} disabled={busy} onChange={onToggle} />
-      <button type="button" className="ib flat" aria-label={t("messenger.clubs.edit")} title={t("messenger.clubs.edit")} onClick={onEdit}>
-        <Pencil />
-      </button>
+      {club.room ? (
+        <button type="button" className="btn clb-leave" onClick={onLeave}>{t("messenger.clubs.leave")}</button>
+      ) : (
+        <button type="button" className="ib flat" aria-label={t("messenger.clubs.edit")} title={t("messenger.clubs.edit")} onClick={onEdit}>
+          <Pencil />
+        </button>
+      )}
     </div>
   );
 }
@@ -352,8 +357,19 @@ export function ClubView({
     onChanged();
   };
 
+  // leaving a room ends it
+  const leave = async () => {
+    const e = await removeClub(id);
+    if (e) {
+      setErr(e);
+      return;
+    }
+    onChanged();
+    onBack();
+  };
+
   const club = chat?.club;
-  const head = club ? <ClubHead club={club} phone={phone} busy={switching} onBack={onBack} onEdit={() => onEdit(club)} onToggle={(v) => void toggle(v)} /> : <div className={phone ? "hd" : "tbar chat-tbar"} />;
+  const head = club ? <ClubHead club={club} phone={phone} busy={switching} onBack={onBack} onEdit={() => onEdit(club)} onLeave={() => void leave()} onToggle={(v) => void toggle(v)} /> : <div className={phone ? "hd" : "tbar chat-tbar"} />;
   const body = (
     <>
       {head}

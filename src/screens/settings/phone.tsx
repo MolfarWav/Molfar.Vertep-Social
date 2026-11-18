@@ -84,6 +84,22 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
             <span className="go" aria-hidden="true">›</span>
           </button>
         </section>
+        <section className="sec" aria-label={t("journal.title")}>
+          <button type="button" className="ln row" onClick={() => go("journal")}>
+            <span className="t">
+              <b>{t("journal.title")}</b>
+              <span className="k">{t("settings.journal.hint")}</span>
+            </span>
+            <span className="go" aria-hidden="true">›</span>
+          </button>
+          <button type="button" className="ln row" onClick={() => go("city")}>
+            <span className="t">
+              <b>{t("city.title")}</b>
+              <span className="k">{t("settings.city.hint")}</span>
+            </span>
+            <span className="go" aria-hidden="true">›</span>
+          </button>
+        </section>
         <GroupHead title={t("settings.group.forum")} glyph="forum" />
         <section className="sec" aria-label={t("settings.group.forum")}>
           <Row title={t("settings.autonomous.phone")}>
@@ -129,6 +145,9 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
           </Row>
           <Row title={t("settings.messenger.recall")} hint={t("settings.messenger.recall.phone.hint")}>
             {(id) => <Switch labelledBy={id} checked={s.messengerRecall} onChange={(v) => set({ messengerRecall: v })} />}
+          </Row>
+          <Row title={t("settings.messenger.place")} hint={t("settings.messenger.place.phone.hint")}>
+            {(id) => <Switch labelledBy={id} checked={s.messengerPlace} onChange={(v) => set({ messengerPlace: v })} />}
           </Row>
           <Row className="stack" title={t("settings.messenger.knows")} hint={t("settings.messenger.knows.phone.hint")}>
             {(id) => <Segmented labelledBy={id} options={knows} value={s.messengerKnows} onChange={(v) => set({ messengerKnows: v })} />}

@@ -10,6 +10,8 @@ export interface Story {
   name: string;
   hue: number;
   picture: string;
+  /** Where the character was (the City's place), when it posted. */
+  place?: string;
   at: number;
   /** When it disappears. */
   until: number;

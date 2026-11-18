@@ -1,0 +1,9 @@
+{
+  "name": "Social journal",
+  "version": "0.1.0",
+  "description": "Journal: every character and you keep a journal of dated posts (journal/<id>.json in the app's data folder). A story that runs out after 24 hours is filed in its author's journal instead of vanishing. Characters may write posts from their diaries and comment (both off by default, one model call each); posts can be for everyone, friends or only you.",
+  "origin": "local",
+  "permissions": ["routes", "fs", "llm", "schedule"],
+  "schedule": { "intervalMs": 60000 },
+  "priority": 26
+}

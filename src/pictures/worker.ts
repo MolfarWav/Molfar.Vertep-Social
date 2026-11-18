@@ -29,6 +29,12 @@ interface StoryItem {
   prompt: string;
   model: string;
 }
+interface JournalItem {
+  id: string;
+  owner: string;
+  prompt: string;
+  model: string;
+}
 interface ForumItem {
   topic: string;
   post: string;
@@ -65,10 +71,11 @@ export function useImageWorker(): void {
       if (running || !alive) return;
       running = true;
       try {
-        const [m, f, st] = await Promise.all([
+        const [m, f, st, jr] = await Promise.all([
           call<{ items: MessengerItem[] }>("GET", "/messenger/images").catch(() => ({ items: [] as MessengerItem[] })),
           call<{ items: ForumItem[] }>("GET", "/forum/images").catch(() => ({ items: [] as ForumItem[] })),
           call<{ items: StoryItem[] }>("GET", "/stories/images").catch(() => ({ items: [] as StoryItem[] })),
+          call<{ items: JournalItem[] }>("GET", "/journal/images").catch(() => ({ items: [] as JournalItem[] })),
         ]);
         for (const it of m.items) {
           if (!alive) break;
@@ -87,6 +94,12 @@ export function useImageWorker(): void {
           if (!lock(`s:${it.id}`)) continue;
           const r = await draw(it.prompt, it.model);
           await call("POST", "/stories/image", { id: it.id, ...r }).catch(() => undefined);
+        }
+        for (const it of jr.items) {
+          if (!alive) break;
+          if (!lock(`j:${it.owner}:${it.id}`)) continue;
+          const r = await draw(it.prompt, it.model);
+          await call("POST", "/journal/image", { owner: it.owner, id: it.id, ...r }).catch(() => undefined);
         }
       } finally {
         running = false;

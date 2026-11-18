@@ -340,9 +340,18 @@ export function pickPair(fsx, settings, now, rand) {
     if (!a || !b || !["online", "away"].includes(statusAt(a.schedule, date, settings.tz)) || !["online", "away"].includes(statusAt(b.schedule, date, settings.tz))) continue;
     // the other one answers; a first line is from either
     const speaker = last ? (last.by === a.id ? b : a) : rand() < 0.5 ? a : b;
-    cands.push({ key, pair: p, speaker, other: speaker === a ? b : a });
+    // C4: two characters at the same place in the city talk three times as often as the rest
+    const at = cityNow(fsx, a.id, now, settings.tz);
+    const bt = cityNow(fsx, b.id, now, settings.tz);
+    cands.push({ key, pair: p, speaker, other: speaker === a ? b : a, w: at && bt && at.place.id === bt.place.id ? 3 : 1 });
   }
-  return cands.length ? cands[Math.floor(rand() * cands.length)] : null;
+  if (!cands.length) return null;
+  let r = rand() * cands.reduce((s, x) => s + x.w, 0);
+  for (const x of cands) {
+    r -= x.w;
+    if (r < 0) return x;
+  }
+  return cands[cands.length - 1];
 }
 
 /** Files the model's message ("ch:<key>:<speaker>"). Returns {message} or {error}. */
@@ -461,3 +470,27 @@ export function onTick(_ctx, host) {
     presetParams: { temperature: 0.9, max_tokens: 220 },
   });
 }
+
+// <city-shared>
+/** Where character `id` is now, from the city's file (read only): {place: {id, name}, here: [profile ids]}, or null (at home, no city, a file of another band). Identical in every plugin that reads it: test/city-readers.test.ts pins the copies. */
+function cityNow(fsx, id, now, tz) {
+  try {
+    const off = Number.isFinite(tz) ? tz : new Date(now).getTimezoneOffset();
+    const local = new Date(now - off * 60000);
+    const band = local.toISOString().slice(0, 10) + "#" + Math.floor(local.getUTCHours() / 3);
+    const d = JSON.parse(fsx.read("city/now.json"));
+    if (!d || typeof d !== "object" || d.id !== band || !d.where || typeof d.where !== "object") return null;
+    const ok = (s) => typeof s === "string" && /^[A-Za-z0-9_-]{1,60}$/.test(s);
+    const at = d.where[id];
+    if (!ok(at) || at === "home") return null;
+    const town = JSON.parse(fsx.read("city/places.json"));
+    const place = town && Array.isArray(town.places) ? town.places.find((p) => p && p.id === at) : null;
+    if (!place || typeof place.name !== "string") return null;
+    const name = place.name.replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+    if (!name) return null;
+    return { place: { id: at, name }, here: Object.keys(d.where).filter((k) => k !== id && d.where[k] === at && ok(k)) };
+  } catch {
+    return null;
+  }
+}
+// </city-shared>

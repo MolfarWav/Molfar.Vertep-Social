@@ -20,6 +20,8 @@ export interface Club {
   name: string;
   interest: string;
   by: "user" | "mod";
+  /** A room the City's "Walk in" made: tied to a place, ends with the 3-hour band or when the user leaves. */
+  room: { place: string; until: number } | null;
   on: boolean;
   count: number;
   last: { by: string; name: string; at: number; text: string } | null;

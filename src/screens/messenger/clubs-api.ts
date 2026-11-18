@@ -44,7 +44,7 @@ export async function loadClubChat(id: string): Promise<ClubChat | null> {
 export async function createClub(body: { name: string; interest: string; members: string[] }, people: Pickable[] = []): Promise<{ error: string; id: string }> {
   if (PREVIEW) {
     const id = `cl-new-${clubs().length + 1}`;
-    clubs().push({ id, name: body.name, interest: body.interest, by: "user", on: true, count: 0, last: null, members: personsOf(body.members, people) });
+    clubs().push({ id, name: body.name, interest: body.interest, by: "user", room: null, on: true, count: 0, last: null, members: personsOf(body.members, people) });
     return { error: "", id };
   }
   try {

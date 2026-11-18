@@ -31,6 +31,8 @@ export interface PictureDialogProps {
   hue: number;
   about: string;
   interests: string[];
+  /** The first prompt, when it is not a portrait (a place). */
+  initialPrompt?: string;
   /** The picture the profile has now (the draft's), "" = none. */
   current: string;
   phone: boolean;
@@ -43,7 +45,7 @@ export function PictureDialog(p: PictureDialogProps) {
   const t = useT();
   const promptId = useId();
   const modelId = useId();
-  const [prompt, setPrompt] = useState(() => portraitPrompt({ name: p.name, about: p.about, interests: p.interests }));
+  const [prompt, setPrompt] = useState(() => p.initialPrompt ?? portraitPrompt({ name: p.name, about: p.about, interests: p.interests }));
   const [models, setModels] = useState<ImageModel[]>([]);
   const [model, setModel] = useState(readModel);
   const [busy, setBusy] = useState(false);
