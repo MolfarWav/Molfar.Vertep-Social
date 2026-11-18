@@ -5,6 +5,13 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.20.0 (2026-11-18)
+
+What a reply remembered, and pinned messages (the second phase of Molfar.Vertep#446). App 0.20.0; plugins: Messenger 0.14.0. Nothing to migrate: replies and messages get the new fields as they are filed.
+
+- Added: **"Remembered" under a reply (Molfar.Vertep#446, phase M2).** A character's reply now records what went into its prompt besides the latest messages (`message.used`: ids of the facts, of recalled and pinned messages, and whether the note went along; ids only, so a chat file stays small). Under such a reply the log shows a line "Remembered" with the counts; it opens to the facts (looked up by id when it opens), the pinned and recalled messages and a button to the Facts page. Replies that used nothing have no line.
+- Added: **pin a message (Molfar.Vertep#446, phase M2).** A pin button on every message with text (`message.pinned`, route `POST /messenger/pin`): a pinned message after the last divider that is not among the recent messages goes into every prompt word for word (the latest 5, 900 characters at most, quotes sanitised like recall), with Recall and the note on or off. At most 20 per chat. The Memory dialog lists the pinned messages with "Unpin". Recall no longer quotes a pinned message a second time.
+
 ## 0.19.0 (2026-11-18)
 
 A facts ledger beside the Messenger's memory note. App 0.19.0; plugins: Messenger 0.13.0. Nothing to migrate: chats get the new fields when they are next saved. The wide-picture request takes effect with an engine release that carries `aspect` on `POST /v1/images` (Molfar.Vertep#455); without it the pictures are drawn as before.

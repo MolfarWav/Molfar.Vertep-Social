@@ -23,7 +23,7 @@ export interface Contact extends MockProfile {
 
 /** A log line: a message, or a dashed system line that names the contact. */
 export type LogItem =
-  | { kind: "msg"; who: string; time: string; text: string; image?: MsgImage }
+  | { kind: "msg"; who: string; time: string; text: string; image?: MsgImage; /** (#446) the engine's message id, whether the user pinned it, and what the reply remembered */ mid?: string; pinned?: boolean; used?: { f?: string[]; r?: string[]; p?: string[]; n?: 1 } }
   | { kind: "sys"; key: string }
   /** A "new conversation" divider (real mode only): the time it was made, ms. */
   | { kind: "break"; at: number };
@@ -101,8 +101,8 @@ export const CONTACTS: Contact[] = PROFILES.map((p) => ({ ...p, ...EXTRA[p.id] }
 export const LOGS: Record<string, LogItem[]> = {
   mavka: [
     { kind: "msg", who: "mavka", time: "21:02", text: "Ти довго мовчав. Я вже думала, ти заблукав у чужому лісі." },
-    { kind: "msg", who: "me", time: "21:03", text: "Було багато справ. Що нового біля озера?" },
-    { kind: "msg", who: "mavka", time: "21:03", text: "Вода тиха. Лісовик знову переставляє стежки, а Ярина лишила на форумі ціле оповідання про рушники. Зазирни." },
+    { kind: "msg", who: "me", time: "21:03", text: "Було багато справ. Що нового біля озера?", mid: "pm2", pinned: true },
+    { kind: "msg", who: "mavka", time: "21:03", text: "Вода тиха. Лісовик знову переставляє стежки, а Ярина лишила на форумі ціле оповідання про рушники. Зазирни.", mid: "pm3", used: { f: ["f2", "f3"], p: ["pm2"], n: 1 } },
     { kind: "msg", who: "me", time: "21:04", text: "Зазирну. А ти там що писала?" },
   ],
   pereles: [

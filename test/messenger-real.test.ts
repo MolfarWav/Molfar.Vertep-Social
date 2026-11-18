@@ -67,9 +67,22 @@ test("messages become log lines: the user's as me, the character's as the contac
     "mavka",
   );
   expect(items).toEqual([
-    { kind: "msg", who: "mavka", time: "21:02", text: "Привіт" },
-    { kind: "msg", who: "me", time: "21:03", text: "Агов" },
+    { kind: "msg", who: "mavka", time: "21:02", text: "Привіт", mid: "a" },
+    { kind: "msg", who: "me", time: "21:03", text: "Агов", mid: "b" },
   ]);
+});
+
+test("(#446) a pinned message and what a reply remembered reach the log line", () => {
+  const items = logItems(
+    [
+      { id: "a", who: "me", at: local(2026, 10, 8, 21, 2), text: "Барсик їсть рибу", pinned: 5 },
+      { id: "b", who: "them", at: local(2026, 10, 8, 21, 3), text: "Пам'ятаю", used: { f: ["f1"], p: ["a"], n: 1 } },
+    ],
+    "mavka",
+  );
+  expect(items[0]).toMatchObject({ mid: "a", pinned: true });
+  expect(items[1]).toMatchObject({ mid: "b", used: { f: ["f1"], p: ["a"], n: 1 } });
+  expect(items[1]).not.toHaveProperty("pinned");
 });
 
 test("a chat from the engine: first message time, a pending reply, a failure", () => {

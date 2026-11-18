@@ -91,6 +91,28 @@
 .s-messenger .info .mem-none { color: var(--muted); font-size: 13px; }
 .s-messenger .info .mem-open { margin-top: 8px; }
 .s-profiles .mem-start { display: flex; flex-wrap: wrap; gap: 8px; }
+/* pinning and "Remembered" in the log (#446, M2) */
+.s-messenger .msg .who { display: flex; align-items: center; }
+.s-messenger .pin { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; min-width: 28px; height: 28px; padding: 0 6px; border: 0; border-radius: 6px; background: none; color: var(--muted); font: inherit; font-size: 12px; font-weight: 400; cursor: pointer; opacity: 0.7; }
+.s-messenger .pin:hover, .s-messenger .pin:focus-visible { opacity: 1; background: var(--raised); color: var(--ink); }
+.s-messenger .pin.on { opacity: 1; color: var(--accent); }
+.s-messenger .log.p .pin { min-width: 40px; height: 40px; margin: -6px -6px -6px auto; justify-content: center; }
+.s-messenger .rem { margin-top: 6px; }
+.s-messenger .rem-btn { display: flex; align-items: center; gap: 6px; max-width: 100%; min-height: 32px; padding: 0 8px 0 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; text-align: left; }
+.s-messenger .rem-btn:hover, .s-messenger .rem-btn:focus-visible { background: var(--raised); }
+.s-messenger .rem-btn svg { flex: none; transition: transform 0.12s; transform: rotate(-90deg); }
+.s-messenger .rem-btn svg.open { transform: none; }
+.s-messenger .rem-t { font-weight: 600; }
+.s-messenger .log.p .rem-btn { min-height: 40px; }
+.s-messenger .rem-body { margin-top: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+.s-messenger .rem-body ul { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+.s-messenger .rem-body .btn { align-self: flex-start; min-height: 36px; }
+.s-profiles .mem-pins { display: flex; flex-direction: column; gap: 6px; }
+.s-profiles .pins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.s-profiles .pins li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.s-profiles .pins .pin-text { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.s-profiles .pins .btn { flex: none; min-height: 36px; }
+
 /* the facts ledger on the Memory dialog (#446) */
 .s-profiles .mem-facts { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
 .s-profiles .mem-facts .btn { flex: none; min-height: 40px; }
