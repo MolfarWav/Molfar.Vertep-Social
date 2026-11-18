@@ -16,6 +16,9 @@
  * already there. A profile with life switched off stays at home.
  *
  * Routes (relative to /v1/apps/social):
+ *   GET /city/listen?place=   {place, present, lines: [{id, by, name, hue, picture, at, text, via: "chatter" | "club"}]}: the last lines (at most 6, from
+ *                             the last 3 days) that characters who are at this place now wrote to each other in chatter or in a club; read only
+ *                             (the chatter and clubs files are those plugins'; the user's own lines are left out)
  *   GET /city   {band, from, to, districts: [{id, name, kind, by, places: [{id, name, kind, icon, text, by, open, seats, people: [person]}]}],
  *                homes: {buildings: [{id, n, doors: [{id, name, hue, picture, flat, state: "lit"|"dark"|"out", where?}]}]}, you: {...}, empty}
  *
@@ -28,6 +31,9 @@ const LEVELS = ["stranger", "slight", "acquaintance", "penfriend", "friend", "cl
 const KNOW_FROM = LEVELS.indexOf("acquaintance");
 const CLOSE_FROM = LEVELS.indexOf("penfriend");
 const FLATS_PER_BUILDING = 8;
+const LISTEN_LINES = 6;
+const LISTEN_MS = 3 * 24 * 3600 * 1000;
+const TEXT_MAX = 600;
 const MAX_PLACES = 60;
 const MAX_DISTRICTS = 12;
 const HOME = "home";
@@ -350,12 +356,17 @@ function readNow(fsx) {
 
 // ---------- the view ----------
 
+/** Everyone's place for the current band: the stored one, or worked out on the spot (nothing is written). */
+function whereNow(fsx, now, tz) {
+  const stored = readNow(fsx);
+  return stored && stored.id === bandId(now, tz) ? stored.where : whereAll(fsx, now, tz);
+}
+
 export function cityView(fsx, now) {
   const tz = readTz(fsx);
   const town = readTown(fsx);
   const { band, weekday } = bandNow(now, tz);
-  const stored = readNow(fsx);
-  const where = stored && stored.id === bandId(now, tz) ? stored.where : whereAll(fsx, now, tz);
+  const where = whereNow(fsx, now, tz);
   const profiles = profileIds(fsx).map((id) => readProfile(fsx, id)).filter(Boolean);
   const byId = Object.fromEntries(profiles.map((p) => [p.id, p]));
   const at = (p) => where[p.id] || HOME;
@@ -411,10 +422,63 @@ export function cityView(fsx, now) {
   };
 }
 
+/** The last lines the characters at `place` wrote to each other (chatter pairs and clubs), read only. */
+export function listenView(fsx, place, now) {
+  const tz = readTz(fsx);
+  const where = whereNow(fsx, now, tz);
+  const here = new Set(Object.entries(where).filter(([, at]) => at === place).map(([id]) => id));
+  const cache = new Map();
+  const person = (id) => {
+    if (!cache.has(id)) cache.set(id, readProfile(fsx, id));
+    return cache.get(id);
+  };
+  const lines = [];
+  const take = (list, via, key) => {
+    for (const m of list.slice(-LISTEN_LINES)) {
+      if (!isObj(m) || typeof m.by !== "string" || !here.has(m.by) || !Number.isFinite(m.at) || now - m.at > LISTEN_MS || typeof m.text !== "string" || !str(m.text)) continue;
+      const p = person(m.by);
+      if (p) lines.push({ id: key + ":" + String(m.id || m.at), by: p.id, name: p.name, hue: p.hue, picture: p.picture, at: m.at, text: oneLine(m.text, TEXT_MAX), via });
+    }
+  };
+  if (here.size >= 2) {
+    let names = [];
+    try {
+      names = fsx.list("chatter");
+    } catch {
+      names = [];
+    }
+    for (const n of names) {
+      const m = /^([A-Za-z0-9_-]{1,60})__([A-Za-z0-9_-]{1,60})\.json$/.exec(n);
+      if (!m || !here.has(m[1]) || !here.has(m[2])) continue;
+      const d = readJson(fsx, "chatter/" + n, null);
+      if (isObj(d) && Array.isArray(d.messages)) take(d.messages, "chatter", "ch-" + m[1] + "-" + m[2]);
+    }
+    try {
+      names = fsx.list("clubs");
+    } catch {
+      names = [];
+    }
+    for (const n of names) {
+      const m = /^(cl-[A-Za-z0-9_-]{1,56})\.json$/.exec(n);
+      if (!m) continue;
+      const d = readJson(fsx, "clubs/" + n, null);
+      if (!isObj(d) || !Array.isArray(d.members) || !Array.isArray(d.messages)) continue;
+      if (d.members.filter((x) => typeof x === "string" && here.has(x)).length >= 2) take(d.messages, "club", m[1]);
+    }
+  }
+  lines.sort((a, b) => a.at - b.at);
+  return { place, present: here.size, lines: lines.slice(-LISTEN_LINES) };
+}
+
 export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   if (path !== "/city" && !path.startsWith("/city/")) return null;
   if (path === "/city" && req.method === "GET") return ok(cityView(host.fs, Date.now()));
+  if (path === "/city/listen" && req.method === "GET") {
+    const place = isObj(req.query) && typeof req.query.place === "string" ? req.query.place : "";
+    if (!ID.test(place)) return ok({ error: "no such place" }, 400);
+    return ok(listenView(host.fs, place, Date.now()));
+  }
   return ok({ error: "not found" }, 404);
 }
 

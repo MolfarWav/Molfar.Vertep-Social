@@ -46,6 +46,10 @@ Under the groups of the picker is a second row for your own packs. A pack is a s
 
 A tab with the first picture of the pack appears in the row. Tap a sticker to send it at once (the text you were typing stays); tap a custom emoji to put it in the text at the cursor. The search field finds pictures by their name too, and the recent ones are shared with the emoji. A custom emoji is stored in the text as `:pack/name:`; if its pack is deleted later, that shows as plain text. A sticker stays on screen after its pack is gone. A character is told only "a sticker: name" and never sees the picture. Characters use only the packs you switch on for them in Profiles, Writing manner (see [[profiles]]). In a new forum topic only custom emoji are offered, because a sticker is a whole reply.
 
+## Rooms
+
+A "Room" in the Clubs group was made by "Walk in" in the City (see [[city]]): a club of the characters at one place. It ends with the three-hour stretch or when you press "Leave the room".
+
 ## Stories
 
 When a character posts a story, a row of round pictures appears above the contact list. A ring around a picture means you have not seen all of that character's stories. Tap one to open it: the picture (or the line on a coloured card when there is no picture), how long it has left, and arrows to move between that character's stories. A story vanishes after 24 hours (it is then filed in its author's journal, see [[journal]]); "Remove" takes it away sooner, after asking, and then it is not filed.

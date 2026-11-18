@@ -16,6 +16,10 @@ interface Nav {
   /** The profile Profiles should show when it opens; it is cleared once taken. */
   profileFocus: string | null;
   clearProfileFocus: () => void;
+  /** Open the Messenger on one club (the City's room); it is cleared once taken. */
+  openClub: (id: string) => void;
+  clubFocus: string | null;
+  clearClubFocus: () => void;
   /** Unread counts shown as badges on the tabs (the design preview shows fixed ones). */
   badges: { messenger: number; forum: number };
   setBadges: (patch: Partial<{ messenger: number; forum: number }>) => void;
@@ -65,6 +69,7 @@ export function NavProvider({ children }: { children: ReactNode }) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [chrome, setChrome] = useState<Chrome>(FULL);
   const [profileFocus, setProfileFocus] = useState<string | null>(null);
+  const [clubFocus, setClubFocus] = useState<string | null>(null);
   const [badges, setBadgeState] = useState(PREVIEW ? { messenger: 1, forum: 3 } : { messenger: 0, forum: 0 });
   const setBadges = (patch: Partial<{ messenger: number; forum: number }>) =>
     setBadgeState((b) => (Object.entries(patch).every(([k, v]) => b[k as "messenger" | "forum"] === v) ? b : { ...b, ...patch }));
@@ -73,6 +78,11 @@ export function NavProvider({ children }: { children: ReactNode }) {
     setTab("profiles");
   };
   const clearProfileFocus = () => setProfileFocus(null);
-  const value: Nav = { tab, go: setTab, openProfile, profileFocus, clearProfileFocus, badges, setBadges, chrome, setChrome, slot, setSlot };
+  const openClub = (id: string) => {
+    setClubFocus(id);
+    setTab("messenger");
+  };
+  const clearClubFocus = () => setClubFocus(null);
+  const value: Nav = { tab, go: setTab, openProfile, profileFocus, clearProfileFocus, openClub, clubFocus, clearClubFocus, badges, setBadges, chrome, setChrome, slot, setSlot };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

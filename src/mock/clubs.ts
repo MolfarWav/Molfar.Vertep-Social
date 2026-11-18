@@ -21,6 +21,7 @@ export const MOCK_CLUBS: Club[] = [
     name: "Вишивка і рушники",
     interest: "вишивка",
     by: "user",
+    room: null,
     on: true,
     count: 8,
     last: { by: "berehynia", name: "Берегиня", at: NOW - 20 * 60e3, text: "Тоді візьму червоні нитки, вони не линяють у воді." },
@@ -31,12 +32,13 @@ export const MOCK_CLUBS: Club[] = [
     name: "Лісові стежки",
     interest: "лісові стежки",
     by: "mod",
+    room: null,
     on: true,
     count: 3,
     last: { by: "mavka", name: "Мавка", at: NOW - 5 * H, text: "Лісовик знову переставив стежку біля озера." },
     members: [lisovyk, chuhaister, mavka, pereles],
   },
-  { id: "cl-3", name: "Погода", interest: "", by: "user", on: false, count: 0, last: null, members: [domovyk, vodianyk, pereles] },
+  { id: "cl-3", name: "Погода", interest: "", by: "user", room: null, on: false, count: 0, last: null, members: [domovyk, vodianyk, pereles] },
 ];
 
 const msg = (id: string, by: string, name: string, hue: number, ago: number, text: string, extra: Partial<ClubMessage> = {}): ClubMessage => ({ id, by, name, hue, picture: "", at: NOW - ago, text, mine: false, ...extra });

@@ -11,7 +11,12 @@
  * character's card is never read; the prompt carries the profile, what each remembers of the others (the Life plugin's list), and
  * what the club said lately.
  *
- * Data: clubs/<id>.json {id, name, interest, by: "user" | "mod", members: [profile ids], on, created, day, today, answered,
+ * A room (issue #445, C2): the City's "Walk in" makes a club of the characters who are at one place now (2 to 4, the ones the user knows
+ * best first), tied to the place (`room: {place, until}`). It lives until the end of the 3-hour band, or until the user leaves it, and does not
+ * count toward the most clubs; one room at a time (walking into another place ends the old room). Everything else is the club's own: the
+ * switch, the daily caps, one model call a message.
+ *
+ * Data: clubs/<id>.json {id, name, interest, by: "user" | "mod", room?, members: [profile ids], on, created, day, today, answered,
  *   messages: [{id, by: profile id | "me", persona?, at, text}] (300), pending, failedAt}; clubs/state.json {lastAuto, removed: {interest: at}}
  *   (the Moderator's: when it last made a club, and the interests of clubs of its making that the user deleted, not proposed again for 14 days).
  *
@@ -21,6 +26,7 @@
  *   POST /clubs/club {name, interest?, members, on?}        makes a club (3 or 4 existing characters, at most 3 clubs)
  *   POST /clubs/edit {id, name?, interest?, members?, on?}  changes it
  *   POST /clubs/remove {id}     deletes the club and its talk
+ *   POST /clubs/room {place, name}   walks in: a room of the characters at `place` now (from city/now.json, read only); a room, if any, ends
  *   POST /clubs/send {id, text} the user's message, as the active persona; when members are around the first reply is written now
  *                               (two passes, like the messenger's send), the rest comes from the tick
  *
@@ -31,6 +37,8 @@ const ID = /^[A-Za-z0-9_-]{1,60}$/;
 const STATUSES = ["online", "away", "dnd", "na", "off"];
 const MAX_CLUBS = 3;
 const MIN_MEMBERS = 3;
+const ROOM_MIN = 2;
+const CLOSE_LEVELS = ["stranger", "slight", "acquaintance", "penfriend", "friend", "close", "confidant"];
 const MAX_MEMBERS = 4;
 const NAME_MAX = 40;
 const INTEREST_MAX = 60;
@@ -139,6 +147,14 @@ function profileIds(fsx) {
 
 const who = (p) => ({ id: p.id, name: p.name, hue: p.hue, picture: p.picture });
 
+/** How many clubs count toward the most clubs at once: rooms do not. */
+function regularCount(fsx, now, tz) {
+  return clubIds(fsx).filter((id) => {
+    const c = readClub(fsx, id, now, tz);
+    return c && !c.room;
+  }).length;
+}
+
 /** The id of the active persona (else the first), "" when there is none. A copy of the messenger's. */
 export function activePersonaId(fsx) {
   const y = readJson(fsx, "you.json", null);
@@ -187,13 +203,15 @@ export function readClub(fsx, id, now, tz) {
   const day = localDay(now, tz);
   const stored = [...new Set((Array.isArray(d.members) ? d.members : []).filter((x) => typeof x === "string" && ID.test(x)))].slice(0, MAX_MEMBERS);
   const members = stored.filter((x) => readProfile(fsx, x));
-  const enough = members.length >= MIN_MEMBERS;
+  const room = isObj(d.room) && typeof d.room.place === "string" && ID.test(d.room.place) && num(d.room.until) > 0 ? { place: d.room.place, until: num(d.room.until) } : null;
+  const enough = members.length >= (room ? ROOM_MIN : MIN_MEMBERS);
   const dirty = members.length !== stored.length || (d.on === true && !enough);
   return {
     id: String(id),
     name: cut(str(d.name), NAME_MAX) || "Club",
     interest: cut(str(d.interest), INTEREST_MAX),
     by: d.by === "mod" ? "mod" : "user",
+    ...(room ? { room } : {}),
     members,
     on: d.on === true && enough,
     created: num(d.created),
@@ -211,7 +229,7 @@ export function readClub(fsx, id, now, tz) {
 }
 
 function writeClub(fsx, c) {
-  fsx.write(clubPath(c.id), JSON.stringify({ id: c.id, name: c.name, interest: c.interest, by: c.by, members: c.members, on: c.on, created: c.created, day: c.day, today: c.today, answered: c.answered, messages: c.messages.slice(-KEEP), pending: c.pending, failedAt: c.failedAt }));
+  fsx.write(clubPath(c.id), JSON.stringify({ id: c.id, name: c.name, interest: c.interest, by: c.by, ...(c.room ? { room: c.room } : {}), members: c.members, on: c.on, created: c.created, day: c.day, today: c.today, answered: c.answered, messages: c.messages.slice(-KEEP), pending: c.pending, failedAt: c.failedAt }));
 }
 
 /** Reads a club and, when its members changed (a character was deleted), writes the cleaned file back. */
@@ -593,7 +611,7 @@ function closest(fsx, ids, rand) {
 export function modClub(fsx, settings, now, rand) {
   if (!settings.on || !settings.mod) return null;
   const ids = clubIds(fsx);
-  if (ids.length >= MAX_CLUBS) return null;
+  if (regularCount(fsx, now, settings.tz) >= MAX_CLUBS) return null;
   const state = readState(fsx, now);
   if (state.lastAuto && now - state.lastAuto < AUTO_GAP_MS) return null;
   const profiles = profileIds(fsx).map((id) => readProfile(fsx, id)).filter(Boolean);
@@ -621,6 +639,7 @@ function view(fsx, c) {
     name: c.name,
     interest: c.interest,
     by: c.by,
+    room: c.room || null,
     on: c.on,
     count: c.messages.length,
     last: last ? { by: last.by, name: last.by === "me" ? ((personaOf(fsx, last.persona) || {}).name || "") : lastWho ? lastWho.name : "", at: last.at, text: cut(last.text.replace(/\s+/g, " "), 120) } : null,
@@ -687,6 +706,67 @@ function sendRoute(req, host, settings, now) {
   return { __llmPending: true, stash: { sent: true, speaker: speaker.id } };
 }
 
+// ---------- rooms (the City's "Walk in") ----------
+
+/** The 3-hour band of `now` in the user's time: {id: "<day>#<band>", end: when it ends (ms)}. The city plugin's id. */
+export function bandOf(now, tz) {
+  const local = new Date(now - offsetOf(now, tz) * 60000);
+  const band = Math.floor(local.getUTCHours() / 3);
+  const into = (local.getUTCHours() % 3) * 3600000 + local.getUTCMinutes() * 60000 + local.getUTCSeconds() * 1000 + local.getUTCMilliseconds();
+  return { id: localDay(now, tz) + "#" + band, end: now + 3 * 3600000 - into };
+}
+
+/** Who is at `place` now, from the city's file (read only): [profile ids], or null when the file is not of this band. */
+function presentAt(fsx, place, now, tz) {
+  const d = readJson(fsx, "city/now.json", null);
+  if (!isObj(d) || d.id !== bandOf(now, tz).id || !isObj(d.where)) return null;
+  return Object.entries(d.where).filter(([id, at]) => at === place && ID.test(id) && readProfile(fsx, id)).map(([id]) => id);
+}
+
+/** The characters ordered by how well they know the user's active persona (best first), then by id. */
+function byAcquaintance(fsx, ids) {
+  const persona = activePersonaId(fsx);
+  const level = (id) => {
+    const d = readJson(fsx, "life/people/" + id + ".json", null);
+    for (const p of isObj(d) && Array.isArray(d.people) ? d.people : []) if (isObj(p) && p.key === "u:" + persona) return Math.max(0, CLOSE_LEVELS.indexOf(p.lvl));
+    return 0;
+  };
+  return ids.slice().sort((a, b) => level(b) - level(a) || (a < b ? -1 : 1));
+}
+
+function roomRoute(fsx, b, settings, now) {
+  if (!settings.on) return ok({ error: "clubs are off: turn them on in Settings > Community first" }, 409);
+  const place = String(b.place || "");
+  if (!ID.test(place)) return ok({ error: "no such place" }, 400);
+  const name = cut(noControls(str(b.name)).trim(), NAME_MAX) || "Room";
+  const here = presentAt(fsx, place, now, settings.tz);
+  if (here === null) return ok({ error: "the city has not moved yet: try again in a minute" }, 409);
+  if (here.length < ROOM_MIN) return ok({ error: "at least two characters must be here" }, 409);
+  // one room at a time: walking into another place ends the old one
+  for (const id of clubIds(fsx)) {
+    const old = readClub(fsx, id, now, settings.tz);
+    if (old && old.room) fsx.remove(clubPath(id));
+  }
+  const members = byAcquaintance(fsx, here).slice(0, MAX_MEMBERS);
+  const club = { id: "cl-" + now.toString(36) + "-" + rid(), name, interest: "", by: "user", room: { place, until: bandOf(now, settings.tz).end }, members, on: true, created: now, day: localDay(now, settings.tz), today: 0, answered: 0, messages: [], pending: 0, failedAt: 0 };
+  writeClub(fsx, club);
+  return ok({ ok: true, club: view(fsx, club) });
+}
+
+/** A room ends with its band. */
+function sweepRooms(fsx, now, tz) {
+  for (const id of clubIds(fsx)) {
+    const c = readClub(fsx, id, now, tz);
+    if (c && c.room && now >= c.room.until) {
+      try {
+        fsx.remove(clubPath(id));
+      } catch {
+        // already gone
+      }
+    }
+  }
+}
+
 export function handleRoute(req, host) {
   const path = String((req && req.path) || "").split("?")[0];
   if (path !== "/clubs" && !path.startsWith("/clubs/")) return null;
@@ -709,7 +789,7 @@ export function handleRoute(req, host) {
     if (!name) return ok({ error: "a club needs a name" }, 400);
     const members = cleanMembers(fsx, b.members);
     if (!members) return ok({ error: "pick three or four different characters" }, 400);
-    if (clubIds(fsx).length >= MAX_CLUBS) return ok({ error: "the most clubs at once is " + MAX_CLUBS }, 409);
+    if (regularCount(fsx, now, settings.tz) >= MAX_CLUBS) return ok({ error: "the most clubs at once is " + MAX_CLUBS }, 409);
     const club = { id: "cl-" + now.toString(36) + "-" + rid(), name, interest: cut(noControls(str(b.interest)).trim(), INTEREST_MAX), by: "user", members, on: b.on !== false, created: now, day: localDay(now, settings.tz), today: 0, answered: 0, messages: [], pending: 0, failedAt: 0 };
     writeClub(fsx, club);
     return ok({ ok: true, club: view(fsx, club) });
@@ -717,6 +797,7 @@ export function handleRoute(req, host) {
   if (path === "/clubs/edit" && req.method === "POST") {
     const club = loadClub(fsx, String(b.id || ""), now, settings.tz);
     if (!club) return ok({ error: "no such club" }, 404);
+    if (club.room && ("name" in b || "interest" in b || "members" in b)) return ok({ error: "a room cannot be edited: leave it instead" }, 409);
     if ("name" in b) {
       const name = cut(noControls(str(b.name)).trim(), NAME_MAX);
       if (!name) return ok({ error: "a club needs a name" }, 400);
@@ -728,7 +809,7 @@ export function handleRoute(req, host) {
       if (!members) return ok({ error: "pick three or four different characters" }, 400);
       club.members = members;
     }
-    if ("on" in b) club.on = b.on === true && club.members.length >= MIN_MEMBERS;
+    if ("on" in b) club.on = b.on === true && club.members.length >= (club.room ? ROOM_MIN : MIN_MEMBERS);
     writeClub(fsx, club);
     return ok({ ok: true, club: view(fsx, club) });
   }
@@ -750,6 +831,7 @@ export function handleRoute(req, host) {
     }
     return ok({ ok: true });
   }
+  if (path === "/clubs/room" && req.method === "POST") return roomRoute(fsx, b, settings, now);
   if (path === "/clubs/send" && req.method === "POST") return sendRoute(req, host, settings, now);
   return ok({ error: "not found" }, 404);
 }
@@ -761,6 +843,7 @@ export function onTick(_ctx, host) {
   if (!fsx || !host.llm) return;
   const now = Date.now();
   const settings = readSettings(fsx);
+  sweepRooms(fsx, now, settings.tz);
   const results = host.llm.results || {};
   const keys = Object.keys(results).filter((k) => k.startsWith("cl:"));
   if (keys.length) {

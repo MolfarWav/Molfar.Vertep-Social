@@ -86,6 +86,43 @@ const MOCK: CityView = {
   },
 };
 
+export interface ListenLine {
+  id: string;
+  by: string;
+  name: string;
+  hue: number;
+  picture: string;
+  at: number;
+  text: string;
+  via: "chatter" | "club";
+}
+
+export async function loadListen(place: string): Promise<{ present: number; lines: ListenLine[] }> {
+  if (PREVIEW) {
+    if (place !== "cafe") return { present: 0, lines: [] };
+    const now = Date.now();
+    return {
+      present: 2,
+      lines: [
+        { id: "l1", by: "mavka", name: "Mavka", hue: 150, picture: "", at: now - 50 * 60000, text: "Did you hear the reeds last night? They sounded like a choir.", via: "chatter" },
+        { id: "l2", by: "lis", name: "Lis", hue: 30, picture: "", at: now - 46 * 60000, text: "I heard the fox in the garden. The choir can wait.", via: "chatter" },
+      ],
+    };
+  }
+  return call<{ present: number; lines: ListenLine[] }>("GET", "/city/listen?place=" + encodeURIComponent(place));
+}
+
+/** Walks into a place: a room of the characters there (the clubs plugin). Resolves to {error: text or "", id of the room}. */
+export async function walkIn(place: string, name: string): Promise<{ error: string; id: string }> {
+  if (PREVIEW) return { error: "", id: "cl-1" };
+  try {
+    const r = await call<{ club: { id: string } }>("POST", "/clubs/room", { place, name });
+    return { error: "", id: r.club.id };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e), id: "" };
+  }
+}
+
 export async function loadCity(): Promise<CityView> {
   if (PREVIEW) return MOCK;
   return call<CityView>("GET", "/city");

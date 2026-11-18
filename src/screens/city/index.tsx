@@ -11,7 +11,8 @@ import { PREVIEW } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
 import { useChrome, useNav } from "@/shell/nav";
 import { useYou } from "../you/store";
-import { loadCity, type CityDoor, type CityPerson, type CityPlace, type CityView } from "./api";
+import { loadClubs } from "@/screens/messenger/clubs-api";
+import { loadCity, loadListen, walkIn, type CityDoor, type CityPlace, type CityView, type ListenLine } from "./api";
 
 const param = (k: string): string => {
   if (!PREVIEW) return "";
@@ -31,27 +32,53 @@ const BackIcon = () => (
 const hh = (h: number) => `${String(h % 24).padStart(2, "0")}:00`;
 const FACES = 5;
 
-function Tile({ p, name, text, on, onToggle, onOpenPerson }: { p: CityPlace; name: string; text: string; on: boolean; onToggle: () => void; onOpenPerson: (id: string) => void }) {
+function Tile({ p, name, text, on, onToggle }: { p: CityPlace; name: string; text: string; on: boolean; onToggle: () => void }) {
   const t = useT();
   return (
-    <div className="ct-cell">
-      <button type="button" className={`ct-tile${on ? " on" : ""}${p.open ? "" : " is-closed"}`} aria-expanded={on} onClick={onToggle}>
-        <span className="ct-top">
-          <span className="ct-ico" aria-hidden="true">{p.icon}</span>
-          <span className="ct-nm">{name}</span>
-          <span className="chip">{t(p.open ? "city.open" : "city.closed")}</span>
-        </span>
-        <span className="ct-tx">{text}</span>
-        <span className="ct-faces">
-          {p.people.slice(0, FACES).map((x) => <Avatar key={x.id} name={x.name} hue={x.hue} size={28} picture={x.picture || undefined} />)}
-          {p.people.length > FACES && <span className="k">{t("city.more", { n: p.people.length - FACES })}</span>}
-          {p.people.length === 0 && <span className="k">{t("city.here.none")}</span>}
-        </span>
-      </button>
-      {on && p.people.length > 0 && (
+    <button type="button" className={`ct-tile${on ? " on" : ""}${p.open ? "" : " is-closed"}`} aria-expanded={on} onClick={onToggle}>
+      <span className="ct-top">
+        <span className="ct-ico" aria-hidden="true">{p.icon}</span>
+        <span className="ct-nm">{name}</span>
+        <span className="chip">{t(p.open ? "city.open" : "city.closed")}</span>
+      </span>
+      <span className="ct-tx">{text}</span>
+      <span className="ct-faces">
+        {p.people.slice(0, FACES).map((x) => <Avatar key={x.id} name={x.name} hue={x.hue} size={28} picture={x.picture || undefined} />)}
+        {p.people.length > FACES && <span className="k">{t("city.more", { n: p.people.length - FACES })}</span>}
+        {p.people.length === 0 && <span className="k">{t("city.here.none")}</span>}
+      </span>
+    </button>
+  );
+}
+
+/** An open place: who is here, what they say to each other (listen), and the way into a room with them (walk in). */
+function Detail({ p, name, clubsOn, onOpenPerson }: { p: CityPlace; name: string; clubsOn: boolean | null; onOpenPerson: (id: string) => void }) {
+  const t = useT();
+  const { go, openClub } = useNav();
+  const [lines, setLines] = useState<ListenLine[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  useEffect(() => {
+    let alive = true;
+    setLines(null);
+    loadListen(p.id).then((r) => alive && setLines(r.lines)).catch(() => alive && setLines([]));
+    return () => { alive = false; };
+  }, [p.id, p.people.length]);
+  const enter = async () => {
+    setBusy(true);
+    setErr("");
+    const r = await walkIn(p.id, name);
+    setBusy(false);
+    if (r.error) setErr(r.error);
+    else openClub(r.id);
+  };
+  const canEnter = p.open && p.people.length >= 2;
+  return (
+    <div className="ct-detail">
+      {p.people.length > 0 && (
         <div className="ct-who" role="group" aria-label={t("city.here")}>
           <h3>{t("city.here")}</h3>
-          {p.people.map((x: CityPerson) => (
+          {p.people.map((x) => (
             <button key={x.id} type="button" className="ct-who-row" aria-label={`${x.name}: ${t("city.door.open")}`} onClick={() => onOpenPerson(x.id)}>
               <Avatar name={x.name} hue={x.hue} size={28} picture={x.picture || undefined} />
               <b>{x.name}</b>
@@ -59,6 +86,28 @@ function Tile({ p, name, text, on, onToggle, onOpenPerson }: { p: CityPlace; nam
           ))}
         </div>
       )}
+      <div className="ct-who" role="group" aria-label={t("city.listen")}>
+        <h3>{t("city.listen")}</h3>
+        {lines === null && <span className="k">{t("city.loading")}</span>}
+        {lines !== null && lines.length === 0 && <span className="k">{t("city.listen.none")}</span>}
+        {lines?.map((l) => (
+          <div key={l.id} className="ct-line">
+            <Avatar name={l.name} hue={l.hue} size={24} picture={l.picture || undefined} />
+            <span><b>{l.name}</b> {l.text}</span>
+          </div>
+        ))}
+      </div>
+      <div className="ct-who">
+        <button type="button" className="btn cta" disabled={busy || !canEnter || clubsOn === false} onClick={() => void enter()}>{t("city.walkin")}</button>
+        {!p.open && <span className="k">{t("city.walkin.closed")}</span>}
+        {p.open && p.people.length < 2 && <span className="k">{t("city.walkin.few")}</span>}
+        {clubsOn === false && (
+          <span className="k">
+            {t("city.walkin.off")} <button type="button" className="link" onClick={() => go("settings")}>{t("city.walkin.settings")}</button>
+          </span>
+        )}
+        {err && <span className="jr-err" role="alert">{err}</span>}
+      </div>
     </div>
   );
 }
@@ -75,6 +124,11 @@ export function City() {
   const [error, setError] = useState("");
   const [district, setDistrict] = useState(() => param("district"));
   const [open, setOpen] = useState(() => param("place"));
+  // walking in needs the global Clubs switch; null while it is not known
+  const [clubsOn, setClubsOn] = useState<boolean | null>(null);
+  useEffect(() => {
+    void loadClubs().then((l) => setClubsOn(l.on));
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -162,7 +216,10 @@ export function City() {
               {!isHomes && (
                 <div className="ct-tiles">
                   {(view.districts.find((d) => d.id === current)?.places ?? []).map((p) => (
-                    <Tile key={p.id} p={p} name={placeName(p)} text={placeText(p)} on={open === p.id} onToggle={() => setOpen(open === p.id ? "" : p.id)} onOpenPerson={openProfile} />
+                    <div key={p.id} className="ct-cell">
+                      <Tile p={p} name={placeName(p)} text={placeText(p)} on={open === p.id} onToggle={() => setOpen(open === p.id ? "" : p.id)} />
+                      {open === p.id && <Detail p={p} name={placeName(p)} clubsOn={clubsOn} onOpenPerson={openProfile} />}
+                    </div>
                   ))}
                 </div>
               )}
