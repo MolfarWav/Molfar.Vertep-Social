@@ -26,7 +26,6 @@ export function FamilyTree({ groups, people, selected, onSelect }: { groups: Fam
                 const p = people.get(n.key);
                 if (!p) return null;
                 const isSel = selected === n.key;
-                const clip = `ft-clip-${g.id.replace(/[^a-z0-9]/gi, "")}-${i}`;
                 return (
                   <g
                     key={n.key}
@@ -46,12 +45,11 @@ export function FamilyTree({ groups, people, selected, onSelect }: { groups: Fam
                   >
                     <title>{p.name}</title>
                     <rect className="pm-hit" x={-half - 8} y={-half - 8} width={FAMILY_NODE + 16} height={FAMILY_NODE + 16} rx={12} />
-                    <clipPath id={clip}>
-                      <rect x={-half} y={-half} width={FAMILY_NODE} height={FAMILY_NODE} rx={8} />
-                    </clipPath>
                     <rect className="pm-av" x={-half} y={-half} width={FAMILY_NODE} height={FAMILY_NODE} rx={8} style={{ fill: `hsl(${p.hue} 40% 32%)` }} />
                     {p.picture ? (
-                      <image href={p.picture} x={-half} y={-half} width={FAMILY_NODE} height={FAMILY_NODE} clipPath={`url(#${clip})`} preserveAspectRatio="xMidYMid slice" />
+                      <foreignObject className="pm-pic" x={-half} y={-half} width={FAMILY_NODE} height={FAMILY_NODE}>
+                        <img src={p.picture} alt="" draggable={false} />
+                      </foreignObject>
                     ) : (
                       <text className="pm-ini" y={1} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 19 }}>
                         {p.name.trim().slice(0, 1).toUpperCase()}

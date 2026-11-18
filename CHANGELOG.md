@@ -5,6 +5,12 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.20.1 (2026-11-18)
+
+A fix for the pictures on the relationship map. App 0.20.1; no plugin changed. Nothing to migrate.
+
+- Fixed: **pictures on the relationship map and the family tree showed as broken images.** The engine's app bridge turns `/v1/assets/...` URLs into `blob:` URLs (a frame cannot send the session cookie) only for `src`, `poster`, `srcset` and `style`, so the SVG `<image href>` of a node stayed a broken picture. A node now draws its picture as an `<img>` in a `foreignObject`, which the bridge does rewrite (as it does for every other avatar). Clicking and the ring are unchanged. The same gap exists for any app that uses `<image href>` with an engine picture (Molfar.Vertep, issue filed).
+
 ## 0.20.0 (2026-11-18)
 
 What a reply remembered, and pinned messages (the second phase of Molfar.Vertep#446). App 0.20.0; plugins: Messenger 0.14.0. Nothing to migrate: replies and messages get the new fields as they are filed.
