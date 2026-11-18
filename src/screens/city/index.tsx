@@ -4,7 +4,7 @@
 // Preview parameters (`?screen=city&...`): district=<id> (open a district), place=<id> (open a place), state=empty.
 import "../profiles/profiles.css";
 import "./city.css";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/i18n/index";
 import { PREVIEW } from "@/lib/api";
@@ -14,6 +14,7 @@ import { useYou } from "../you/store";
 import { loadClubs } from "@/screens/messenger/clubs-api";
 import { loadCity, loadListen, removeDistrict, removePlace, resetTown, saveDistrict, savePlace, walkIn, type CityDoor, type CityPlace, type CityView, type ListenLine } from "./api";
 import { DistrictForm, PlaceForm, draftOf, type PlaceDraft } from "./editors";
+import { IsoMap, type IsoSpot } from "./iso-map";
 
 const param = (k: string): string => {
   if (!PREVIEW) return "";
@@ -38,7 +39,7 @@ function Tile({ p, name, text, on, onToggle }: { p: CityPlace; name: string; tex
   return (
     <button type="button" className={`ct-tile${on ? " on" : ""}${p.open ? "" : " is-closed"}`} aria-expanded={on} onClick={onToggle}>
       <span className="ct-top">
-        {p.picture ? <img className="ct-thumb" src={p.picture} alt="" /> : <span className="ct-ico" aria-hidden="true">{p.icon}</span>}
+        {p.background || p.picture ? <img className="ct-thumb" src={p.background || p.picture} alt="" /> : <span className="ct-ico" aria-hidden="true">{p.icon}</span>}
         <span className="ct-nm">{name}</span>
         <span className="chip">{t(p.open ? "city.open" : "city.closed")}</span>
       </span>
@@ -83,8 +84,10 @@ function Detail({ p, name, clubsOn, onOpenPerson, onEdit, onRemoved }: { p: City
     else openClub(r.id);
   };
   const canEnter = p.open && p.people.length >= 2;
+  // (#452) the place's picture behind the opened card: clear at the top, under a scrim where the text is
+  const bd = p.background || "";
   return (
-    <div className="ct-detail">
+    <div className={`ct-detail${bd ? " has-bd" : ""}`} style={bd ? ({ "--bd": `url("${bd}")` } as CSSProperties) : undefined}>
       {p.people.length > 0 && (
         <div className="ct-who" role="group" aria-label={t("city.here")}>
           <h3>{t("city.here")}</h3>
@@ -198,6 +201,18 @@ export function City() {
   const editedPlace = editor?.kind === "place" && editor.id ? view?.districts.flatMap((d) => d.places).find((p) => p.id === editor.id) ?? null : null;
   const pickDistricts = (view?.districts ?? []).map((d) => ({ id: d.id, name: districtName(d) }));
 
+  // C5 (#453): the drawn district; a pin opens the place like its tile does (Homes: a building's doors), and the page goes to it
+  const mapSpots: IsoSpot[] = !view
+    ? []
+    : isHomes
+      ? view.homes.buildings.map((b) => ({ id: b.id, name: t("city.building", { n: b.n }), kind: "home", icon: "\u{1F3E0}", open: true, count: b.doors.length, doors: b.doors.map((d) => d.state) }))
+      : (currentDistrict?.places ?? []).map((p) => ({ id: p.id, name: placeName(p), kind: p.kind, icon: p.icon, open: p.open, count: p.people.length }));
+  const pickOnMap = (id: string) => {
+    if (!isHomes) setOpen(open === id ? "" : id);
+    // after the card has opened
+    setTimeout(() => document.getElementById(isHomes ? `ct-b-${id}` : `ct-cell-${id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 0);
+  };
+
   const doorText = (d: CityDoor): string => {
     if (d.state === "lit") return t("city.state.lit");
     if (d.state === "dark") return t("city.state.dark");
@@ -253,10 +268,18 @@ export function City() {
               {editor?.kind === "district" && (
                 <DistrictForm
                   key={editor.id || "new"}
-                  initial={editor.id && currentDistrict ? { id: currentDistrict.id, name: districtName(currentDistrict), kind: currentDistrict.kind } : { name: "", kind: "custom" }}
-                  canRemove={!!currentDistrict && currentDistrict.places.length === 0}
+                  initial={
+                    editor.id && isHomes && view
+                      ? { id: view.homesDistrict, name: tabs.find((x) => x.id === view.homesDistrict)?.name ?? view.homesName, kind: "homes", background: view.homesBackground ?? "" }
+                      : editor.id && currentDistrict
+                        ? { id: currentDistrict.id, name: districtName(currentDistrict), kind: currentDistrict.kind, background: currentDistrict.background ?? "" }
+                        : { name: "", kind: "custom", background: "" }
+                  }
+                  homes={!!editor.id && isHomes}
+                  phone={phone}
+                  canRemove={!isHomes && !!currentDistrict && currentDistrict.places.length === 0}
                   onSave={async (v) => { await saveDistrict(v); await afterSave(undefined, v.id); }}
-                  onRemove={editor.id ? async () => { await removeDistrict(editor.id); setDistrict(""); await afterSave(); } : undefined}
+                  onRemove={editor.id && !isHomes ? async () => { await removeDistrict(editor.id); setDistrict(""); await afterSave(); } : undefined}
                   onCancel={() => setEditor(null)}
                 />
               )}
@@ -281,10 +304,21 @@ export function City() {
                   {currentDistrict && <button type="button" className="btn" onClick={() => setEditor({ kind: "district", id: currentDistrict.id })}>{t("city.district.edit")}</button>}
                 </div>
               )}
+              {!editor && (
+                <IsoMap
+                  spots={mapSpots}
+                  districtKind={isHomes ? "homes" : (currentDistrict?.kind ?? "custom")}
+                  name={tabs.find((x) => x.id === current)?.name ?? ""}
+                  picture={(isHomes ? view.homesBackground : currentDistrict?.background) || undefined}
+                  phone={phone}
+                  selected={isHomes ? "" : open}
+                  onPick={pickOnMap}
+                />
+              )}
               {!isHomes && (
                 <div className="ct-tiles">
                   {(currentDistrict?.places ?? []).map((p) => (
-                    <div key={p.id} className="ct-cell">
+                    <div key={p.id} id={`ct-cell-${p.id}`} className="ct-cell">
                       <Tile p={p} name={placeName(p)} text={placeText(p)} on={open === p.id} onToggle={() => setOpen(open === p.id ? "" : p.id)} />
                       {open === p.id && <Detail p={p} name={placeName(p)} clubsOn={clubsOn} onOpenPerson={openProfile} onEdit={() => setEditor({ kind: "place", id: p.id })} onRemoved={() => { setOpen(""); void load(); }} />}
                     </div>
@@ -295,6 +329,11 @@ export function City() {
               {isHomes && (
                 <>
                   <p className="k">{t("city.homes.intro")}</p>
+                  {!editor && (
+                    <div className="ct-btns">
+                      <button type="button" className="btn" onClick={() => setEditor({ kind: "district", id: view.homesDistrict })}>{t("city.district.edit")}</button>
+                    </div>
+                  )}
                   <button type="button" className="ct-you" onClick={() => go("you")}>
                     <Avatar name={me?.name ?? t("city.you")} hue={me?.hue ?? 210} size={36} picture={me?.picture || undefined} />
                     <span className="t">
@@ -303,7 +342,7 @@ export function City() {
                     </span>
                   </button>
                   {view.homes.buildings.map((b) => (
-                    <section key={b.id} className="ct-b" aria-label={t("city.building", { n: b.n })}>
+                    <section key={b.id} id={`ct-b-${b.id}`} className="ct-b" aria-label={t("city.building", { n: b.n })}>
                       <h2>{t("city.building", { n: b.n })}</h2>
                       <div className="ct-doors">
                         {b.doors.map((d) => (

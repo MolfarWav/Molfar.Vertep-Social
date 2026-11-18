@@ -1041,6 +1041,8 @@ export const TIE_TYPES = {
 };
 const TIES_MAX = 4;
 const TIE_LABEL_CHARS = 40;
+/** Ties that may carry "Live together" (`home: true`, #453); the city plugin has the same list. */
+const HOME_TIES = ["spouse", "parent", "child", "sibling", "relative", "partner", "dating"];
 const MARKS_KEEP = 8;
 const MARK_KINDS = ["level", "feel", "tie", "follow"];
 const FOLLOW_FROM = LEVELS.indexOf("penfriend");
@@ -1056,7 +1058,8 @@ export function cleanTies(raw) {
     const label = t.type === "other" ? oneLine(t.label, TIE_LABEL_CHARS) : "";
     if (t.type === "other" && !label) continue;
     if (out.some((x) => x.type === t.type && (x.label || "") === label)) continue;
-    out.push({ type: t.type, ...(label ? { label } : {}) });
+    // (#453) "Live together": the city gives both one flat; only family and romantic ties can carry it
+    out.push({ type: t.type, ...(label ? { label } : {}), ...(t.home === true && HOME_TIES.includes(t.type) ? { home: true } : {}) });
     if (out.length >= TIES_MAX) break;
   }
   return out;
@@ -1453,7 +1456,7 @@ function candidates(fsx, id, pf) {
 }
 
 /** The ties `other` sees when `mine` is the list of ties on this side: the mirrored ones only. */
-export const mirrorTies = (mine) => mine.filter((t) => TIE_TYPES[t.type].inverse).map((t) => ({ type: TIE_TYPES[t.type].inverse }));
+export const mirrorTies = (mine) => mine.filter((t) => TIE_TYPES[t.type].inverse).map((t) => ({ type: TIE_TYPES[t.type].inverse, ...(t.home === true ? { home: true } : {}) }));
 
 /** What the user set for one person: `{level, pinned, ties, mirror, follow}`; returns {error, status} or {ok}. Writes this list and, for a character, the other one. */
 export function setRelation(fsx, id, key, b, now) {

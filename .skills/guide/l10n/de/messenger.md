@@ -1,4 +1,4 @@
-<!-- source: 4c6132e986dd -->
+<!-- source: f3da32e5a456 -->
 # Social: Messenger
 
 Der Messenger ist ein Chat mit den Charakteren, die in Social leben. Du siehst eine Kontaktliste, die Unterhaltung mit dem gewählten Kontakt und eine Karte mit seinen Angaben. Wer mit einem Charakter einzeln reden möchte, fängt hier an.
@@ -13,7 +13,7 @@ Tippe in "Find a contact", um die Liste nach Namen zu filtern. Passt niemand, sa
 
 Wähle einen Kontakt, um den Chat zu öffnen. Deine Nachrichten und seine sind Zeilen mit einem farbigen Namen und einer Uhrzeit, keine Blasen. Schreibe in das Feld und drücke Enter zum Senden; Shift+Enter beginnt eine neue Zeile. "Clear" leert das Feld.
 
-Der Status ändert das Verhalten eines Charakters. Ein online-Charakter antwortet in Sekunden. Ein away-Charakter antwortet in ein paar Minuten. Ein offline-Charakter bekommt die Nachricht und antwortet, wenn er zurück ist; der Chat sagt dir, dass die Nachricht dann beantwortet wird. Während eine Antwort unterwegs ist, siehst du "<name> tippt…". Kommt keine Antwort, sagt dir der Chat, was schiefging, und bietet "Try again" an. Ist für den Messenger kein Modell gewählt, sagt der Chat das und verlinkt auf die Einstellungen.
+Der Status ändert das Verhalten eines Charakters. Ein online-Charakter antwortet in Sekunden. Ein away-Charakter antwortet in ein paar Minuten. Ein offline-Charakter bekommt die Nachricht und antwortet, wenn er zurück ist; der Chat sagt dir, dass die Nachricht dann beantwortet wird. Während eine Antwort unterwegs ist, siehst du „<name> tippt…“. Kommt keine Antwort, sagt dir der Chat, was schiefging, und bietet "Try again" an. Ist für den Messenger kein Modell gewählt, sagt der Chat das und verlinkt auf die Einstellungen.
 
 ### Gedächtnis und eine neue Unterhaltung
 
@@ -45,15 +45,15 @@ Unter den Gruppen der Auswahl liegt eine zweite Zeile für deine eigenen Pakete.
 
 **Kostenlose Pakete.** In "Sticker packs" öffnet die Karte "Free packs" einen Katalog von Paketen anderer Künstler (derzeit die animierten Noto-Emoji von Google, CC BY 4.0, und die Fluent-3D-Emoji von Microsoft, MIT). Jede Karte zeigt eine Vorschau, den Autor, die Lizenz und einen Link zur Quelle. "Add the pack" lädt die Bilder herunter und macht daraus ein gewöhnliches Paket von dir; Autor und Lizenz bleiben am Paket im Manager. Ein bereits hinzugefügtes Paket zeigt "Added" (lösche es, um es erneut hinzuzufügen). Die Liste wird beim Öffnen von GitHub geladen und braucht deshalb eine Internetverbindung. Kann sie nicht geladen werden, siehst du den Grund und einen Button "Try again". Dort erscheinen nur die Pakete, die der Eigentümer von Social in den Katalog gelegt hat, und immer mit einer freien Lizenz (CC0, CC BY oder MIT).
 
-In der Zeile erscheint ein Reiter mit dem ersten Bild des Pakets. Tippe einen Sticker an, um ihn sofort zu senden (der Text, den du gerade schreibst, bleibt); tippe ein eigenes Emoji an, um es an der Cursorposition in den Text zu setzen. Das Suchfeld findet Bilder auch nach ihrem Namen, und die zuletzt benutzten werden mit den Emoji geteilt. Ein eigenes Emoji wird im Text als `:pack/name:` gespeichert; ist sein Paket später gelöscht, erscheint es als einfacher Text. Ein Sticker bleibt auf dem Bildschirm, nachdem sein Paket weg ist. Einem Charakter wird nur "a sticker: name" gesagt, er sieht das Bild nie. Charaktere benutzen nur die Pakete, die du ihnen in Profiles unter Writing manner einschaltest (siehe [[profiles]]). In einem neuen Forenthema werden nur eigene Emoji angeboten, weil ein Sticker eine ganze Antwort ist.
+In der Zeile erscheint ein Reiter mit dem ersten Bild des Pakets. Tippe einen Sticker an, um ihn sofort zu senden (der Text, den du gerade schreibst, bleibt); tippe ein eigenes Emoji an, um es an der Cursorposition in den Text zu setzen. Das Suchfeld findet Bilder auch nach ihrem Namen, und die zuletzt benutzten werden mit den Emoji geteilt. Ein eigenes Emoji wird im Text als `:pack/name:` gespeichert; ist sein Paket später gelöscht, erscheint es als einfacher Text. Ein Sticker bleibt auf dem Bildschirm, nachdem sein Paket weg ist. Einem Charakter wird nur „a sticker: name“ gesagt, er sieht das Bild nie. Charaktere benutzen nur die Pakete, die du ihnen in Profiles unter Writing manner einschaltest (siehe [[profiles]]). In einem neuen Forenthema werden nur eigene Emoji angeboten, weil ein Sticker eine ganze Antwort ist.
 
 ## Wo der Charakter ist
 
-Mit eingeschaltetem "Tell the character where it is" (Settings > Messenger, standardmäßig aus) bekommt eine Antwort die Information, wo der Charakter gerade in der City ist und wer bei ihm ist: eine Zeile, etwa 30 Tokens. Siehe [[city]].
+Mit eingeschaltetem "Tell the character where it is" (Settings > Messenger, standardmäßig aus) bekommt eine Antwort die Information, wo der Charakter gerade in der City ist und wer bei ihm ist: eine Zeile, etwa 30 Tokens. Der Chat zeigt außerdem das Bild des Ortes hinter den Nachrichten, wenn der Ort eines hat. Siehe [[city]].
 
 ## Räume
 
-Ein "Room" in der Gruppe Clubs entstand durch "Walk in" in der City (siehe [[city]]): ein Club der Charaktere an einem Ort. Er endet mit dem dreistündigen Zeitraum oder wenn du "Leave the room" drückst.
+Ein "Room" in der Gruppe Clubs entstand durch "Walk in" in der City (siehe [[city]]): ein Club der Charaktere an einem Ort, mit dem Bild des Ortes hinter dem Gespräch, wenn er eines hat. Er endet mit dem dreistündigen Zeitraum oder wenn du "Leave the room" drückst.
 
 ## Geschichten
 

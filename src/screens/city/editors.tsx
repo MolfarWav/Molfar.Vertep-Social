@@ -17,7 +17,10 @@ export interface PlaceDraft {
   text: string;
   tags: string;
   seats: number;
+  /** A small picture from before #452 (kept until the user sets or removes the background). */
   picture: string;
+  /** (#452) The place's one picture: wide, behind the opened place, the room and a character's chat. */
+  background: string;
   /** Sent only when it was changed (a grid the form cannot show is kept as it is). */
   hours: Hours | null;
 }
@@ -27,8 +30,8 @@ const DEFAULT_HOURS: Hours = { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] };
 
 export function draftOf(p: CityPlace | null, district: string, name: string, text: string): PlaceDraft {
   return p
-    ? { id: p.id, name, district: p.district, kind: p.kind, icon: p.icon, text, tags: p.tags.join(", "), seats: p.seats, picture: p.picture ?? "", hours: null }
-    : { name: "", district, kind: "custom", icon: "", text: "", tags: "", seats: 6, picture: "", hours: { ...DEFAULT_HOURS } };
+    ? { id: p.id, name, district: p.district, kind: p.kind, icon: p.icon, text, tags: p.tags.join(", "), seats: p.seats, picture: p.picture ?? "", background: p.background ?? "", hours: null }
+    : { name: "", district, kind: "custom", icon: "", text: "", tags: "", seats: 6, picture: "", background: "", hours: { ...DEFAULT_HOURS } };
 }
 
 export function PlaceForm({ initial, existingHours, districts, phone, onSave, onCancel }: { initial: PlaceDraft; existingHours: Hours | null | undefined; districts: { id: string; name: string }[]; phone: boolean; onSave: (v: PlaceDraft) => Promise<void>; onCancel: () => void }) {
@@ -40,6 +43,8 @@ export function PlaceForm({ initial, existingHours, districts, phone, onSave, on
   const [pic, setPic] = useState(false);
   const editing = !!initial.id;
   const hid = useId();
+  // one picture per place (#452): the background, or the small picture of an older place until it gets one
+  const image = v.background || v.picture;
   const set = (patch: Partial<PlaceDraft>) => setV((x) => ({ ...x, ...patch }));
   // an existing place shows its own hours; a grid the form cannot show says so and stays unless the user sets new ones
   const shown: Hours = v.hours ?? existingHours ?? DEFAULT_HOURS;
@@ -106,13 +111,7 @@ export function PlaceForm({ initial, existingHours, districts, phone, onSave, on
         <Field label={t("city.form.seats")}>{(id) => <input id={id} className="inp" type="number" min={1} max={200} value={v.seats} onChange={(e) => set({ seats: Math.max(1, Math.min(200, Math.floor(Number(e.target.value) || 1))) })} />}</Field>
       </div>
       <Field label={t("city.form.icon")}>{(id) => <input id={id} className="inp ct-icon" maxLength={8} placeholder={"\u{1F4CD}"} value={v.icon} onChange={(e) => set({ icon: e.target.value })} />}</Field>
-      <div className="f">
-        <span className="lb">{t("city.form.picture")}</span>
-        <div className="ct-picrow">
-          {v.picture ? <img className="ct-pic" src={v.picture} alt="" /> : <span className="k">{t("city.form.picture.none")}</span>}
-          <button type="button" className="btn" onClick={() => setPic(true)}>{t(v.picture ? "city.form.picture.change" : "city.form.picture.add")}</button>
-        </div>
-      </div>
+      <WidePicture label={t("city.form.picture")} hint={t("city.form.picture.hint")} url={image} onOpen={() => setPic(true)} />
       {err && <div className="jr-err" role="alert">{err}</div>}
       <div className="ct-btns">
         <button type="submit" className="btn cta" disabled={busy}>{t("city.form.save")}</button>
@@ -121,14 +120,16 @@ export function PlaceForm({ initial, existingHours, districts, phone, onSave, on
       {pic && (
         <PictureDialog
           name={v.name.trim() || t("city.form.newPlace")}
+          title={t("city.form.picture.title", { name: v.name.trim() || t("city.form.newPlace") })}
           hue={200}
           about={v.text}
           interests={v.tags.split(",").map((x) => x.trim()).filter(Boolean)}
-          initialPrompt={`A picture of ${v.name.trim() || "a place"}${v.text.trim() ? ", " + v.text.trim() : ""}. A place in a town, no people, no text.`}
-          current={v.picture}
+          initialPrompt={placePrompt(v.name, v.text)}
+          wide
+          current={image}
           phone={phone}
-          onUse={(url) => { set({ picture: url }); setPic(false); }}
-          onRemove={() => { set({ picture: "" }); setPic(false); }}
+          onUse={(url) => { set({ background: url, picture: "" }); setPic(false); }}
+          onRemove={() => { set({ background: "", picture: "" }); setPic(false); }}
           onClose={() => setPic(false)}
         />
       )}
@@ -136,9 +137,18 @@ export function PlaceForm({ initial, existingHours, districts, phone, onSave, on
   );
 }
 
-export function DistrictForm({ initial, canRemove, onSave, onRemove, onCancel }: { initial: { id?: string; name: string; kind: string }; canRemove: boolean; onSave: (v: { id?: string; name: string; kind: string }) => Promise<void>; onRemove?: () => Promise<void>; onCancel: () => void }) {
+export interface DistrictDraft {
+  id?: string;
+  name: string;
+  kind: string;
+  /** (#452) The district's picture, behind its tiles; "" = none. */
+  background: string;
+}
+
+export function DistrictForm({ initial, canRemove, homes, phone, onSave, onRemove, onCancel }: { initial: DistrictDraft; canRemove: boolean; /** Homes: the name and the picture only. */ homes?: boolean; phone: boolean; onSave: (v: DistrictDraft) => Promise<void>; onRemove?: () => Promise<void>; onCancel: () => void }) {
   const t = useT();
   const [v, setV] = useState(initial);
+  const [pic, setPic] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [ask, setAsk] = useState(false);
@@ -157,14 +167,33 @@ export function DistrictForm({ initial, canRemove, onSave, onRemove, onCancel }:
       <h2 className="ct-fh">{t(initial.id ? "city.form.editDistrict" : "city.form.newDistrict")}</h2>
       <div className="ct-two">
         <Field label={t("city.form.name")}>{(id) => <input id={id} className="inp" maxLength={40} placeholder={t("city.form.dname.ph")} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} />}</Field>
-        <Field label={t("city.form.dkind")}>
-          {(id) => (
-            <select id={id} className="inp" value={v.kind} onChange={(e) => setV({ ...v, kind: e.target.value })}>
-              {DISTRICT_KINDS.map((k) => <option key={k} value={k}>{t(`city.dkind.${k}`)}</option>)}
-            </select>
-          )}
-        </Field>
+        {!homes && (
+          <Field label={t("city.form.dkind")}>
+            {(id) => (
+              <select id={id} className="inp" value={v.kind} onChange={(e) => setV({ ...v, kind: e.target.value })}>
+                {DISTRICT_KINDS.map((k) => <option key={k} value={k}>{t(`city.dkind.${k}`)}</option>)}
+              </select>
+            )}
+          </Field>
+        )}
       </div>
+      <WidePicture label={t("city.form.dpicture")} hint={t("city.form.dpicture.hint")} url={v.background} onOpen={() => setPic(true)} />
+      {pic && (
+        <PictureDialog
+          name={v.name.trim() || t("city.form.newDistrict")}
+          title={t("city.form.picture.title", { name: v.name.trim() || t("city.form.newDistrict") })}
+          hue={200}
+          about=""
+          interests={[]}
+          initialPrompt={districtPrompt(v.name, homes ? "homes" : v.kind)}
+          wide
+          current={v.background}
+          phone={phone}
+          onUse={(url) => { setV((x) => ({ ...x, background: url })); setPic(false); }}
+          onRemove={() => { setV((x) => ({ ...x, background: "" })); setPic(false); }}
+          onClose={() => setPic(false)}
+        />
+      )}
       {err && <div className="jr-err" role="alert">{err}</div>}
       <div className="ct-btns">
         <button type="submit" className="btn cta" disabled={busy}>{t("city.form.save")}</button>
@@ -182,5 +211,37 @@ export function DistrictForm({ initial, canRemove, onSave, onRemove, onCancel }:
     </form>
   );
 }
+
+/** The picture field of the place and district forms: a wide preview (or "none") and one button that opens the picture window. */
+function WidePicture({ label, hint, url, onOpen }: { label: string; hint: string; url: string; onOpen: () => void }) {
+  const t = useT();
+  const hid = useId();
+  return (
+    <div className="f" role="group" aria-labelledby={hid}>
+      <span className="lb" id={hid}>{label}</span>
+      <div className="ct-picrow">
+        {url ? <img className="ct-pic is-wide" src={url} alt="" /> : <span className="ct-pic is-wide is-none k">{t("city.form.picture.none")}</span>}
+        <button type="button" className="btn" onClick={onOpen}>{t(url ? "city.form.picture.change" : "city.form.picture.add")}</button>
+      </div>
+      <span className="k">{hint}</span>
+    </div>
+  );
+}
+
+/** The first prompt of a place's picture: a wide view with nobody in it (the people are the characters, drawn over it). */
+export const placePrompt = (name: string, text: string) => {
+  const about = text.trim().replace(/[.!?…\s]+$/, "");
+  return `A wide view of ${name.trim() || "a place in a town"}${about ? ", " + about : ""}. Landscape 16:9, no people, no text, soft light.`;
+};
+
+const DISTRICT_LOOK: Record<string, string> = {
+  centre: "a small town centre with cafes and shops along a square",
+  nature: "a park and a river at the edge of a small town",
+  work: "a quiet business street with offices and workshops",
+  homes: "a street of apartment buildings with lit windows",
+};
+
+export const districtPrompt = (name: string, kind: string) =>
+  `A wide view of ${name.trim() || "a district"}, ${DISTRICT_LOOK[kind] ?? "a district of a small town"}. Landscape 16:9, seen from a little above, no people, no text.`;
 
 export type { CityDistrict };

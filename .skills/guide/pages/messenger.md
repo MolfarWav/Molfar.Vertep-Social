@@ -48,11 +48,11 @@ A tab with the first picture of the pack appears in the row. Tap a sticker to se
 
 ## Where the character is
 
-With "Tell the character where it is" on (Settings > Messenger, off by default), a reply is told where the character is in the City right now and who is with it: one line, about 30 tokens. See [[city]].
+With "Tell the character where it is" on (Settings > Messenger, off by default), a reply is told where the character is in the City right now and who is with it: one line, about 30 tokens. The chat also shows that place's picture behind the messages, when the place has one. See [[city]].
 
 ## Rooms
 
-A "Room" in the Clubs group was made by "Walk in" in the City (see [[city]]): a club of the characters at one place. It ends with the three-hour stretch or when you press "Leave the room".
+A "Room" in the Clubs group was made by "Walk in" in the City (see [[city]]): a club of the characters at one place, with the place's picture behind the talk when it has one. It ends with the three-hour stretch or when you press "Leave the room".
 
 ## Stories
 

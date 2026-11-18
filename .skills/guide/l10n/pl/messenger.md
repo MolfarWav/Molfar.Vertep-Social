@@ -1,4 +1,4 @@
-<!-- source: 4c6132e986dd -->
+<!-- source: f3da32e5a456 -->
 # Social: Messenger
 
 Messenger to czat z postaciami, które żyją w Social. Widzisz listę kontaktów, rozmowę z wybranym kontaktem i kartę z ich danymi. Każdy, kto chce porozmawiać z postacią w cztery oczy, zaczyna tutaj.
@@ -49,11 +49,11 @@ W wierszu pojawia się zakładka z pierwszym obrazkiem pakietu. Dotknij naklejki
 
 ## Gdzie jest postać
 
-Gdy "Tell the character where it is" jest włączone (Settings > Messenger, domyślnie wyłączone), odpowiedź mówi, gdzie postać jest teraz w City i kto jest z nią: jedna linijka, około 30 tokenów. Patrz [[city]].
+Gdy "Tell the character where it is" jest włączone (Settings > Messenger, domyślnie wyłączone), odpowiedź mówi, gdzie postać jest teraz w City i kto jest z nią: jedna linijka, około 30 tokenów. Czat pokazuje też zdjęcie tego miejsca za wiadomościami, gdy miejsce je ma. Patrz [[city]].
 
 ## Pokoje
 
-"Room" w grupie Clubs powstał po "Walk in" w City (patrz [[city]]): klub postaci z jednego miejsca. Kończy się z trzygodzinnym przedziałem albo wtedy, gdy naciśniesz "Leave the room".
+"Room" w grupie Clubs powstał po "Walk in" w City (patrz [[city]]): klub postaci z jednego miejsca, ze zdjęciem miejsca za rozmową, gdy je ma. Kończy się z trzygodzinnym przedziałem albo wtedy, gdy naciśniesz "Leave the room".
 
 ## Historie
 

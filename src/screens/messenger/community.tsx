@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { currentLang, useT } from "@/i18n/index";
+import { usePlaceName } from "@/screens/city/place-name";
 import { MsgPicture } from "@/pictures/MsgPicture";
 import { refreshImages } from "@/pictures/worker";
 import { Dialog } from "@/screens/profiles/dialog";
@@ -104,6 +105,7 @@ export function StoriesBar({ phone }: { phone: boolean }) {
 
 function StoryViewer({ who, start, phone, onClose }: { who: Who; start: number; phone: boolean; onClose: () => void }) {
   const t = useT();
+  const placeName = usePlaceName();
   const lang = currentLang();
   const [i, setI] = useState(Math.min(start, who.list.length - 1));
   const [asking, setAsking] = useState(false);
@@ -138,7 +140,7 @@ function StoryViewer({ who, start, phone, onClose }: { who: Who; start: number; 
           <Avatar name={who.name} hue={who.hue} size={36} picture={who.picture || undefined} />
           <div className="story-meta">
             <b style={{ color: themColor(who.hue) }}>{who.name}</b>
-            <span className="k">{t("messenger.stories.meta", { time: when, n: left })}{s.place ? ` · ${t("messenger.stories.at", { place: s.place })}` : ""}</span>
+            <span className="k">{t("messenger.stories.meta", { time: when, n: left })}{s.place ? ` · ${t("messenger.stories.at", { place: placeName(s.place) })}` : ""}</span>
           </div>
           <span className="k story-count" aria-live="polite">{i + 1} / {list.length}</span>
         </div>

@@ -1284,7 +1284,24 @@ function chatRoute(req, host) {
   const id = String((isObj(req.query) ? req.query.id : "") || "");
   const p = readProfile(host.fs, id);
   if (!p) return ok({ error: "no such profile" }, 404);
-  return ok({ chat: viewOf(readChat(host.fs, id, activePersonaId(host.fs)), p, Date.now()) });
+  return ok({ chat: { ...viewOf(readChat(host.fs, id, activePersonaId(host.fs)), p, Date.now()), place: placeOf(host.fs, p) } });
+}
+
+/**
+ * (#452) Where the character is now, for the picture behind its chat: {id, name, picture} or null. Only with the same switch as the place line
+ * (Settings > Messenger > "Tell the character where it is"), and only from the city's file of this band (read only). `picture` is the place's
+ * background, else its small picture, else "".
+ */
+export function placeOf(fsx, p) {
+  const s = readJson(fsx, "settings.json", null);
+  if (!isObj(s) || s.messengerPlace !== true) return null;
+  const tz = typeof s.tzOffset === "number" && Number.isFinite(s.tzOffset) && Math.abs(s.tzOffset) <= 840 ? s.tzOffset : null;
+  const c = cityNow(fsx, p.id, Date.now(), tz);
+  if (!c) return null;
+  const town = readJson(fsx, "city/places.json", null);
+  const place = isObj(town) && Array.isArray(town.places) ? town.places.find((x) => isObj(x) && x.id === c.place.id) : null;
+  const asset = (v) => (typeof v === "string" && /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/.test(v) ? v : "");
+  return { id: c.place.id, name: c.place.name, picture: place ? asset(place.background) || asset(place.picture) : "" };
 }
 
 function sendRoute(req, host) {

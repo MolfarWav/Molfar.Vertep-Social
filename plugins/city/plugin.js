@@ -3,15 +3,17 @@
  * character is right now. All by rules, no model call, read-only for the user in this phase.
  *
  * Data (this plugin is the only writer of city/*):
- *   city/places.json  {districts: [{id, name, kind, order, by}], places: [{id, district, name, kind, icon, text, picture?, open, tags, seats, by}]}
+ *   city/places.json  {districts: [{id, name, kind, order, by, background?}], places: [{id, district, name, kind, icon, text, picture?, background?, open, tags, seats, by}]}
+ *                     (#452) `background`: the wide picture of a place or district (an asset url); `picture` is the small one of before.
  *                     `open` is 8 bands of 3 hours by 7 days from Monday (the schedule's shape), 1 = open. The stock town is an ordinary
  *                     present-day town with no real city, country or brand: plain names. It is written once, so later phases (own places,
  *                     packs) edit records, not code.
  *   city/homes.json   {buildings: [{id, n, flats}], flats: {<profileId>: {b: buildingId, n: flatNumber}}}: every profile has exactly one
- *                     flat; when the buildings are full the next one appears. Two profiles may point at one flat later (shared flats).
+ *                     flat; when the buildings are full the next one appears. (#453) Profiles joined by a family or romantic tie marked
+ *                     "Lives together" (`home: true`, Life's list) point at one flat (`homeGroups`).
  *   city/now.json     {id: "<local day>#<band>", at, where: {<profileId>: <placeId> | "home"}}, written once per band by the tick.
  * Who is where (`placeAt`, rules only, the same answer for the same profile and band): status off = home; na or dnd in a work band = the
- * profile's `workplace` (a place id, empty by default and not editable yet) else home; online or away = a seeded draw over the open
+ * profile's `workplace` (a place id set in Profiles; with none, the workplace of a boss, subordinate or colleague, `workplaceOf`) else home; online or away = a seeded draw over the open
  * places with free seats and home, weighted by the place's tags against the profile's interests and by followed or close people who are
  * already there. A profile with life switched off stays at home.
  *
@@ -137,6 +139,7 @@ function cleanPlace(x, districtIds) {
     icon: oneLine(x.icon, 8) || "📍",
     text: oneLine(x.text, 160),
     ...(typeof x.picture === "string" && ASSET.test(x.picture) ? { picture: x.picture } : {}),
+    ...(typeof x.background === "string" && ASSET.test(x.background) ? { background: x.background } : {}),
     open,
     tags: (Array.isArray(x.tags) ? x.tags : []).map((t) => oneLine(t, 24).toLowerCase()).filter(Boolean).slice(0, 12),
     seats,
@@ -153,7 +156,7 @@ export function readTown(fsx) {
   for (const x of d.districts) {
     if (!isObj(x) || typeof x.id !== "string" || !ID.test(x.id) || seen.has(x.id) || !str(x.name)) continue;
     seen.add(x.id);
-    districts.push({ id: x.id, name: oneLine(x.name, 40), kind: DISTRICT_KINDS.includes(x.kind) ? x.kind : "custom", order: Number.isFinite(x.order) ? x.order : 99, by: x.by === "you" ? "you" : "stock" });
+    districts.push({ id: x.id, name: oneLine(x.name, 40), kind: DISTRICT_KINDS.includes(x.kind) ? x.kind : "custom", order: Number.isFinite(x.order) ? x.order : 99, by: x.by === "you" ? "you" : "stock", ...(typeof x.background === "string" && ASSET.test(x.background) ? { background: x.background } : {}) });
     if (districts.length >= MAX_DISTRICTS) break;
   }
   const ids = new Set(districts.map((x) => x.id));
@@ -212,6 +215,62 @@ function closeOf(fsx, id) {
   return out;
 }
 
+/** Ties that put two profiles at one workplace when one of them has none of its own. */
+const WORK_TIES = ["boss", "subordinate", "colleague"];
+/** Ties that may share a flat (the user's switch "Live together" on the tie). */
+export const HOME_TIES = ["spouse", "parent", "child", "sibling", "relative", "partner", "dating"];
+
+/** The character ids `id` is tied to by a tie of `types` (with `home`, only ties the user marked "Live together"), in id order. Read only. */
+function tiedTo(fsx, id, types, home) {
+  const d = readJson(fsx, "life/people/" + id + ".json", null);
+  const out = [];
+  for (const p of isObj(d) && Array.isArray(d.people) ? d.people : []) {
+    if (!isObj(p) || typeof p.key !== "string" || !p.key.startsWith("c:") || !Array.isArray(p.ties)) continue;
+    const other = p.key.slice(2);
+    if (!ID.test(other) || other === id) continue;
+    if (p.ties.some((t) => isObj(t) && types.includes(t.type) && (!home || t.home === true))) out.push(other);
+  }
+  return out.sort();
+}
+
+/**
+ * Where a profile works: its own `workplace` (Profiles > Life), else the workplace of the first character (in id order) it is tied to as boss,
+ * subordinate or colleague that has one of its own. Only a place that exists counts. `byId`: Map of profile id -> profile (readProfile).
+ */
+export function workplaceOf(fsx, profile, byId, placeIds) {
+  if (profile.workplace && placeIds.has(profile.workplace)) return profile.workplace;
+  for (const other of tiedTo(fsx, profile.id, WORK_TIES, false)) {
+    const o = byId.get(other);
+    if (o && o.workplace && placeIds.has(o.workplace)) return o.workplace;
+  }
+  return "";
+}
+
+/** The groups of profiles that live together: joined by a family or romantic tie the user marked "Live together" on either side; at most 6 in one flat. */
+export function homeGroups(fsx, ids) {
+  const want = new Set(ids);
+  const parent = new Map(ids.map((id) => [id, id]));
+  const find = (x) => {
+    let r = x;
+    while (parent.get(r) !== r) r = parent.get(r);
+    return r;
+  };
+  for (const id of ids) {
+    for (const other of tiedTo(fsx, id, HOME_TIES, true)) {
+      if (!want.has(other)) continue;
+      const a = find(id);
+      const b = find(other);
+      if (a !== b) parent.set(a < b ? b : a, a < b ? a : b);
+    }
+  }
+  const groups = new Map();
+  for (const id of ids) {
+    const r = find(id);
+    groups.set(r, [...(groups.get(r) || []), id]);
+  }
+  return [...groups.values()].filter((g) => g.length >= 2).map((g) => g.sort().slice(0, 6));
+}
+
 /** How well the character knows the user's active persona: an index into LEVELS (0 when the list says nothing). */
 function levelOfUser(fsx, id, personaId) {
   if (!personaId) return 0;
@@ -242,29 +301,37 @@ export function readHomes(fsx) {
 
 /**
  * Gives every profile in `ids` a flat (the first free one, a new building when all are full) and frees the flats of profiles that are
- * gone. Pure: returns the new homes and whether anything changed.
+ * gone. `groups` (shared flats, `homeGroups`): lists of profile ids that live together; a group lives in the flat of its first member that
+ * has one. A profile that shared a flat with others it no longer lives with moves out to a free flat (the first holder in id order stays).
+ * Pure: returns the new homes and whether anything changed.
  */
-export function assignHomes(homes, ids) {
+export function assignHomes(homes, ids, groups) {
   const buildings = homes.buildings.map((b) => ({ ...b }));
   const flats = {};
   const want = new Set(ids);
-  for (const [k, v] of Object.entries(homes.flats)) if (want.has(k)) flats[k] = v;
-  const taken = new Set(Object.values(flats).map((v) => v.b + "#" + v.n));
-  for (const id of ids) {
-    if (flats[id]) continue;
-    let spot = null;
-    for (const b of buildings) {
-      for (let n = 1; n <= b.flats && !spot; n++) if (!taken.has(b.id + "#" + n)) spot = { b: b.id, n };
-      if (spot) break;
-    }
-    if (!spot) {
-      const n = buildings.reduce((m, b) => Math.max(m, b.n), 0) + 1;
-      buildings.push({ id: "b" + n, n, flats: FLATS_PER_BUILDING });
-      spot = { b: "b" + n, n: 1 };
-    }
-    flats[id] = spot;
-    taken.add(spot.b + "#" + spot.n);
+  const keyOf = (v) => v.b + "#" + v.n;
+  const groupOf = new Map();
+  for (const g of Array.isArray(groups) ? groups : []) {
+    const members = [...new Set(g.filter((x) => want.has(x)))].sort();
+    if (members.length >= 2) for (const m of members) if (!groupOf.has(m)) groupOf.set(m, members);
   }
+  for (const [k, v] of Object.entries(homes.flats)) if (want.has(k)) flats[k] = v;
+  const holders = new Map();
+  for (const id of Object.keys(flats).sort()) holders.set(keyOf(flats[id]), [...(holders.get(keyOf(flats[id])) || []), id]);
+  for (const list of holders.values()) for (const other of list.slice(1)) if (!(groupOf.get(other) || []).includes(list[0])) delete flats[other];
+  const spotFor = () => {
+    const taken = new Set(Object.values(flats).map(keyOf));
+    for (const b of buildings) for (let n = 1; n <= b.flats; n++) if (!taken.has(b.id + "#" + n)) return { b: b.id, n };
+    const n = buildings.reduce((m, b) => Math.max(m, b.n), 0) + 1;
+    buildings.push({ id: "b" + n, n, flats: FLATS_PER_BUILDING });
+    return { b: "b" + n, n: 1 };
+  };
+  for (const g of new Set(groupOf.values())) {
+    const anchor = g.find((m) => flats[m]) || g[0];
+    if (!flats[anchor]) flats[anchor] = spotFor();
+    for (const m of g) if (m !== anchor) flats[m] = { b: flats[anchor].b, n: flats[anchor].n };
+  }
+  for (const id of ids) if (!flats[id]) flats[id] = spotFor();
   const changed = JSON.stringify({ buildings, flats }) !== JSON.stringify({ buildings: homes.buildings, flats: homes.flats });
   return { homes: { buildings, flats }, changed };
 }
@@ -308,8 +375,9 @@ export function placeAt(profile, c) {
   const status = statusAt(profile.schedule, new Date(c.now), c.tz);
   if (status === "off") return HOME;
   if (status === "na" || status === "dnd") {
-    if (isWorkBand(c.band, c.weekday) && profile.workplace) {
-      const w = c.places.find((p) => p.id === profile.workplace);
+    const workplace = typeof c.workplace === "string" ? c.workplace : profile.workplace;
+    if (isWorkBand(c.band, c.weekday) && workplace) {
+      const w = c.places.find((p) => p.id === workplace);
       if (w && isOpen(w, c.band, c.weekday) && (c.seats[w.id] || 0) < w.seats) return w.id;
     }
     return HOME;
@@ -334,12 +402,14 @@ export function placeAt(profile, c) {
 export function whereAll(fsx, now, tz) {
   const { band, weekday, day } = bandNow(now, tz);
   const places = readTown(fsx).places;
+  const placeIds = new Set(places.map((p) => p.id));
   const seats = {};
   const placed = {};
-  for (const id of profileIds(fsx)) {
-    const p = readProfile(fsx, id);
-    if (!p) continue;
-    const at = placeAt(p, { places, band, weekday, day, tz, now, seats, placed, close: closeOf(fsx, id) });
+  const profiles = profileIds(fsx).map((id) => readProfile(fsx, id)).filter(Boolean);
+  const byId = new Map(profiles.map((p) => [p.id, p]));
+  for (const p of profiles) {
+    const id = p.id;
+    const at = placeAt(p, { places, band, weekday, day, tz, now, seats, placed, close: closeOf(fsx, id), workplace: workplaceOf(fsx, p, byId, placeIds) });
     placed[id] = at;
     if (at !== HOME) seats[at] = (seats[at] || 0) + 1;
   }
@@ -391,6 +461,7 @@ export function cityView(fsx, now) {
       name: d.name,
       kind: d.kind,
       by: d.by,
+      ...(d.background ? { background: d.background } : {}),
       places: town.places
         .filter((p) => p.district === d.id)
         .map((p) => ({
@@ -400,6 +471,7 @@ export function cityView(fsx, now) {
           icon: p.icon,
           text: p.text,
           ...(p.picture ? { picture: p.picture } : {}),
+          ...(p.background ? { background: p.background } : {}),
           by: p.by,
           district: p.district,
           tags: p.tags,
@@ -438,6 +510,7 @@ export function cityView(fsx, now) {
     homesDistrict: hasHomesDistrict ? town.districts.find((d) => d.kind === "homes").id : "",
     homesName: hasHomesDistrict ? town.districts.find((d) => d.kind === "homes").name : "",
     homesBy: hasHomesDistrict ? town.districts.find((d) => d.kind === "homes").by : "stock",
+    homesBackground: hasHomesDistrict ? town.districts.find((d) => d.kind === "homes").background || "" : "",
     empty: profiles.length === 0,
   };
 }
@@ -486,6 +559,7 @@ function placeRoute(fsx, b) {
   const kind = KINDS.includes(b.kind) && b.kind !== "home" ? b.kind : old ? old.kind : "custom";
   const seats = Number.isInteger(b.seats) && b.seats >= 1 && b.seats <= 200 ? b.seats : old ? old.seats : 6;
   const picture = "picture" in b ? (typeof b.picture === "string" && ASSET.test(b.picture) ? b.picture : "") : old && old.picture ? old.picture : "";
+  const background = "background" in b ? (typeof b.background === "string" && ASSET.test(b.background) ? b.background : "") : old && old.background ? old.background : "";
   const place = {
     id: old ? old.id : "p-" + Date.now().toString(36) + rid(),
     district: district.id,
@@ -494,6 +568,7 @@ function placeRoute(fsx, b) {
     icon: oneLine("icon" in b ? b.icon : old ? old.icon : "", 8) || KIND_ICONS[kind] || KIND_ICONS.custom,
     text: oneLine("text" in b ? b.text : old ? old.text : "", 160),
     ...(picture ? { picture } : {}),
+    ...(background ? { background } : {}),
     open,
     tags: "tags" in b ? tagList(b.tags) : old ? old.tags : [],
     seats,
@@ -510,12 +585,20 @@ function districtRoute(fsx, b) {
   if (typeof b.id === "string" && b.id && !old) return ok({ error: "no such district" }, 404);
   const name = oneLine("name" in b ? b.name : old ? old.name : "", 40);
   if (!name) return ok({ error: "a district needs a name" }, 400);
+  // the district's backdrop (#452): an asset url, "" removes it, absent keeps it
+  const bgOf = (d) => ("background" in b ? (typeof b.background === "string" && ASSET.test(b.background) ? b.background : "") : d && d.background ? d.background : "");
   if (old) {
-    town.districts = town.districts.map((d) => (d.id === old.id ? { ...d, name, by: "you", ...(d.kind !== "homes" && DISTRICT_KINDS.includes(b.kind) && b.kind !== "homes" ? { kind: b.kind } : {}) } : d));
+    town.districts = town.districts.map((d) => {
+      if (d.id !== old.id) return d;
+      const { background: _was, ...rest } = d;
+      const background = bgOf(d);
+      return { ...rest, name, by: "you", ...(d.kind !== "homes" && DISTRICT_KINDS.includes(b.kind) && b.kind !== "homes" ? { kind: b.kind } : {}), ...(background ? { background } : {}) };
+    });
   } else {
     if (town.districts.length >= MAX_DISTRICTS) return ok({ error: "the town has the most districts there can be: " + MAX_DISTRICTS }, 409);
     const kind = DISTRICT_KINDS.includes(b.kind) && b.kind !== "homes" ? b.kind : "custom";
-    town.districts.push({ id: "d-" + Date.now().toString(36) + rid(), name, kind, order: town.districts.reduce((m, d) => Math.max(m, d.order), 0) + 1, by: "you" });
+    const background = bgOf(null);
+    town.districts.push({ id: "d-" + Date.now().toString(36) + rid(), name, kind, order: town.districts.reduce((m, d) => Math.max(m, d.order), 0) + 1, by: "you", ...(background ? { background } : {}) });
   }
   writeTown(fsx, town);
   return ok({ ok: true, id: old ? old.id : town.districts[town.districts.length - 1].id });
@@ -624,7 +707,7 @@ export function onTick(_ctx, host) {
   // an empty list may be a failed read: then nothing is assigned and nothing is freed
   if (!ids.length) return;
   const profiles = ids.filter((id) => readProfile(fsx, id));
-  const { homes, changed } = assignHomes(readHomes(fsx), profiles);
+  const { homes, changed } = assignHomes(readHomes(fsx), profiles, homeGroups(fsx, profiles));
   if (changed) fsx.write("city/homes.json", JSON.stringify(homes));
   const id = bandId(now, tz);
   const stored = readNow(fsx);

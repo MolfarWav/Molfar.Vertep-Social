@@ -5,7 +5,7 @@
 //   ClubInfo      the desktop's right column: the members with their status, the interest, how it works.
 //   ClubDialog    "New club" and "Edit club": a name, an interest and the member picker (a search box and ticks, never a native select).
 // Nothing here talks to the engine except through clubs-api.ts (which answers from a fake in the design preview).
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { Avatar, themColor } from "@/components/Avatar";
 import { Flower } from "@/components/Flower";
 import { currentLang, useT } from "@/i18n/index";
@@ -227,8 +227,10 @@ function ClubLog({ chat, busy, queued, err, globalOn, phone, onSettings }: { cha
     rows.push(m);
   }
   const club = chat?.club;
+  // (#452) a room shows the picture of its place behind the talk
+  const bd = club?.room?.picture ?? "";
   return (
-    <div className={`log${phone ? " p" : ""}`} ref={ref} role="log" aria-label={t("messenger.clubs.chat")}>
+    <div className={`log${phone ? " p" : ""}${bd ? " has-bd" : ""}`} style={bd ? ({ "--bd": `url("${bd}")` } as CSSProperties) : undefined} ref={ref} role="log" aria-label={t("messenger.clubs.chat")}>
       {chat && n === 0 && <div className="sys">{t("messenger.clubs.emptyLog")}</div>}
       {rows.map((r) =>
         "day" in r ? (

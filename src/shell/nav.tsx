@@ -21,8 +21,8 @@ interface Nav {
   clubFocus: string | null;
   clearClubFocus: () => void;
   /** Unread counts shown as badges on the tabs (the design preview shows fixed ones). */
-  badges: { messenger: number; forum: number };
-  setBadges: (patch: Partial<{ messenger: number; forum: number }>) => void;
+  badges: { messenger: number; forum: number; journal: number };
+  setBadges: (patch: Partial<{ messenger: number; forum: number; journal: number }>) => void;
   chrome: Chrome;
   setChrome: (c: Chrome) => void;
   slot: HTMLElement | null;
@@ -70,8 +70,8 @@ export function NavProvider({ children }: { children: ReactNode }) {
   const [chrome, setChrome] = useState<Chrome>(FULL);
   const [profileFocus, setProfileFocus] = useState<string | null>(null);
   const [clubFocus, setClubFocus] = useState<string | null>(null);
-  const [badges, setBadgeState] = useState(PREVIEW ? { messenger: 1, forum: 3 } : { messenger: 0, forum: 0 });
-  const setBadges = (patch: Partial<{ messenger: number; forum: number }>) =>
+  const [badges, setBadgeState] = useState(PREVIEW ? { messenger: 1, forum: 3, journal: 1 } : { messenger: 0, forum: 0, journal: 0 });
+  const setBadges = (patch: Partial<{ messenger: number; forum: number; journal: number }>) =>
     setBadgeState((b) => (Object.entries(patch).every(([k, v]) => b[k as "messenger" | "forum"] === v) ? b : { ...b, ...patch }));
   const openProfile = (id: string) => {
     setProfileFocus(id);

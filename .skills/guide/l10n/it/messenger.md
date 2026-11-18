@@ -1,17 +1,17 @@
-<!-- source: 4c6132e986dd -->
+<!-- source: f3da32e5a456 -->
 # Social: Messenger
 
 Il Messenger è una chat con i personaggi che vivono in Social. Vedi un elenco di contatti, la conversazione con il contatto selezionato e una scheda con i suoi dettagli. Chi vuole parlare con un personaggio uno a uno inizia qui.
 
 ## L'elenco dei contatti
 
-I contatti sono raggruppati per stato: **Online**, **Away**, **Do not disturb**, **Unavailable** e **Offline**, ciascuno con un conteggio. All'interno di un gruppo vengono prima i contatti con un nuovo messaggio, poi la conversazione più recente, poi gli altri in ordine alfabetico. Clicca sul titolo di un gruppo per ripiegarlo. Accanto a ogni nome c'è un fiore. Il colore, il segno al centro e la parola nell'intestazione della chat indicano lo stato. Un contatto con un messaggio in attesa mostra una busta al posto del fiore e un nome in grassetto.
+I contatti sono raggruppati per stato: **Online**, **Away**, **Do not disturb**, **Unavailable** e **Offline**, ciascuno con un conteggio. All'interno di un gruppo vengono prima i contatti con un nuovo messaggio, poi la conversazione più recente, poi gli altri in ordine alfabetico. Clicca sul titolo di un gruppo per ripiegarlo. Accanto a ogni nome c'è un fiore. Il suo colore, il segno al centro e la parola nell'intestazione della chat indicano lo stato. Un contatto con un messaggio in attesa mostra una busta al posto del fiore e un nome in grassetto.
 
 Scrivi in "Find a contact" per filtrare l'elenco per nome. Se nessuno corrisponde, l'elenco lo dice e propone "Clear search". Il tuo stato ("My status") si trova in fondo all'elenco su un computer e in cima su un telefono. Su un telefono, l'icona di ricerca nella barra in alto apre il campo di ricerca.
 
 ## Una conversazione
 
-Seleziona un contatto per aprire la chat. I tuoi messaggi e quelli suoi sono righe con un nome colorato e un orario, non bolle. Scrivi nella casella e premi Invio per inviare; Shift+Invio va a capo. "Clear" svuota la casella.
+Seleziona un contatto per aprire la chat. I tuoi messaggi e i suoi sono righe con un nome colorato e un orario, non bolle. Scrivi nella casella e premi Invio per inviare; Shift+Invio va a capo. "Clear" svuota la casella.
 
 Lo stato cambia il comportamento di un personaggio. Un personaggio online risponde in pochi secondi. Un personaggio assente risponde in pochi minuti. Un personaggio offline riceve il messaggio e risponde quando torna; la chat dice che il messaggio sarà risposto allora. Mentre una risposta è in arrivo vedi "<name> is typing…". Se non arriva alcuna risposta, la chat ti dice cosa è andato storto e propone "Try again". Se non è stato scelto alcun modello per il Messenger, la chat lo dice e rimanda alle impostazioni.
 
@@ -41,19 +41,19 @@ Ogni tanto un personaggio può anche tirar fuori nella chat con te qualcosa dal 
 
 Sotto i gruppi del selettore c'è una seconda riga per i tuoi pacchetti. Un pacchetto è un insieme di immagini che hai aggiunto tu: gli **Stickers** si inviano come messaggio intero, grandi e senza testo; le **Custom emoji** sono piccole immagini che stanno dentro una riga di testo, come su Telegram o Discord. Premi il più di quella riga ("Manage packs") per aprire "Sticker packs": scrivi un nome, scegli Stickers o Custom emoji, premi "Choose pictures…" e seleziona più file insieme (PNG, WebP, GIF o JPEG, fino a 512 KB ciascuno dopo il ridimensionamento, 200 per pacchetto; gli sticker vengono ridimensionati a 512 px, le emoji personalizzate a 64 px; l'SVG non è accettato). Le immagini animate restano in movimento: GIF e WebP animato (o APNG) vengono conservati così come sono, senza essere ridimensionati, quindi disegnali alla dimensione che vuoi e entro 512 KB; un WebP animato è molto più leggero di una GIF per la stessa immagine. Ogni pacchetto può essere rinominato, passato dall'uno all'altro tipo, ricevere altre immagini, perdere singole immagini con la croce, o essere eliminato (dopo una domanda). Tutto viene salvato man mano.
 
-**The Molfar pack comes with the app.** In cima a "Sticker packs" compare una scheda "Molfar pack" con otto volti di Molfar (il vecchio con l'occhio cibernetico) in otto stati d'animo: felice, che ride, triste, innamorato, compiaciuto, assonnato, diffidente, impassibile. Premi "Add the Molfar pack" e ottieni due pacchetti, "Molfar" (sticker animati) e "Molfar emoji" (gli stessi volti come piccole emoji personalizzate); la scheda scompare. Sono pacchetti normali: rinominali, eliminali o ampliali. Dopo averne eliminato uno la scheda torna, così puoi aggiungerli di nuovo. All'altezza di una riga le emoji sono piccole, quindi gli stati d'animo si distinguono soprattutto negli sticker.
+**Il pacchetto Molfar è incluso nell'app.** In cima a "Sticker packs" compare una scheda "Molfar pack" con otto volti di Molfar (il vecchio con l'occhio cibernetico) in otto stati d'animo: felice, che ride, triste, innamorato, compiaciuto, assonnato, diffidente, impassibile. Premi "Add the Molfar pack" e ottieni due pacchetti, "Molfar" (sticker animati) e "Molfar emoji" (gli stessi volti come piccole emoji personalizzate); la scheda scompare. Sono pacchetti normali: rinominali, eliminali o ampliali. Dopo averne eliminato uno la scheda torna, così puoi aggiungerli di nuovo. All'altezza di una riga le emoji sono piccole, quindi gli stati d'animo si distinguono soprattutto negli sticker.
 
-**Free packs.** In "Sticker packs" la scheda "Free packs" apre un catalogo di pacchetti di altri artisti (al momento le emoji animate Noto di Google, CC BY 4.0, e le emoji 3D Fluent di Microsoft, MIT). Ogni scheda mostra un'anteprima, l'autore, la licenza e un link alla fonte. "Add the pack" scarica le sue immagini e ne fa un pacchetto normale tuo; l'autore e la licenza restano sul pacchetto nel gestore. Un pacchetto già aggiunto mostra "Added" (eliminalo per aggiungerlo di nuovo). L'elenco viene letto da GitHub quando lo apri, quindi serve una connessione internet; se non si carica vedi il motivo e un pulsante "Try again". Vi compaiono solo i pacchetti che il proprietario di Social ha messo nel catalogo, sempre con una licenza libera (CC0, CC BY o MIT).
+**Pacchetti gratuiti.** In "Sticker packs" la scheda "Free packs" apre un catalogo di pacchetti di altri artisti (al momento le emoji animate Noto di Google, CC BY 4.0, e le emoji 3D Fluent di Microsoft, MIT). Ogni scheda mostra un'anteprima, l'autore, la licenza e un link alla fonte. "Add the pack" scarica le sue immagini e ne fa un pacchetto normale tuo; l'autore e la licenza restano sul pacchetto nel gestore. Un pacchetto già aggiunto mostra "Added" (eliminalo per aggiungerlo di nuovo). L'elenco viene letto da GitHub quando lo apri, quindi serve una connessione internet; se non si carica vedi il motivo e un pulsante "Try again". Vi compaiono solo i pacchetti che il proprietario di Social ha messo nel catalogo, sempre con una licenza libera (CC0, CC BY o MIT).
 
 Nella riga compare una scheda con la prima immagine del pacchetto. Tocca uno sticker per inviarlo subito (il testo che stavi scrivendo resta); tocca un'emoji personalizzata per metterla nel testo sul cursore. Il campo di ricerca trova le immagini anche per nome, e quelle recenti sono condivise con le emoji. Un'emoji personalizzata è salvata nel testo come `:pack/name:`; se il suo pacchetto viene eliminato più tardi, appare come testo semplice. Uno sticker resta sullo schermo anche dopo che il suo pacchetto è scomparso. Al personaggio viene detto solo "a sticker: name" e non vede mai l'immagine. I personaggi usano solo i pacchetti che attivi per loro in Profiles, Writing manner (vedi [[profiles]]). In un nuovo topic del forum sono offerte solo le emoji personalizzate, perché uno sticker è una risposta intera.
 
 ## Dove si trova il personaggio
 
-Con "Tell the character where it is" attivo (Settings > Messenger, disattivato per impostazione predefinita), una risposta indica dove si trova il personaggio nella City in questo momento e con chi: una riga, circa 30 token. Vedi [[city]].
+Con "Tell the character where it is" attivo (Settings > Messenger, disattivato per impostazione predefinita), una risposta indica dove si trova il personaggio nella City in questo momento e con chi: una riga, circa 30 token. La chat mostra anche l'immagine del luogo dietro i messaggi, quando il luogo ne ha una. Vedi [[city]].
 
 ## Stanze
 
-Una "Room" nel gruppo Clubs è stata creata da "Walk in" nella City (vedi [[city]]): un club dei personaggi di un luogo. Finisce con la fascia di tre ore o quando premi "Leave the room".
+Una "Room" nel gruppo Clubs è stata creata da "Walk in" nella City (vedi [[city]]): un club dei personaggi di un luogo, con l'immagine del luogo dietro la conversazione quando ne ha una. Finisce con la fascia di tre ore o quando premi "Leave the room".
 
 ## Storie
 

@@ -54,6 +54,8 @@ export interface EngineChat {
   /** The memory note and the "new conversation" dividers (absent in an answer of an older plugin). */
   summary?: EngineNote | null;
   breaks?: number[];
+  /** (#452) Where the character is now, with the place's picture (only with Settings > Messenger > "Tell the character where it is"). */
+  place?: { id: string; name: string; picture: string } | null;
 }
 
 /** The answer of POST /messenger/send and POST /messenger/retry (and, with `warn`, of /messenger/new). */
@@ -83,9 +85,11 @@ export interface ChatView {
   noteEdited: boolean;
   /** How many messages the chat holds (the Clear chat question names it). */
   count: number;
+  /** (#452) The picture behind the log: the place the character is at ("" = none). */
+  backdrop: string;
 }
 
-export const EMPTY_CHAT: ChatView = { items: [], firstAt: null, pending: false, failed: null, busy: false, loaded: false, note: "", noteEdited: false, count: 0 };
+export const EMPTY_CHAT: ChatView = { items: [], firstAt: null, pending: false, failed: null, busy: false, loaded: false, note: "", noteEdited: false, count: 0, backdrop: "" };
 
 /** Local time as HH:MM. */
 export function clock(ms: number): string {
@@ -159,7 +163,8 @@ export function breakLabel(at: number, lang: string): string {
 }
 
 /** An engine chat as the screen's chat view. */
-export function chatView(chat: EngineChat, contactId: string): ChatView {
+/** `backdrop`: the picture shown so far, kept when the answer does not say where the character is (a send answer). */
+export function chatView(chat: EngineChat, contactId: string, backdrop = ""): ChatView {
   return {
     items: logItems(chat.messages, contactId, chat.breaks ?? []),
     firstAt: chat.messages.length ? chat.messages[0].at : null,
@@ -170,5 +175,6 @@ export function chatView(chat: EngineChat, contactId: string): ChatView {
     note: chat.summary?.text ?? "",
     noteEdited: chat.summary?.edited === true,
     count: chat.messages.length,
+    backdrop: chat.place === undefined ? backdrop : (chat.place?.picture ?? ""),
   };
 }

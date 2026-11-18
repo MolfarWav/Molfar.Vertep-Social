@@ -7,7 +7,7 @@ import { PREVIEW } from "@/lib/api";
 import { ModelPick } from "@/screens/settings/model-pick";
 import { Pick } from "@/screens/settings/controls";
 import { Dialog } from "./dialog";
-import { generatePicture, imageOptions, listImageModels, PICTURE_MAX_BYTES, PICTURE_TYPES, uploadPicture, type ImageModel } from "./picture-api";
+import { generatePicture, imageOptions, listImageModels, PICTURE_MAX_BYTES, PICTURE_TYPES, uploadPicture, WIDE_SIDE, type ImageModel } from "./picture-api";
 import { portraitPrompt } from "./picture";
 
 const MODEL_KEY = "social:image-model";
@@ -33,6 +33,10 @@ export interface PictureDialogProps {
   interests: string[];
   /** The first prompt, when it is not a portrait (a place). */
   initialPrompt?: string;
+  /** (#452) A wide picture (a place or a district): the preview is a 16:9 frame and an upload keeps a longer side. */
+  wide?: boolean;
+  /** The dialog's title, when it is not "Picture of <name>". */
+  title?: string;
   /** The picture the profile has now (the draft's), "" = none. */
   current: string;
   phone: boolean;
@@ -86,7 +90,7 @@ export function PictureDialog(p: PictureDialogProps) {
     setBusy(true);
     setBusyText(t("profiles.picture.uploading"));
     try {
-      setFresh(await uploadPicture(f));
+      setFresh(await uploadPicture(f, p.wide ? { side: WIDE_SIDE } : {}));
       setUploaded(true);
     } catch (e) {
       setError(t("profiles.picture.uploadFailed", { error: e instanceof Error ? e.message : String(e) }));
@@ -97,10 +101,14 @@ export function PictureDialog(p: PictureDialogProps) {
   const options = imageOptions(models, model, t("profiles.picture.engineDefault"));
 
   return (
-    <Dialog title={t("profiles.picture.title", { name: p.name })} width={560} sheet={p.phone} onClose={p.onClose}>
-      <div className="pf-body pic-body">
+    <Dialog title={p.title ?? t("profiles.picture.title", { name: p.name })} width={560} sheet={p.phone} onClose={p.onClose}>
+      <div className={`pf-body pic-body${p.wide ? " is-wide" : ""}`}>
         <div className="pic-view" aria-live="polite">
-          <Avatar name={p.name} hue={p.hue} size={p.phone ? 128 : 160} radius={12} picture={shown || undefined} />
+          {p.wide ? (
+            <div className="pic-wide">{shown ? <img src={shown} alt="" /> : <span className="k">{t("profiles.picture.wideEmpty")}</span>}</div>
+          ) : (
+            <Avatar name={p.name} hue={p.hue} size={p.phone ? 128 : 160} radius={12} picture={shown || undefined} />
+          )}
           {busy && <div className="pic-busy"><span className="spin" /> {busyText}</div>}
           <button type="button" className="btn" onClick={() => fileInput.current?.click()} disabled={busy}>{t("profiles.picture.upload")}</button>
           <input ref={fileInput} type="file" accept={PICTURE_TYPES.join(",")} className="hidden" tabIndex={-1} onChange={(e) => {

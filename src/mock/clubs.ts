@@ -1,6 +1,7 @@
 // Mock clubs for the design preview (`?screen=messenger&view=clubs`): three clubs of the mock cast, one with a log. Character texts stay
 // Ukrainian in both languages (the characters' voice, not interface copy).
 import type { Club, ClubMessage } from "@/screens/messenger/clubs-model";
+import { fakeWide } from "@/screens/city/api";
 
 const H = 3600e3;
 const NOW = Date.now();
@@ -32,7 +33,8 @@ export const MOCK_CLUBS: Club[] = [
     name: "Лісові стежки",
     interest: "лісові стежки",
     by: "mod",
-    room: null,
+    // the preview's one room (#452): walked into at the park, with the place's picture behind the talk
+    room: { place: "park", until: NOW + 2 * H, picture: fakeWide(120) },
     on: true,
     count: 3,
     last: { by: "mavka", name: "Мавка", at: NOW - 5 * H, text: "Лісовик знову переставив стежку біля озера." },

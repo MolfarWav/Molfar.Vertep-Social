@@ -216,6 +216,7 @@ export function Messenger() {
             contacts={contacts}
             items={items}
             dayLine={dayLine}
+            backdrop={real ? view.backdrop : ""}
             draft={draft}
             failed={failedNote}
             failError={failError}
@@ -341,6 +342,7 @@ export function Messenger() {
                 contacts={contacts}
                 items={items}
                 dayLine={dayLine}
+                backdrop={real ? view.backdrop : ""}
                 typing={cur.typing || busy}
                 failed={failedNote}
                 failError={failError}

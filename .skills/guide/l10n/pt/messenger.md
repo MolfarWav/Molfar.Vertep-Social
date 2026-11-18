@@ -1,4 +1,4 @@
-<!-- source: 4c6132e986dd -->
+<!-- source: f3da32e5a456 -->
 # Social: Mensageiro
 
 O Mensageiro é um chat com os personagens que vivem no Social. Você vê uma lista de contatos, a conversa com o contato selecionado e um cartão com os detalhes dele. Quem quer falar com um personagem a sós começa aqui.
@@ -49,11 +49,11 @@ Uma aba com a primeira imagem do pacote aparece na linha. Toque numa figurinha p
 
 ## Onde está o personagem
 
-Com "Tell the character where it is" ligado (Settings > Messenger, desligado por padrão), uma resposta informa onde o personagem está agora na Cidade e quem está com ele: uma linha, cerca de 30 tokens. Veja [[city]].
+Com "Tell the character where it is" ligado (Settings > Messenger, desligado por padrão), uma resposta informa onde o personagem está agora na Cidade e quem está com ele: uma linha, cerca de 30 tokens. O chat também mostra a imagem do lugar atrás das mensagens, quando o lugar tem uma. Veja [[city]].
 
 ## Salas
 
-Uma "Room" no grupo Clubs nasceu de "Walk in" na Cidade (veja [[city]]): um clube dos personagens de um lugar. Ela termina quando acaba o intervalo de três horas ou quando você pressiona "Leave the room".
+Uma "Room" no grupo Clubs nasceu de "Walk in" na Cidade (veja [[city]]): um clube dos personagens de um lugar, com a imagem do lugar atrás da conversa quando ela tem uma. Ela termina quando acaba o intervalo de três horas ou quando você pressiona "Leave the room".
 
 ## Stories
 

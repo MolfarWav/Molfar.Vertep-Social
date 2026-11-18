@@ -67,6 +67,8 @@ export interface ProfileForm {
   tags: string[];
   /** schedule[band][day]: 8 time bands (00-03 .. 21-24) by 7 days (Mon..Sun). */
   schedule: Status[][];
+  /** (#453) The City place where the character works in its busy hours (a place id); "" or absent = none of its own. */
+  workplace?: string;
 }
 
 export interface MockProfile extends ProfileForm {

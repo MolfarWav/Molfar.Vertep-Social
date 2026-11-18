@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { useT } from "@/i18n/index";
 import { SectionHead } from "../sections";
 import { Chip, Switch } from "../ui";
-import { LEVELS, TIE_GROUPS, type Follow, type Level, type RelationEdit, type Tie, type TieType } from "../people-api";
+import { HOME_TIES, LEVELS, TIE_GROUPS, type Follow, type Level, type RelationEdit, type Tie, type TieType } from "../people-api";
 
 export interface EditTarget {
   key: string;
@@ -112,6 +112,16 @@ export function RelationEditor({ target, busy, onSave, onCancel, levelNote, extr
           </div>
         ) : (
           <p className="k">{t("profiles.people.tie.max")}</p>
+        )}
+        {character && ties.some((x) => HOME_TIES.includes(x.type)) && (
+          <>
+            <Switch on={ties.some((x) => x.home === true)} onChange={(v) => {
+              // one switch for the person: it sits on the first tie that can carry it
+              const first = ties.findIndex((x) => HOME_TIES.includes(x.type));
+              setTies(ties.map((x, i) => (i === first && v ? { ...x, home: true } : { type: x.type, ...(x.label ? { label: x.label } : {}) })));
+            }}>{t("profiles.people.home", { name: target.name })}</Switch>
+            <p className="k">{t("profiles.people.home.hint")}</p>
+          </>
         )}
         {character && <p className="k">{t("profiles.people.tie.mirrorHint", { name: target.name })}</p>}
         {!target.romance && <p className="k">{t("profiles.people.tie.adultHint")}</p>}

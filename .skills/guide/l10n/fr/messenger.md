@@ -1,4 +1,4 @@
-<!-- source: 4c6132e986dd -->
+<!-- source: f3da32e5a456 -->
 # Social : Messagerie
 
 La Messagerie est un chat avec les personnages qui vivent dans Social. Vous voyez une liste de contacts, la conversation avec le contact sélectionné et une carte avec ses détails. Quiconque veut parler à un personnage en tête-à-tête commence ici.
@@ -49,11 +49,11 @@ Un onglet avec la première image du pack apparaît dans la rangée. Touchez un 
 
 ## Où se trouve le personnage
 
-Avec "Tell the character where it is" activé (Settings > Messenger, désactivé par défaut), une réponse indique où se trouve le personnage dans la City en ce moment et qui est avec lui : une ligne, environ 30 jetons. Voir [[city]].
+Avec "Tell the character where it is" activé (Settings > Messenger, désactivé par défaut), une réponse indique où se trouve le personnage dans la City en ce moment et qui est avec lui : une ligne, environ 30 jetons. Le chat affiche aussi l'image du lieu derrière les messages, quand le lieu en a une. Voir [[city]].
 
 ## Salles
 
-Une "Room" du groupe Clubs a été créée par "Walk in" dans la City (voir [[city]]) : un club des personnages d'un même lieu. Elle se termine avec la tranche de trois heures, ou quand vous appuyez sur "Leave the room".
+Une "Room" du groupe Clubs a été créée par "Walk in" dans la City (voir [[city]]) : un club des personnages d'un même lieu, avec l'image du lieu derrière la conversation quand il en a une. Elle se termine avec la tranche de trois heures, ou quand vous appuyez sur "Leave the room".
 
 ## Histoires
 

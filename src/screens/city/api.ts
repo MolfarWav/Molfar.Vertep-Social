@@ -22,7 +22,10 @@ export interface CityPlace {
   kind: string;
   icon: string;
   text: string;
+  /** A small picture from before #452: shown on the tile only while the place has no background. */
   picture?: string;
+  /** (#452) The wide picture of the place: behind the opened place, the room and a character's chat; the tile shows it cut square. */
+  background?: string;
   district: string;
   tags: string[];
   /** Null for a grid the form cannot show. */
@@ -39,6 +42,8 @@ export interface CityDistrict {
   name: string;
   kind: string;
   by: "stock" | "you";
+  /** (#452) The district's picture: behind its tiles. */
+  background?: string;
   places: CityPlace[];
 }
 
@@ -62,10 +67,14 @@ export interface CityView {
   homesDistrict: string;
   homesName: string;
   homesBy: "stock" | "you";
+  homesBackground?: string;
   empty: boolean;
 }
 
 const p = (id: string, name: string, hue: number, status = "online"): CityPerson => ({ id, name, hue, picture: "", status });
+/** A canned wide picture for the design preview (#452): sky, hills and a street line, tinted by the hue. */
+export const fakeWide = (hue: number): string =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${hue} 60% 72%)"/><stop offset="1" stop-color="hsl(${(hue + 30) % 360} 45% 45%)"/></linearGradient></defs><rect width="320" height="180" fill="url(#s)"/><circle cx="250" cy="48" r="20" fill="hsl(45 90% 80%)"/><path d="M0 120q60-40 120-10t110-20 90 10v80H0z" fill="hsl(${(hue + 60) % 360} 35% 32%)"/><path d="M0 150h320v30H0z" fill="hsl(${hue} 20% 22%)"/><g fill="hsl(${hue} 25% 28%)"><rect x="30" y="96" width="40" height="54"/><rect x="80" y="80" width="30" height="70"/><rect x="200" y="90" width="50" height="60"/></g></svg>`)}`;
 const MOCK: CityView = {
   band: 4,
   from: 12,
@@ -73,6 +82,8 @@ const MOCK: CityView = {
   homesDistrict: "homes",
   homesName: "Homes",
   homesBy: "stock",
+  // the preview's district picture (#452): the drawing gives way to it, the pins stay
+  homesBackground: fakeWide(210),
   empty: false,
   districts: [
     {
@@ -81,7 +92,7 @@ const MOCK: CityView = {
       kind: "centre",
       by: "stock",
       places: [
-        { id: "cafe", name: "The cafe by the park", kind: "cafe", icon: "☕", text: "Coffee, cake and a table by the window.", by: "stock", open: true, seats: 6, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [p("mavka", "Mavka", 150), p("lis", "Lis", 30)] },
+        { id: "cafe", name: "The cafe by the park", kind: "cafe", icon: "☕", text: "Coffee, cake and a table by the window.", background: fakeWide(30), by: "stock", open: true, seats: 6, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [p("mavka", "Mavka", 150), p("lis", "Lis", 30)] },
         { id: "library", name: "The library", kind: "library", icon: "📚", text: "Quiet shelves, old maps and a reading room.", by: "stock", open: true, seats: 8, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [] },
         { id: "cinema", name: "The small cinema", kind: "club", icon: "🎬", text: "One screen and an evening show.", by: "stock", open: false, seats: 10, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [] },
       ],
@@ -156,6 +167,7 @@ export interface PlaceInput {
   tags: string;
   seats: number;
   picture: string;
+  background: string;
   hours?: Hours;
 }
 
@@ -173,7 +185,7 @@ export async function removePlace(id: string): Promise<void> {
   await call("POST", "/city/place/remove", { id }).catch(fail);
 }
 
-export async function saveDistrict(v: { id?: string; name: string; kind: string }): Promise<void> {
+export async function saveDistrict(v: { id?: string; name: string; kind: string; background?: string }): Promise<void> {
   if (PREVIEW) return;
   await call("POST", "/city/district", v).catch(fail);
 }
