@@ -155,6 +155,7 @@ export function IsoMap({ spots, districtKind, name, picture, phone, selected, on
   return (
     <div className="ct-iso-wrap">
       <div className={`ct-iso${phone ? " is-phone" : ""}${picture ? " has-pic" : ""}`} style={picture ? ({ "--bd": `url("${picture}")` } as CSSProperties) : undefined} role="group" aria-label={t("city.map.label", { name })}>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: the string is built from numbers and theme tokens only (isoSvg), no user text */}
         {!picture && <svg viewBox={`0 0 ${f.W} ${f.H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false" dangerouslySetInnerHTML={{ __html: svg }} />}
         {shown.map((x, i) => {
           const pin = isoPin(f, lots[i], isoHeight(f, x.kind, g));
