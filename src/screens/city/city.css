@@ -1,0 +1,56 @@
+/* The city. It borrows the Profiles screen's controls (buttons, chips); these rules only lay the page out.
+ * Every rule hangs off .s-city. */
+.s-city { flex-direction: column; }
+.s-city h1 { margin: 0; }
+.s-city .ct-head { display: flex; align-items: center; gap: 16px; padding: 20px 24px 8px; flex: none; }
+.s-city .ct-head > div:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.s-city .ct-h { font: 26px/1.2 Kurale, Georgia, serif; }
+.s-city .ct-title { margin: 0; font: 22px/1.2 Kurale, Georgia, serif; }
+.s-city .ct-scroll { flex: 1; min-height: 0; overflow: auto; }
+.s-city .ct-page { display: flex; flex-direction: column; gap: 16px; max-width: 760px; padding: 12px 24px 24px; }
+.s-city.is-phone .ct-page { padding: 14px 16px 24px; }
+.s-city .ct-now { font-weight: 600; }
+.s-city .ct-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.s-city .ct-strip .chip { height: 36px; padding: 0 14px; font-size: 13px; }
+.s-city.is-phone .ct-strip .chip { height: 40px; }
+
+.s-city .ct-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.s-city.is-phone .ct-tiles { grid-template-columns: 1fr; }
+.s-city .ct-cell { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.s-city .ct-tile { width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.s-city .ct-tile:hover { background: var(--raised); }
+.s-city .ct-tile.on { border-color: var(--accent); background: var(--raised); }
+.s-city .ct-tile.is-closed { opacity: 0.7; }
+.s-city .ct-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.s-city .ct-ico { font-size: 24px; line-height: 1; flex: none; }
+.s-city .ct-nm { flex: 1; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+.s-city .ct-tx { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.s-city .ct-faces { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-height: 28px; }
+.s-city .ct-faces .k { margin-left: 4px; }
+.s-city .ct-who { display: flex; flex-direction: column; gap: 6px; padding: 4px 0 0; }
+.s-city .ct-who h3 { margin: 0; font: 700 12px/1.3 Inter, sans-serif; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.s-city .ct-who-row { display: flex; align-items: center; gap: 8px; min-height: 40px; width: 100%; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--base); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.s-city .ct-who-row:hover { background: var(--raised); }
+
+.s-city .ct-b { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.s-city .ct-b h2 { margin: 0; font: 700 15px/1.3 Inter, sans-serif; }
+.s-city .ct-doors { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.s-city.is-phone .ct-doors { grid-template-columns: 1fr 1fr; }
+.s-city .ct-door { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 96px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--base); color: var(--ink); font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.s-city .ct-door:hover { background: var(--raised); }
+.s-city .ct-door .win { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.s-city .ct-door .win::before { content: ""; width: 14px; height: 18px; border-radius: 3px; border: 1.5px solid var(--muted); box-sizing: border-box; }
+.s-city .ct-door.lit .win { color: var(--ink); }
+.s-city .ct-door.lit .win::before { background: var(--warn); border-color: var(--warn); box-shadow: 0 0 6px color-mix(in srgb, var(--warn) 55%, transparent); }
+.s-city .ct-door.dark .win::before { background: var(--line); }
+.s-city .ct-door.out .win::before { background: none; border-style: dashed; }
+.s-city .ct-door b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-city .ct-door .k { font-size: 12px; }
+.s-city .ct-you { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.s-city .ct-you:hover { background: var(--raised); }
+.s-city .ct-you .t { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+
+.s-city .ct-empty { display: flex; flex-direction: column; gap: 10px; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; }
+.s-city .ct-empty h2 { margin: 0; font: 700 16px/1.3 Inter, sans-serif; }
+.s-city .ct-empty p { margin: 0; }
+.s-city .ct-btns { display: flex; flex-wrap: wrap; gap: 10px; }

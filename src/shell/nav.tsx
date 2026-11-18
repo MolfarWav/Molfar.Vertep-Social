@@ -2,9 +2,9 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { createPortal } from "react-dom";
 import { PREVIEW } from "@/lib/api";
 
-/** "you" (Your profile) has no tab of its own: the "You" chip opens it, and on a phone Settings does. "journal" has a tab on desktop; on a phone the More page (Settings) opens it. */
-export type Tab = "messenger" | "forum" | "profiles" | "journal" | "settings" | "you";
-export const TABS: Tab[] = ["messenger", "forum", "profiles", "journal", "settings", "you"];
+/** "you" (Your profile) has no tab of its own: the "You" chip opens it, and on a phone Settings does. "journal" and "city" have tabs on desktop; on a phone the More page (Settings) opens them. */
+export type Tab = "messenger" | "forum" | "profiles" | "journal" | "city" | "settings" | "you";
+export const TABS: Tab[] = ["messenger", "forum", "profiles", "journal", "city", "settings", "you"];
 export interface Chrome { bar: boolean; tabs: boolean }
 const FULL: Chrome = { bar: true, tabs: true };
 

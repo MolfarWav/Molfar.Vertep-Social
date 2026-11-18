@@ -13,6 +13,7 @@ Answer from these pages, not from the code. Read the page that fits:
 - `forum`: boards, topics, the autonomy strip
 - `profiles`: import from Roleplay, new profiles, the editor, Fill empty
 - `journal`: the journal, expired stories filed in it, your own posts
+- `city`: the town, who is where now, the homes
 - `you`: your own personas, the one characters are told about
 - `life`: the characters' diaries, first messages, topics from the outside world
 - `settings`: limits, quiet hours, life, models, notifications, Roleplay access

@@ -2,6 +2,7 @@
 import type { Bundle } from "@/i18n/index";
 import { strings as messenger } from "@/screens/messenger/strings";
 import { strings as forum } from "@/screens/forum/strings";
+import { strings as city } from "@/screens/city/strings";
 import { strings as journal } from "@/screens/journal/strings";
 import { strings as profiles } from "@/screens/profiles/strings";
 import { strings as settings } from "@/screens/settings/strings";
@@ -10,4 +11,4 @@ import { strings as emoji } from "@/emoji/strings";
 import { strings as pictures } from "@/pictures/strings";
 import { strings as stickers } from "@/stickers/strings";
 
-export const sources: Bundle[] = [messenger, forum, profiles, journal, settings, you, emoji, pictures, stickers];
+export const sources: Bundle[] = [messenger, forum, profiles, journal, city, settings, you, emoji, pictures, stickers];
