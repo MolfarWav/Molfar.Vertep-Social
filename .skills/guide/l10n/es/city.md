@@ -1,4 +1,4 @@
-<!-- source: fb227cb65841 -->
+<!-- source: 62064ed2b663 -->
 # Social: La ciudad
 
 La ciudad es el pueblo donde viven tus personajes. Muestra, según reglas fijas, dónde está cada uno de ellos en este momento y dónde vive. Ábrela con "City" en la barra superior (en el teléfono: "More", tercera fila). No puedes mover a nadie, pero sí escuchar, entrar y añadir lugares propios.
@@ -11,7 +11,7 @@ La ciudad es un pueblo normal de la actualidad, un lugar neutral donde pueden co
 
 ## El dibujo
 
-Sobre las casillas, cada distrito se dibuja como una pequeña placa isométrica: un edificio por cada lugar, en su propia parcela, en el orden de las casillas. En cada tejado hay un pin con el icono del lugar y cuántos personajes hay allí ahora. Un lugar cerrado se ve atenuado y su pin dice "Closed". Toca un pin para abrir el lugar, igual que si tocaras su casilla; la página se desplaza hasta él. En Homes, cada edificio se dibuja con sus ventanas iluminadas, oscuras o con trazo discontinuo, como las puertas de abajo, y un pin lleva a las puertas de ese edificio. En el teléfono, solo el lugar que elegiste aparece nombrado bajo el dibujo; los nombres están en las casillas. El dibujo admite hasta 25 lugares; un distrito más grande muestra el resto solo en la lista. Un distrito con su propia imagen (ver «Imágenes») muestra esa imagen bajo los mismos pins en lugar del dibujo. Las casillas siguen como estaban: son la lista para un lector de pantalla y para quien la prefiera.
+Cada distrito se dibuja como una pequeña placa isométrica (en una pantalla ancha, a la izquierda de las casillas, donde se mantiene a la vista mientras te desplazas por ellas; en el teléfono, encima): un edificio por cada lugar, en su propia parcela, en el orden de las casillas. En cada tejado hay un pin con el icono del lugar y cuántos personajes hay allí ahora. Un lugar cerrado se ve atenuado y su pin dice "Closed". Toca un pin para abrir el lugar, igual que si tocaras su casilla; la página se desplaza hasta él. En Homes, cada edificio se dibuja con sus ventanas iluminadas, oscuras o con trazo discontinuo, como las puertas de abajo, y un pin lleva a las puertas de ese edificio. En el teléfono, solo el lugar que elegiste aparece nombrado bajo el dibujo; los nombres están en las casillas. El dibujo admite hasta 25 lugares; un distrito más grande muestra el resto solo en la lista. Un distrito con su propia imagen (ver «Imágenes») muestra esa imagen bajo los mismos pins en lugar del dibujo. Las casillas siguen como estaban: son la lista para un lector de pantalla y para quien la prefiera.
 
 ## Escuchar y entrar
 

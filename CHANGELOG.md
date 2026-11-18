@@ -5,9 +5,17 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.19.0 (2026-11-18)
+
+A facts ledger beside the Messenger's memory note. App 0.19.0; plugins: Messenger 0.13.0. Nothing to migrate: chats get the new fields when they are next saved. The wide-picture request takes effect with an engine release that carries `aspect` on `POST /v1/images` (Molfar.Vertep#455); without it the pictures are drawn as before.
+
 - Added: **a facts ledger beside the memory note (Molfar.Vertep#446, phase M1).** Every fold of older messages now asks the model for JSON `{facts, note}`: the new or changed facts (one sentence each, a kind, private by default) and a shorter narrative note (about 80 words instead of 180). The code merges them (the same words only refresh the time, `replaces` swaps one of the model's own for the corrected one, nothing else is removed), so a detail no longer has to be copied by the model at every fold. A plain-text answer is the note exactly as before and leaves the facts alone. The reply's prompt carries up to 1500 characters of facts (the pinned first, then the newest six, then those sharing words with the last messages). The Memory dialog has a Facts page (list, add, edit, pin, private or public, delete after a question, an Archive tab; over 200 facts the oldest unpinned jokes and shared moments move there and are not sent). Pinned facts and the user's own are never replaced by the model. Messenger plugin: new route `/messenger/facts`; chat file fields `facts`, `factsArchive`, `factsDropped`. Tests: `test/messenger-facts.test.ts`.
 - Changed: `scripts/fold-check.mjs` reads the per-persona chat file and reports the facts too.
 - Added: **wide pictures ask the engine for a wide shape (Molfar.Vertep#455).** The place and district picture window sends `aspect: "wide"` to `POST /v1/images`; an engine without the field, or a model that cannot take a shape, still draws a picture.
+
+## 0.18.1 (2026-11-18)
+
+- Fixed: **the City and the Journal used only the left part of a wide screen** (owner's screenshot). The Journal's column is centred; the City is centred and, from 1000 px wide, shows the drawing on the left (it stays in view while the list scrolls) and the tiles, forms and doors on the right. The drawing sits lower in its frame and the Homes buildings are lower, so a tall building at the back and its pin are no longer cut off at the top. Checked: a new test (every roof of every kind on every grid has room for its pin, without the clamp), the whole suite, the preview at 1280 and 390 px.
 
 ## 0.18.0 (2026-11-18)
 

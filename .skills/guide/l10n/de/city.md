@@ -1,17 +1,17 @@
-<!-- source: fb227cb65841 -->
+<!-- source: 62064ed2b663 -->
 # Social: Die Stadt
 
-Die Stadt ist der Ort, in dem deine Charaktere leben. Sie zeigt nach festen Regeln, wo sich jeder Charakter gerade befindet und wo er wohnt. Öffne sie mit "City" in der oberen Leiste (auf dem Telefon: "More", dritte Zeile). Du kannst niemanden bewegen, aber du kannst zuhören, hineingehen und eigene Orte hinzufügen.
+Die Stadt ist der Ort, in dem deine Charaktere leben. Sie zeigt nach festen Regeln, wo sich jeder von ihnen gerade befindet und wo sie wohnen. Öffne sie mit "City" in der oberen Leiste (auf dem Telefon: "More", dritte Zeile). Du kannst niemanden bewegen, aber du kannst zuhören, hineingehen und eigene Orte hinzufügen.
 
 ## Stadtteile und Orte
 
-Der Streifen unter dem Titel zeigt die Stadtteile: Centre, Nature, Work und Homes. Wähle einen aus, um seine Orte als Kacheln zu sehen: ein Café, eine Bibliothek, ein Geschäft und ein kleines Kino im Centre, einen Park und ein Flussufer in Nature, ein Büro und eine Werkstatt in Work. Jede Kachel zeigt, ob der Ort gerade geöffnet ist, und die Gesichter der Charaktere, die dort sind. Tippe eine Kachel an, um ihre Namen zu sehen; tippe einen Namen an, um das Profil dieses Charakters zu öffnen. "Now: 12:00-15:00" ist der dreistündige Zeitraum, für den das Bild gilt; zum nächsten Zeitraum wechseln die Charaktere den Ort.
+Der Streifen unter dem Titel zeigt die Stadtteile: Centre, Nature, Work und Homes. Wähle einen aus, um seine Orte als Kacheln zu sehen: ein Café, eine Bibliothek, ein Geschäft und ein kleines Kino im Centre, einen Park und ein Flussufer in Nature, ein Büro und eine Werkstatt in Work. Jede Kachel zeigt, ob der Ort gerade geöffnet ist, und die Gesichter der Charaktere, die dort sind. Tippe eine Kachel an, um ihre Namen zu sehen; tippe einen Namen an, um das Profil dieses Charakters zu öffnen. "Now: 12:00-15:00" ist der dreistündige Zeitraum, für den das Bild gilt; zum nächsten Zeitraum wechseln die Charaktere weiter.
 
 Die Stadt ist eine ganz gewöhnliche Stadt der Gegenwart, ein neutraler Ort, an dem Charaktere aus allen Settings nebeneinander leben können. Deshalb nennt sie keine echte Stadt und kein echtes Land.
 
 ## Die Zeichnung
 
-Über den Kacheln ist jeder Stadtteil als kleine isometrische Platte gezeichnet: ein Gebäude für jeden Ort, auf seinem eigenen Grundstück, in der Reihenfolge der Kacheln. Auf jedem Dach sitzt eine Markierung mit dem Symbol des Ortes und der Anzahl der Charaktere, die gerade dort sind. Ein geschlossener Ort ist abgedunkelt, und seine Markierung zeigt "Closed". Tippe eine Markierung an, um den Ort zu öffnen, genau wie beim Antippen seiner Kachel; die Seite scrollt dorthin. In Homes ist jedes Gebäude mit beleuchteten, dunklen oder gestrichelten Fenstern gezeichnet, wie die Türen darunter, und eine Markierung führt zu den Türen dieses Gebäudes. Auf dem Telefon ist unter der Zeichnung nur der Ort benannt, den du gewählt hast; die Namen stehen auf den Kacheln. Die Zeichnung fasst bis zu 25 Orte; ein größerer Stadtteil zeigt den Rest nur in der Liste. Ein Stadtteil mit eigenem Bild (siehe „Bilder“) zeigt dieses Bild unter denselben Markierungen statt der Zeichnung. Die Kacheln bleiben, wie sie waren: Sie sind die Liste für einen Screenreader und für alle, die sie bevorzugen.
+Jeder Stadtteil ist als kleine isometrische Platte gezeichnet (auf einem breiten Bildschirm links neben den Kacheln, wo sie beim Scrollen sichtbar bleibt; auf dem Telefon über ihnen): ein Gebäude für jeden Ort, auf seinem eigenen Grundstück, in der Reihenfolge der Kacheln. Auf jedem Dach sitzt eine Markierung mit dem Symbol des Ortes und der Anzahl der Charaktere, die gerade dort sind. Ein geschlossener Ort ist abgedunkelt, und seine Markierung zeigt "Closed". Tippe eine Markierung an, um den Ort zu öffnen, genau wie beim Antippen seiner Kachel; die Seite scrollt dorthin. In Homes ist jedes Gebäude mit beleuchteten, dunklen oder gestrichelten Fenstern gezeichnet, wie die Türen darunter, und eine Markierung führt zu den Türen dieses Gebäudes. Auf dem Telefon ist unter der Zeichnung nur der Ort benannt, den du gewählt hast; die Namen stehen auf den Kacheln. Die Zeichnung fasst bis zu 25 Orte; ein größerer Stadtteil zeigt den Rest nur in der Liste. Ein Stadtteil mit eigenem Bild (siehe „Bilder“) zeigt dieses Bild unter denselben Markierungen statt der Zeichnung. Die Kacheln bleiben, wie sie waren: Sie sind die Liste für einen Screenreader und für alle, die sie bevorzugen.
 
 ## Zuhören und hineingehen
 
@@ -36,7 +36,7 @@ Zeichnen kostet einen Bildaufruf jedes Mal, wenn du "Generate" drückst; ein Bil
 
 ## Wo der Rest von Social es sieht
 
-- **Tagebücher.** Ein Tagebuchtag der Art "something unexpected" wird mit Ort und Begleitung erzählt, sodass das, was der Charakter bemerkt hat, dort gewesen sein kann.
+- **Tagebücher.** Ein Tagebuchtag der Art "something unexpected" wird mit Ort und Begleitung erzählt, sodass das, was er bemerkt hat, dort gewesen sein kann.
 - **Charaktere reden und Clubs.** Zwei Charaktere am selben Ort sprechen etwa dreimal so oft miteinander, und ein Club mit zwei oder mehr Mitgliedern an einem Ort spricht etwa dreimal so oft. (Räume sind ebenfalls Clubs; siehe oben.)
 - **Geschichten und das Journal.** Eine Geschichte sagt, wo der Charakter war, als er sie veröffentlichte ("im Café am Park"), und das wandert mit ins Journal. Ein Beitrag, den ein Charakter in sein Journal schreibt, trägt den Ort, an dem er sich gerade befand.
 - **Der Messenger.** Settings > Messenger > "Tell the character where it is" (standardmäßig aus) fügt einer Antwort eine Zeile hinzu: wo der Charakter gerade ist und wer bei ihm ist, etwa 30 Tokens. Dem Charakter wird gesagt, es nur zu erwähnen, wenn es passt.

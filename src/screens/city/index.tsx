@@ -265,6 +265,22 @@ export function City() {
                 ))}
                 <button type="button" className="chip" aria-label={t("city.district.add")} title={t("city.district.add")} onClick={() => setEditor({ kind: "district", id: "" })}>+</button>
               </div>
+              {/* a wide screen: the drawing on the left (it stays in view), the forms, tiles and doors on the right; a phone: one column */}
+              <div className="ct-body">
+              {!(phone && editor) && (
+                <div className="ct-map-col">
+                  <IsoMap
+                    spots={mapSpots}
+                    districtKind={isHomes ? "homes" : (currentDistrict?.kind ?? "custom")}
+                    name={tabs.find((x) => x.id === current)?.name ?? ""}
+                    picture={(isHomes ? view.homesBackground : currentDistrict?.background) || undefined}
+                    phone={phone}
+                    selected={isHomes ? "" : open}
+                    onPick={pickOnMap}
+                  />
+                </div>
+              )}
+              <div className="ct-list-col">
               {editor?.kind === "district" && (
                 <DistrictForm
                   key={editor.id || "new"}
@@ -303,17 +319,6 @@ export function City() {
                   <button type="button" className="btn" onClick={() => setEditor({ kind: "place", id: "" })}>{t("city.place.add")}</button>
                   {currentDistrict && <button type="button" className="btn" onClick={() => setEditor({ kind: "district", id: currentDistrict.id })}>{t("city.district.edit")}</button>}
                 </div>
-              )}
-              {!editor && (
-                <IsoMap
-                  spots={mapSpots}
-                  districtKind={isHomes ? "homes" : (currentDistrict?.kind ?? "custom")}
-                  name={tabs.find((x) => x.id === current)?.name ?? ""}
-                  picture={(isHomes ? view.homesBackground : currentDistrict?.background) || undefined}
-                  phone={phone}
-                  selected={isHomes ? "" : open}
-                  onPick={pickOnMap}
-                />
               )}
               {!isHomes && (
                 <div className="ct-tiles">
@@ -358,6 +363,8 @@ export function City() {
                   ))}
                 </>
               )}
+              </div>
+              </div>
               <div className="ct-foot">
                 {restoring ? (
                   <div className="ct-ask" role="alertdialog" aria-label={t("city.restore.ask")}>

@@ -2,12 +2,12 @@
  * Every rule hangs off .s-journal. */
 .s-journal { flex-direction: column; }
 .s-journal h1 { margin: 0; }
-.s-journal .jr-head { display: flex; align-items: center; gap: 16px; padding: 20px 24px 8px; flex: none; }
+.s-journal .jr-head { display: flex; align-items: center; gap: 16px; width: 100%; max-width: 720px; margin: 0 auto; box-sizing: border-box; padding: 20px 24px 8px; flex: none; }
 .s-journal .jr-head > div:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .s-journal .jr-h { font: 26px/1.2 Kurale, Georgia, serif; }
 .s-journal .jr-title { margin: 0; font: 22px/1.2 Kurale, Georgia, serif; }
 .s-journal .jr-scroll { flex: 1; min-height: 0; overflow: auto; }
-.s-journal .jr-page { display: flex; flex-direction: column; gap: 16px; max-width: 640px; padding: 12px 24px 24px; }
+.s-journal .jr-page { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 720px; margin: 0 auto; box-sizing: border-box; padding: 12px 24px 24px; }
 .s-journal.is-phone .jr-page { padding: 14px 16px 24px; }
 .s-journal .jr-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
 .s-journal .jr-filter { display: flex; gap: 8px; }

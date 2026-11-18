@@ -1,4 +1,4 @@
-<!-- source: fb227cb65841 -->
+<!-- source: 62064ed2b663 -->
 # Social : La ville
 
 La ville est la localité où vivent vos personnages. Elle montre où se trouve chacun d'eux en ce moment, selon des règles, et où il habite. Ouvrez-la avec "City" dans la barre du haut (sur téléphone : "More", la troisième ligne). Vous ne pouvez déplacer personne, mais vous pouvez écouter, entrer dans un lieu et ajouter vos propres endroits.
@@ -11,7 +11,7 @@ La ville est une localité ordinaire d'aujourd'hui, un lieu neutre où des perso
 
 ## Le dessin
 
-Au-dessus des tuiles, chaque quartier est dessiné comme une petite plaque isométrique : un bâtiment par lieu, sur son propre lot, dans l'ordre des tuiles. Sur chaque toit se trouve une épingle avec l'icône du lieu et le nombre de personnages qui s'y trouvent en ce moment. Un lieu fermé est assombri et son épingle indique "Closed". Touchez une épingle pour ouvrir le lieu, comme si vous touchiez sa tuile ; la page y fait défiler. Dans Homes, chaque bâtiment est dessiné avec ses fenêtres éclairées, sombres ou en pointillés, comme les portes ci-dessous, et une épingle mène aux portes de ce bâtiment. Sur téléphone, seul le lieu que vous avez choisi est nommé sous le dessin ; les noms sont sur les tuiles. Le dessin contient jusqu'à 25 lieux ; un quartier plus grand n'affiche le reste que dans la liste. Un quartier avec sa propre image (voir « Images ») affiche cette image sous les mêmes épingles au lieu du dessin. Les tuiles restent telles qu'elles étaient : elles sont la liste pour un lecteur d'écran et pour quiconque la préfère.
+Chaque quartier est dessiné comme une petite plaque isométrique (sur un écran large à gauche des tuiles, où elle reste visible pendant que vous les faites défiler ; sur téléphone, au-dessus d'elles) : un bâtiment par lieu, sur son propre lot, dans l'ordre des tuiles. Sur chaque toit se trouve une épingle avec l'icône du lieu et le nombre de personnages qui s'y trouvent en ce moment. Un lieu fermé est assombri et son épingle indique "Closed". Touchez une épingle pour ouvrir le lieu, comme si vous touchiez sa tuile ; la page y fait défiler. Dans Homes, chaque bâtiment est dessiné avec ses fenêtres éclairées, sombres ou en pointillés, comme les portes ci-dessous, et une épingle mène aux portes de ce bâtiment. Sur téléphone, seul le lieu que vous avez choisi est nommé sous le dessin ; les noms sont sur les tuiles. Le dessin contient jusqu'à 25 lieux ; un quartier plus grand n'affiche le reste que dans la liste. Un quartier avec sa propre image (voir « Images ») affiche cette image sous les mêmes épingles au lieu du dessin. Les tuiles restent telles qu'elles étaient : elles sont la liste pour un lecteur d'écran et pour quiconque la préfère.
 
 ## Écouter et entrer
 

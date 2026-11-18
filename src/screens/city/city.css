@@ -2,12 +2,20 @@
  * Every rule hangs off .s-city. */
 .s-city { flex-direction: column; }
 .s-city h1 { margin: 0; }
-.s-city .ct-head { display: flex; align-items: center; gap: 16px; padding: 20px 24px 8px; flex: none; }
+.s-city .ct-head { display: flex; align-items: center; gap: 16px; width: 100%; max-width: 1240px; margin: 0 auto; box-sizing: border-box; padding: 20px 24px 8px; flex: none; }
 .s-city .ct-head > div:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .s-city .ct-h { font: 26px/1.2 Kurale, Georgia, serif; }
 .s-city .ct-title { margin: 0; font: 22px/1.2 Kurale, Georgia, serif; }
 .s-city .ct-scroll { flex: 1; min-height: 0; overflow: auto; }
-.s-city .ct-page { display: flex; flex-direction: column; gap: 16px; max-width: 760px; padding: 12px 24px 24px; }
+.s-city .ct-page { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 1240px; margin: 0 auto; box-sizing: border-box; padding: 12px 24px 24px; }
+/* (#453) the drawing and the list: one column, side by side from 1000 px (the drawing stays in view while the list scrolls) */
+.s-city .ct-body { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.s-city .ct-list-col, .s-city .ct-map-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 1000px) {
+  .s-city.is-desk .ct-body { display: grid; grid-template-columns: minmax(0, 7fr) minmax(340px, 5fr); align-items: start; gap: 24px; }
+  .s-city.is-desk .ct-map-col { position: sticky; top: 0; }
+  .s-city.is-desk .ct-list-col .ct-tiles { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+}
 .s-city.is-phone .ct-page { padding: 14px 16px 24px; }
 .s-city .ct-now { font-weight: 600; }
 .s-city .ct-strip { display: flex; flex-wrap: wrap; gap: 8px; }
