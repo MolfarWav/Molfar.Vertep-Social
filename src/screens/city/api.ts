@@ -72,6 +72,9 @@ export interface CityView {
 }
 
 const p = (id: string, name: string, hue: number, status = "online"): CityPerson => ({ id, name, hue, picture: "", status });
+/** A canned wide picture for the design preview (#452): sky, hills and a street line, tinted by the hue. */
+export const fakeWide = (hue: number): string =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${hue} 60% 72%)"/><stop offset="1" stop-color="hsl(${(hue + 30) % 360} 45% 45%)"/></linearGradient></defs><rect width="320" height="180" fill="url(#s)"/><circle cx="250" cy="48" r="20" fill="hsl(45 90% 80%)"/><path d="M0 120q60-40 120-10t110-20 90 10v80H0z" fill="hsl(${(hue + 60) % 360} 35% 32%)"/><path d="M0 150h320v30H0z" fill="hsl(${hue} 20% 22%)"/><g fill="hsl(${hue} 25% 28%)"><rect x="30" y="96" width="40" height="54"/><rect x="80" y="80" width="30" height="70"/><rect x="200" y="90" width="50" height="60"/></g></svg>`)}`;
 const MOCK: CityView = {
   band: 4,
   from: 12,
@@ -86,8 +89,9 @@ const MOCK: CityView = {
       name: "Centre",
       kind: "centre",
       by: "stock",
+      background: fakeWide(210),
       places: [
-        { id: "cafe", name: "The cafe by the park", kind: "cafe", icon: "☕", text: "Coffee, cake and a table by the window.", by: "stock", open: true, seats: 6, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [p("mavka", "Mavka", 150), p("lis", "Lis", 30)] },
+        { id: "cafe", name: "The cafe by the park", kind: "cafe", icon: "☕", text: "Coffee, cake and a table by the window.", background: fakeWide(30), by: "stock", open: true, seats: 6, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [p("mavka", "Mavka", 150), p("lis", "Lis", 30)] },
         { id: "library", name: "The library", kind: "library", icon: "📚", text: "Quiet shelves, old maps and a reading room.", by: "stock", open: true, seats: 8, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [] },
         { id: "cinema", name: "The small cinema", kind: "club", icon: "🎬", text: "One screen and an evening show.", by: "stock", open: false, seats: 10, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [] },
       ],

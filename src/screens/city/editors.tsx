@@ -229,8 +229,10 @@ function WidePicture({ label, hint, url, onOpen }: { label: string; hint: string
 }
 
 /** The first prompt of a place's picture: a wide view with nobody in it (the people are the characters, drawn over it). */
-export const placePrompt = (name: string, text: string) =>
-  `A wide view of ${name.trim() || "a place in a town"}${text.trim() ? ", " + text.trim() : ""}. Landscape 16:9, no people, no text, soft light.`;
+export const placePrompt = (name: string, text: string) => {
+  const about = text.trim().replace(/[.!?…\s]+$/, "");
+  return `A wide view of ${name.trim() || "a place in a town"}${about ? ", " + about : ""}. Landscape 16:9, no people, no text, soft light.`;
+};
 
 const DISTRICT_LOOK: Record<string, string> = {
   centre: "a small town centre with cafes and shops along a square",

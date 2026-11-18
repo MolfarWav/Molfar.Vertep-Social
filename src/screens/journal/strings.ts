@@ -89,7 +89,7 @@ export const strings: Bundle = {
     "journal.following": "Стежу",
     "journal.comments": "Коментарі",
     "journal.comments.n": "Коментарі ({n})",
-    "journal.comments.new": "{n} нових",
+    "journal.comments.new": "нові: {n}",
     "journal.hide": "Сховати від інших",
     "journal.unhide": "Показати іншим",
     "journal.form.place": "Де",

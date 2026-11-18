@@ -46,7 +46,7 @@ function Workplace({ value, name, onChange }: { value: string; name: string; onC
           </select>
         )}
       </Field>
-      <p className="k">{t("profiles.work.hint", { name })}</p>
+      <p className="k">{t("profiles.work.hint", { name, dnd: t("profiles.status.dnd").toLowerCase(), na: t("profiles.status.na").toLowerCase() })}</p>
       {failed && <p className="k" role="alert">{t("profiles.work.failed")}</p>}
     </>
   );
