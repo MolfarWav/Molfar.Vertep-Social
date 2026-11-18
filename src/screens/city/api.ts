@@ -82,6 +82,8 @@ const MOCK: CityView = {
   homesDistrict: "homes",
   homesName: "Homes",
   homesBy: "stock",
+  // the preview's district picture (#452): the drawing gives way to it, the pins stay
+  homesBackground: fakeWide(210),
   empty: false,
   districts: [
     {
@@ -89,7 +91,6 @@ const MOCK: CityView = {
       name: "Centre",
       kind: "centre",
       by: "stock",
-      background: fakeWide(210),
       places: [
         { id: "cafe", name: "The cafe by the park", kind: "cafe", icon: "☕", text: "Coffee, cake and a table by the window.", background: fakeWide(30), by: "stock", open: true, seats: 6, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [p("mavka", "Mavka", 150), p("lis", "Lis", 30)] },
         { id: "library", name: "The library", kind: "library", icon: "📚", text: "Quiet shelves, old maps and a reading room.", by: "stock", open: true, seats: 8, district: "centre", tags: [], hours: { from: 2, to: 7, days: [0, 1, 2, 3, 4, 5, 6] }, people: [] },

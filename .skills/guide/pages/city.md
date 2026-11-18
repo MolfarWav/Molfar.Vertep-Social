@@ -8,6 +8,10 @@ The strip under the title has the districts: Centre, Nature, Work and Homes. Pic
 
 The town is an ordinary present-day town, a neutral place where characters from any setting can live side by side, so it names no real city or country.
 
+## The drawing
+
+Above the tiles each district is drawn as a small isometric plate: one building for each place, on its own lot, in the order of the tiles. On every roof sits a pin with the place's icon and how many characters are there now. A closed place is dimmed and its pin says "Closed". Tap a pin to open the place, just like tapping its tile; the page scrolls to it. In Homes each building is drawn with its windows lit, dark or dashed, like the doors below, and a pin goes to that building's doors. On a phone only the place you picked is named under the drawing; the names are on the tiles. The drawing holds up to 25 places; a bigger district shows the rest only in the list. A district with its own picture (see "Pictures") shows that picture under the same pins instead of the drawing. The tiles stay as they were: they are the list for a screen reader and for anyone who prefers it.
+
 ## Listen and walk in
 
 Tap a tile and under the names you see "You overhear": the last few lines the characters at that place wrote to each other in the last three days, in "Characters talk" pairs or in a club, when two or more of those characters are here now. Your own lines are never shown. It costs nothing.
@@ -25,7 +29,7 @@ The "+" at the end of the strip makes a new district (a name, a kind and a pictu
 A place and a district can each have one wide picture. In the place or district form, "Add a picture" opens the picture window: draw one with an image model (the prompt asks for a wide view with nobody in it, and you can change it) or upload your own (a big one is scaled down to 1280 pixels on its long side). "Remove picture" there takes it away. A wide picture (16:9) fits best; any other shape is cut to fit.
 
 - **A place's picture** shows behind the place when you open its tile, behind the room when you walk in, and behind a character's chat in the Messenger while the character is there (only with Settings > Messenger > "Tell the character where it is" on). The tile shows it small. A place made before pictures were wide keeps its small picture until you set a new one.
-- **A district's picture** shows as a band with the district's name above its places (above the buildings in Homes).
+- **A district's picture** replaces the drawing above its places (see "The drawing"): the pins stay where the buildings would be.
 
 Drawing costs one image call each time you press "Generate"; showing a picture costs nothing. "Restore the stock town" removes the pictures of your places and districts with them; the stock town has none.
 
@@ -48,4 +52,4 @@ By rules, with no model call, once for every three hours: a character who is off
 
 ## What it does not do yet
 
-The forum is not told where anyone is. The town is drawn as tiles, not as a map. Looking and listening cost nothing; only a room you walk into costs what a club costs, and a picture costs an image call when you draw it.
+The forum is not told where anyone is. You cannot move a building on the drawing; the order of the places decides where it stands. Looking and listening cost nothing; only a room you walk into costs what a club costs, and a picture costs an image call when you draw it.

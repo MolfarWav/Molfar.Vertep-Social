@@ -14,16 +14,7 @@ import { useYou } from "../you/store";
 import { loadClubs } from "@/screens/messenger/clubs-api";
 import { loadCity, loadListen, removeDistrict, removePlace, resetTown, saveDistrict, savePlace, walkIn, type CityDoor, type CityPlace, type CityView, type ListenLine } from "./api";
 import { DistrictForm, PlaceForm, draftOf, type PlaceDraft } from "./editors";
-
-/** (#452) The district's picture as a wide band above its tiles, with its name on it; nothing when it has none. */
-function DistrictBand({ url, name }: { url: string; name: string }) {
-  if (!url) return null;
-  return (
-    <div className="ct-band" style={{ "--bd": `url("${url}")` } as CSSProperties} role="img" aria-label={name}>
-      <span className="ct-band-name">{name}</span>
-    </div>
-  );
-}
+import { IsoMap, type IsoSpot } from "./iso-map";
 
 const param = (k: string): string => {
   if (!PREVIEW) return "";
@@ -210,6 +201,18 @@ export function City() {
   const editedPlace = editor?.kind === "place" && editor.id ? view?.districts.flatMap((d) => d.places).find((p) => p.id === editor.id) ?? null : null;
   const pickDistricts = (view?.districts ?? []).map((d) => ({ id: d.id, name: districtName(d) }));
 
+  // C5 (#453): the drawn district; a pin opens the place like its tile does (Homes: a building's doors), and the page goes to it
+  const mapSpots: IsoSpot[] = !view
+    ? []
+    : isHomes
+      ? view.homes.buildings.map((b) => ({ id: b.id, name: t("city.building", { n: b.n }), kind: "home", icon: "\u{1F3E0}", open: true, count: b.doors.length, doors: b.doors.map((d) => d.state) }))
+      : (currentDistrict?.places ?? []).map((p) => ({ id: p.id, name: placeName(p), kind: p.kind, icon: p.icon, open: p.open, count: p.people.length }));
+  const pickOnMap = (id: string) => {
+    if (!isHomes) setOpen(open === id ? "" : id);
+    // after the card has opened
+    setTimeout(() => document.getElementById(isHomes ? `ct-b-${id}` : `ct-cell-${id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 0);
+  };
+
   const doorText = (d: CityDoor): string => {
     if (d.state === "lit") return t("city.state.lit");
     if (d.state === "dark") return t("city.state.dark");
@@ -301,11 +304,21 @@ export function City() {
                   {currentDistrict && <button type="button" className="btn" onClick={() => setEditor({ kind: "district", id: currentDistrict.id })}>{t("city.district.edit")}</button>}
                 </div>
               )}
-              {!editor && <DistrictBand url={isHomes ? (view.homesBackground ?? "") : (currentDistrict?.background ?? "")} name={tabs.find((x) => x.id === current)?.name ?? ""} />}
+              {!editor && (
+                <IsoMap
+                  spots={mapSpots}
+                  districtKind={isHomes ? "homes" : (currentDistrict?.kind ?? "custom")}
+                  name={tabs.find((x) => x.id === current)?.name ?? ""}
+                  picture={(isHomes ? view.homesBackground : currentDistrict?.background) || undefined}
+                  phone={phone}
+                  selected={isHomes ? "" : open}
+                  onPick={pickOnMap}
+                />
+              )}
               {!isHomes && (
                 <div className="ct-tiles">
                   {(currentDistrict?.places ?? []).map((p) => (
-                    <div key={p.id} className="ct-cell">
+                    <div key={p.id} id={`ct-cell-${p.id}`} className="ct-cell">
                       <Tile p={p} name={placeName(p)} text={placeText(p)} on={open === p.id} onToggle={() => setOpen(open === p.id ? "" : p.id)} />
                       {open === p.id && <Detail p={p} name={placeName(p)} clubsOn={clubsOn} onOpenPerson={openProfile} onEdit={() => setEditor({ kind: "place", id: p.id })} onRemoved={() => { setOpen(""); void load(); }} />}
                     </div>
@@ -329,7 +342,7 @@ export function City() {
                     </span>
                   </button>
                   {view.homes.buildings.map((b) => (
-                    <section key={b.id} className="ct-b" aria-label={t("city.building", { n: b.n })}>
+                    <section key={b.id} id={`ct-b-${b.id}`} className="ct-b" aria-label={t("city.building", { n: b.n })}>
                       <h2>{t("city.building", { n: b.n })}</h2>
                       <div className="ct-doors">
                         {b.doors.map((d) => (
