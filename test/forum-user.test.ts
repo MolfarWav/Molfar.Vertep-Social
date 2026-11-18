@@ -1,4 +1,4 @@
-// Issue #336: a forum reply sees how well the character knows the user and, when it answers the user's own post, the memory note of their chat.
+// Issue #336, #446 M3: a forum reply sees how well the character knows the user and, when it answers the user's own post, the facts of their chat that are public (never the note).
 import { expect, test } from "bun:test";
 import path from "node:path";
 
@@ -30,12 +30,18 @@ type H = ReturnType<typeof makeHost>;
 const put = (h: H, p: string, v: unknown) => void h.files.set(p, JSON.stringify(v));
 const always = Array.from({ length: 8 }, () => Array.from({ length: 7 }, () => "online"));
 const NOTE = "Mavka promised Serhii a playlist by Friday. Serhii has a dog called Barsyk and moved to Kyiv.";
+const FACTS = [
+  { id: "f1", text: "Serhii plays bass in a folk band.", kind: "about_you", at: 1, from: 1, private: false, pinned: false, by: "model" },
+  { id: "f2", text: "Serhii has a dog called Barsyk.", kind: "about_you", at: 2, from: 2, private: false, pinned: false, by: "model" },
+  { id: "f3", text: "Serhii is afraid of his boss.", kind: "about_you", at: 3, from: 3, private: true, pinned: false, by: "model" },
+];
+const PUBLIC = ["Serhii has a dog called Barsyk.", "Serhii plays bass in a folk band."]; // the newest first
 
-function seed(h: H, opts: { profile?: object; settings?: object; note?: string | null; you?: object | null } = {}) {
+function seed(h: H, opts: { profile?: object; settings?: object; note?: string | null; facts?: object[] | null; you?: object | null } = {}) {
   put(h, "profiles/mavka.json", { id: "mavka", name: "Mavka", hue: 150, about: "Lives by the lake.", interests: ["reeds"], habits: [], voice: { length: 0, emoji: 0 }, schedule: always, createdAt: 1000, forum: { frequency: 50, repliesYou: true, repliesOthers: true }, ...opts.profile });
   put(h, "settings.json", { tzOffset: 0, autonomous: true, models: { forum: "" }, ...opts.settings });
   put(h, "forum/boards.json", { categories: [{ id: "c1", name: "General", boards: [{ id: "b1", name: "Guest", desc: "Hello" }] }] });
-  if (opts.note !== null) put(h, "chats/mavka.json", { id: "mavka", messages: [], summary: { text: opts.note ?? NOTE, upto: 5, at: 6 } });
+  if (opts.note !== null) put(h, "chats/mavka.json", { id: "mavka", messages: [], summary: { text: opts.note ?? NOTE, upto: 5, at: 6 }, ...(opts.facts === null ? {} : { facts: opts.facts ?? FACTS }) });
   if (opts.you !== null) put(h, "you.json", opts.you ?? { active: "u1", personas: [{ id: "u1", name: "Serhii", about: "Plays bass." }] });
 }
 const post = (id: string, by: string, name: string, text: string, at: number) => ({ id, by, name, hue: 150, at, text });
@@ -55,41 +61,50 @@ test("the user is not in the conversation: nothing is added", () => {
   expect(forum.userKnownTo(h.host.fs, author(h), t, t.posts[1])).toBeNull();
 });
 
-test("knows: the persona's name and About, and the note when the reply answers the user's post", () => {
+test("knows: the persona's name and About, and the public facts (not the note) when the reply answers the user's post", () => {
   const h = makeHost();
   seed(h);
   const t = topicOf([post("a", "x9", "Other", "Hello", 10), post("b", "me", "Serhii", "Anyone here?", 11)]);
   const u = forum.userKnownTo(h.host.fs, author(h), t, t.posts[1]);
-  expect(u).toEqual({ label: "Serhii", name: "Serhii", about: "Plays bass.", note: NOTE });
-  // answering another character in a topic where the user wrote: the name, but the private note stays out
+  expect(u).toEqual({ label: "Serhii", name: "Serhii", about: "Plays bass.", facts: PUBLIC });
+  // answering another character in a topic where the user wrote: the name, but the chat's facts stay out
   const t2 = topicOf([post("b", "me", "Serhii", "Anyone here?", 10), post("a", "x9", "Other", "Hello", 11)]);
-  expect(forum.userKnownTo(h.host.fs, author(h), t2, t2.posts[1])).toEqual({ label: "Serhii", name: "Serhii", about: "Plays bass.", note: "" });
+  expect(forum.userKnownTo(h.host.fs, author(h), t2, t2.posts[1])).toEqual({ label: "Serhii", name: "Serhii", about: "Plays bass.", facts: [] });
 });
 
-test("name only drops the About and keeps the note, a stranger gets neither name, About nor note", () => {
+test("name only drops the About and keeps the public facts, a stranger gets neither name, About nor facts", () => {
   const t = topicOf([post("b", "me", "Serhii", "Anyone here?", 10)]);
   const named = makeHost();
   seed(named, { profile: { knows: "name" } });
-  expect(forum.userKnownTo(named.host.fs, author(named), t, t.posts[0])).toEqual({ label: "Serhii", name: "Serhii", about: "", note: NOTE });
+  expect(forum.userKnownTo(named.host.fs, author(named), t, t.posts[0])).toEqual({ label: "Serhii", name: "Serhii", about: "", facts: PUBLIC });
   const stranger = makeHost();
   seed(stranger, { settings: { messengerKnows: "stranger" } });
-  expect(forum.userKnownTo(stranger.host.fs, author(stranger), t, t.posts[0])).toEqual({ label: "", name: "", about: "", note: "" });
+  expect(forum.userKnownTo(stranger.host.fs, author(stranger), t, t.posts[0])).toEqual({ label: "", name: "", about: "", facts: [] });
   // the profile's own choice wins over Settings
   const own = makeHost();
   seed(own, { profile: { knows: "knows" }, settings: { messengerKnows: "stranger" } });
   expect(forum.userKnownTo(own.host.fs, author(own), t, t.posts[0]).name).toBe("Serhii");
 });
 
-test("no note: the messenger's switch is off, the chat has none, or there is no chat", () => {
+test("no facts: the messenger's memory switch or the sharing switch is off, the chat has no public fact, or there is no chat", () => {
   const t = topicOf([post("b", "me", "Serhii", "Anyone here?", 10)]);
-  for (const o of [{ settings: { messengerSummary: false } }, { note: "" }, { note: null }]) {
+  for (const o of [{ settings: { messengerSummary: false } }, { settings: { factsShare: false } }, { facts: [FACTS[2]] }, { facts: [] }, { facts: null }, { note: null }]) {
     const h = makeHost();
     seed(h, o);
-    expect(forum.userKnownTo(h.host.fs, author(h), t, t.posts[0]).note).toBe("");
+    expect(forum.userKnownTo(h.host.fs, author(h), t, t.posts[0]).facts).toEqual([]);
   }
 });
 
-test("the prompt: the name and note for a character that knows the user, 'User' and a hint for a stranger, nothing without the user", () => {
+test("the note never reaches the forum, whatever it holds", () => {
+  const h = makeHost();
+  seed(h, { facts: null, note: "Serhii told Mavka a secret about his boss." });
+  const t = topicOf([post("b", "me", "Serhii", "Anyone here?", 10)]);
+  const user = forum.userKnownTo(h.host.fs, author(h), t, t.posts[0]);
+  expect(JSON.stringify(user)).not.toContain("secret");
+  expect(forum.systemPromptFor(author(h), "", { user })).not.toContain("secret");
+});
+
+test("the prompt: the name and public facts for a character that knows the user, 'User' and a hint for a stranger, nothing without the user", () => {
   const h = makeHost();
   seed(h);
   const t = topicOf([post("b", "me", "Serhii", "Anyone here?", 10)]);
@@ -97,8 +112,10 @@ test("the prompt: the name and note for a character that knows the user, 'User' 
   const sys = forum.systemPromptFor(author(h), "", { user });
   expect(sys).toContain("writes on this forum as Serhii");
   expect(sys).toContain("Plays bass.");
-  expect(sys).toContain(NOTE);
-  expect(sys).toContain("do not quote it");
+  expect(sys).toContain("- Serhii has a dog called Barsyk.");
+  expect(sys).toContain("- Serhii plays bass in a folk band.");
+  expect(sys).not.toContain("afraid of his boss");
+  expect(sys).not.toContain(NOTE);
   const ctx = forum.replyContext({ name: "Guest", desc: "" }, t, t.posts[0], user.label);
   expect(ctx).toContain("Serhii: Anyone here?");
   expect(ctx).toContain("You are answering Serhii's post");
@@ -109,7 +126,7 @@ test("the prompt: the name and note for a character that knows the user, 'User' 
   const ssys = forum.systemPromptFor(author(st), "", { user: su });
   expect(ssys).not.toContain("Serhii");
   expect(ssys).toContain("do not guess their name");
-  expect(ssys).not.toContain("private chats");
+  expect(ssys).not.toContain("told you openly");
   expect(forum.replyContext({ name: "Guest", desc: "" }, t, t.posts[0], su.label)).toContain("User: Anyone here?");
 
   const plain = forum.systemPromptFor(author(h), "", {});
@@ -117,7 +134,7 @@ test("the prompt: the name and note for a character that knows the user, 'User' 
   expect(forum.systemPromptFor(author(h), "")).toBe(plain);
 });
 
-test("end to end: 'Write now' on the user's topic sends the name and the note, a new topic sends neither", () => {
+test("end to end: 'Write now' on the user's topic sends the name and the public facts, a new topic sends neither", () => {
   const h = makeHost();
   seed(h);
   put(h, "forum/topics/t1.json", topicOf([post("b", "me", "Serhii", "Anyone here?", Date.now() - 1000)]));
@@ -126,6 +143,7 @@ test("end to end: 'Write now' on the user's topic sends the name and the note, a
   const reply = h.requests.splice(0)[0].req;
   expect(reply.systemPrompt).toContain("Serhii");
   expect(reply.systemPrompt).toContain("Barsyk");
+  expect(reply.systemPrompt).not.toContain("afraid of his boss");
   expect(reply.messages[0].content).toContain("Serhii: Anyone here?");
 
   const h2 = makeHost();

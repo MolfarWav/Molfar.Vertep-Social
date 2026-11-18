@@ -172,6 +172,46 @@ function personaOf(fsx, pid) {
   const p = (pid && list.find((x) => x.id === pid)) || list.find((x) => isObj(y) && x.id === y.active) || list[0];
   return p ? { id: p.id, name: cut(str(p.name), 80) } : null;
 }
+const KNOWS = ["knows", "name", "stranger"];
+/** How well the profile knows the user: its own choice, else Settings > Messenger, else "knows". A copy of the messenger's. */
+export function knowsOf(fsx, profile) {
+  if (isObj(profile) && KNOWS.includes(profile.knows)) return profile.knows;
+  const s = readJson(fsx, "settings.json", null);
+  return isObj(s) && KNOWS.includes(s.messengerKnows) ? s.messengerKnows : "knows";
+}
+
+// <public-facts-shared>
+// (#446, M3) What a character knows of the user from their private chat, for every place but that chat (the forum, the clubs): only the facts the
+// messenger marks public (`private: false`, strictly: a fact with no flag is private), never the memory note, which is free text and may hold anything.
+// Read from `chats/<profile>[.<persona>].json` `facts`. Nothing when Settings > Messenger "Public facts leave the chat" is off, when the messenger's
+// memory switch is off, or when the character is a stranger to the user. Identical in the forum and the clubs (test/public-facts.test.ts pins it).
+const PUBLIC_FACTS_MAX = 1000;
+const PUBLIC_FACTS_COUNT = 12;
+export function publicFacts(fsx, profile, pid) {
+  const s = readJson(fsx, "settings.json", null);
+  if (isObj(s) && (s.messengerSummary === false || s.factsShare === false)) return [];
+  if (!isObj(profile) || knowsOf(fsx, profile) === "stranger") return [];
+  const who = pid || activePersonaId(fsx);
+  let chat = readJson(fsx, "chats/" + profile.id + (who ? "." + who : "") + ".json", null);
+  // a chat from before personas had their own is adopted by the active persona the first time the messenger runs; until then it is theirs
+  if (!isObj(chat) && who && who === activePersonaId(fsx)) chat = readJson(fsx, "chats/" + profile.id + ".json", null);
+  const list = isObj(chat) && Array.isArray(chat.facts) ? chat.facts : [];
+  const open = list
+    .filter((f) => isObj(f) && f.private === false && typeof f.text === "string")
+    .map((f) => ({ pinned: f.pinned === true, from: Number.isFinite(f.from) ? f.from : 0, text: cut(noControls(str(f.text)).replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim(), 160) }))
+    .filter((f) => f.text)
+    .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.from - a.from);
+  const out = [];
+  let size = 0;
+  for (const f of open) {
+    if (out.length >= PUBLIC_FACTS_COUNT || (size + f.text.length > PUBLIC_FACTS_MAX && out.length)) break;
+    out.push(f.text);
+    size += f.text.length;
+  }
+  return out;
+}
+// </public-facts-shared>
+
 const personaCount = (fsx) => {
   const y = readJson(fsx, "you.json", null);
   return (isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && typeof x.id === "string" && ID.test(x.id) && str(x.name)).length;
@@ -435,6 +475,7 @@ export function clubSystem(me, club, others, opts) {
   for (const x of others) if (x.relation) lines.push("About " + x.name + ": " + x.relation);
   if (o.jealous) lines.push(o.jealous);
   if (o.userName) lines.push(o.userName + " is a real person who has joined the club and writes here too: treat them as one of the group and answer them when they write to you.");
+  if (o.userName && Array.isArray(o.userFacts) && o.userFacts.length) lines.push("Things " + o.userName + " has told you openly, which you know from your chats (facts they are happy to have known in a group; use them naturally where they fit, never as a list, and never anything beyond them):\n" + o.userFacts.map((f) => "- " + f).join("\n"));
   lines.push(CEILING_LINE[o.level === "none" || o.level === "flirty" ? o.level : "warm"]);
   const emoji = [0, 1, 2].includes(me.voice.emoji) ? me.voice.emoji : 1;
   lines.push(EMOJI_WORDS[emoji]);
@@ -467,6 +508,8 @@ export function buildRequest(fsx, settings, club, speaker) {
   const userMsgs = talk.slice(-CONTEXT).filter((m) => m.by === "me");
   const lastUser = userMsgs[userMsgs.length - 1];
   const userName = lastUser ? (personaOf(fsx, lastUser.persona) || { name: "The user" }).name : "";
+  // what the character knows of this persona from their private chat, public facts only (#446, M3); with the day's answers used up the user is not in the talk
+  const userFacts = lastUser ? publicFacts(fsx, speaker, lastUser.persona || "") : [];
   const nameOf = (m) => (m.by === "me" ? (personaOf(fsx, m.persona) || { name: "The user" }).name : profiles.has(m.by) ? profiles.get(m.by).name : (readProfile(fsx, m.by) || { name: "Someone" }).name);
   const last = talk[talk.length - 1];
   const answered = last && last.by !== "me" && last.by !== speaker.id ? last.by : "";
@@ -475,7 +518,7 @@ export function buildRequest(fsx, settings, club, speaker) {
   const model = speaker.model || settings.model;
   return {
     ...(model ? { model } : {}),
-    systemPrompt: clubSystem(speaker, club, others, { userName, jealous, level: communityLevel(fsx) }),
+    systemPrompt: clubSystem(speaker, club, others, { userName, userFacts, jealous, level: communityLevel(fsx) }),
     messages: [{ role: "user", content: clubUser(club, talk, nameOf, userName, asked) }],
     presetParams: { temperature: 0.9, max_tokens: 220 },
   };

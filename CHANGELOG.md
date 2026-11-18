@@ -5,6 +5,8 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+- Changed: **privacy is a rule of the program, not a request in the prompt (Molfar.Vertep#446, phase M3).** The forum no longer reads the memory note of your private chats (it did, with a sentence in the prompt asking the character not to quote it). It reads the **public facts** of the chat instead: only a fact with `private: false` (a fact with no flag is private), at most 12 and about 1000 characters, pinned first then the newest, when a character answers your post and is not a stranger to you. Clubs now do the same for the persona who wrote, while you are in the talk (before they knew nothing of your chats); the day's answers used up, the club talks among itself and sees neither your lines nor your facts. The reader is one block copied into both plugins and pinned by a test. New switch Settings > Messenger > "Public facts leave the chat" (on): off, nothing leaves. A character that is a stranger to you, and the messenger's memory switch off, also give nothing. The messenger itself still sees all facts of its own chat.
+
 ## 0.20.1 (2026-11-18)
 
 A fix for the pictures on the relationship map. App 0.20.1; no plugin changed. Nothing to migrate.
