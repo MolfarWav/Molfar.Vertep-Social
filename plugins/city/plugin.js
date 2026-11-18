@@ -3,15 +3,17 @@
  * character is right now. All by rules, no model call, read-only for the user in this phase.
  *
  * Data (this plugin is the only writer of city/*):
- *   city/places.json  {districts: [{id, name, kind, order, by}], places: [{id, district, name, kind, icon, text, picture?, open, tags, seats, by}]}
+ *   city/places.json  {districts: [{id, name, kind, order, by, background?}], places: [{id, district, name, kind, icon, text, picture?, background?, open, tags, seats, by}]}
+ *                     (#452) `background`: the wide picture of a place or district (an asset url); `picture` is the small one of before.
  *                     `open` is 8 bands of 3 hours by 7 days from Monday (the schedule's shape), 1 = open. The stock town is an ordinary
  *                     present-day town with no real city, country or brand: plain names. It is written once, so later phases (own places,
  *                     packs) edit records, not code.
  *   city/homes.json   {buildings: [{id, n, flats}], flats: {<profileId>: {b: buildingId, n: flatNumber}}}: every profile has exactly one
- *                     flat; when the buildings are full the next one appears. Two profiles may point at one flat later (shared flats).
+ *                     flat; when the buildings are full the next one appears. (#453) Profiles joined by a family or romantic tie marked
+ *                     "Lives together" (`home: true`, Life's list) point at one flat (`homeGroups`).
  *   city/now.json     {id: "<local day>#<band>", at, where: {<profileId>: <placeId> | "home"}}, written once per band by the tick.
  * Who is where (`placeAt`, rules only, the same answer for the same profile and band): status off = home; na or dnd in a work band = the
- * profile's `workplace` (a place id, empty by default and not editable yet) else home; online or away = a seeded draw over the open
+ * profile's `workplace` (a place id set in Profiles; with none, the workplace of a boss, subordinate or colleague, `workplaceOf`) else home; online or away = a seeded draw over the open
  * places with free seats and home, weighted by the place's tags against the profile's interests and by followed or close people who are
  * already there. A profile with life switched off stays at home.
  *
