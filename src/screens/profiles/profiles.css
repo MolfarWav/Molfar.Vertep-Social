@@ -510,6 +510,9 @@
 .s-profiles .pm-e.dim line, .s-profiles .pm-e.dim .pm-heart { opacity: 0.08; }
 .s-profiles .pm-n { cursor: pointer; outline: none; transition: opacity 0.15s; }
 .s-profiles .pm-n.dim { opacity: 0.4; }
+/* a node's picture: an <img> in a foreignObject (the engine bridge only rewrites asset URLs in `src`); the ring and the hit area stay the SVG's */
+.s-profiles .pm-pic { pointer-events: none; overflow: hidden; }
+.s-profiles .pm-pic img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
 .s-profiles .pm-hit { fill: transparent; }
 .s-profiles .pm-ini { fill: #fff; font-weight: 600; pointer-events: none; }
 .s-profiles .pm-ring { fill: none; stroke: transparent; stroke-width: 2; }

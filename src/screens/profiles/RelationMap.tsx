@@ -97,7 +97,6 @@ export function RelationMap({ people, edges, order, selected, onSelect, phone }:
           const isSel = selected === k;
           const showName = c.allNames || isSel || near.has(k) || hover === k;
           const n = count(k);
-          const clip = "pm-clip-" + i;
           return (
             <g
               key={k}
@@ -118,12 +117,11 @@ export function RelationMap({ people, edges, order, selected, onSelect, phone }:
             >
               <title>{p.name}</title>
               <rect className="pm-hit" x={-half - 8} y={-half - 8} width={c.size + 16} height={c.size + 16} rx={12} />
-              <clipPath id={clip}>
-                <rect x={-half} y={-half} width={c.size} height={c.size} rx={8} />
-              </clipPath>
               <rect className="pm-av" x={-half} y={-half} width={c.size} height={c.size} rx={8} style={{ fill: `hsl(${p.hue} 40% 32%)` }} />
               {p.picture ? (
-                <image href={p.picture} x={-half} y={-half} width={c.size} height={c.size} clipPath={`url(#${clip})`} preserveAspectRatio="xMidYMid slice" />
+                <foreignObject className="pm-pic" x={-half} y={-half} width={c.size} height={c.size}>
+                  <img src={p.picture} alt="" draggable={false} />
+                </foreignObject>
               ) : (
                 <text className="pm-ini" y={1} textAnchor="middle" dominantBaseline="central" style={{ fontSize: Math.round(c.size * 0.44) }}>
                   {p.name.trim().slice(0, 1).toUpperCase()}
