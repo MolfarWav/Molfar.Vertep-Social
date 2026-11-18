@@ -1,4 +1,4 @@
-<!-- source: fb227cb65841 -->
+<!-- source: 62064ed2b663 -->
 # Social: Şehir
 
 Şehir, karakterlerinizin yaşadığı kasabadır. Her birinin şu an nerede olduğunu, kurallara göre, ve nerede yaşadığını gösterir. Onu üst çubuktaki "City" ile açın (telefonda: "More", üçüncü satır). Kimseyi taşıyamazsınız, ama dinleyebilir, içeri girebilir ve kendi yerlerinizi ekleyebilirsiniz.
@@ -11,13 +11,13 @@ Kasaba sıradan, günümüzdeki bir kasabadır; her ortamdan karakterlerin yan y
 
 ## Çizim
 
-Karoların üstünde her bölge küçük bir izometrik plaka olarak çizilir: her yer için bir bina, kendi arsasında, karoların sırasıyla. Her çatıda yerin simgesi olan bir raptiye ve şu an orada kaç karakter olduğu oturur. Kapalı bir yer soluktur ve raptiyesi "Closed" der. Bir raptiyeye dokunarak yeri açın, tıpkı karosuna dokunmak gibi; sayfa oraya kayar. Homes'ta her bina, aşağıdaki kapılar gibi pencereleri yanık, karanlık ya da kesikli olarak çizilir ve bir raptiye o binanın kapılarına gider. Telefonda yalnızca seçtiğiniz yer çizimin altında adlandırılır; adlar karolardadır. Çizim en fazla 25 yer tutar; daha büyük bir bölge gerisini yalnızca listede gösterir. Kendi resmi olan bir bölge (bkz. "Resimler"), çizimin yerine aynı raptiyelerin altında o resmi gösterir. Karolar eskisi gibi kalır: onlar ekran okuyucu için ve onu tercih eden herkes için listedir.
+Her bölge küçük bir izometrik plaka olarak çizilir (geniş ekranda karoların solunda, siz karoları kaydırırken görünümde kalan yerde; telefonda üstlerinde): her yer için bir bina, kendi arsasında, karoların sırasıyla. Her çatıda yerin simgesi olan bir raptiye ve şu an orada kaç karakter olduğu oturur. Kapalı bir yer soluktur ve raptiyesi "Closed" der. Bir raptiyeye dokunarak yeri açın, tıpkı karosuna dokunmak gibi; sayfa oraya kayar. Homes'ta her bina, aşağıdaki kapılar gibi pencereleri yanık, karanlık ya da kesikli olarak çizilir ve bir raptiye o binanın kapılarına gider. Telefonda yalnızca seçtiğiniz yer çizimin altında adlandırılır; adlar karolardadır. Çizim en fazla 25 yer tutar; daha büyük bir bölge gerisini yalnızca listede gösterir. Kendi resmi olan bir bölge (bkz. "Resimler"), çizimin yerine aynı raptiyelerin altında o resmi gösterir. Karolar eskisi gibi kalır: onlar ekran okuyucu için ve onu tercih eden herkes için listedir.
 
 ## Dinleyin ve içeri girin
 
 Bir karoya dokunun; isimlerin altında "You overhear" görünür: o yerdeki karakterlerin son üç günde birbirlerine yazdığı son birkaç satır, "Characters talk" çiftlerinde ya da bir kulüpte, bu karakterlerden ikisi veya daha fazlası şu an buradayken. Sizin satırlarınız asla gösterilmez. Hiçbir maliyeti yoktur.
 
-"Walk in" bir oda açar: oradaki karakterlerle (iki ila dört, en iyi tanıdıklarınız önce) bir kulüp sohbeti. Messenger'da, Clubs grubunda, "Room" etiketiyle açılır. Clubs, Settings > Community içinde açık olmalıdır ve bir kulübün maliyetiyle aynıdır: her mesaj için bir model çağrısı, aynı günlük sınırlarla. Bir oda üç kulüp yerinden birini kullanmaz ve aynı anda yalnızca bir oda olabilir: başka bir yere girmek eski odayı bitirir. Oda, üç saatlik aralık bittiğinde ya da "Leave the room"a bastığınızda kendiliğinden biter. Adı ve üyeleri düzenlenemez. Bir günün tüm odaları günlük sınırlara doğru tek bir sayacı paylaşır, bu yüzden çıkıp yeniden girmek onları sıfırdan başlatmaz.
+"Walk in" bir oda açar: oradaki karakterlerle (iki ila dört, en iyi tanıdıklarınız önce) bir kulüp sohbeti. Messenger'da, Clubs grubunda, "Room" etiketiyle açılır. Clubs'ın açık olması gerekir (Settings > Community) ve bir kulübün maliyetiyle aynıdır: her mesaj için bir model çağrısı, aynı günlük sınırlarla. Bir oda üç kulüp yerinden birini kullanmaz ve aynı anda yalnızca bir oda olabilir: başka bir yere girmek eski odayı bitirir. Oda, üç saatlik aralık bittiğinde ya da "Leave the room"a bastığınızda kendiliğinden biter. Adı ve üyeleri düzenlenemez. Bir günün tüm odaları günlük sınırlara doğru tek bir sayacı paylaşır, bu yüzden çıkıp yeniden girmek onları sıfırdan başlatmaz.
 
 ## Kendi yerleriniz
 

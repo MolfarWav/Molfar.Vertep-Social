@@ -1,17 +1,17 @@
-<!-- source: fb227cb65841 -->
+<!-- source: 62064ed2b663 -->
 # Social: La città
 
 La città è il paese in cui vivono i tuoi personaggi. Mostra dove si trova ciascuno di loro in questo momento, secondo delle regole, e dove abita. Aprila con "City" nella barra in alto (su un telefono: "More", la terza riga). Non puoi spostare nessuno, ma puoi ascoltare, entrare nei luoghi e aggiungere luoghi tuoi.
 
 ## Quartieri e luoghi
 
-La striscia sotto il titolo contiene i quartieri: Centre, Nature, Work e Homes. Sceglierne uno mostra i suoi luoghi come riquadri: un bar, una biblioteca, un negozio e un piccolo cinema nel Centre, un parco e un lungofiume in Nature, un ufficio e un laboratorio in Work. Ogni riquadro indica se il luogo è aperto adesso e mostra i volti dei personaggi presenti. Tocca un riquadro per vedere i loro nomi; tocca un nome per aprire il profilo di quel personaggio. "Now: 12:00-15:00" è la fascia di tre ore per cui l'immagine è valida; i personaggi si spostano alla fascia successiva.
+La striscia sotto il titolo contiene i quartieri: Centre, Nature, Work e Homes. Scegline uno per vedere i suoi luoghi come riquadri: un bar, una biblioteca, un negozio e un piccolo cinema nel Centre, un parco e un lungofiume in Nature, un ufficio e un laboratorio in Work. Ogni riquadro indica se il luogo è aperto adesso e mostra i volti dei personaggi presenti. Tocca un riquadro per vedere i loro nomi; tocca un nome per aprire il profilo di quel personaggio. "Now: 12:00-15:00" è la fascia di tre ore per cui l'immagine è valida; i personaggi si spostano alla fascia successiva.
 
 La città è una normale cittadina dei giorni nostri, un luogo neutro dove possono vivere fianco a fianco personaggi di qualsiasi ambientazione, quindi non nomina alcuna città o paese reale.
 
 ## Il disegno
 
-Sopra i riquadri ogni quartiere è disegnato come una piccola piastra isometrica: un edificio per ogni luogo, sul proprio lotto, nell'ordine dei riquadri. Su ogni tetto c'è una puntina con l'icona del luogo e quanti personaggi sono lì adesso. Un luogo chiuso è attenuato e la sua puntina dice "Closed". Tocca una puntina per aprire il luogo, proprio come toccare il suo riquadro; la pagina scorre fino a esso. In Homes ogni edificio è disegnato con le finestre illuminate, buie o tratteggiate, come le porte qui sotto, e una puntina va alle porte di quell'edificio. Su un telefono solo il luogo che hai scelto è nominato sotto il disegno; i nomi sono sui riquadri. Il disegno contiene fino a 25 luoghi; un quartiere più grande mostra il resto solo nell'elenco. Un quartiere con una sua immagine (vedi "Immagini") mostra quell'immagine sotto le stesse puntine invece del disegno. I riquadri restano come erano: sono l'elenco per un lettore di schermo e per chiunque lo preferisca.
+Ogni quartiere è disegnato come una piccola piastra isometrica (su uno schermo largo a sinistra dei riquadri, dove resta in vista mentre li scorri; su un telefono sopra di essi): un edificio per ogni luogo, sul proprio lotto, nell'ordine dei riquadri. Su ogni tetto c'è una puntina con l'icona del luogo e quanti personaggi sono lì adesso. Un luogo chiuso è attenuato e la sua puntina dice "Closed". Tocca una puntina per aprire il luogo, proprio come toccare il suo riquadro; la pagina scorre fino a esso. In Homes ogni edificio è disegnato con le finestre illuminate, buie o tratteggiate, come le porte qui sotto, e una puntina va alle porte di quell'edificio. Su un telefono solo il luogo che hai scelto è nominato sotto il disegno; i nomi sono sui riquadri. Il disegno contiene fino a 25 luoghi; un quartiere più grande mostra il resto solo nell'elenco. Un quartiere con una sua immagine (vedi "Immagini") mostra quell'immagine sotto le stesse puntine invece del disegno. I riquadri restano come erano: sono l'elenco per un lettore di schermo e per chiunque lo preferisca.
 
 ## Ascoltare ed entrare
 

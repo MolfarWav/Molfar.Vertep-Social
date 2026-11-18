@@ -1,4 +1,4 @@
-<!-- source: fb227cb65841 -->
+<!-- source: 62064ed2b663 -->
 # Social: Miasto
 
 Miasto to miasteczko, w którym mieszkają twoje postacie. Pokazuje, gdzie każda z nich jest teraz, według reguł, i gdzie mieszka. Otwórz je przyciskiem "City" na górnym pasku (na telefonie: "More", trzeci wiersz). Nikogo nie możesz przesunąć, ale możesz słuchać, wchodzić i dodawać własne miejsca.
@@ -11,7 +11,7 @@ Miasto jest zwykłym współczesnym miastem, neutralnym miejscem, w którym post
 
 ## Rysunek
 
-Nad kafelkami każda dzielnica jest narysowana jako mała izometryczna plansza: jeden budynek na każde miejsce, na własnej działce, w kolejności kafelków. Na każdym dachu siedzi pinezka z ikoną miejsca i liczbą postaci, które tam teraz są. Zamknięte miejsce jest przyciemnione, a jego pinezka mówi "Closed". Dotknij pinezki, żeby otworzyć miejsce, tak samo jak dotknięcie jego kafelka; strona przewija się do niego. W Homes każdy budynek jest narysowany z oknami zapalonymi, ciemnymi lub przerywanymi, jak drzwi poniżej, a pinezka prowadzi do drzwi tego budynku. Na telefonie tylko miejsce, które wybrałeś, jest nazwane pod rysunkiem; nazwy są na kafelkach. Rysunek mieści do 25 miejsc; większa dzielnica pokazuje resztę tylko na liście. Dzielnica z własnym zdjęciem (patrz „Zdjęcia”) pokazuje to zdjęcie pod tymi samymi pinezkami zamiast rysunku. Kafelki zostają, jak były: są listą dla czytnika ekranu i dla każdego, kto ją woli.
+Każda dzielnica jest narysowana jako mała izometryczna plansza (na szerokim ekranie na lewo od kafelków, gdzie zostaje w polu widzenia, gdy je przewijasz; na telefonie nad nimi): jeden budynek na każde miejsce, na własnej działce, w kolejności kafelków. Na każdym dachu siedzi pinezka z ikoną miejsca i liczbą postaci, które tam teraz są. Zamknięte miejsce jest przyciemnione, a jego pinezka mówi "Closed". Dotknij pinezki, żeby otworzyć miejsce, tak samo jak dotknięcie jego kafelka; strona przewija się do niego. W Homes każdy budynek jest narysowany z oknami zapalonymi, ciemnymi lub przerywanymi, jak drzwi poniżej, a pinezka prowadzi do drzwi tego budynku. Na telefonie tylko miejsce, które wybrałeś, jest nazwane pod rysunkiem; nazwy są na kafelkach. Rysunek mieści do 25 miejsc; większa dzielnica pokazuje resztę tylko na liście. Dzielnica z własnym zdjęciem (patrz „Zdjęcia”) pokazuje to zdjęcie pod tymi samymi pinezkami zamiast rysunku. Kafelki zostają, jak były: są listą dla czytnika ekranu i dla każdego, kto ją woli.
 
 ## Słuchanie i wchodzenie
 
@@ -23,7 +23,7 @@ Dotknij kafelka, a pod imionami zobaczysz "You overhear": ostatnie kilka linijek
 
 Pod paskiem dzielnic "Add a place" otwiera formularz: nazwa, dzielnica, rodzaj, krótki opis, godziny otwarcia (od, do i dni), zainteresowania, które przyciągają ludzi (oddzielone przecinkami), liczba miejsc, ikona (emoji) i zdjęcie (patrz „Zdjęcia” poniżej). Postacie, których zainteresowania pasują do tagów, są przyciągane do miejsca, a ono bierze udział w dniu tak jak standardowe miejsca. Na kafelku, który dotkniesz, są "Edit place" i "Remove place" (po pytaniu); działa to także na standardowych miejscach, a standardowe miejsce, które zmienisz, staje się twoje.
 
-"+" na końcu paska tworzy nową dzielnicę (nazwę, rodzaj i zdjęcie); "Edit district" zmienia jej nazwę, zmienia jej zdjęcie i, gdy nie ma w niej miejsc, ją usuwa. Homes też ma "Edit district", dla swojej nazwy i zdjęcia. Domów nie można usunąć ani zdublować, i nie da się w nich umieszczać miejsc. "Restore the stock town" na dole przywraca osiem standardowych miejsc i cztery dzielnice, a usuwa twoje; domy i to, kto gdzie jest, zostają. Miasto ma najwyżej 60 miejsc i 12 dzielnic.
+"+" na końcu paska tworzy nową dzielnicę (nazwę, rodzaj i zdjęcie); "Edit district" zmienia jej nazwę, zmienia jej zdjęcie i, gdy nie ma w niej miejsc, ją usuwa. Homes też ma "Edit district", dla swojej nazwy i zdjęcia. Homes nie można usunąć ani zdublować, i nie da się w nim umieszczać miejsc. "Restore the stock town" na dole przywraca osiem standardowych miejsc i cztery dzielnice, a usuwa twoje; domy i to, kto gdzie jest, zostają. Miasto ma najwyżej 60 miejsc i 12 dzielnic.
 
 ## Zdjęcia
 
@@ -34,7 +34,7 @@ Miejsce i dzielnica mogą mieć po jednym szerokim zdjęciu. W formularzu miejsc
 
 Rysowanie kosztuje jedno wywołanie graficzne za każdym razem, gdy naciskasz "Generate"; pokazywanie zdjęcia nic nie kosztuje. "Restore the stock town" usuwa razem z nimi zdjęcia twoich miejsc i dzielnic; standardowe miasto ich nie ma.
 
-## Gdzie resztę Social to widzi
+## Gdzie reszta Social to widzi
 
 - **Dzienniki.** Dzień dziennika typu "something unexpected" jest opowiadany z tym, gdzie jest postać i kto jest z nią, więc to, co zauważyła, mogło tam naprawdę być.
 - **Characters talk i kluby.** Dwie postacie, które są w tym samym miejscu, rozmawiają ze sobą około trzy razy częściej, a klub z dwoma lub więcej członkami w jednym miejscu rozmawia około trzy razy częściej. (Pokoje też są klubami; patrz wyżej.)

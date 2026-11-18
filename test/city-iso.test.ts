@@ -1,7 +1,7 @@
 // City C5 (#453): the geometry of the drawn district (isometric). The drawing itself is checked in the design preview; here the lots,
 // the pins and the SVG string are pinned.
 import { expect, test } from "bun:test";
-import { ISO_MAX, isoAllLots, isoFrame, isoGrid, isoHeight, isoLots, isoPin } from "../src/screens/city/iso";
+import { ISO_MAX, KIND_LOOK, isoAllLots, isoFrame, isoGrid, isoHeight, isoLots, isoPin, isoPoint } from "../src/screens/city/iso";
 import { isoSvg } from "../src/screens/city/iso-map";
 
 test("the grid grows with the places: one fills the plate, then 2, 3, 4 and 5 lots a side; never more than ISO_MAX lots", () => {
@@ -51,4 +51,22 @@ test("the SVG uses theme tokens only and carries no text", () => {
   expect(svg).toContain("var(--");
   // a closed place is dimmed
   expect(svg).toContain("opacity:.55");
+});
+
+test("the tallest building on the back lot leaves room for its pin above it, without the clamp (the owner saw Building 1 cut off)", () => {
+  for (const phone of [false, true]) {
+    const f = isoFrame(phone);
+    for (const n of [1, 2, 5, 7, 10, 17, 25]) {
+      const g = isoGrid(n);
+      for (const kind of Object.keys(KIND_LOOK)) {
+        for (const lot of isoLots(n)) {
+          const [, y] = isoPoint(f, lot.u, lot.v, isoHeight(f, kind, g));
+          // a pin is about 44 px tall over a drawing at least 340 px wide: 0.13 of the frame's height is enough room
+          expect(y / f.H).toBeGreaterThan(0.13);
+        }
+      }
+      // the plate's front edge and its thickness stay inside the frame
+      expect(isoPoint(f, 1, 1)[1] + 14).toBeLessThan(f.H);
+    }
+  }
 });

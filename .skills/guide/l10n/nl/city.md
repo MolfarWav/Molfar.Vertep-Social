@@ -1,4 +1,4 @@
-<!-- source: fb227cb65841 -->
+<!-- source: 62064ed2b663 -->
 # Sociaal: De stad
 
 De stad is het stadje waar je personages wonen. Het laat zien waar elk van hen nu is, volgens regels, en waar ze wonen. Open het met "City" in de bovenste balk (op een telefoon: "More", de derde rij). Je kunt niemand verplaatsen, maar je kunt meeluisteren, binnenlopen en eigen plekken toevoegen.
@@ -11,7 +11,7 @@ De stad is een gewone hedendaagse stad, een neutrale plek waar personages uit el
 
 ## De tekening
 
-Boven de tegels is elke wijk getekend als een kleine isometrische plaat: één gebouw voor elke plek, op een eigen kavel, in de volgorde van de tegels. Op elk dak zit een speld met het icoon van de plek en hoeveel personages er nu zijn. Een gesloten plek is gedimd en de speld zegt "Closed". Tik op een speld om de plek te openen, net als bij het tikken op de tegel; de pagina scrollt ernaartoe. In Homes is elk gebouw getekend met de ramen verlicht, donker of gestippeld, zoals de deuren eronder, en een speld gaat naar de deuren van dat gebouw. Op een telefoon wordt alleen de plek die je koos onder de tekening genoemd; de namen staan op de tegels. De tekening bevat hoogstens 25 plekken; een grotere wijk toont de rest alleen in de lijst. Een wijk met een eigen foto (zie "Foto's") toont die foto onder dezelfde spelden in plaats van de tekening. De tegels blijven zoals ze waren: ze zijn de lijst voor een schermlezer en voor wie dat liever heeft.
+Elke wijk is getekend als een kleine isometrische plaat (op een breed scherm links van de tegels, waar hij in beeld blijft terwijl je erdoorheen scrolt; op een telefoon erboven): één gebouw voor elke plek, op een eigen kavel, in de volgorde van de tegels. Op elk dak zit een speld met het icoon van de plek en hoeveel personages er nu zijn. Een gesloten plek is gedimd en de speld zegt "Closed". Tik op een speld om de plek te openen, net als bij het tikken op de tegel; de pagina scrollt ernaartoe. In Homes is elk gebouw getekend met de ramen verlicht, donker of gestippeld, zoals de deuren eronder, en een speld gaat naar de deuren van dat gebouw. Op een telefoon wordt alleen de plek die je koos onder de tekening genoemd; de namen staan op de tegels. De tekening bevat hoogstens 25 plekken; een grotere wijk toont de rest alleen in de lijst. Een wijk met een eigen foto (zie "Foto's") toont die foto onder dezelfde spelden in plaats van de tekening. De tegels blijven zoals ze waren: ze zijn de lijst voor een schermlezer en voor wie dat liever heeft.
 
 ## Luisteren en binnenlopen
 

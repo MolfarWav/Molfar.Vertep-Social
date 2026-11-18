@@ -1,4 +1,4 @@
-<!-- source: fb227cb65841 -->
+<!-- source: 62064ed2b663 -->
 # Social: A cidade
 
 A cidade é o lugar onde os seus personagens moram. Ela mostra onde cada um deles está agora, por regras, e onde ele mora. Abra-a com "City" na barra superior (no celular: "More", a terceira linha). Você não pode mover ninguém, mas pode ouvir, entrar e adicionar lugares seus.
@@ -11,7 +11,7 @@ A cidade é uma cidade comum, da atualidade, um lugar neutro onde personagens de
 
 ## O desenho
 
-Acima dos blocos, cada distrito é desenhado como uma pequena placa isométrica: um prédio para cada lugar, no seu próprio terreno, na ordem dos blocos. Em cada telhado fica um alfinete com o ícone do lugar e quantos personagens estão ali agora. Um lugar fechado fica esmaecido e o seu alfinete diz "Closed". Toque num alfinete para abrir o lugar, como tocar no bloco; a página rola até ele. Em Moradias, cada prédio é desenhado com as janelas acesas, apagadas ou tracejadas, como as portas abaixo, e um alfinete leva às portas daquele prédio. No celular, só o lugar que você escolheu é nomeado sob o desenho; os nomes estão nos blocos. O desenho comporta até 25 lugares; um distrito maior mostra o resto apenas na lista. Um distrito com imagem própria (veja "Imagens") mostra essa imagem sob os mesmos alfinetes em vez do desenho. Os blocos continuam como estavam: são a lista para um leitor de tela e para quem preferir.
+Cada distrito é desenhado como uma pequena placa isométrica (numa tela larga, à esquerda dos blocos, onde fica visível enquanto você os rola; no celular, acima deles): um prédio para cada lugar, no seu próprio terreno, na ordem dos blocos. Em cada telhado fica um alfinete com o ícone do lugar e quantos personagens estão ali agora. Um lugar fechado fica esmaecido e o seu alfinete diz "Closed". Toque num alfinete para abrir o lugar, como tocar no bloco; a página rola até ele. Em Moradias, cada prédio é desenhado com as janelas acesas, apagadas ou tracejadas, como as portas abaixo, e um alfinete leva às portas daquele prédio. No celular, só o lugar que você escolheu é nomeado sob o desenho; os nomes estão nos blocos. O desenho comporta até 25 lugares; um distrito maior mostra o resto apenas na lista. Um distrito com imagem própria (veja "Imagens") mostra essa imagem sob os mesmos alfinetes em vez do desenho. Os blocos continuam como estavam: são a lista para um leitor de tela e para quem preferir.
 
 ## Ouvir e entrar
 
