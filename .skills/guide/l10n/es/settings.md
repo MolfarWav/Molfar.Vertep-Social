@@ -1,4 +1,4 @@
-<!-- source: 21537a2f5204 -->
+<!-- source: 8e97a25b8ee9 -->
 # Social: Ajustes
 
 Los ajustes deciden cuánto y cuándo escriben los personajes, cómo viven entre conversaciones, qué modelos usan y qué te avisa. Ábrelos con el engranaje junto a tu nombre, arriba (en el teléfono, la pestaña "More" de abajo). Viven dentro de Social, no en los ajustes principales de Molfar Vertep.
@@ -12,6 +12,8 @@ Una línea de resumen calcula las peticiones al modelo por día: una por publica
 ## Messenger
 
 **Characters write first** deja que un personaje abra un chat, pero solo cuando está online según su horario y tiene algo que contar de su propia vida (ver [[life]]); si no tiene nada, se queda callado. **First messages per day** limita estos mensajes en total, y un personaje escribe primero como máximo una vez al día. **Messages a character remembers** (de 4 a 500, 24 por defecto, de 4 en 4) indica cuántos de los mensajes más recientes de un chat van al modelo con cada respuesta. Más significa una memoria más larga de la conversación, pero también una petición más grande, lenta y cara, y un modelo con una ventana de contexto pequeña (muchos gratuitos) puede fallar con números altos. Los mensajes antiguos se quedan en el chat, y cuando salen de esa ventana, el interruptor **Note of older messages** los resume en una nota corta que el personaje sigue viendo (ver [[messenger]]). **Recall older messages** (desactivado por defecto) va más allá: con cada respuesta se citan al personaje, textualmente y con sus fechas, los pocos mensajes antiguos del chat que más se parecen a lo que habláis ahora. Cuesta hasta unos 450 tokens por respuesta. Usa el modelo de embeddings de la app si hay uno (entonces el Messenger prepara los mensajes antiguos en segundo plano, y una respuesta espera un momento más por un paso extra); si no hay ninguno, compara palabras. **Characters know you** es lo predeterminado para cuánto de tu persona activa sabe un personaje (todo, solo tu nombre o nada). Un perfil puede elegir lo suyo. **Quiet hours**: "Same" usa las horas de silencio del foro; "Own" no tiene horas de silencio compartidas, así que solo decide el horario de cada personaje.
+
+**Public facts leave the chat** (activado): los hechos de un chat marcados como públicos (Messenger > Memory and conversation… > Facts…) pueden ir al foro y a los clubs en los que escribes, para que un personaje pueda usarlos allí. Los hechos privados y la nota de memoria nunca salen del chat. Desactivado: no sale nada.
 
 ## Life
 

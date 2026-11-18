@@ -127,13 +127,14 @@ test("a character writes first only to the active persona", () => {
   expect(plan.profile.id).toBe("mavka");
 });
 
-test("a persona's chat is the memory the forum uses for that persona's posts", () => {
+test("a persona's chat is the memory the forum uses for that persona's posts (its public facts)", () => {
   const h = seed();
-  put(h, "chats/mavka.u1.json", { id: "mavka", persona: "u1", messages: [], summary: { text: "Serhii plays bass.", upto: 1, at: 1 } });
-  put(h, "chats/mavka.u2.json", { id: "mavka", persona: "u2", messages: [], summary: { text: "Oksana paints.", upto: 1, at: 1 } });
-  expect(forum.chatNote(h.host.fs, { id: "mavka" }, "u2")).toContain("Oksana paints");
-  expect(forum.chatNote(h.host.fs, { id: "mavka" }, "u1")).toContain("Serhii plays bass");
-  expect(forum.chatNote(h.host.fs, { id: "mavka" })).toContain("Serhii plays bass"); // the active one
+  const fact = (text: string) => ({ id: "f1", text, kind: "about_you", at: 1, from: 1, private: false, pinned: false, by: "model" });
+  put(h, "chats/mavka.u1.json", { id: "mavka", persona: "u1", messages: [], facts: [fact("Serhii plays bass.")] });
+  put(h, "chats/mavka.u2.json", { id: "mavka", persona: "u2", messages: [], facts: [fact("Oksana paints.")] });
+  expect(forum.publicFacts(h.host.fs, { id: "mavka" }, "u2")).toEqual(["Oksana paints."]);
+  expect(forum.publicFacts(h.host.fs, { id: "mavka" }, "u1")).toEqual(["Serhii plays bass."]);
+  expect(forum.publicFacts(h.host.fs, { id: "mavka" })).toEqual(["Serhii plays bass."]); // the active one
 });
 
 test("the people list counts the chats of every persona, each under its own persona", () => {

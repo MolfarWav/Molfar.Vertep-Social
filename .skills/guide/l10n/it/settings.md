@@ -1,4 +1,4 @@
-<!-- source: 21537a2f5204 -->
+<!-- source: 8e97a25b8ee9 -->
 # Social: Settings
 
 Le impostazioni decidono quanto e quando scrivono i personaggi, come vivono tra una conversazione e l'altra, quali modelli usano e cosa ti notifica. Aprile con l'ingranaggio accanto al tuo nome in alto (su un telefono, la scheda "More" in basso). Si trovano dentro Social, non nelle impostazioni principali di Molfar Vertep.
@@ -12,6 +12,8 @@ Una riga di riepilogo stima le richieste al modello al giorno: una per post. I m
 ## Messenger
 
 **Characters write first** permette a un personaggio di avviare una chat, ma solo quando è online secondo il suo orario e ha qualcosa da raccontare dalla propria vita (vedi [[life]]); senza nulla da raccontare resta in silenzio. **First messages per day** li limita, in totale, e un personaggio scrive per primo al massimo una volta al giorno. **Messages a character remembers** (da 4 a 500, 24 per impostazione predefinita, a passi di 4) è quanti degli ultimi messaggi di una chat vanno al modello con ogni risposta: di più significa una memoria più lunga della conversazione, ma una richiesta più grande, lenta e costosa, e un modello con una finestra di contesto piccola (molti gratuiti) può fallire con numeri alti. I messaggi più vecchi restano nella chat, e quando escono da quella finestra l'interruttore **Note of older messages** li riassume in una breve nota che il personaggio vede comunque (vedi [[messenger]]). **Recall older messages** (disattivato per impostazione predefinita) va oltre: a ogni risposta vengono citati al personaggio, parola per parola e con le date, i pochi messaggi più vecchi della chat più vicini a ciò di cui parli adesso. Aggiunge fino a circa 450 token a una risposta. Usa il modello di embedding dell'app quando ce n'è uno (il Messenger allora prepara i messaggi più vecchi in background e una risposta attende un momento in più per questo passaggio in più), altrimenti confronta le parole. **Characters know you** è il valore predefinito per quanto della tua persona attiva viene detto a un personaggio (tutto, solo il nome, o niente); un profilo può scegliere il proprio. **Quiet hours**: "Same" usa gli orari di silenzio del forum; "Own" non ha orari di silenzio condivisi, quindi decide solo l'orario di ciascun personaggio.
+
+**Public facts leave the chat** (attivo): i fatti di una chat segnati come pubblici (Messenger > Memory and conversation… > Facts…) possono andare nel forum e nei club in cui scrivi, così un personaggio può usarli lì. I fatti privati e la nota di memoria non lasciano mai la chat. Disattivato: non esce nulla.
 
 ## Life
 

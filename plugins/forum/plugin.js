@@ -708,12 +708,11 @@ export function lifeSubject(fsx, p, now, shared, rand, fits) {
 }
 
 // ---------- what a character knows of the human user (issue #336) ----------
-// The messenger decides how well a character knows the user (`knows` on the profile, else Settings > Messenger, else "knows") and keeps a
-// memory note per chat (`chats/<id>.json` `summary`). The forum reads both, never writes them. Plugins cannot import each other, so
-// `youOf` and `knowsOf` are copies of the messenger's (test/forum-user.test.ts pins that they agree).
+// The messenger decides how well a character knows the user (`knows` on the profile, else Settings > Messenger, else "knows") and keeps the facts
+// of each chat (`chats/<id>.json` `facts`, #446). The forum reads both, never writes them, and only the facts marked public, never the memory note
+// (`publicFacts`, M3). Plugins cannot import each other, so `youOf` and `knowsOf` are copies of the messenger's (test/forum-user.test.ts pins that they agree).
 
 const KNOWS = ["knows", "name", "stranger"];
-const NOTE_FOR_FORUM = 800;
 
 /** The persona `pid` of Your profile ({name, about}), or with none the active one: what a character is told about the person writing. Null when there is none. A copy lives in the forum. */
 export function youOf(fsx, pid) {
@@ -745,17 +744,37 @@ export function knowsOf(fsx, profile) {
   return isObj(s) && KNOWS.includes(s.messengerKnows) ? s.messengerKnows : "knows";
 }
 
-/** The memory note of this profile's chat with the persona `pid` (else the active one), as the messenger keeps it (`chats/<profile>.<persona>.json`, or `chats/<profile>.json` while there is no persona); "" when there is none or the messenger's note switch is off. */
-export function chatNote(fsx, profile, pid) {
+// <public-facts-shared>
+// (#446, M3) What a character knows of the user from their private chat, for every place but that chat (the forum, the clubs): only the facts the
+// messenger marks public (`private: false`, strictly: a fact with no flag is private), never the memory note, which is free text and may hold anything.
+// Read from `chats/<profile>[.<persona>].json` `facts`. Nothing when Settings > Messenger "Public facts leave the chat" is off, when the messenger's
+// memory switch is off, or when the character is a stranger to the user. Identical in the forum and the clubs (test/public-facts.test.ts pins it).
+const PUBLIC_FACTS_MAX = 1000;
+const PUBLIC_FACTS_COUNT = 12;
+export function publicFacts(fsx, profile, pid) {
   const s = readJson(fsx, "settings.json", null);
-  if (isObj(s) && s.messengerSummary === false) return "";
+  if (isObj(s) && (s.messengerSummary === false || s.factsShare === false)) return [];
+  if (!isObj(profile) || knowsOf(fsx, profile) === "stranger") return [];
   const who = pid || activePersonaId(fsx);
   let chat = readJson(fsx, "chats/" + profile.id + (who ? "." + who : "") + ".json", null);
   // a chat from before personas had their own is adopted by the active persona the first time the messenger runs; until then it is theirs
   if (!isObj(chat) && who && who === activePersonaId(fsx)) chat = readJson(fsx, "chats/" + profile.id + ".json", null);
-  const sum = isObj(chat) && isObj(chat.summary) ? chat.summary : null;
-  return sum ? cut(noControls(str(sum.text)).replace(/<[^>]*>/g, " ").replace(/[ \t]{2,}/g, " ").trim(), NOTE_FOR_FORUM) : "";
+  const list = isObj(chat) && Array.isArray(chat.facts) ? chat.facts : [];
+  const open = list
+    .filter((f) => isObj(f) && f.private === false && typeof f.text === "string")
+    .map((f) => ({ pinned: f.pinned === true, from: Number.isFinite(f.from) ? f.from : 0, text: cut(noControls(str(f.text)).replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim(), 160) }))
+    .filter((f) => f.text)
+    .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.from - a.from);
+  const out = [];
+  let size = 0;
+  for (const f of open) {
+    if (out.length >= PUBLIC_FACTS_COUNT || (size + f.text.length > PUBLIC_FACTS_MAX && out.length)) break;
+    out.push(f.text);
+    size += f.text.length;
+  }
+  return out;
 }
+// </public-facts-shared>
 
 // <relation-shared>
 // What the user set between two people: a level of familiarity and ties (the Life plugin writes them, "levels, ties and milestones" there).
@@ -893,7 +912,7 @@ export function userKnownTo(fsx, author, topic, target) {
   const you = post.persona ? personaOf(fsx, post.persona) : youOf(fsx);
   const name = knows === "stranger" ? "" : str(post.name) || (you ? you.name : "");
   const met = knows !== "stranger" && str(post.name) ? metLine(fsx, author, userKeyOf(post)) : "";
-  return { label: name, name, about: knows === "knows" && you ? you.about : "", note: toUser && knows !== "stranger" ? chatNote(fsx, author, post.persona || "") : "", ...(met ? { met } : {}) };
+  return { label: name, name, about: knows === "knows" && you ? you.about : "", facts: toUser && knows !== "stranger" ? publicFacts(fsx, author, post.persona || "") : [], ...(met ? { met } : {}) };
 }
 
 const LENGTH_WORDS = ["Short: one or two sentences.", "Medium: two to four sentences.", "Long: a short paragraph when the topic asks for it."];
@@ -923,7 +942,7 @@ export function systemPromptFor(p, recent, opts) {
   else if (user) lines.push("You do not know who the human user is beyond what they write here; do not guess their name.");
   if (user && user.met) lines.push(user.met);
   if (isObj(opts) && str(opts.met)) lines.push(opts.met);
-  if (user && user.note) lines.push("What you remember from your private chats with them (your own notes): " + cut(user.note, NOTE_FOR_FORUM) + "\nThat stays between the two of you: do not quote it or reveal it on the forum, let it only shape how you speak to them.");
+  if (user && Array.isArray(user.facts) && user.facts.length) lines.push("Things they have told you openly, which you know from your chats (facts they are happy to have known; use them naturally where they fit, never as a list, and never anything beyond them):\n" + user.facts.map((f) => "- " + f).join("\n"));
   lines.push(LENGTH_WORDS[length] + " " + EMOJI_WORDS[emoji] + " " + (formality >= 66 ? "Formal, polite address." : formality <= 33 ? "Informal, on first-name terms." : "Neutral tone."));
   if (Array.isArray(v.never) && v.never.length) lines.push("Never write: " + v.never.slice(0, 12).join(", ") + ".");
   if (Array.isArray(v.words) && v.words.length) lines.push("Words and turns of speech that are yours: " + v.words.slice(0, 8).join(", ") + ". Use one now and then where it fits, never in every message.");

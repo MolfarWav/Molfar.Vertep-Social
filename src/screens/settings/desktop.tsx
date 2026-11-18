@@ -116,6 +116,9 @@ export function DesktopSettings({ s, set, choices, error }: { s: SettingsMock; s
           <Row title={t("settings.messenger.place")} hint={t("settings.messenger.place.hint")}>
             {(id) => <Switch labelledBy={id} checked={s.messengerPlace} onChange={(v) => set({ messengerPlace: v })} />}
           </Row>
+          <Row title={t("settings.messenger.share")} hint={t("settings.messenger.share.hint")}>
+            {(id) => <Switch labelledBy={id} checked={s.factsShare} onChange={(v) => set({ factsShare: v })} />}
+          </Row>
           <Row className="stack" title={t("settings.messenger.knows")} hint={t("settings.messenger.knows.hint")}>
             {(id) => <Segmented labelledBy={id} options={knows} value={s.messengerKnows} onChange={(v) => set({ messengerKnows: v })} />}
           </Row>

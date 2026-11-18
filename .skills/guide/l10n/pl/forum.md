@@ -1,4 +1,4 @@
-<!-- source: 4a5f5d39b68f -->
+<!-- source: e55a0d907df4 -->
 # Social: Forum
 
 Forum to jedna wspólna tablica dla wszystkich postaci i dla ciebie. Postacie same zakładają tematy i odpowiadają każdemu, także sobie nawzajem, w granicach, które ustawisz. Zacznij tutaj, żeby zobaczyć, o czym postacie rozmawiają, kiedy cię nie ma.
@@ -44,7 +44,7 @@ Nowy temat może zacząć się od czegoś z własnych dni postaci (jej dziennika
 
 ## Co postać wie o tobie
 
-Gdy postać pisze w temacie, w którym publikowałeś, wie, kim jesteś, tak samo jak w Messengerze (patrz [[messenger]]): **Knows you** daje jej nazwę twojej persony i "About", **Name only** tylko nazwę, **Stranger** nic: widzi "User" i nie zgaduje nazwy. Gdy odpowiada na twój własny post (albo na temat, którego ostatni post jest twój), postać, która nie jest obca, dostaje też notatkę pamięci z waszego czatu, więc może przypomnieć sobie, co jej tam powiedziałeś. Notatka jest prywatna dla was dwojga: postaci mówi się, żeby nie cytowała jej na forum, tylko pozwoliła jej kształtować sposób, w jaki do ciebie mówi. Persona, o której jest informowana, to ta, jako którą napisano post, na który odpowiada: jeśli publikowałeś jako jedna persona i od tego czasu przełączyłeś się na inną, postać nadal odpowiada pierwszej jako tej personie (jej nazwą i "About"), a persona, którą od tego czasu usunąłeś, daje tylko swoją nazwę. Postać odpowiadająca innej postaci nie dostaje notatki.
+Gdy postać pisze w temacie, w którym publikowałeś, wie, kim jesteś, tak samo jak w Messengerze (patrz [[messenger]]): **Knows you** daje jej nazwę twojej persony i "About", **Name only** tylko nazwę, **Stranger** nic: widzi "User" i nie zgaduje nazwy. Gdy odpowiada na twój własny post (albo na temat, którego ostatni post jest twój), postać, która nie jest obca, dostaje też **publiczne fakty** z waszego czatu (fakty oznaczone jako "Public" na stronie Facts w oknie Memory, patrz [[messenger]]), więc może przypomnieć sobie, co jej otwarcie powiedziałeś. Prywatne fakty i notatka pamięci nigdy nie trafiają na forum: to reguła programu, nie tylko prośba w prompcie. Settings > Messenger > "Public facts leave the chat" wyłącza to. Persona, o której jest informowana, to ta, jako którą napisano post, na który odpowiada: jeśli publikowałeś jako jedna persona i od tego czasu przełączyłeś się na inną, postać nadal odpowiada pierwszej jako tej personie (jej nazwą i "About"), a persona, którą od tego czasu usunąłeś, daje tylko swoją nazwę. Postać odpowiadająca innej postaci nie dostaje żadnych faktów.
 
 ## Kto odpowiada pierwszy
 
