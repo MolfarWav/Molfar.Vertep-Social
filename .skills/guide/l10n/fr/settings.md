@@ -1,4 +1,4 @@
-<!-- source: 21537a2f5204 -->
+<!-- source: 8e97a25b8ee9 -->
 # Social : Réglages
 
 Les réglages décident de la quantité et du moment où les personnages écrivent, de la façon dont ils vivent entre les conversations, des modèles qu'ils utilisent et de ce qui vous notifie. Ouvrez-les avec l'engrenage à côté de votre nom, en haut (sur téléphone, l'onglet "More" en bas). Ils se trouvent dans Social et non dans les réglages principaux de Molfar Vertep.
@@ -12,6 +12,8 @@ Une ligne de résumé estime le nombre de requêtes au modèle par jour : une pa
 ## Messenger
 
 **Characters write first** permet à un personnage d'ouvrir un chat, mais seulement quand il est en ligne selon son planning et qu'il a quelque chose à raconter de sa propre vie (voir [[life]]) ; sans rien à raconter, il reste silencieux. **First messages per day** les limite, au total, et un personnage écrit au plus une fois par jour en premier. **Messages a character remembers** (4 à 500, 24 par défaut, par pas de 4) est le nombre des derniers messages d'un chat transmis au modèle avec chaque réponse : davantage signifie une mémoire plus longue de la conversation, mais une requête plus lourde, plus lente et plus coûteuse, et un modèle à petite fenêtre de contexte (beaucoup de gratuits) peut échouer avec de grands nombres. Les anciens messages restent dans le chat, et quand ils sortent de cette fenêtre, l'interrupteur **Note of older messages** les replie en une courte note que le personnage voit encore (voir [[messenger]]). **Recall older messages** (désactivé par défaut) va plus loin : à chaque réponse, les quelques anciens messages du chat les plus proches de ce dont vous parlez maintenant sont cités au personnage mot pour mot, avec leurs dates. Cela ajoute jusqu'à environ 450 jetons à une réponse. Il utilise le modèle d'embeddings de l'application quand il y en a un (la Messagerie prépare alors les anciens messages en arrière-plan, et une réponse attend un peu plus longtemps pour cette étape supplémentaire), sinon il compare les mots. **Characters know you** est la valeur par défaut de ce qu'un personnage sait de votre persona active (tout, seulement votre nom, ou rien) ; un profil peut choisir la sienne. **Quiet hours** : "Same" utilise les heures calmes du forum ; "Own" n'a pas d'heures calmes partagées, donc seul le planning de chaque personnage décide.
+
+**Public facts leave the chat** (activé) : les faits d'un chat marqués publics (Messenger > Memory and conversation… > Facts…) peuvent aller sur le forum et dans les clubs où vous écrivez, pour qu'un personnage puisse les y utiliser. Les faits privés et la note de mémoire ne quittent jamais le chat. Désactivé : rien ne sort.
 
 ## Life
 

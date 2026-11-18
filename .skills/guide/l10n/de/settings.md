@@ -1,4 +1,4 @@
-<!-- source: 21537a2f5204 -->
+<!-- source: 8e97a25b8ee9 -->
 # Social: Einstellungen
 
 Die Einstellungen bestimmen, wie viel und wann Charaktere schreiben, wie sie zwischen den Gesprächen leben, welche Modelle sie nutzen und was dich benachrichtigt. Öffne sie mit dem Zahnrad neben deinem Namen oben (auf dem Telefon der Tab "More" unten). Sie leben innerhalb von Social, nicht in den Haupteinstellungen von Molfar Vertep.
@@ -12,6 +12,8 @@ Eine Zusammenfassungszeile schätzt die Modellanfragen pro Tag: eine pro Beitrag
 ## Messenger
 
 **Characters write first** lässt einen Charakter einen Chat beginnen, aber nur, wenn er nach seinem Zeitplan online ist und etwas aus seinem eigenen Leben zu erzählen hat (siehe [[life]]). Hat er nichts, bleibt er still. **First messages per day** begrenzt diese insgesamt, und ein Charakter schreibt höchstens einmal am Tag zuerst. **Messages a character remembers** (4 bis 500, standardmäßig 24, in Schritten von 4) legt fest, wie viele der neuesten Nachrichten eines Chats mit jeder Antwort an das Modell gehen. Mehr heißt ein längeres Gedächtnis des Gesprächs, aber auch eine größere, langsamere und teurere Anfrage. Ein Modell mit kleinem Kontextfenster (viele kostenlose) kann bei hohen Zahlen scheitern. Ältere Nachrichten bleiben im Chat. Wenn sie aus diesem Fenster herausfallen, faltet der Schalter **Note of older messages** sie zu einer kurzen Notiz, die der Charakter weiterhin sieht (siehe [[messenger]]). **Recall older messages** (standardmäßig aus) geht weiter: Mit jeder Antwort werden dem Charakter die wenigen älteren Nachrichten des Chats wortwörtlich mit ihrem Datum zitiert, die dem, worüber ihr gerade sprecht, am nächsten sind. Das kostet bis zu etwa 450 Tokens pro Antwort. Es nutzt das Embeddings-Modell der App, wenn es eines gibt. Dann bereitet der Messenger die älteren Nachrichten im Hintergrund vor, und eine Antwort wartet einen Moment länger auf einen zusätzlichen Schritt. Ohne Embeddings-Modell gleicht es Wörter ab. **Characters know you** ist der Standard dafür, wie viel deiner aktiven Persona ein Charakter erfährt (alles, nur dein Name oder nichts). Ein Profil kann eine eigene Wahl treffen. **Quiet hours**: "Same" nutzt die Ruhezeiten des Forums; "Own" hat keine gemeinsamen Ruhezeiten, sodass nur der Zeitplan jedes Charakters entscheidet.
+
+**Public facts leave the chat** (an): Die Fakten eines Chats, die als öffentlich markiert sind (Messenger > Memory and conversation… > Facts…), dürfen ins Forum und in Clubs gehen, in denen du schreibst, damit ein Charakter sie dort nutzen kann. Private Fakten und die Gedächtnisnotiz verlassen den Chat nie. Aus: nichts verlässt ihn.
 
 ## Life
 

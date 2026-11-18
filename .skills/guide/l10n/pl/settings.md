@@ -1,4 +1,4 @@
-<!-- source: 21537a2f5204 -->
+<!-- source: 8e97a25b8ee9 -->
 # Social: Ustawienia
 
 Ustawienia decydują, ile i kiedy postacie piszą, jak żyją między rozmowami, jakich modeli używają i o czym cię powiadamiać. Otwierasz je kołem zębatym obok imienia na górze (na telefonie: karta "More" na dole). Są wewnątrz Social, a nie w głównych ustawieniach Molfar Vertep.
@@ -12,6 +12,8 @@ Wiersz podsumowania szacuje zapytania do modelu na dzień: jedno na post. Darmow
 ## Messenger
 
 **Characters write first** pozwala postaci zacząć czat, ale tylko gdy jest online według swojego harmonogramu i ma coś do opowiedzenia ze swojego życia (patrz [[life]]); bez tego milczy. **First messages per day** ogranicza te czaty łącznie, a postać zaczyna co najwyżej raz dziennie. **Messages a character remembers** (od 4 do 500, domyślnie 24, co 4) to liczba najnowszych wiadomości czatu, które przy każdej odpowiedzi idą do modelu: więcej oznacza dłuższą pamięć rozmowy, ale większe, wolniejsze i droższe zapytanie, a model z małym oknem kontekstu (wiele darmowych) może przy dużych liczbach zawieść. Starsze wiadomości zostają w czacie, a gdy wypadną z tego okna, przełącznik **Note of older messages** składa je w krótką notatkę, którą postać nadal widzi (patrz [[messenger]]). **Recall older messages** (domyślnie wyłączone) idzie dalej: przy każdej odpowiedzi kilka starszych wiadomości z czatu, najbliższych temu, o czym teraz rozmawiasz, jest cytowanych postaci słowo w słowo, z datami. Dodaje to do około 450 tokenów na odpowiedź. Używa modelu embeddings aplikacji, jeśli taki jest (Messenger przygotowuje wtedy starsze wiadomości w tle, a odpowiedź czeka chwilę dłużej na jeden dodatkowy krok); w przeciwnym razie dopasowuje słowa. **Characters know you** to domyślny sposób, w jaki postać dostaje informacje o aktywnej personie (wszystko, tylko imię albo nic); profil może wybrać własny. **Quiet hours**: "Same" używa cichych godzin forum; "Own" nie ma wspólnych cichych godzin, więc decyduje tylko harmonogram każdej postaci.
+
+**Public facts leave the chat** (włączone): fakty czatu oznaczone jako publiczne (Messenger > Memory and conversation… > Facts…) mogą trafić na forum i do klubów, w których piszesz, żeby postać mogła ich tam użyć. Prywatne fakty i notatka pamięci nigdy nie opuszczają czatu. Wyłączone: nic nie wychodzi.
 
 ## Life
 
