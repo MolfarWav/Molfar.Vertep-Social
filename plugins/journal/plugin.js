@@ -16,12 +16,14 @@
  * Data: journal/<ownerId>.json {posts: [{id, at, title, text, image?, mood?, place?, tags[], visible: "all"|"friends"|"me",
  * from: "you" | "story:<id>"}]}; the owner is a profile id, or "you" for the user. journal/mirror.json {stories: {<storyId>:
  * {id, by, at, text, image?}}, done: [storyIds]} (`done`: stories already filed or removed, so one the user removed is not filed
- * again while the stories file still holds it). `visible` is stored for the later phases (J4); in J1 only the user reads the journal.
+ * again while the stories file still holds it). `visible` (J4): "all" anyone, "friends" only friends, "me" nobody but the user. The one rule is
+ * `canRead`, checked in code wherever a character could read a post (today: who may comment); a friend of the user is a character the user
+ * follows (journal/follows.json) that follows the user's persona back (Life's list, `fol`); two characters are friends when each follows the other.
  *
  * J3 (the same issue): comments and follows. journal/comments/<postId>.json {comments: [{id, by: profile id | "you", at, text}]} (100); the user
  * comments freely, and a character may comment under a post of someone it follows or is close to (Life's list, read only), or answer the
  * user's comment under its own post: switch `community.journalComments` (off by default), a cap per day per character
- * (`journalCommentsPerDay`), at most 4 comments by characters under one post, only posts of the last 3 days with `visible: "all"`, one model
+ * (`journalCommentsPerDay`), at most 4 comments by characters under one post, only posts of the last 3 days that the commenter may read (`canRead`), one model
  * call a comment, key `jc:<commenter>:<owner>:<post>`. A reply owed to the user ignores the chance. journal/follows.json {you: [profile ids]}: the
  * journals the user follows (the "Following" feed). The state file also holds {ccounts, cpending, cfailedAt}.
  *
@@ -31,6 +33,7 @@
  *   POST /journal/comment {owner, post, text}   the user comments
  *   POST /journal/comment/remove {owner, post, id}
  *   POST /journal/follow {id, on}         follow or unfollow a character's journal
+ *   GET  /journal/friends                 {friends: [{id, name, hue, picture}]}: the characters who may read the user's friends-only posts
  *   GET  /journal/feed?owner=<id|you>&before=<at>   {on, posts: [view], more}: newest first, 30 a page, all journals or one
  *   POST /journal/post {title?, text, mood?, tags?, visible?}   the user writes a post
  *   POST /journal/edit {id, title?, text?, mood?, tags?, visible?}   the user edits one of their own posts
@@ -475,8 +478,41 @@ function peopleOf(fsx, id) {
 const closeTo = (r) => !!r && (r.fol || r.lvl >= CLOSE_FROM);
 
 /**
+ * May the character `viewer` read `post` of `owner` (a profile id, or "you")? "all": yes. "me": only the owner. "friends": the owner, and
+ * a friend: of the user, a character the user follows that follows the persona back; between two characters, each follows the other.
+ * `ctx` = {follows, you, peopleFor}. The only rule of who reads what: anything that would show a post to a character asks it.
+ */
+export function canRead(ctx, viewer, owner, post) {
+  if (post.visible === "all") return true;
+  if (viewer === owner) return true;
+  if (post.visible !== "friends") return false;
+  const { follows, you, peopleFor } = ctx;
+  if (owner === YOU) return follows.includes(viewer) && !!you.id && (peopleFor(viewer).get("u:" + you.id) || {}).fol === true;
+  return (peopleFor(viewer).get("c:" + owner) || {}).fol === true && (peopleFor(owner).get("c:" + viewer) || {}).fol === true;
+}
+
+/** The context `canRead` needs, with the people lists read once each. */
+function readCtx(fsx) {
+  const people = new Map();
+  return {
+    follows: readFollows(fsx),
+    you: youOf(fsx),
+    peopleFor: (id) => {
+      if (!people.has(id)) people.set(id, peopleOf(fsx, id));
+      return people.get(id);
+    },
+  };
+}
+
+/** The characters that are friends of the user now. */
+export function friendsOfUser(fsx) {
+  const ctx = readCtx(fsx);
+  return ctx.follows.filter((id) => canRead(ctx, id, YOU, { visible: "friends" })).map((id) => readProfile(fsx, id)).filter(Boolean).map((p) => ({ id: p.id, name: p.name, hue: p.hue, picture: p.picture }));
+}
+
+/**
  * One comment that could be written now: {profile, owner, post, comments, owed, note} or null. Rules only: the switch, Life on, a character
- * that is around, under its daily cap, a post of the last 3 days that anyone may read, not yet commented by it, under four comments by
+ * that is around, under its daily cap, a post of the last 3 days that it may read (`canRead`), not yet commented by it, under four comments by
  * characters, by someone it follows or is close to (the user's posts weigh more). `owed`: the user commented under a post of this very
  * character and nobody answered since: it comes first. `only: "owed"` looks for those alone (they ignore the chance).
  */
@@ -486,17 +522,14 @@ export function pickCommenter(c, rand, only) {
   const awake = profiles.filter((p) => p.lifeOn && ["online", "away"].includes(statusAt(p.schedule, new Date(now), settings.tz)) && (state.ccounts[p.id] || 0) < settings.commentsPerDay && now - (state.cfailedAt[p.id] || 0) >= FAIL_WAIT_MS && !(state.cpending[p.id] && now - state.cpending[p.id] < PENDING_MS));
   if (!awake.length) return null;
   const you = youOf(fsx);
-  const people = new Map();
-  const peopleFor = (id) => {
-    if (!people.has(id)) people.set(id, peopleOf(fsx, id));
-    return people.get(id);
-  };
+  const ctx = readCtx(fsx);
+  const peopleFor = ctx.peopleFor;
   const byId = new Map(profiles.map((p) => [p.id, p]));
   const cands = [];
   for (const owner of [YOU, ...ownerIds(fsx).filter((x) => x !== YOU)]) {
     if (owner !== YOU && !byId.has(owner)) continue;
     for (const post of readPosts(fsx, owner)) {
-      if (post.visible !== "all" || now - post.at > FRESH_MS) continue;
+      if (post.visible === "me" || now - post.at > FRESH_MS) continue;
       const comments = readComments(fsx, post.id);
       const aiCount = comments.filter((m) => m.by !== YOU).length;
       const last = comments[comments.length - 1];
@@ -505,7 +538,7 @@ export function pickCommenter(c, rand, only) {
           if (last && last.by === YOU) cands.push({ profile: p, owner, post, comments, owed: true, w: 6, note: "" });
           continue;
         }
-        if (only === "owed" || aiCount >= AI_PER_POST || comments.some((m) => m.by === p.id)) continue;
+        if (only === "owed" || aiCount >= AI_PER_POST || comments.some((m) => m.by === p.id) || !canRead(ctx, p.id, owner, post)) continue;
         const rel = peopleFor(p.id).get(owner === YOU ? "u:" + you.id : "c:" + owner);
         if (!closeTo(rel)) continue;
         cands.push({ profile: p, owner, post, comments, owed: false, w: (rel.fol ? 1.5 : 0) + (rel.lvl >= CLOSE_FROM ? 1 : 0) + rel.lvl * 0.2 + (owner === YOU ? 2 : 0), note: rel.note });
@@ -558,7 +591,7 @@ export function fileCommentResult(fsx, key, result, now, tz) {
   const profile = readProfile(fsx, by);
   if (!profile) return fail("the profile is gone");
   const post = readPosts(fsx, owner).find((p) => p.id === postId);
-  if (!post || post.visible !== "all") return fail("the post is gone");
+  if (!post || !canRead(readCtx(fsx), by, owner, post)) return fail("the post is gone");
   const r = isObj(result) ? result : {};
   if (r.error || !str(r.text)) return fail(r.error || "the model returned nothing");
   // a stray quotation mark around the answer, or the commenter's own name as a label, is not part of the comment
@@ -744,6 +777,8 @@ export function handleRoute(req, host) {
     writeComments(fsx, postId, list.filter((m) => m.id !== id));
     return ok({ ok: true });
   }
+
+  if (path === "/journal/friends" && req.method === "GET") return ok({ friends: friendsOfUser(fsx) });
 
   if (path === "/journal/follow" && req.method === "POST") {
     const id = String(b.id || "");

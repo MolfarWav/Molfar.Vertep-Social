@@ -6,13 +6,14 @@ import "../profiles/profiles.css";
 import "./journal.css";
 import { useCallback, useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
+import { Seg } from "../profiles/ui";
 import { useLangPref, useT } from "@/i18n/index";
 import { PREVIEW } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
 import { refreshImages } from "@/pictures/worker";
 import { useChrome, useNav } from "@/shell/nav";
 import { useYou } from "../you/store";
-import { addComment, editPost, loadComments, loadFeed, removeComment, removePost, setFollow, writePost, type JournalComment, type JournalPost, type PostInput } from "./api";
+import { addComment, editPost, loadComments, loadFeed, removeComment, removePost, setFollow, writePost, loadFriends, type Friend, type JournalComment, type JournalPost, type PostInput } from "./api";
 
 const param = (k: string): string => {
   if (!PREVIEW) return "";
@@ -29,13 +30,19 @@ const BackIcon = () => (
   </svg>
 );
 
-const BLANK: PostInput = { title: "", text: "", mood: "", tags: "" };
+const BLANK: PostInput = { title: "", text: "", mood: "", tags: "", visible: "all" };
 
 function Form({ initial, submitLabel, onSubmit, onCancel }: { initial: PostInput; submitLabel: string; onSubmit: (v: PostInput) => Promise<void>; onCancel: () => void }) {
   const t = useT();
   const [v, setV] = useState<PostInput>(initial);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [friends, setFriends] = useState<Friend[] | null>(null);
+  // who the friends are matters only once "Friends" is picked
+  useEffect(() => {
+    if (v.visible !== "friends" || friends !== null) return;
+    loadFriends().then(setFriends).catch(() => setFriends([]));
+  }, [v.visible, friends]);
   const set = (patch: Partial<PostInput>) => setV((x) => ({ ...x, ...patch }));
   const go = async () => {
     if (!v.title.trim() && !v.text.trim()) {
@@ -70,6 +77,11 @@ function Form({ initial, submitLabel, onSubmit, onCancel }: { initial: PostInput
           <label className="lb" htmlFor="jr-tags">{t("journal.form.tags")}</label>
           <input id="jr-tags" className="inp" placeholder={t("journal.form.tags.ph")} value={v.tags} onChange={(e) => set({ tags: e.target.value })} />
         </div>
+      </div>
+      <div className="f">
+        <span className="lb" id="jr-vis">{t("journal.form.visible")}</span>
+        <Seg label={t("journal.form.visible")} options={[{ value: "all", label: t("journal.visible.all") }, { value: "friends", label: t("journal.visible.friends") }, { value: "me", label: t("journal.visible.me") }]} value={v.visible} onChange={(x) => set({ visible: x })} />
+        <span className="k">{v.visible === "all" ? t("journal.visible.all.hint") : v.visible === "me" ? t("journal.visible.me.hint") : friends === null ? t("journal.loading") : friends.length === 0 ? t("journal.visible.friends.none") : t("journal.visible.friends.list", { names: friends.map((x) => x.name).join(", ") })}</span>
       </div>
       {err && <div className="jr-err" role="alert">{err}</div>}
       <div className="jr-btns">
@@ -152,7 +164,7 @@ function Post({ p, name, when, whenOf, onChanged, onRemoved, onFollow }: { p: Jo
   if (editing) {
     return (
       <Form
-        initial={{ title: p.title, text: p.text, mood: p.mood ?? "", tags: p.tags.join(", ") }}
+        initial={{ title: p.title, text: p.text, mood: p.mood ?? "", tags: p.tags.join(", "), visible: p.visible }}
         submitLabel={t("journal.form.save")}
         onCancel={() => setEditing(false)}
         onSubmit={async (v) => {
@@ -184,7 +196,7 @@ function Post({ p, name, when, whenOf, onChanged, onRemoved, onFollow }: { p: Jo
         <Avatar name={name} hue={p.hue} size={36} picture={p.picture || undefined} />
         <div className="jr-who-t">
           <b>{name}</b>
-          <span className="k">{when}{p.fromStory ? ` · ${t("journal.fromStory")}` : ""}{p.mood ? ` · ${p.mood}` : ""}</span>
+          <span className="k">{when}{p.fromStory ? ` · ${t("journal.fromStory")}` : ""}{p.mood ? ` · ${p.mood}` : ""}{p.visible !== "all" ? ` · ${t(p.visible === "me" ? "journal.visible.me" : "journal.visible.friends")}` : ""}</span>
         </div>
       </div>
       {p.title && <h2 className="jr-pt">{p.title}</h2>}

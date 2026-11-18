@@ -46,11 +46,14 @@ export interface Feed {
   more: boolean;
 }
 
+export type Visible = "all" | "friends" | "me";
+
 export interface PostInput {
   title: string;
   text: string;
   mood: string;
   tags: string;
+  visible: Visible;
 }
 
 const HOUR = 3600000;
@@ -108,4 +111,17 @@ export async function removeComment(post: string, id: string): Promise<void> {
 export async function setFollow(id: string, on: boolean): Promise<void> {
   if (PREVIEW) return;
   await call("POST", "/journal/follow", { id, on });
+}
+
+export interface Friend {
+  id: string;
+  name: string;
+  hue: number;
+  picture: string;
+}
+
+/** The characters who may read the user's friends-only posts: followed by the user and following the persona back. */
+export async function loadFriends(): Promise<Friend[]> {
+  if (PREVIEW) return [{ id: "lis", name: "Lis", hue: 30, picture: "" }];
+  return (await call<{ friends: Friend[] }>("GET", "/journal/friends")).friends;
 }
