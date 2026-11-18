@@ -17,7 +17,9 @@
  * switch, the daily caps, one model call a message.
  *
  * Data: clubs/<id>.json {id, name, interest, by: "user" | "mod", room?, members: [profile ids], on, created, day, today, answered,
- *   messages: [{id, by: profile id | "me", persona?, at, text}] (300), pending, failedAt}; clubs/state.json {lastAuto, removed: {interest: at}}
+ *   messages: [{id, by: profile id | "me", persona?, at, text}] (300), pending, failedAt}; clubs/state.json {lastAuto, removed: {interest: at},
+ *   rooms: {day, today, answered}}. `rooms` (#453): the day's counts of the rooms that ended today, so walking in again does not start the
+ *   daily caps from zero: every room of one day shares one count of its talk and one of its answers to the user.
  *   (the Moderator's: when it last made a club, and the interests of clubs of its making that the user deleted, not proposed again for 14 days).
  *
  * Routes (relative to /v1/apps/social):
@@ -246,9 +248,41 @@ function readState(fsx, now) {
   const d = readJson(fsx, STATE, null);
   const removed = {};
   if (isObj(d) && isObj(d.removed)) for (const [k, v] of Object.entries(d.removed)) if (Number.isFinite(v) && now - v < FORGET_MS && typeof k === "string" && k) removed[k] = v;
-  return { lastAuto: isObj(d) ? num(d.lastAuto) : 0, removed };
+  const r = isObj(d) && isObj(d.rooms) && typeof d.rooms.day === "string" ? d.rooms : null;
+  return { lastAuto: isObj(d) ? num(d.lastAuto) : 0, removed, rooms: r ? { day: r.day, today: Math.max(0, Math.floor(num(r.today))), answered: Math.max(0, Math.floor(num(r.answered))) } : null };
 }
-const writeState = (fsx, s) => fsx.write(STATE, JSON.stringify({ lastAuto: s.lastAuto, removed: s.removed }));
+const writeState = (fsx, s) => fsx.write(STATE, JSON.stringify({ lastAuto: s.lastAuto, removed: s.removed, ...(s.rooms ? { rooms: s.rooms } : {}) }));
+
+/** (#453) A room ends: its counts of the day are kept for the next room of the same day (they only grow), then the file goes. */
+function endRoom(fsx, c, now, tz) {
+  const day = localDay(now, tz);
+  if (c.day === day) {
+    const st = readState(fsx, now);
+    const had = st.rooms && st.rooms.day === day ? st.rooms : { today: 0, answered: 0 };
+    st.rooms = { day, today: Math.max(had.today, c.today), answered: Math.max(had.answered, c.answered) };
+    writeState(fsx, st);
+  }
+  try {
+    fsx.remove(clubPath(c.id));
+  } catch {
+    // already gone
+  }
+}
+
+/** The counts a new room of today starts from: those of the rooms that ended today. */
+function roomCounts(fsx, now, tz) {
+  const r = readState(fsx, now).rooms;
+  return r && r.day === localDay(now, tz) ? { today: r.today, answered: r.answered } : { today: 0, answered: 0 };
+}
+
+/** (#452) The picture of the place a room is at (its background, else its small picture), read from the city's file; "" when none. */
+function roomPicture(fsx, place) {
+  const town = readJson(fsx, "city/places.json", null);
+  const p = isObj(town) && Array.isArray(town.places) ? town.places.find((x) => isObj(x) && x.id === place) : null;
+  if (!p) return "";
+  const asset = (v) => (typeof v === "string" && ASSET.test(v) ? v : "");
+  return asset(p.background) || asset(p.picture);
+}
 
 // <relation-shared>
 // What the user set between two people: a level of familiarity and ties (the Life plugin writes them, "levels, ties and milestones" there).
@@ -637,7 +671,7 @@ export function modClub(fsx, settings, now, rand) {
   const members = closest(fsx, [...g.ids], rand);
   const club = { id: "cl-" + now.toString(36) + "-" + rid(), name: autoName(g.label), interest: cut(g.label, INTEREST_MAX), by: "mod", members, on: true, created: now, day: localDay(now, settings.tz), today: 0, answered: 0, messages: [], pending: 0, failedAt: 0 };
   writeClub(fsx, club);
-  writeState(fsx, { lastAuto: now, removed: state.removed });
+  writeState(fsx, { lastAuto: now, removed: state.removed, rooms: state.rooms });
   return club;
 }
 
@@ -652,7 +686,7 @@ function view(fsx, c) {
     name: c.name,
     interest: c.interest,
     by: c.by,
-    room: c.room || null,
+    room: c.room ? { ...c.room, ...(roomPicture(fsx, c.room.place) ? { picture: roomPicture(fsx, c.room.place) } : {}) } : null,
     on: c.on,
     count: c.messages.length,
     last: last ? { by: last.by, name: last.by === "me" ? ((personaOf(fsx, last.persona) || {}).name || "") : lastWho ? lastWho.name : "", at: last.at, text: cut(last.text.replace(/\s+/g, " "), 120) } : null,
@@ -758,10 +792,11 @@ function roomRoute(fsx, b, settings, now) {
   // one room at a time: walking into another place ends the old one
   for (const id of clubIds(fsx)) {
     const old = readClub(fsx, id, now, settings.tz);
-    if (old && old.room) fsx.remove(clubPath(id));
+    if (old && old.room) endRoom(fsx, old, now, settings.tz);
   }
   const members = byAcquaintance(fsx, here).slice(0, MAX_MEMBERS);
-  const club = { id: "cl-" + now.toString(36) + "-" + rid(), name, interest: "", by: "user", room: { place, until: bandOf(now, settings.tz).end }, members, on: true, created: now, day: localDay(now, settings.tz), today: 0, answered: 0, messages: [], pending: 0, failedAt: 0 };
+  const counts = roomCounts(fsx, now, settings.tz);
+  const club = { id: "cl-" + now.toString(36) + "-" + rid(), name, interest: "", by: "user", room: { place, until: bandOf(now, settings.tz).end }, members, on: true, created: now, day: localDay(now, settings.tz), today: counts.today, answered: counts.answered, messages: [], pending: 0, failedAt: 0 };
   writeClub(fsx, club);
   return ok({ ok: true, club: view(fsx, club) });
 }
@@ -770,13 +805,7 @@ function roomRoute(fsx, b, settings, now) {
 function sweepRooms(fsx, now, tz) {
   for (const id of clubIds(fsx)) {
     const c = readClub(fsx, id, now, tz);
-    if (c && c.room && now >= c.room.until) {
-      try {
-        fsx.remove(clubPath(id));
-      } catch {
-        // already gone
-      }
-    }
+    if (c && c.room && now >= c.room.until) endRoom(fsx, c, now, tz);
   }
 }
 
@@ -836,6 +865,10 @@ export function handleRoute(req, host) {
       const st = readState(fsx, now);
       st.removed[norm(club.interest)] = now;
       writeState(fsx, st);
+    }
+    if (club.room) {
+      endRoom(fsx, club, now, settings.tz);
+      return ok({ ok: true });
     }
     try {
       fsx.remove(clubPath(id));

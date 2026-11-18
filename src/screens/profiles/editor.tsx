@@ -88,6 +88,7 @@ export function formOf(p: MockProfile): ProfileForm {
     voice: p.voice,
     forum: p.forum,
     schedule: p.schedule,
+    workplace: p.workplace ?? "",
   };
 }
 

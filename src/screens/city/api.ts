@@ -22,7 +22,10 @@ export interface CityPlace {
   kind: string;
   icon: string;
   text: string;
+  /** A small picture from before #452: shown on the tile only while the place has no background. */
   picture?: string;
+  /** (#452) The wide picture of the place: behind the opened place, the room and a character's chat; the tile shows it cut square. */
+  background?: string;
   district: string;
   tags: string[];
   /** Null for a grid the form cannot show. */
@@ -39,6 +42,8 @@ export interface CityDistrict {
   name: string;
   kind: string;
   by: "stock" | "you";
+  /** (#452) The district's picture: behind its tiles. */
+  background?: string;
   places: CityPlace[];
 }
 
@@ -62,6 +67,7 @@ export interface CityView {
   homesDistrict: string;
   homesName: string;
   homesBy: "stock" | "you";
+  homesBackground?: string;
   empty: boolean;
 }
 
@@ -156,6 +162,7 @@ export interface PlaceInput {
   tags: string;
   seats: number;
   picture: string;
+  background: string;
   hours?: Hours;
 }
 
@@ -173,7 +180,7 @@ export async function removePlace(id: string): Promise<void> {
   await call("POST", "/city/place/remove", { id }).catch(fail);
 }
 
-export async function saveDistrict(v: { id?: string; name: string; kind: string }): Promise<void> {
+export async function saveDistrict(v: { id?: string; name: string; kind: string; background?: string }): Promise<void> {
   if (PREVIEW) return;
   await call("POST", "/city/district", v).catch(fail);
 }

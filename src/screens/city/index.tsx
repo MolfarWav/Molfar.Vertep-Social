@@ -4,7 +4,7 @@
 // Preview parameters (`?screen=city&...`): district=<id> (open a district), place=<id> (open a place), state=empty.
 import "../profiles/profiles.css";
 import "./city.css";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/i18n/index";
 import { PREVIEW } from "@/lib/api";
@@ -14,6 +14,16 @@ import { useYou } from "../you/store";
 import { loadClubs } from "@/screens/messenger/clubs-api";
 import { loadCity, loadListen, removeDistrict, removePlace, resetTown, saveDistrict, savePlace, walkIn, type CityDoor, type CityPlace, type CityView, type ListenLine } from "./api";
 import { DistrictForm, PlaceForm, draftOf, type PlaceDraft } from "./editors";
+
+/** (#452) The district's picture as a wide band above its tiles, with its name on it; nothing when it has none. */
+function DistrictBand({ url, name }: { url: string; name: string }) {
+  if (!url) return null;
+  return (
+    <div className="ct-band" style={{ "--bd": `url("${url}")` } as CSSProperties} role="img" aria-label={name}>
+      <span className="ct-band-name">{name}</span>
+    </div>
+  );
+}
 
 const param = (k: string): string => {
   if (!PREVIEW) return "";
@@ -38,7 +48,7 @@ function Tile({ p, name, text, on, onToggle }: { p: CityPlace; name: string; tex
   return (
     <button type="button" className={`ct-tile${on ? " on" : ""}${p.open ? "" : " is-closed"}`} aria-expanded={on} onClick={onToggle}>
       <span className="ct-top">
-        {p.picture ? <img className="ct-thumb" src={p.picture} alt="" /> : <span className="ct-ico" aria-hidden="true">{p.icon}</span>}
+        {p.background || p.picture ? <img className="ct-thumb" src={p.background || p.picture} alt="" /> : <span className="ct-ico" aria-hidden="true">{p.icon}</span>}
         <span className="ct-nm">{name}</span>
         <span className="chip">{t(p.open ? "city.open" : "city.closed")}</span>
       </span>
@@ -83,8 +93,10 @@ function Detail({ p, name, clubsOn, onOpenPerson, onEdit, onRemoved }: { p: City
     else openClub(r.id);
   };
   const canEnter = p.open && p.people.length >= 2;
+  // (#452) the place's picture behind the opened card: clear at the top, under a scrim where the text is
+  const bd = p.background || "";
   return (
-    <div className="ct-detail">
+    <div className={`ct-detail${bd ? " has-bd" : ""}`} style={bd ? ({ "--bd": `url("${bd}")` } as CSSProperties) : undefined}>
       {p.people.length > 0 && (
         <div className="ct-who" role="group" aria-label={t("city.here")}>
           <h3>{t("city.here")}</h3>
@@ -253,10 +265,18 @@ export function City() {
               {editor?.kind === "district" && (
                 <DistrictForm
                   key={editor.id || "new"}
-                  initial={editor.id && currentDistrict ? { id: currentDistrict.id, name: districtName(currentDistrict), kind: currentDistrict.kind } : { name: "", kind: "custom" }}
-                  canRemove={!!currentDistrict && currentDistrict.places.length === 0}
+                  initial={
+                    editor.id && isHomes && view
+                      ? { id: view.homesDistrict, name: tabs.find((x) => x.id === view.homesDistrict)?.name ?? view.homesName, kind: "homes", background: view.homesBackground ?? "" }
+                      : editor.id && currentDistrict
+                        ? { id: currentDistrict.id, name: districtName(currentDistrict), kind: currentDistrict.kind, background: currentDistrict.background ?? "" }
+                        : { name: "", kind: "custom", background: "" }
+                  }
+                  homes={!!editor.id && isHomes}
+                  phone={phone}
+                  canRemove={!isHomes && !!currentDistrict && currentDistrict.places.length === 0}
                   onSave={async (v) => { await saveDistrict(v); await afterSave(undefined, v.id); }}
-                  onRemove={editor.id ? async () => { await removeDistrict(editor.id); setDistrict(""); await afterSave(); } : undefined}
+                  onRemove={editor.id && !isHomes ? async () => { await removeDistrict(editor.id); setDistrict(""); await afterSave(); } : undefined}
                   onCancel={() => setEditor(null)}
                 />
               )}
@@ -281,6 +301,7 @@ export function City() {
                   {currentDistrict && <button type="button" className="btn" onClick={() => setEditor({ kind: "district", id: currentDistrict.id })}>{t("city.district.edit")}</button>}
                 </div>
               )}
+              {!editor && <DistrictBand url={isHomes ? (view.homesBackground ?? "") : (currentDistrict?.background ?? "")} name={tabs.find((x) => x.id === current)?.name ?? ""} />}
               {!isHomes && (
                 <div className="ct-tiles">
                   {(currentDistrict?.places ?? []).map((p) => (
@@ -295,6 +316,11 @@ export function City() {
               {isHomes && (
                 <>
                   <p className="k">{t("city.homes.intro")}</p>
+                  {!editor && (
+                    <div className="ct-btns">
+                      <button type="button" className="btn" onClick={() => setEditor({ kind: "district", id: view.homesDistrict })}>{t("city.district.edit")}</button>
+                    </div>
+                  )}
                   <button type="button" className="ct-you" onClick={() => go("you")}>
                     <Avatar name={me?.name ?? t("city.you")} hue={me?.hue ?? 210} size={36} picture={me?.picture || undefined} />
                     <span className="t">

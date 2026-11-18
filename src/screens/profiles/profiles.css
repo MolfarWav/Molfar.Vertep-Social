@@ -404,6 +404,9 @@
 .s-profiles .pic-btn-big:hover .pic-badge { background: var(--accent); color: #fff; }
 .s-profiles .pic-body { overflow: auto; }
 .s-profiles .pic-view { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.s-profiles .pic-wide { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: var(--raised); border: 1px solid var(--line); display: grid; place-items: center; text-align: center; padding: 0; }
+.s-profiles .pic-wide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.s-profiles .pic-wide .k { padding: 12px; }
 .s-profiles .pic-busy { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
 .s-profiles .form-err { color: var(--bad); font-size: 13px; }
 .s-profiles .pic-body .sel { width: 100%; justify-content: space-between; }

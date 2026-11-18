@@ -144,7 +144,7 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
           if (!alive.current) return;
           setChats((c) => {
             const prev = c[id] ?? EMPTY_CHAT;
-            const base = ans.chat ? chatView(ans.chat, id) : prev;
+            const base = ans.chat ? chatView(ans.chat, id, prev?.backdrop) : prev;
             const failed: EngineFailure | null = ans.ok
               ? base.failed
               : { error: ans.error ?? "", ...(ans.code === "no-model" ? { code: "no-model" as const } : {}) };
@@ -186,7 +186,7 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
     async (id: string, path: string, body: object): Promise<EngineAnswer> => {
       try {
         const ans = await call<EngineAnswer>("POST", path, { id, ...body });
-        if (ans.chat && alive.current) setChats((c) => ({ ...c, [id]: chatView(ans.chat as EngineChat, id) }));
+        if (ans.chat && alive.current) setChats((c) => ({ ...c, [id]: chatView(ans.chat as EngineChat, id, c[id]?.backdrop) }));
         void loadContacts();
         return ans;
       } catch (e) {

@@ -8,12 +8,36 @@ import { useCallback, useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { Seg } from "../profiles/ui";
 import { useLangPref, useT } from "@/i18n/index";
+import { usePlaceName } from "@/screens/city/place-name";
 import { PREVIEW } from "@/lib/api";
 import { useIsPhone } from "@/lib/use-phone";
 import { refreshImages } from "@/pictures/worker";
 import { useChrome, useNav } from "@/shell/nav";
 import { useYou } from "../you/store";
-import { addComment, editPost, loadComments, loadFeed, removeComment, removePost, setFollow, writePost, loadFriends, type Friend, type JournalComment, type JournalPost, type PostInput } from "./api";
+import { addComment, editPost, loadComments, loadFeed, removeComment, removePost, setFollow, writePost, loadFriends, markSeen, setVisible, type Friend, type JournalComment, type JournalPost, type PostInput } from "./api";
+import { loadCity, type CityView } from "@/screens/city/api";
+import { refreshBadges } from "@/lib/badges";
+
+/** (#453) The town's places for a post's "Where": [{id, name}] by district, names in the page's language for the stock town. */
+function usePlaces(): { id: string; name: string; group: string; raw: string }[] | null {
+  const t = useT();
+  const [city, setCity] = useState<CityView | null>(null);
+  useEffect(() => {
+    let alive = true;
+    loadCity().then((v) => alive && setCity(v)).catch(() => alive && setCity({ districts: [] } as unknown as CityView));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  if (!city) return null;
+  const tr = (key: string, fallback: string) => {
+    const v = t(key as never);
+    return v === key ? fallback : v;
+  };
+  return city.districts.flatMap((d) =>
+    d.places.map((p) => ({ id: p.id, raw: p.name, name: p.by === "stock" ? tr(`city.place.${p.id}`, p.name) : p.name, group: d.by === "stock" ? tr(`city.district.${d.id}`, d.name) : d.name })),
+  );
+}
 
 const param = (k: string): string => {
   if (!PREVIEW) return "";
@@ -32,9 +56,14 @@ const BackIcon = () => (
 
 const BLANK: PostInput = { title: "", text: "", mood: "", tags: "", visible: "all" };
 
-function Form({ initial, submitLabel, onSubmit, onCancel }: { initial: PostInput; submitLabel: string; onSubmit: (v: PostInput) => Promise<void>; onCancel: () => void }) {
+function Form({ initial, submitLabel, onSubmit, onCancel, placeName }: { initial: PostInput; submitLabel: string; onSubmit: (v: PostInput) => Promise<void>; onCancel: () => void; /** The place the post has now (a stored name), when editing. */ placeName?: string }) {
   const t = useT();
   const [v, setV] = useState<PostInput>(initial);
+  const places = usePlaces();
+  const shownPlace = usePlaceName();
+  // an edited post holds a place name: find its id; a place that is gone stays as it is unless the user picks another
+  const kept = placeName && places && !places.some((x) => x.raw === placeName) ? placeName : "";
+  const placeValue = v.place !== undefined ? v.place : placeName && places ? (places.find((x) => x.raw === placeName)?.id ?? "__kept") : "";
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [friends, setFriends] = useState<Friend[] | null>(null);
@@ -77,6 +106,19 @@ function Form({ initial, submitLabel, onSubmit, onCancel }: { initial: PostInput
           <label className="lb" htmlFor="jr-tags">{t("journal.form.tags")}</label>
           <input id="jr-tags" className="inp" placeholder={t("journal.form.tags.ph")} value={v.tags} onChange={(e) => set({ tags: e.target.value })} />
         </div>
+      </div>
+      <div className="f">
+        <label className="lb" htmlFor="jr-place">{t("journal.form.place")}</label>
+        <select id="jr-place" className="inp" value={placeValue} disabled={places === null} onChange={(e) => set({ place: e.target.value === "__kept" ? undefined : e.target.value })}>
+          <option value="">{t("journal.form.place.none")}</option>
+          {kept && <option value="__kept">{shownPlace(kept)}</option>}
+          {[...new Set((places ?? []).map((x) => x.group))].map((g) => (
+            <optgroup key={g} label={g}>
+              {(places ?? []).filter((x) => x.group === g).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+            </optgroup>
+          ))}
+        </select>
+        <span className="k">{t("journal.form.place.hint")}</span>
       </div>
       <div className="f">
         <span className="lb" id="jr-vis">{t("journal.form.visible")}</span>
@@ -157,6 +199,7 @@ function Comments({ p, name, when, onCount }: { p: JournalPost; name: string; wh
 
 function Post({ p, name, when, whenOf, onChanged, onRemoved, onFollow }: { p: JournalPost; name: string; when: string; whenOf: (ms: number) => string; onChanged: (p: JournalPost) => void; onRemoved: (id: string) => void; onFollow: (owner: string, on: boolean) => void }) {
   const t = useT();
+  const placeName = usePlaceName();
   const [editing, setEditing] = useState(false);
   const [asking, setAsking] = useState(false);
   const [problem, setProblem] = useState("");
@@ -165,6 +208,7 @@ function Post({ p, name, when, whenOf, onChanged, onRemoved, onFollow }: { p: Jo
     return (
       <Form
         initial={{ title: p.title, text: p.text, mood: p.mood ?? "", tags: p.tags.join(", "), visible: p.visible }}
+        placeName={p.place}
         submitLabel={t("journal.form.save")}
         onCancel={() => setEditing(false)}
         onSubmit={async (v) => {
@@ -178,6 +222,16 @@ function Post({ p, name, when, whenOf, onChanged, onRemoved, onFollow }: { p: Jo
     try {
       await setFollow(p.owner, !p.following);
       onFollow(p.owner, !p.following);
+    } catch (e) {
+      setProblem(e instanceof Error ? e.message : String(e));
+    }
+  };
+  // (#453) a character's post: the user may hide it from every other character, and show it again
+  const hide = async () => {
+    const visible = p.visible === "me" ? "all" : "me";
+    try {
+      await setVisible(p.owner, p.id, visible);
+      onChanged({ ...p, visible });
     } catch (e) {
       setProblem(e instanceof Error ? e.message : String(e));
     }
@@ -196,7 +250,7 @@ function Post({ p, name, when, whenOf, onChanged, onRemoved, onFollow }: { p: Jo
         <Avatar name={name} hue={p.hue} size={36} picture={p.picture || undefined} />
         <div className="jr-who-t">
           <b>{name}</b>
-          <span className="k">{when}{p.fromStory ? ` · ${t("journal.fromStory")}` : ""}{p.mood ? ` · ${p.mood}` : ""}{p.place ? ` · ${t("journal.at", { place: p.place })}` : ""}{p.visible !== "all" ? ` · ${t(p.visible === "me" ? "journal.visible.me" : "journal.visible.friends")}` : ""}</span>
+          <span className="k">{when}{p.fromStory ? ` · ${t("journal.fromStory")}` : ""}{p.mood ? ` · ${p.mood}` : ""}{p.place ? ` · ${t("journal.at", { place: placeName(p.place) })}` : ""}{p.visible !== "all" ? ` · ${t(p.visible === "me" ? "journal.visible.me" : "journal.visible.friends")}` : ""}</span>
         </div>
       </div>
       {p.title && <h2 className="jr-pt">{p.title}</h2>}
@@ -218,11 +272,15 @@ function Post({ p, name, when, whenOf, onChanged, onRemoved, onFollow }: { p: Jo
         </div>
       ) : (
         <div className="jr-acts">
-          <button type="button" className="btn" aria-expanded={talk} onClick={() => setTalk(!talk)}>{t("journal.comments.n", { n: p.comments ?? 0 })}</button>
+          <button type="button" className="btn" aria-expanded={talk} onClick={() => setTalk(!talk)}>
+            {t("journal.comments.n", { n: p.comments ?? 0 })}
+            {(p.fresh ?? 0) > 0 && <span className="jr-new">{t("journal.comments.new", { n: p.fresh ?? 0 })}</span>}
+          </button>
           {p.mine && <button type="button" className="btn" onClick={() => setEditing(true)}>{t("journal.edit")}</button>}
           {!p.mine && (
             <button type="button" className="btn" aria-pressed={!!p.following} onClick={() => void follow()}>{t(p.following ? "journal.following" : "journal.follow")}</button>
           )}
+          {!p.mine && <button type="button" className="btn" onClick={() => void hide()}>{t(p.visible === "me" ? "journal.unhide" : "journal.hide")}</button>}
           <button type="button" className="btn" onClick={() => setAsking(true)}>{t("journal.remove")}</button>
         </div>
       )}
@@ -252,6 +310,8 @@ export function Journal() {
       setPosts(param("state") === "empty" ? [] : f.posts);
       setMore(f.more);
       setState("ready");
+      // (#453) the new comments are shown on their posts now: they count as seen, and the tab's badge goes
+      if (f.posts.some((p) => (p.fresh ?? 0) > 0)) void markSeen().then(refreshBadges).catch(() => undefined);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setState("error");

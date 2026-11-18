@@ -30,12 +30,14 @@ export function useBadgePoll(): void {
     if (PREVIEW) return;
     let alive = true;
     let prev: Unread | null = null;
+    let prevJournal: number | null = null;
     let lastReported = -1;
     const poll = async () => {
-      const [forum, contacts, settings] = await Promise.all([
+      const [forum, contacts, settings, journal] = await Promise.all([
         call<{ unread: number; latest?: { title: string; who: string; at: number } | null }>("GET", "/forum/unread").catch(() => null),
         call<{ contacts: EngineContact[] }>("GET", "/messenger/contacts").catch(() => null),
         call<{ settings: { notify?: { tab?: boolean; system?: boolean } } }>("GET", "/settings").catch(() => null),
+        call<{ unread: number }>("GET", "/journal/unread").catch(() => null),
       ]);
       if (!alive || (!forum && !contacts)) return; // keep the last numbers; the next poll asks again
       const now: Unread = {
@@ -43,7 +45,8 @@ export function useBadgePoll(): void {
         forum: forum ? forum.unread : (prev?.forum ?? 0),
         forumLatest: forum ? (forum.latest ?? null) : (prev?.forumLatest ?? null),
       };
-      set.current({ forum: now.forum, messenger: now.messenger.length });
+      set.current({ forum: now.forum, messenger: now.messenger.length, journal: journal ? journal.unread : (prevJournal ?? 0) });
+      if (journal) prevJournal = journal.unread;
       // the app's own switches (Settings > Notifications): the counter on the shell's tab, and the messages
       const sw = settings?.settings.notify;
       const count = sw?.tab === false ? 0 : now.forum + now.messenger.length;

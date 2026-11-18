@@ -66,7 +66,8 @@ function Chrome() {
   const me = you?.personas.find((p) => p.id === you.active);
   // a phone has no "You" chip and no Journal or City tab: More (Settings) opens Your profile, the Journal and the City, so it stays lit while they are open
   const lit: Tab = tab === "you" || tab === "journal" || tab === "city" ? "settings" : tab;
-  const badgeOf = (x: Tab) => (x === "messenger" ? badges.messenger : x === "forum" ? badges.forum : 0);
+  // (#453) the journal's new comments: on its tab on desktop, on More on a phone (the Journal row there shows it too)
+  const badgeOf = (x: Tab) => (x === "messenger" ? badges.messenger : x === "forum" ? badges.forum : x === "journal" && !phone ? badges.journal : x === "settings" && phone ? badges.journal : 0);
 
   return (
     <div className="soc">

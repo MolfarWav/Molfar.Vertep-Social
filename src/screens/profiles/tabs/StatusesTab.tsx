@@ -1,12 +1,56 @@
 // "Розклад статусів": a week of messenger statuses. Pick a brush, click cells.
 // Each cell is one time band on one day; the cell carries the colour, the word
 // and (through the flower's mark on the brush) the shape, so colour is not alone.
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { loadCity, type CityView } from "@/screens/city/api";
 import { useT } from "@/i18n/index";
 import { Flower } from "@/components/Flower";
 import { STATUS_ORDER, type Status } from "@/mock/status";
 import { SectionPage } from "../sections";
+import { Field } from "../ui";
 import type { TabProps } from "./types";
+
+/** (#453) "Works at": a City place the character is at in its Busy and Not available hours on weekdays, 09:00 to 18:00. */
+function Workplace({ value, name, onChange }: { value: string; name: string; onChange: (v: string) => void }) {
+  const t = useT();
+  const [city, setCity] = useState<CityView | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    loadCity().then((v) => alive && setCity(v)).catch(() => alive && setFailed(true));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  // the stock town is translated by id, like the City screen does
+  const tr = (key: string, fallback: string) => {
+    const v = t(key as never);
+    return v === key ? fallback : v;
+  };
+  const districts = city?.districts.filter((d) => d.places.length > 0) ?? [];
+  const known = districts.some((d) => d.places.some((p) => p.id === value));
+  return (
+    <>
+      <Field label={t("profiles.work.place")}>
+        {(id) => (
+          <select id={id} className="inp" value={value} disabled={!city} onChange={(e) => onChange(e.target.value)}>
+            <option value="">{t("profiles.work.none")}</option>
+            {districts.map((d) => (
+              <optgroup key={d.id} label={d.by === "stock" ? tr(`city.district.${d.id}`, d.name) : d.name}>
+                {d.places.map((p) => (
+                  <option key={p.id} value={p.id}>{p.by === "stock" ? tr(`city.place.${p.id}`, p.name) : p.name}</option>
+                ))}
+              </optgroup>
+            ))}
+            {value && city && !known && <option value={value}>{t("profiles.work.gone")}</option>}
+          </select>
+        )}
+      </Field>
+      <p className="k">{t("profiles.work.hint", { name })}</p>
+      {failed && <p className="k" role="alert">{t("profiles.work.failed")}</p>}
+    </>
+  );
+}
 
 const BANDS = ["00–03", "03–06", "06–09", "09–12", "12–15", "15–18", "18–21", "21–24"];
 const DAY_KEYS = ["profiles.day.mon", "profiles.day.tue", "profiles.day.wed", "profiles.day.thu", "profiles.day.fri", "profiles.day.sat", "profiles.day.sun"];
@@ -80,6 +124,13 @@ export function StatusesTab({ form, set, name }: TabProps) {
               </div>
             </>
           ),
+        },
+        {
+          id: "work",
+          title: t("profiles.sec.work"),
+          icon: "brief",
+          tone: "amber",
+          children: <Workplace value={form.workplace ?? ""} name={name} onChange={(v) => set({ workplace: v })} />,
         },
         {
           id: "shift",

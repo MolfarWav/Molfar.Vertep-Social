@@ -103,6 +103,8 @@ export interface PhoneChatProps {
   contacts: Contact[];
   items: LogItem[];
   dayLine: string;
+  /** (#452) The picture of the place the character is at ("" = none). */
+  backdrop?: string;
   draft: string;
   failed: boolean;
   failError?: string;
@@ -174,6 +176,7 @@ export function PhoneChat(p: PhoneChatProps) {
         contacts={p.contacts}
         items={p.items}
         dayLine={p.dayLine}
+        backdrop={p.backdrop}
         typing={c.typing || p.busy}
         failed={p.failed}
         failError={p.failError}

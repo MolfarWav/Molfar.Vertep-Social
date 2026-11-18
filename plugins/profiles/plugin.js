@@ -330,6 +330,8 @@ export function cleanProfile(raw, id, now, prev) {
     },
     /** Life (issue #311): does the character keep a diary, and does it follow the outside world. */
     life: { on: lf.on !== false, world: lf.world !== false },
+    // (#453) the City place it works at in its busy hours (a place id; the city checks that it exists)
+    ...(typeof raw.workplace === "string" && ID.test(raw.workplace) ? { workplace: raw.workplace } : {}),
     schedule: [],
     createdAt: prev && Number.isFinite(prev.createdAt) ? prev.createdAt : now,
     updatedAt: now,
@@ -439,7 +441,7 @@ export const DEFAULT_SETTINGS = {
    * flirty (hints and teasing); never anything explicit. `chronicle` is the Moderator's daily digest (one model request a day, only when there is something to tell). `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
    * and a sharper answer from the characters' own ties (#367); neither costs a model call.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, storiesToJournal: true, journalPosts: false, journalPerDay: 1, journalComments: false, journalCommentsPerDay: 2, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, storiesToJournal: true, journalPosts: false, journalPictures: false, journalPerDay: 1, journalComments: false, journalCommentsPerDay: 2, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -511,6 +513,7 @@ export function mergeSettings(base, patch) {
       storiesPerDay: clampInt(cm.storiesPerDay, 0, 10, Number.isInteger(bcm.storiesPerDay) ? bcm.storiesPerDay : 1),
       storiesToJournal: bool(cm.storiesToJournal, bool(bcm.storiesToJournal, true)),
       journalPosts: bool(cm.journalPosts, bool(bcm.journalPosts, false)),
+      journalPictures: bool(cm.journalPictures, bool(bcm.journalPictures, false)),
       journalPerDay: clampInt(cm.journalPerDay, 0, 5, Number.isInteger(bcm.journalPerDay) ? bcm.journalPerDay : 1),
       journalComments: bool(cm.journalComments, bool(bcm.journalComments, false)),
       journalCommentsPerDay: clampInt(cm.journalCommentsPerDay, 0, 10, Number.isInteger(bcm.journalCommentsPerDay) ? bcm.journalCommentsPerDay : 2),

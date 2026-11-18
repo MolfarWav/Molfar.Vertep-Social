@@ -24,6 +24,8 @@ export interface JournalPost {
   comments?: number;
   /** Does the user follow this character's journal (only in the feed). */
   following?: boolean;
+  /** (#453) Comments by characters the user has not seen yet (only in the feed; absent = none). */
+  fresh?: number;
 }
 
 export interface JournalComment {
@@ -54,12 +56,14 @@ export interface PostInput {
   mood: string;
   tags: string;
   visible: Visible;
+  /** (#453) A place of the town (its id); "" = none. Absent: the post keeps the place it has. */
+  place?: string;
 }
 
 const HOUR = 3600000;
 const MOCK: JournalPost[] = [
-  { id: "m1", owner: "mavka", by: "Mavka", hue: 150, picture: "", at: Date.now() - 2 * HOUR, title: "", text: "Mended the net by the reeds. The lake was calm and nobody came by.", tags: [], visible: "all", fromStory: true, mine: false, comments: 2, following: true },
-  { id: "m2", owner: "you", by: "", hue: 200, picture: "", at: Date.now() - 20 * HOUR, title: "A quiet Sunday", text: "Rain all morning, so I stayed in and sorted the old letters.", mood: "calm", tags: ["home", "letters"], visible: "all", fromStory: false, mine: true },
+  { id: "m1", owner: "mavka", by: "Mavka", hue: 150, picture: "", at: Date.now() - 2 * HOUR, title: "", text: "Mended the net by the reeds. The lake was calm and nobody came by.", place: "The riverside", tags: [], visible: "all", fromStory: true, mine: false, comments: 2, following: true },
+  { id: "m2", owner: "you", by: "", hue: 200, picture: "", at: Date.now() - 20 * HOUR, title: "A quiet Sunday", text: "Rain all morning, so I stayed in and sorted the old letters.", mood: "calm", tags: ["home", "letters"], visible: "all", fromStory: false, mine: true, comments: 1, fresh: 1 },
 ];
 
 /** `who`: "" everyone, "you" the user's own, "follow" the journals the user follows. */
@@ -118,6 +122,24 @@ export interface Friend {
   name: string;
   hue: number;
   picture: string;
+}
+
+/** (#453) Who sees a post: the user's own, or a character's ("me" hides it from every other character). */
+export async function setVisible(owner: string, id: string, visible: Visible): Promise<void> {
+  if (PREVIEW) return;
+  await call("POST", "/journal/visible", { owner, id, visible });
+}
+
+/** (#453) How many comments by characters the user has not seen (the Journal tab's badge). */
+export async function loadUnread(): Promise<number> {
+  if (PREVIEW) return 0;
+  return (await call<{ unread: number }>("GET", "/journal/unread")).unread;
+}
+
+/** (#453) The user opened the journal: what is there counts as seen. */
+export async function markSeen(): Promise<void> {
+  if (PREVIEW) return;
+  await call("POST", "/journal/seen", {});
 }
 
 /** The characters who may read the user's friends-only posts: followed by the user and following the persona back. */

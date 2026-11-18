@@ -189,7 +189,7 @@ function changedKeys(a: ProfileForm, b: ProfileForm): string[] {
   if (!same(a.habits, b.habits) || a.habitsAuto !== b.habitsAuto) out.push("profiles.tab.habits");
   if (!same(a.life, b.life)) out.push("profiles.tab.life");
   if (!same(a.voice, b.voice) || (a.knows ?? "") !== (b.knows ?? "") || !same(a.stickerPacks ?? [], b.stickerPacks ?? [])) out.push("profiles.tab.voice");
-  if (!same(a.schedule, b.schedule)) out.push("profiles.tab.statuses");
+  if (!same(a.schedule, b.schedule) || (a.workplace ?? "") !== (b.workplace ?? "")) out.push("profiles.tab.statuses");
   if (!same(a.forum, b.forum)) out.push("profiles.tab.forum");
   if (a.model !== b.model || a.imageModel !== b.imageModel) out.push("profiles.tab.model");
   return out;

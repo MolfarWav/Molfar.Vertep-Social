@@ -53,6 +53,8 @@
 .s-messenger .chat { background: var(--base); }
 .s-messenger .log { flex: 1; min-height: 0; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow: auto; }
 .s-messenger .log.p { padding: 16px; }
+/* (#452) the picture of the place behind the talk (a room, or a character who is somewhere): a scrim in the page colour keeps the text readable in every theme; the picture stays put while the log scrolls */
+.s-messenger .log.has-bd { background: linear-gradient(color-mix(in srgb, var(--base) 80%, transparent), color-mix(in srgb, var(--base) 80%, transparent)), var(--bd) center / cover no-repeat, var(--base); background-attachment: scroll, scroll, scroll; }
 .s-messenger .who { font-weight: 700; font-size: 13px; }
 .s-messenger .time { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
 .s-messenger .sys { align-self: center; max-width: 100%; text-align: center; color: var(--muted); font-size: 12px; padding: 2px 12px; border: 1px dashed var(--line); border-radius: 999px; }

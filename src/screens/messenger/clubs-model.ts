@@ -21,7 +21,7 @@ export interface Club {
   interest: string;
   by: "user" | "mod";
   /** A room the City's "Walk in" made: tied to a place, ends with the 3-hour band or when the user leaves. */
-  room: { place: string; until: number } | null;
+  room: { place: string; until: number; /** (#452) the place's picture, shown behind the room's log */ picture?: string } | null;
   on: boolean;
   count: number;
   last: { by: string; name: string; at: number; text: string } | null;

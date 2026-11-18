@@ -127,6 +127,8 @@ export const PICTURE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gi
 export const PICTURE_MAX_BYTES = 10 * 1024 * 1024;
 /** Longest side of a stored picture: a profile picture is shown small, so more pixels only cost space. */
 export const PICTURE_MAX_SIDE = 768;
+/** (#452) Longest side of a wide picture (a place's or a district's background): it fills a chat or a card. */
+export const WIDE_SIDE = 1280;
 
 /** The size to scale to: the same shape, longest side at most `max`; never bigger than the original. */
 export function fitSize(w: number, h: number, max = PICTURE_MAX_SIDE): { w: number; h: number } {

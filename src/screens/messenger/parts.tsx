@@ -1,6 +1,6 @@
 // Pieces shared by the desktop and the phone layouts: contact rows and groups,
 // the chat log, the composer and the status words.
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { Avatar, themColor } from "@/components/Avatar";
 import { Envelope, Flower } from "@/components/Flower";
 import { useEmoji } from "@/emoji/use-emoji";
@@ -102,7 +102,10 @@ export function ChatLog({
   phone,
   onRetry,
   onSettings,
+  backdrop,
 }: {
+  /** (#452) The picture of the place the character is at (Settings > Messenger > "Tell the character where it is"); "" = none. */
+  backdrop?: string;
   c: Contact;
   contacts: Contact[];
   items: LogItem[];
@@ -128,7 +131,7 @@ export function ChatLog({
 
   const name = c.name;
   return (
-    <div className={`log${phone ? " p" : ""}`} ref={ref} role="log">
+    <div className={`log${phone ? " p" : ""}${backdrop ? " has-bd" : ""}`} style={backdrop ? ({ "--bd": `url("${backdrop}")` } as CSSProperties) : undefined} ref={ref} role="log">
       {n > 0 ? <div className="sys">{dayLine}</div> : <div className="sys">{t("messenger.emptyLog")}</div>}
       {items.map((m, i) => {
         if (m.kind === "sys") return <div key={i} className="sys">{t(m.key, { name })}</div>;

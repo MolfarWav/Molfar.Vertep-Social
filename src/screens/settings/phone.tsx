@@ -41,7 +41,7 @@ function Disclosure({ id, open, onToggle, title, hint, children }: { id: Exclude
 /** Phone layout: one scrolling page with its own header. The shell's bottom tabs stay (tab "More"). */
 export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set: Patch; choices: ModelChoice[]; error: SettingsError | null }) {
   const t = useT();
-  const { go } = useNav();
+  const { go, badges } = useNav();
   const you = useYou();
   const { pref, lang } = useLangPref();
   const me = you?.personas.find((p) => p.id === you.active);
@@ -90,6 +90,7 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
               <b>{t("journal.title")}</b>
               <span className="k">{t("settings.journal.hint")}</span>
             </span>
+            {badges.journal > 0 && <span className="pbadge row-badge" aria-label={t("journal.comments.new", { n: badges.journal })}>{badges.journal}</span>}
             <span className="go" aria-hidden="true">›</span>
           </button>
           <button type="button" className="ln row" onClick={() => go("city")}>

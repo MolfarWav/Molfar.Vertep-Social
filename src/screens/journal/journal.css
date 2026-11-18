@@ -52,3 +52,5 @@
 .s-journal .jr-cform { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .s-journal .jr-carea { min-height: 64px; width: 100%; }
 .s-journal .jr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* (#453) new comments by characters on this post: a small filled mark inside the Comments button */
+.s-journal .jr-new { margin-left: 8px; padding: 1px 8px; border-radius: 9px; background: var(--accent); color: var(--onacc); font-size: 12px; font-weight: 700; }

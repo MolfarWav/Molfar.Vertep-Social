@@ -74,3 +74,13 @@
 .s-city .ct-ask { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .s-city .ct-foot { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 .s-city .ct-foot .link, .s-city .ct-detail .link, .s-city .ct-who .link { align-self: flex-start; min-height: 40px; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-decoration: underline; cursor: pointer; }
+
+/* (#452) pictures: a place's behind its opened card, a district's as a band above its tiles. The scrim is the page colour, so text
+ * reads the same in every theme. */
+.s-city .ct-pic.is-wide { width: 160px; height: 90px; }
+.s-city .ct-pic.is-none { display: grid; place-items: center; box-sizing: border-box; padding: 8px; text-align: center; background: var(--raised); }
+.s-city .ct-detail.has-bd { padding: 132px 14px 14px; border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(to bottom, transparent 0, transparent 96px, color-mix(in srgb, var(--base) 88%, transparent) 150px), var(--bd) center top / cover no-repeat, var(--base); }
+.s-city.is-phone .ct-detail.has-bd { padding-top: 112px; background: linear-gradient(to bottom, transparent 0, transparent 76px, color-mix(in srgb, var(--base) 88%, transparent) 130px), var(--bd) center top / cover no-repeat, var(--base); }
+.s-city .ct-band { position: relative; aspect-ratio: 16 / 5; min-height: 96px; border-radius: 12px; border: 1px solid var(--line); background: var(--bd) center / cover no-repeat, var(--raised); overflow: hidden; }
+.s-city.is-phone .ct-band { aspect-ratio: 16 / 7; }
+.s-city .ct-band-name { position: absolute; left: 12px; bottom: 10px; padding: 4px 10px; border-radius: 8px; background: color-mix(in srgb, var(--base) 80%, transparent); color: var(--ink); font-weight: 700; font-size: 14px; }

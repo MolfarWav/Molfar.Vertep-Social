@@ -19,7 +19,12 @@ export interface Tie {
   type: TieType;
   /** Only for "other": the user's own words. */
   label?: string;
+  /** (#453) "Live together": the City gives both one flat. Only on HOME_TIES. */
+  home?: boolean;
 }
+
+/** The ties that may carry "Live together" (the life and city plugins have the same list). */
+export const HOME_TIES: readonly TieType[] = ["spouse", "parent", "child", "sibling", "relative", "partner", "dating"];
 
 /** A milestone in the list: a level reached, a feeling that crossed a band, a tie set, a follow started by the rule (#368). */
 export interface Mark {
