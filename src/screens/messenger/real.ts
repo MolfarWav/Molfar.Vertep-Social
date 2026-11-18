@@ -54,6 +54,9 @@ export interface EngineChat {
   /** The memory note and the "new conversation" dividers (absent in an answer of an older plugin). */
   summary?: EngineNote | null;
   breaks?: number[];
+  /** (#446) The counts of the facts ledger (the list itself is GET /messenger/facts); absent in an answer of an older plugin. */
+  factCount?: number;
+  factPinned?: number;
   /** (#452) Where the character is now, with the place's picture (only with Settings > Messenger > "Tell the character where it is"). */
   place?: { id: string; name: string; picture: string } | null;
 }
@@ -87,9 +90,12 @@ export interface ChatView {
   count: number;
   /** (#452) The picture behind the log: the place the character is at ("" = none). */
   backdrop: string;
+  /** (#446) How many facts the character remembers of this chat, and how many are pinned. */
+  factCount: number;
+  factPinned: number;
 }
 
-export const EMPTY_CHAT: ChatView = { items: [], firstAt: null, pending: false, failed: null, busy: false, loaded: false, note: "", noteEdited: false, count: 0, backdrop: "" };
+export const EMPTY_CHAT: ChatView = { items: [], firstAt: null, pending: false, failed: null, busy: false, loaded: false, note: "", noteEdited: false, count: 0, backdrop: "", factCount: 0, factPinned: 0 };
 
 /** Local time as HH:MM. */
 export function clock(ms: number): string {
@@ -176,5 +182,7 @@ export function chatView(chat: EngineChat, contactId: string, backdrop = ""): Ch
     noteEdited: chat.summary?.edited === true,
     count: chat.messages.length,
     backdrop: chat.place === undefined ? backdrop : (chat.place?.picture ?? ""),
+    factCount: chat.factCount ?? 0,
+    factPinned: chat.factPinned ?? 0,
   };
 }

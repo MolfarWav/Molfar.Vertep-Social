@@ -104,7 +104,7 @@ export async function descriptionToTags(prompt: string, from?: PictureFrom): Pro
 
 /** Draws one picture. Resolves to its URL; throws an ApiError whose text says what went wrong.
  *  A model that wants tags (a local ComfyUI or A1111 checkpoint) gets the description turned into tags first (#344). */
-export async function generatePicture(prompt: string, model: string, hue: number, from?: PictureFrom): Promise<string> {
+export async function generatePicture(prompt: string, model: string, hue: number, from?: PictureFrom, aspect?: "wide"): Promise<string> {
   if (PREVIEW) {
     await delay(700);
     const mode = new URLSearchParams(location.search).get("picture");
@@ -116,7 +116,8 @@ export async function generatePicture(prompt: string, model: string, hue: number
   const res = await fetch("/v1/images", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ prompt, ...(model ? { model } : {}) }),
+    // (#455) the shape is a wish: an engine without the field, or a model that cannot take it, still draws a picture
+    body: JSON.stringify({ prompt, ...(model ? { model } : {}), ...(aspect ? { aspect } : {}) }),
   });
   const json = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
   if (!res.ok || !json?.url) throw new ApiError(json?.error ?? `the engine answered ${res.status}`, res.status);

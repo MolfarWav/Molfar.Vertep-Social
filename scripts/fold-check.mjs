@@ -63,7 +63,8 @@ async function call(req) {
   return { error: "failed" };
 }
 
-const readChat = () => JSON.parse(files.get("chats/lesya.json"));
+// with a persona the plugin keeps the pair's chat in chats/<id>.<persona>.json (it moves the plain one there on first use)
+const readChat = () => JSON.parse(files.get(files.has("chats/lesya.u1.json") ? "chats/lesya.u1.json" : "chats/lesya.json"));
 let t = 1_700_000_000_000;
 const realNow = Date.now;
 Date.now = () => t; // the plugin reads the clock: every step is a minute
@@ -151,11 +152,16 @@ Date.now = realNow;
 
 const final = readChat();
 const note = final.summary ? final.summary.text : "";
+// since the facts ledger (#446) a planted fact may live in the note or in the ledger
+const facts = (final.facts || []).map((f) => f.text);
+const memory = note + "\n" + facts.join("\n");
 const checks = { "Барсик": /Барсик/i, "Київ": /Ки[їє]в|Києв/i, "Львів(old)": /Льв/i, "Сергій": /Серг/i, "звукорежисер": /звукорежис/i, "бас": /бас/i, "добірка": /добірк|плейлист/i, "фестиваль": /фестивал/i, "Харків": /Харк/i, "14 грудня": /14 грудня|14\.12|грудн/i, "субота/четвер": /субот|четвер/i, "одужав": /одужа|здоров/i };
-const hit = Object.fromEntries(Object.entries(checks).map(([k, re]) => [k, re.test(note)]));
+const hit = Object.fromEntries(Object.entries(checks).map(([k, re]) => [k, re.test(memory)]));
+const hitNote = Object.fromEntries(Object.entries(checks).map(([k, re]) => [k, re.test(note)]));
 const probes = replies.slice(-6);
-const out = { model: MODEL, window: WINDOW, turns: USER.length, folds, finalNoteLen: note.length, noteMax: Math.max(0, ...log.map((l) => l.noteLen)), failedFolds: log.filter((l) => l.failed).length, hit, finalNote: note, probes, log: log.map((l) => ({ fold: l.fold, len: l.noteLen, note: l.note })), replies };
+const out = { model: MODEL, window: WINDOW, turns: USER.length, folds, finalNoteLen: note.length, noteMax: Math.max(0, ...log.map((l) => l.noteLen)), failedFolds: log.filter((l) => l.failed).length, factCount: facts.length, factChars: facts.join("\n").length, hit, hitNote, finalNote: note, facts, probes, log: log.map((l) => ({ fold: l.fold, len: l.noteLen, note: l.note })), replies };
 fs.writeFileSync(path.join(OUT, "fold-" + MODEL.replace(/[^a-z0-9.]+/gi, "_") + ".json"), JSON.stringify(out, null, 1));
-console.log(JSON.stringify({ model: MODEL, folds, finalNoteLen: out.finalNoteLen, noteMax: out.noteMax, failedFolds: out.failedFolds, hit }, null, 1));
+console.log(JSON.stringify({ model: MODEL, folds, finalNoteLen: out.finalNoteLen, noteMax: out.noteMax, failedFolds: out.failedFolds, factCount: out.factCount, factChars: out.factChars, hit, hitNote }, null, 1));
 console.log("\nFINAL NOTE:\n" + note);
+console.log("\nFACTS (" + facts.length + "):\n" + facts.map((f) => "- " + f).join("\n"));
 console.log("\nPROBES:\n" + probes.map((p) => p.q + "\n  -> " + p.a).join("\n"));

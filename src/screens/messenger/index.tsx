@@ -35,6 +35,7 @@ import { dayLabel } from "./real";
 //   state=clubsoff                    the global switch (Settings > Community > Clubs) is off: the group and an open club say so
 //   state=limited                     the open club says the day's answers to you are used up
 //   dialog=newclub | editclub         opens the "New club" dialog, or "Edit club" for the open club (use with view=club)
+//   dialog=memory | facts             opens the Memory dialog (#446), or its Facts page, with a made-up ledger
 // Combine with the theme and language: ?screen=messenger&view=chat&theme=dark&lang=uk
 // The state flags are preview only: they show on whichever chat is open, and "Try again" just hides the line.
 
@@ -75,7 +76,7 @@ export function Messenger() {
   const [logs, setLogs] = useState<Record<string, LogItem[]>>(LOGS);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState(pv.state === "failed");
-  const [memOpen, setMemOpen] = useState(false);
+  const [memOpen, setMemOpen] = useState(() => PREVIEW && (pv.dialog === "memory" || pv.dialog === "facts"));
   // clubs (#368): the open club, and the "New club" / "Edit club" dialog
   const [clubId, setClubId] = useState(() => (PREVIEW && (pv.view === "club" || pv.dialog === "editclub") ? "cl-1" : ""));
   const [clubDlg, setClubDlg] = useState<"new" | "edit" | null>(() => (PREVIEW ? (pv.dialog === "newclub" ? "new" : pv.dialog === "editclub" ? "edit" : null) : null));
@@ -175,19 +176,26 @@ export function Messenger() {
     if (real) live.retry(curId);
     else setFailed(false);
   };
-  useEffect(() => setMemOpen(false), [curId]);
-  const memory = real && cur ? (
+  useEffect(() => {
+    if (!PREVIEW) setMemOpen(false);
+  }, [curId]);
+  const memory = cur ? (
+    // in the preview the dialog opens from ?dialog=memory or ?dialog=facts, with fake answers
     memOpen && (
       <MemoryDialog
+        id={cur.id}
         name={cur.name}
+        factCount={view.factCount}
+        factPinned={view.factPinned}
         note={view.note}
         edited={view.noteEdited}
         count={view.count}
         phone={phone}
+        startAt={PREVIEW && pv.dialog === "facts" ? "facts" : undefined}
         onClose={() => setMemOpen(false)}
-        onSave={(text) => live.saveNote(cur.id, text)}
-        onNew={(keep) => live.startNew(cur.id, keep)}
-        onClear={() => live.clearChat(cur.id)}
+        onSave={(text) => (PREVIEW ? Promise.resolve("") : live.saveNote(cur.id, text))}
+        onNew={(keep) => (PREVIEW ? Promise.resolve({ error: "", warn: false }) : live.startNew(cur.id, keep))}
+        onClear={() => (PREVIEW ? Promise.resolve("") : live.clearChat(cur.id))}
       />
     )
   ) : null;
