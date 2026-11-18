@@ -13,8 +13,11 @@ export interface MemoryDialogProps {
   /** The contact's id: the facts page loads its own list (#446). */
   id: string;
   name: string;
-  /** Preview only: open on the facts page. */
+  /** Open on the facts page (from "Remembered" under a reply). */
   startAt?: "facts";
+  /** (#446) The messages the user pinned, newest first in the log order, and how to unpin one ("" when it worked). */
+  pinned: { id: string; text: string; time: string }[];
+  onUnpin: (messageId: string) => Promise<string>;
   /** How many facts the character remembers, and how many of them are pinned. */
   factCount: number;
   factPinned: number;
@@ -90,6 +93,22 @@ export function MemoryDialog(p: MemoryDialogProps) {
                 <div className="k">{facts.n === 0 ? t("messenger.facts.none", { name: p.name }) : t("messenger.facts.count", { n: facts.n, pinned: facts.pinned })}</div>
               </div>
               <button type="button" className="btn" disabled={!!busy} onClick={() => setStep("facts")}>{t("messenger.facts.open")}</button>
+            </div>
+            <div className="mem-pins">
+              <div className="lb">{t("messenger.pinned.title")}</div>
+              {p.pinned.length === 0 ? (
+                <div className="k">{t("messenger.pinned.none")}</div>
+              ) : (
+                <ul className="pins">
+                  {p.pinned.map((x) => (
+                    <li key={x.id}>
+                      <span className="pin-text"><span className="k">{x.time}</span> {x.text.length > 120 ? x.text.slice(0, 120) + "…" : x.text}</span>
+                      <button type="button" className="btn" disabled={!!busy} onClick={() => void p.onUnpin(x.id)}>{t("messenger.pinned.unpin")}</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="k">{t("messenger.pinned.hint", { name: p.name })}</div>
             </div>
             <div className="f f-wide">
               <label htmlFor="mem-note" className="lb">{t("messenger.memory.note")}</label>

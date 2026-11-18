@@ -11,7 +11,7 @@ import { imageShown, usePicture, type Attached } from "@/pictures/use-picture";
 import { useNav } from "@/shell/nav";
 import { useYou } from "@/screens/you/store";
 import { useLiveMessenger } from "./live";
-import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
+import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY, type ChatMemory } from "./parts";
 import { PhoneChat, PhoneList } from "./phone";
 import { MemoryDialog } from "./memory";
 import { ChatterEntry, StoriesBar } from "./community";
@@ -77,6 +77,9 @@ export function Messenger() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState(pv.state === "failed");
   const [memOpen, setMemOpen] = useState(() => PREVIEW && (pv.dialog === "memory" || pv.dialog === "facts"));
+  // (#446) the Memory dialog opens on its facts page from "Remembered" under a reply; a pin that did not work says why above the log
+  const [memStart, setMemStart] = useState<"facts" | undefined>(undefined);
+  const [pinNotice, setPinNotice] = useState("");
   // clubs (#368): the open club, and the "New club" / "Edit club" dialog
   const [clubId, setClubId] = useState(() => (PREVIEW && (pv.view === "club" || pv.dialog === "editclub") ? "cl-1" : ""));
   const [clubDlg, setClubDlg] = useState<"new" | "edit" | null>(() => (PREVIEW ? (pv.dialog === "newclub" ? "new" : pv.dialog === "editclub" ? "edit" : null) : null));
@@ -179,6 +182,26 @@ export function Messenger() {
   useEffect(() => {
     if (!PREVIEW) setMemOpen(false);
   }, [curId]);
+  const chatMemory: ChatMemory | undefined = cur
+    ? {
+        chatId: cur.id,
+        name: cur.name,
+        onPin: (mid, pinned) => {
+          setPinNotice("");
+          if (PREVIEW) return;
+          void live.pin(cur.id, mid, pinned).then((err) => setPinNotice(err === "limit" ? t("messenger.pin.limit") : err ? t("messenger.pin.failed") : ""));
+        },
+        onFacts: () => {
+          setMemStart("facts");
+          setMemOpen(true);
+        },
+        notice: pinNotice,
+        onNotice: () => setPinNotice(""),
+      }
+    : undefined;
+  const pinnedList = items
+    .filter((x): x is Extract<LogItem, { kind: "msg" }> => x.kind === "msg" && !!x.pinned && !!x.mid)
+    .map((x) => ({ id: x.mid!, text: x.text, time: x.time }));
   const memory = cur ? (
     // in the preview the dialog opens from ?dialog=memory or ?dialog=facts, with fake answers
     memOpen && (
@@ -191,8 +214,13 @@ export function Messenger() {
         edited={view.noteEdited}
         count={view.count}
         phone={phone}
-        startAt={PREVIEW && pv.dialog === "facts" ? "facts" : undefined}
-        onClose={() => setMemOpen(false)}
+        startAt={PREVIEW && pv.dialog === "facts" ? "facts" : memStart}
+        pinned={pinnedList}
+        onUnpin={(mid) => (PREVIEW ? Promise.resolve("") : live.pin(cur.id, mid, false))}
+        onClose={() => {
+          setMemOpen(false);
+          setMemStart(undefined);
+        }}
         onSave={(text) => (PREVIEW ? Promise.resolve("") : live.saveNote(cur.id, text))}
         onNew={(keep) => (PREVIEW ? Promise.resolve({ error: "", warn: false }) : live.startNew(cur.id, keep))}
         onClear={() => (PREVIEW ? Promise.resolve("") : live.clearChat(cur.id))}
@@ -243,6 +271,7 @@ export function Messenger() {
             onSettings={toSettings}
             onProfile={toProfileOfCur}
             onMemory={real ? () => setMemOpen(true) : undefined}
+            memory={chatMemory}
           />
         ) : (
           <PhoneList
@@ -358,6 +387,7 @@ export function Messenger() {
                 queued={queued}
                 real={real}
                 phone={false}
+                memory={chatMemory}
                 onRetry={retry}
                 onSettings={toSettings}
               />

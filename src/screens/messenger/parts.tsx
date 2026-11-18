@@ -9,6 +9,7 @@ import { RichText } from "@/stickers/Render";
 import type { Attached, usePicture } from "@/pictures/use-picture";
 import { currentLang, useT } from "@/i18n/index";
 import { CONTACTS, type Contact, type LogItem } from "@/mock/messenger";
+import { Remembered } from "./remembered";
 import { STATUS_ORDER, type Status } from "@/mock/status";
 import { breakLabel } from "./real";
 
@@ -88,6 +89,18 @@ export function EmptyBlock({ title, text, children }: { title: string; text?: st
  * `real` is the engine's chat: `contacts` are the real contacts, `queued` shows the neutral line for a reply
  * that waits, and the gendered offline line is not used.
  */
+/** (#446) What the log needs to pin a message and to show what a reply remembered (real mode and the preview). */
+export interface ChatMemory {
+  chatId: string;
+  name: string;
+  onPin: (mid: string, pinned: boolean) => void;
+  /** Opens the Memory dialog on its facts page. */
+  onFacts: () => void;
+  /** A line above the log when pinning did not work, and how to dismiss it. */
+  notice?: string;
+  onNotice: () => void;
+}
+
 export function ChatLog({
   c,
   contacts,
@@ -103,7 +116,9 @@ export function ChatLog({
   onRetry,
   onSettings,
   backdrop,
+  memory,
 }: {
+  memory?: ChatMemory;
   /** (#452) The picture of the place the character is at (Settings > Messenger > "Tell the character where it is"); "" = none. */
   backdrop?: string;
   c: Contact;
@@ -145,12 +160,33 @@ export function ChatLog({
             <div className="who" style={{ color }}>
               {who}
               <span className="time">{m.time}</span>
+              {memory && m.mid && m.text && (
+                <button
+                  type="button"
+                  className={`pin${m.pinned ? " on" : ""}`}
+                  aria-label={m.pinned ? t("messenger.pin.unpin") : t("messenger.pin.pin", { name })}
+                  title={m.pinned ? t("messenger.pin.unpin") : t("messenger.pin.pin", { name })}
+                  onClick={() => memory.onPin(m.mid!, !m.pinned)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 4h6l-1 6 3 3v2h-4v5l-1 1-1-1v-5H7v-2l3-3-1-6z" fill={m.pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                  </svg>
+                  {m.pinned && <span>{t("messenger.pin.pinned")}</span>}
+                </button>
+              )}
             </div>
             {m.text && <div><RichText text={m.text} /></div>}
             {m.image && <MsgPicture image={m.image} />}
+            {memory && !mine && m.used && <Remembered used={m.used} chatId={memory.chatId} name={name} items={items} onFacts={memory.onFacts} />}
           </div>
         );
       })}
+      {memory?.notice && (
+        <div className="note" role="alert">
+          <span>{memory.notice}</span>
+          <button type="button" className="btn" onClick={memory.onNotice}>{t("messenger.memory.close")}</button>
+        </div>
+      )}
       {failed && (
         <div className="note">
           <span>{t("messenger.failed")}</span>

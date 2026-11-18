@@ -35,6 +35,8 @@ export interface LiveMessenger {
   /** A new conversation; `keepNote` folds what is not in the note yet into it first (a model call). `warn` = the note could not be updated. */
   startNew: (id: string, keepNote: boolean) => Promise<{ error: string; warn: boolean }>;
   clearChat: (id: string) => Promise<string>;
+  /** (#446) Pins or unpins a message: "" when it worked, "limit" at 20 pinned, else "failed". */
+  pin: (id: string, messageId: string, pinned: boolean) => Promise<string>;
 }
 
 /**
@@ -204,6 +206,13 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
     [chatCall],
   );
   const clearChat = useCallback(async (id: string) => ((await chatCall(id, "/messenger/clear", {})).ok ? "" : "failed"), [chatCall]);
+  const pin = useCallback(
+    async (id: string, messageId: string, pinned: boolean) => {
+      const ans = await chatCall(id, "/messenger/pin", { messageId, pinned });
+      return ans.ok ? "" : /too many/.test(ans.error ?? "") ? "limit" : "failed";
+    },
+    [chatCall],
+  );
 
   const lang = currentLang();
   const contacts = raw ? raw.map((e) => contactFromEngine(e, lang, t)) : [];
@@ -217,5 +226,6 @@ export function useLiveMessenger(sel: string, open: boolean): LiveMessenger {
     saveNote,
     startNew,
     clearChat,
+    pin,
   };
 }

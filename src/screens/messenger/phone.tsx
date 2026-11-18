@@ -8,7 +8,7 @@ import { useT } from "@/i18n/index";
 import type { Contact, LogItem } from "@/mock/messenger";
 import type { Status } from "@/mock/status";
 import type { Attached, usePicture } from "@/pictures/use-picture";
-import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY } from "./parts";
+import { ChatLog, Composer, ContactGroups, EmptyBlock, STATUS_KEY, type ChatMemory } from "./parts";
 
 export interface PhoneListProps {
   empty: boolean;
@@ -126,6 +126,8 @@ export interface PhoneChatProps {
   onProfile?: () => void;
   /** Real mode: opens the memory and conversation dialog. */
   onMemory?: () => void;
+  /** (#446) Pinning and "Remembered" in the log. */
+  memory?: ChatMemory;
 }
 
 /** The chat on phone. Mounting it hides the top bar and the tabs; unmounting (back) shows them again. */
@@ -184,6 +186,7 @@ export function PhoneChat(p: PhoneChatProps) {
         queued={p.queued}
         real={p.real}
         phone
+        memory={p.memory}
         onRetry={p.onRetry}
         onSettings={p.onSettings}
       />

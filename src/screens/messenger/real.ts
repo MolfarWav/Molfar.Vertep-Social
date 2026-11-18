@@ -29,6 +29,9 @@ export interface EngineMessage {
   text: string;
   /** A picture the user attached or a character sent (drawn, or waiting to be). */
   image?: MsgImage;
+  /** (#446) The time the user pinned it, and what a reply remembered (ids: facts, recalled and pinned messages, the note). */
+  pinned?: number;
+  used?: { f?: string[]; r?: string[]; p?: string[]; n?: 1 };
 }
 
 /** The memory note of a chat as the engine shows it (plugins/messenger: `chat.summary`). */
@@ -157,7 +160,7 @@ export function logItems(messages: EngineMessage[], contactId: string, breaks: n
   let next = 0;
   for (const m of messages) {
     while (next < dividers.length && dividers[next] <= m.at) out.push({ kind: "break", at: dividers[next++] });
-    out.push({ kind: "msg", who: m.who === "me" ? "me" : contactId, time: clock(m.at), text: m.text, ...(m.image ? { image: m.image } : {}) });
+    out.push({ kind: "msg", who: m.who === "me" ? "me" : contactId, time: clock(m.at), text: m.text, mid: m.id, ...(m.image ? { image: m.image } : {}), ...(m.pinned ? { pinned: true } : {}), ...(m.used ? { used: m.used } : {}) });
   }
   while (next < dividers.length) out.push({ kind: "break", at: dividers[next++] });
   return out;
