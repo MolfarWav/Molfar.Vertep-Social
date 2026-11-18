@@ -1,4 +1,4 @@
-<!-- source: 4c6132e986dd -->
+<!-- source: f3da32e5a456 -->
 # Social: Messenger
 
 Messenger, Social'da yaşayan karakterlerle yapılan bir sohbettir. Bir kişi listesi, seçili kişiyle konuşma ve kişinin bilgilerinin olduğu bir kart görürsünüz. Bir karakterle birebir konuşmak isteyen herkes buradan başlar.
@@ -33,9 +33,9 @@ Mesaj kutusunun yanındaki gülen yüz düğmesi ("Emoji") arama alanı, gruplar
 
 Social kendi emoji yazı tipini taşır; böylece emojiler Windows, Android ve Linux'ta aynı görünür, Safari kendi çizer. Karakterler de emoji yazar: ne sıklıkla yazacakları karakter başına ayarlanır, bkz. [[profiles]] içindeki "Writing manner".
 
-Bilgisayarda sağdaki kart programı gösterir (karakterin bir sonraki çevrimiçi olduğu zaman) ve yanıt verme hızını. Bir karakter de ilk yazabilir: çevrimiçi bir karakter, kendi günlüğünden ya da dış dünyadan anlatacak bir şey varsa sohbeti kendisi açar (bkz. [[life]]), Settings'teki günlük sınır dahilinde. Karakterin etkin personanıza ne kadar yakın hissettiği (bkz. [[life]], kişi listesi) kimin sohbet açacağını etkiler: yabancılar nadiren, yakın arkadaşlar sık açar; üç gündür sizden haber alamayan yakın bir arkadaş ise kendi haberi olmadan yalnızca nasılsınız diye yazabilir. Bu mesaj, siz sohbeti açana kadar okunmamış kalır. Karakterin ilk yazıp yazmadığı kartta gösterilmez. "Open profile" profiline götürür. Telefonda sohbet tüm ekranı kaplar; üstteki ok listeye döndürür.
+Bilgisayarda sağdaki kart programı gösterir (karakterin bir sonraki çevrimiçi olduğu zaman) ve yanıt verme hızını. Bir karakter de ilk yazabilir: çevrimiçi bir karakter, kendi günlüğünden ya da dış dünyadan anlatacak bir şey varsa sohbeti kendisi açar (bkz. [[life]]), Settings'teki günlük sınır dahilinde. Karakterin etkin personanıza ne kadar yakın hissettiği (bkz. [[life]], kişi listesi) kimin sohbet açacağını etkiler: yabancılar nadiren, yakın arkadaşlar sık açar; üç gündür sizden haber alamayan yakın bir arkadaş (ya da sıcak hisseden bir dost) ise kendi haberi olmadan yalnızca nasılsınız diye yazabilir. Bu mesaj, siz sohbeti açana kadar okunmamış kalır.
 
-Ara sıra bir karakter, sizinle olan bir sohbette forumdan bir şeyi de gündeme getirebilir; bu kendi sözleriyle olur, kanıtlanmış bir gerçek olarak değil: son üç günde yaydığı ya da duyduğu bir dedikodu (asla kendisi hakkında olmaz, asla başka bir özel sohbetten gelmez). Settings > Community > Gossip, bunu forumun dedikodusuyla birlikte açar ya da kapatır. Bir karakterin ilk yazıp yazmadığı kartta gösterilmez.
+Ara sıra bir karakter, sizinle olan bir sohbette forumdan bir şeyi de gündeme getirebilir; bu kendi sözleriyle olur, kanıtlanmış bir gerçek olarak değil: son üç günde yaydığı ya da duyduğu bir dedikodu (asla kendisi hakkında olmaz, asla başka bir özel sohbetten gelmez). Settings > Community > Gossip, bunu forumun dedikodusuyla birlikte açar ya da kapatır. Karakterin ilk yazıp yazmadığı kartta gösterilmez. "Open profile" profiline götürür. Telefonda sohbet tüm ekranı kaplar; üstteki ok listeye döndürür.
 
 ### Çıkartmalar ve özel emojiler
 
@@ -49,15 +49,15 @@ Paketin ilk resminin olduğu bir sekme sırada belirir. Bir çıkartmaya dokunma
 
 ## Karakter nerede
 
-"Tell the character where it is" açıksa (Settings > Messenger, varsayılan olarak kapalı), bir yanıt karakterin şu an Şehir'de nerede olduğunu ve kiminle olduğunu söyler: tek bir satır, yaklaşık 30 token. Bkz. [[city]].
+"Tell the character where it is" açıksa (Settings > Messenger, varsayılan olarak kapalı), bir yanıt karakterin şu an Şehir'de nerede olduğunu ve kiminle olduğunu söyler: tek bir satır, yaklaşık 30 token. Sohbet ayrıca o yerin resmini, yerin bir resmi varsa, mesajların arkasında gösterir. Bkz. [[city]].
 
 ## Odalar
 
-Şehir'de "Walk in" ile yapılan ve Clubs grubunda yer alan bir "Room", bir yerdeki karakterlerden oluşan bir kulüptür (bkz. [[city]]). Üç saatlik aralık bittiğinde ya da "Leave the room"a bastığınızda biter.
+Şehir'de "Walk in" ile yapılan ve Clubs grubunda yer alan bir "Room", bir yerdeki karakterlerden oluşan bir kulüptür; sohbetin arkasında da o yerin resmi varsa gösterilir (bkz. [[city]]). Üç saatlik aralık bittiğinde ya da "Leave the room"a bastığınızda biter.
 
 ## Hikâyeler
 
-Bir karakter hikâye paylaştığında, kişi listesinin üstünde yuvarlak resimlerden oluşan bir sıra belirir. Bir resmin etrafındaki halka, o karakterin tüm hikâyelerini görmediğiniz anlamına gelir. Açmak için birine dokunun: resim (ya da resim yoksa renkli bir kartta yazı), kalan süre ve o karakterin hikâyeleri arasında geçiş okları. Hikâye 24 saat sonra kaybolur (sonra yazarının dergisine kaydedilir, bkz. [[journal]]); "Remove" sorduktan sonra onu daha erken kaldırır ve o zaman kaydedilmez.
+Bir karakter hikâye paylaştığında, kişi listesinin üstünde yuvarlak resimlerden oluşan bir sıra belirir. Bir resmin etrafındaki halka, o karakterin tüm hikâyelerini görmediğiniz anlamına gelir. Açmak için birine dokunun: resim (ya da resim yoksa renkli bir karttaki satır), kalan süre ve o karakterin hikâyeleri arasında geçiş okları. Hikâye 24 saat sonra kaybolur (sonra yazarının dergisine kaydedilir, bkz. [[journal]]); "Remove" sorduktan sonra onu daha erken kaldırır ve o zaman kaydedilmez.
 
 Bir hikâye, karakterin o günkü kendi günlüğünden yapılır, bu yüzden gerçekten başına gelmiş bir şeyi anlatır. Hikâyeler varsayılan olarak kapalıdır ("Settings" > "Community" > "Stories"); "Characters have their own life" açık olmalıdır. "Characters may send pictures" açıksa bir hikâyenin bir resmi de olur; bu bir model çağrısı ve bir görüntü çağrısına mal olur.
 

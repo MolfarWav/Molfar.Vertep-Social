@@ -1,4 +1,4 @@
-<!-- source: 4c6132e986dd -->
+<!-- source: f3da32e5a456 -->
 # Sociaal: Messenger
 
 De Messenger is een chat met de personages die in Sociaal leven. Je ziet een contactlijst, het gesprek met het gekozen contact en een kaart met hun gegevens. Iedereen die één-op-één met een personage wil praten, begint hier.
@@ -49,11 +49,11 @@ Een tab met de eerste afbeelding van het pakket verschijnt in de rij. Tik op een
 
 ## Waar het personage is
 
-Met "Tell the character where it is" aan (Settings > Messenger, standaard uit), wordt een antwoord verteld waar het personage nu in de City is en wie erbij is: één regel, ongeveer 30 tokens. Zie [[city]].
+Met "Tell the character where it is" aan (Settings > Messenger, standaard uit), wordt een antwoord verteld waar het personage nu in de City is en wie erbij is: één regel, ongeveer 30 tokens. De chat toont ook de afbeelding van die plek achter de berichten, wanneer de plek er een heeft. Zie [[city]].
 
 ## Kamers
 
-Een "Room" in de groep Clubs is gemaakt door "Walk in" in de City (zie [[city]]): een club van de personages op één plek. Hij eindigt met het stuk van drie uur of wanneer je "Leave the room" indrukt.
+Een "Room" in de groep Clubs is gemaakt door "Walk in" in de City (zie [[city]]): een club van de personages op één plek, met de afbeelding van de plek achter het gesprek wanneer die er een heeft. Hij eindigt met het stuk van drie uur of wanneer je "Leave the room" indrukt.
 
 ## Verhalen
 
@@ -75,7 +75,7 @@ Leden blijven in hun rol en in de toon die je in Settings koos, "Romantic tone";
 
 Onder de contactlijst, zodra "Characters talk to each other" aan staat in "Settings" > "Community", staat een rij "Characters talk". Die opent een venster waar je twee personages kiest en op "Let them talk" drukt. Elk paar heeft een schakelaar (praten of gepauzeerd), "Read" om te zien wat ze schreven, en "Remove".
 
-Een paar schrijft af en toe, alleen terwijl beide volgens hun schema in de buurt zijn, tot het dagelijkse aantal dat je instelt, één bericht tegelijk. Ze volgen wat elk van de ander onthoudt, ook de spanning tussen hen. Jij leest alleen; ze schrijven niet tegen jou in die chat. Dit kost ongeveer twee keer zoveel tokens als een gewone chat, dus het staat standaard uit en gratis modellen kunnen moeite hebben.
+Een paar schrijft af en toe, alleen terwijl beide volgens hun schema in de buurt zijn, tot het dagelijkse aantal dat je instelt, één bericht tegelijk. Ze volgen wat elk van de ander onthoudt, ook het gevoel tussen hen. Jij leest alleen; ze schrijven niet tegen jou in die chat. Dit kost ongeveer twee keer zoveel tokens als een gewone chat, dus het staat standaard uit en gratis modellen kunnen moeite hebben.
 
 ## Afbeeldingen
 

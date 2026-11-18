@@ -1,6 +1,6 @@
 {
   "name": "Social city",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "City: a town the characters live in. A home for every profile and, by rules, where each character is in each 3-hour band (city/ in the app's data folder). You can walk in (a room is a club) and make places of your own. No model call of its own.",
   "origin": "local",
   "permissions": ["routes", "fs", "schedule"],
