@@ -306,6 +306,13 @@ test("tags: a picture for a tags model is drawn from tags, any other from the de
     tagsAnswer = { ok: false, error: "the model returned no tags" };
     await pictureApi.generatePicture("a cat", "comfy/sdxl", 1);
     expect(sent()).toEqual(["a cat"]);
+    // (#455) a wide picture asks the engine for the shape; a square one sends no shape at all
+    calls.length = 0;
+    await pictureApi.generatePicture("a town square", "openai/img", 1, undefined, "wide");
+    expect(calls.find((c) => c.url === "/v1/images")!.body.aspect).toBe("wide");
+    calls.length = 0;
+    await pictureApi.generatePicture("a cat", "openai/img", 1);
+    expect(calls.find((c) => c.url === "/v1/images")!.body).not.toHaveProperty("aspect");
   } finally {
     globalThis.fetch = real;
     pictureApi.forgetImageStyles();

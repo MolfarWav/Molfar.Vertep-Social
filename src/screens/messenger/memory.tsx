@@ -4,12 +4,20 @@
 import { useState } from "react";
 import { useT } from "@/i18n/index";
 import { Dialog } from "@/screens/profiles/dialog";
+import { FactsPage } from "./facts";
 
 const NOTE_MAX = 1500;
-type Step = "main" | "new" | "clear";
+type Step = "main" | "facts" | "new" | "clear";
 
 export interface MemoryDialogProps {
+  /** The contact's id: the facts page loads its own list (#446). */
+  id: string;
   name: string;
+  /** Preview only: open on the facts page. */
+  startAt?: "facts";
+  /** How many facts the character remembers, and how many of them are pinned. */
+  factCount: number;
+  factPinned: number;
   /** The note now ("" = none) and whether the user wrote it. */
   note: string;
   edited: boolean;
@@ -25,11 +33,12 @@ export interface MemoryDialogProps {
 
 export function MemoryDialog(p: MemoryDialogProps) {
   const t = useT();
-  const [step, setStep] = useState<Step>("main");
+  const [step, setStep] = useState<Step>(p.startAt ?? "main");
   const [draft, setDraft] = useState(p.note);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const [facts, setFacts] = useState({ n: p.factCount, pinned: p.factPinned });
   const dirty = draft.trim() !== p.note.trim();
   const empty = p.count === 0;
 
@@ -69,9 +78,19 @@ export function MemoryDialog(p: MemoryDialogProps) {
 
   return (
     <Dialog title={t("messenger.memory.title", { name: p.name })} width={520} sheet={p.phone} onClose={p.onClose}>
+      {step === "facts" && (
+        <FactsPage id={p.id} name={p.name} onBack={() => setStep("main")} onChanged={(l) => setFacts({ n: l.facts.length, pinned: l.facts.filter((f) => f.pinned).length })} />
+      )}
       {step === "main" && (
         <>
           <div className="pf-body">
+            <div className="mem-facts">
+              <div>
+                <div className="lb">{t("messenger.facts.title")}</div>
+                <div className="k">{facts.n === 0 ? t("messenger.facts.none", { name: p.name }) : t("messenger.facts.count", { n: facts.n, pinned: facts.pinned })}</div>
+              </div>
+              <button type="button" className="btn" disabled={!!busy} onClick={() => setStep("facts")}>{t("messenger.facts.open")}</button>
+            </div>
             <div className="f f-wide">
               <label htmlFor="mem-note" className="lb">{t("messenger.memory.note")}</label>
               <textarea

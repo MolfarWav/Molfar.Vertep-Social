@@ -75,7 +75,7 @@ export function PictureDialog(p: PictureDialogProps) {
     setBusyText(t("profiles.picture.drawing"));
     setError("");
     try {
-      setFresh(await generatePicture(prompt.trim(), model, p.hue));
+      setFresh(await generatePicture(prompt.trim(), model, p.hue, undefined, p.wide ? "wide" : undefined));
       setUploaded(false);
     } catch (e) {
       setError(t("profiles.picture.failed", { error: e instanceof Error ? e.message : String(e) }));

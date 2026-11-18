@@ -5,6 +5,10 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+- Added: **a facts ledger beside the memory note (Molfar.Vertep#446, phase M1).** Every fold of older messages now asks the model for JSON `{facts, note}`: the new or changed facts (one sentence each, a kind, private by default) and a shorter narrative note (about 80 words instead of 180). The code merges them (the same words only refresh the time, `replaces` swaps one of the model's own for the corrected one, nothing else is removed), so a detail no longer has to be copied by the model at every fold. A plain-text answer is the note exactly as before and leaves the facts alone. The reply's prompt carries up to 1500 characters of facts (the pinned first, then the newest six, then those sharing words with the last messages). The Memory dialog has a Facts page (list, add, edit, pin, private or public, delete after a question, an Archive tab; over 200 facts the oldest unpinned jokes and shared moments move there and are not sent). Pinned facts and the user's own are never replaced by the model. Messenger plugin: new route `/messenger/facts`; chat file fields `facts`, `factsArchive`, `factsDropped`. Tests: `test/messenger-facts.test.ts`.
+- Changed: `scripts/fold-check.mjs` reads the per-persona chat file and reports the facts too.
+- Added: **wide pictures ask the engine for a wide shape (Molfar.Vertep#455).** The place and district picture window sends `aspect: "wide"` to `POST /v1/images`; an engine without the field, or a model that cannot take a shape, still draws a picture.
+
 ## 0.18.0 (2026-11-18)
 
 Pictures and a drawing for the City, and the follow-ups of the Journal and the City. App 0.18.0; plugins: City 0.2.0, Journal 0.2.0, Clubs 0.3.0, Messenger 0.12.0, Life 0.9.0, Profiles 0.18.0. Nothing to migrate: new fields are optional, everything that costs a call is off by default. Molfar.Vertep#452 and #453. Tried with unit tests and the design preview; NOT with a real engine or a real model.

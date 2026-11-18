@@ -91,6 +91,27 @@
 .s-messenger .info .mem-none { color: var(--muted); font-size: 13px; }
 .s-messenger .info .mem-open { margin-top: 8px; }
 .s-profiles .mem-start { display: flex; flex-wrap: wrap; gap: 8px; }
+/* the facts ledger on the Memory dialog (#446) */
+.s-profiles .mem-facts { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.s-profiles .mem-facts .btn { flex: none; min-height: 40px; }
+.s-profiles .fact-add { display: flex; gap: 8px; flex-wrap: wrap; }
+.s-profiles .fact-add .inp:first-child { flex: 1 1 200px; min-width: 0; }
+.s-profiles .fact-add .fact-kind { flex: 0 1 140px; width: auto; }
+.s-profiles .fact-seg { margin: 0; width: 100%; }
+.s-profiles .facts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.s-profiles .fact { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.s-profiles .fact.is-pinned { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.s-profiles .fact-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.s-profiles .fact-text { margin: 0; overflow-wrap: anywhere; line-height: 1.4; }
+.s-profiles .fact-edit { display: flex; gap: 8px; flex-wrap: wrap; }
+.s-profiles .fact-edit .inp { flex: 1 1 200px; min-width: 0; }
+.s-profiles .fact-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.s-profiles .fact-btns .btn, .s-profiles .fact-edit .btn { min-height: 36px; padding: 0 12px; font-size: 13px; }
+.s-profiles .btn.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
+.s-profiles .fact-empty { margin: 4px 0; }
+@media (max-width: 767px) {
+  .s-profiles .fact-btns .btn, .s-profiles .fact-edit .btn, .s-profiles .mem-facts .btn { min-height: 40px; }
+}
 
 /* stories and "Characters talk" (#358) */
 .s-messenger .stories { display: flex; gap: 10px; overflow-x: auto; padding: 8px 12px; border-bottom: 1px solid var(--line); flex: none; scrollbar-width: thin; }
