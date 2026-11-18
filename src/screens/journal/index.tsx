@@ -196,7 +196,7 @@ function Post({ p, name, when, whenOf, onChanged, onRemoved, onFollow }: { p: Jo
         <Avatar name={name} hue={p.hue} size={36} picture={p.picture || undefined} />
         <div className="jr-who-t">
           <b>{name}</b>
-          <span className="k">{when}{p.fromStory ? ` · ${t("journal.fromStory")}` : ""}{p.mood ? ` · ${p.mood}` : ""}{p.visible !== "all" ? ` · ${t(p.visible === "me" ? "journal.visible.me" : "journal.visible.friends")}` : ""}</span>
+          <span className="k">{when}{p.fromStory ? ` · ${t("journal.fromStory")}` : ""}{p.mood ? ` · ${p.mood}` : ""}{p.place ? ` · ${t("journal.at", { place: p.place })}` : ""}{p.visible !== "all" ? ` · ${t(p.visible === "me" ? "journal.visible.me" : "journal.visible.friends")}` : ""}</span>
         </div>
       </div>
       {p.title && <h2 className="jr-pt">{p.title}</h2>}

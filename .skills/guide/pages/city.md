@@ -20,6 +20,15 @@ Under the strip of districts, "Add a place" opens a form: a name, the district, 
 
 The "+" at the end of the strip makes a new district (a name and a kind); "Edit district" renames it and, when it has no places, removes it. Homes cannot be removed or doubled, and places cannot be put in it. "Restore the stock town" at the bottom brings back the eight stock places and the four districts and removes yours; homes and who is where stay. A town has at most 60 places and 12 districts.
 
+## Where the rest of Social sees it
+
+- **Diaries.** A diary day of the kind "something unexpected" is told where the character is and who is with it, so what it noticed may have been there.
+- **Characters talk and clubs.** Two characters who are at the same place talk to each other about three times as often, and a club with two or more members at one place talks about three times as often. (Rooms are clubs too; see above.)
+- **Stories and the journal.** A story says where the character was when it posted ("at the cafe by the park"), and that goes with it into the journal. A post a character writes in its journal carries the place it was at.
+- **The messenger.** Settings > Messenger > "Tell the character where it is" (off by default) adds one line to a reply: where the character is right now and who is with it, about 30 tokens. The character is told to mention it only if it fits.
+
+Meeting at a place does not change who knows whom; that stays as Life counts it.
+
 ## Homes
 
 Every character has a flat; when a building is full, the next one appears. In the Homes district each building is a row of doors with name plates. A lit window means the character is at home and awake, a dark one that they are asleep, and a dashed one that they are out. A character you know at least as an acquaintance also shows where they are. Tap a door to open the profile. The first row, "Your home", opens your own profile.

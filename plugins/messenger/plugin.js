@@ -511,6 +511,7 @@ export function systemPromptFor(p, you, recent, opts) {
   if (str(v.text)) lines.push("How you write: " + cut(str(v.text), 800));
   if (str(recent)) lines.push(recent);
   if (isObj(opts) && str(opts.met)) lines.push(opts.met);
+  if (isObj(opts) && str(opts.place)) lines.push(opts.place);
   if (isObj(opts) && str(opts.gossip)) lines.push(opts.gossip);
   if (isObj(opts) && str(opts.summary)) lines.push("What you remember from earlier in this conversation (your own notes, in order of importance): " + cut(str(opts.summary), SUMMARY_MAX));
   if (isObj(opts) && Array.isArray(opts.recall) && opts.recall.length) {
@@ -802,6 +803,20 @@ const RECALL_BATCH = 16;
 const RECALL_FAIL_WAIT_MS = 30 * 60 * 1000;
 const RECALL_META_DIR = ".cache/recall/meta/";
 const RECALL_VEC_DIR = ".cache/recall/vec/";
+
+/**
+ * Settings > Messenger > "Tell where the character is" (C4, off unless switched on): one line for the prompt, "Right now you are at <place>, with <names>."
+ * from the city's file (read only), or "" when it is off, the character is at home or the city has not placed it. About 30 tokens (27 to 40 measured with the engine's estimator).
+ */
+export function placeLineFor(fsx, p) {
+  const s = readJson(fsx, "settings.json", null);
+  if (!isObj(s) || s.messengerPlace !== true) return "";
+  const tz = typeof s.tzOffset === "number" && Number.isFinite(s.tzOffset) && Math.abs(s.tzOffset) <= 840 ? s.tzOffset : null;
+  const c = cityNow(fsx, p.id, Date.now(), tz);
+  if (!c) return "";
+  const names = c.here.map((id) => readProfile(fsx, id)).filter(Boolean).map((x) => x.name).slice(0, 3);
+  return "Right now you are at " + c.place.name + (names.length ? ", with " + names.join(", ") : "") + ". Mention it only if it fits.";
+}
 
 /** Settings > Messenger > Recall: off unless it was switched on. */
 export function recallOn(fsx) {
@@ -1169,6 +1184,7 @@ function requestReply(host, key, profile, chat, qv) {
       summary: ctx.summary,
       recall: recallFor(host.fs, chat, qv || null),
       met: metUser(host.fs, profile, chat.persona),
+      place: placeLineFor(host.fs, profile),
       stranger: knowsOf(host.fs, profile) === "stranger",
       gossip: knowsOf(host.fs, profile) === "stranger" ? "" : chatGossipLine(host.fs, profile, Date.now(), Math.random, []),
     }),
@@ -1710,7 +1726,7 @@ function requestFirst(host, plan, chat) {
     ", in your own voice, about this and nothing else. No generic greeting like \"how are you\", no stage directions. If the chat has no messages yet, write in the language of your description.";
   host.llm.request("fm:" + p.id + ":" + plan.subject.ref + tail(chat.persona), {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now()), { summary: ctx.summary, met: metUser(host.fs, p, chat.persona), stranger: knowsOf(host.fs, p) === "stranger" }),
+    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now()), { summary: ctx.summary, met: metUser(host.fs, p, chat.persona), place: placeLineFor(host.fs, p), stranger: knowsOf(host.fs, p) === "stranger" }),
     messages: [...ctx.messages.slice(-6), { role: "user", content: ask }],
     presetParams: { temperature: 0.9, max_tokens: MAX_TOKENS[length] },
   });
@@ -1759,3 +1775,27 @@ export function handleRoute(req, host) {
   if (path === "/messenger/image" && method === "POST") return imageRoute(req, host);
   return ok({ error: "not found" }, 404);
 }
+
+// <city-shared>
+/** Where character `id` is now, from the city's file (read only): {place: {id, name}, here: [profile ids]}, or null (at home, no city, a file of another band). Identical in every plugin that reads it: test/city-readers.test.ts pins the copies. */
+function cityNow(fsx, id, now, tz) {
+  try {
+    const off = Number.isFinite(tz) ? tz : new Date(now).getTimezoneOffset();
+    const local = new Date(now - off * 60000);
+    const band = local.toISOString().slice(0, 10) + "#" + Math.floor(local.getUTCHours() / 3);
+    const d = JSON.parse(fsx.read("city/now.json"));
+    if (!d || typeof d !== "object" || d.id !== band || !d.where || typeof d.where !== "object") return null;
+    const ok = (s) => typeof s === "string" && /^[A-Za-z0-9_-]{1,60}$/.test(s);
+    const at = d.where[id];
+    if (!ok(at) || at === "home") return null;
+    const town = JSON.parse(fsx.read("city/places.json"));
+    const place = town && Array.isArray(town.places) ? town.places.find((p) => p && p.id === at) : null;
+    if (!place || typeof place.name !== "string") return null;
+    const name = place.name.replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+    if (!name) return null;
+    return { place: { id: at, name }, here: Object.keys(d.where).filter((k) => k !== id && d.where[k] === at && ok(k)) };
+  } catch {
+    return null;
+  }
+}
+// </city-shared>

@@ -423,6 +423,7 @@ export const DEFAULT_SETTINGS = {
   messengerSummary: true,
   /** The few older messages closest in meaning to the talk are quoted in a reply's prompt (issue #368): off by default, it adds up to about 450 tokens to a reply. */
   messengerRecall: false,
+  messengerPlace: false,
   /** How well a character knows the user when its profile does not say: "knows", "name" or "stranger". */
   messengerKnows: "knows",
   models: { messenger: "", forum: "", import: "", image: "" },
@@ -540,6 +541,7 @@ export function mergeSettings(base, patch) {
     messengerContext: clampInt(p.messengerContext, 4, 500, Number.isInteger(b.messengerContext) ? b.messengerContext : 24),
     messengerSummary: bool(p.messengerSummary, typeof b.messengerSummary === "boolean" ? b.messengerSummary : true),
     messengerRecall: bool(p.messengerRecall, typeof b.messengerRecall === "boolean" ? b.messengerRecall : false),
+    messengerPlace: bool(p.messengerPlace, typeof b.messengerPlace === "boolean" ? b.messengerPlace : false),
     messengerKnows: oneOf(p.messengerKnows, ["knows", "name", "stranger"], oneOf(b.messengerKnows, ["knows", "name", "stranger"], "knows")),
     models: {
       messenger: "messenger" in m ? modelRef(m.messenger) : b.models.messenger,

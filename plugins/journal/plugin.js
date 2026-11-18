@@ -249,7 +249,7 @@ function ownerIds(fsx) {
 function cleanMirrorStory(x) {
   if (!isObj(x) || typeof x.id !== "string" || !ID.test(x.id) || typeof x.by !== "string" || !ID.test(x.by) || !Number.isFinite(x.at) || !str(x.text)) return null;
   const image = cleanImage(x.image);
-  return { id: x.id, by: x.by, at: x.at, text: oneLine(x.text, 140), ...(image ? { image } : {}) };
+  return { id: x.id, by: x.by, at: x.at, text: oneLine(x.text, 140), ...(str(x.place) ? { place: oneLine(x.place, 60) } : {}), ...(image ? { image } : {}) };
 }
 
 function readMirror(fsx) {
@@ -275,7 +275,7 @@ function readStories(fsx) {
 // ---------- stories into the journal ----------
 
 /** A story as a post of its author. The id follows the story's, so filing it twice is a no-op. */
-export const postFromStory = (s) => ({ id: "j-" + s.id, at: s.at, title: "", text: s.text, ...(s.image ? { image: s.image } : {}), tags: [], visible: "all", from: "story:" + s.id });
+export const postFromStory = (s) => ({ id: "j-" + s.id, at: s.at, title: "", text: s.text, ...(s.place ? { place: s.place } : {}), ...(s.image ? { image: s.image } : {}), tags: [], visible: "all", from: "story:" + s.id });
 
 /**
  * One pass of the mirror. `live` is what the stories plugin holds now; `mirror` is {stories, done} from the last pass. Returns
@@ -405,7 +405,7 @@ export function fileWriterResult(fsx, key, result, now, tz) {
   const text = j ? body(j.text, 1200) : body(r.text, 1200);
   if (!text) return fail("the model returned no text");
   const entries = pend ? pend.entries : [];
-  const post = cleanPost({ id: "j-d-" + now + "-" + rid(), at: now, title: j ? j.title : "", text, mood: j ? j.mood : "", tags: j ? j.tags : [], visible: "all", from: "diary:" + (entries[0] || "x") });
+  const post = cleanPost({ id: "j-d-" + now + "-" + rid(), at: now, title: j ? j.title : "", text, mood: j ? j.mood : "", place: (cityNow(fsx, m[1], now, tz) || { place: { name: "" } }).place.name, tags: j ? j.tags : [], visible: "all", from: "diary:" + (entries[0] || "x") });
   if (!post) return fail("the model returned nothing usable");
   const posts = readPosts(fsx, m[1]).concat(post).sort((a, b) => a.at - b.at);
   writePosts(fsx, m[1], posts.slice(-MAX_POSTS));
@@ -867,3 +867,27 @@ function writeNow(fsx, host, settings, now) {
     return t === "comment" ? askComment(pick) : askPost(pick);
   }
 }
+
+// <city-shared>
+/** Where character `id` is now, from the city's file (read only): {place: {id, name}, here: [profile ids]}, or null (at home, no city, a file of another band). Identical in every plugin that reads it: test/city-readers.test.ts pins the copies. */
+function cityNow(fsx, id, now, tz) {
+  try {
+    const off = Number.isFinite(tz) ? tz : new Date(now).getTimezoneOffset();
+    const local = new Date(now - off * 60000);
+    const band = local.toISOString().slice(0, 10) + "#" + Math.floor(local.getUTCHours() / 3);
+    const d = JSON.parse(fsx.read("city/now.json"));
+    if (!d || typeof d !== "object" || d.id !== band || !d.where || typeof d.where !== "object") return null;
+    const ok = (s) => typeof s === "string" && /^[A-Za-z0-9_-]{1,60}$/.test(s);
+    const at = d.where[id];
+    if (!ok(at) || at === "home") return null;
+    const town = JSON.parse(fsx.read("city/places.json"));
+    const place = town && Array.isArray(town.places) ? town.places.find((p) => p && p.id === at) : null;
+    if (!place || typeof place.name !== "string") return null;
+    const name = place.name.replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+    if (!name) return null;
+    return { place: { id: at, name }, here: Object.keys(d.where).filter((k) => k !== id && d.where[k] === at && ok(k)) };
+  } catch {
+    return null;
+  }
+}
+// </city-shared>

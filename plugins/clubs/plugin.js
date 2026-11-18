@@ -500,10 +500,23 @@ export function pickTurn(fsx, settings, now, rand) {
     }
     if (c.today >= settings.perDay || here.length < 2) continue;
     if (last && now - last.at < MIN_GAP_MS) continue;
-    idle.push({ club: c, speaker: weightedPick(pool, weightOf, rand), owed: false });
+    // C4: a club with two or more members at the same place in the city talks three times as often
+    const spots = {};
+    for (const p of here) {
+      const at = cityNow(fsx, p.id, now, settings.tz);
+      if (at) spots[at.place.id] = (spots[at.place.id] || 0) + 1;
+    }
+    idle.push({ club: c, speaker: weightedPick(pool, weightOf, rand), owed: false, w: Object.values(spots).some((n) => n >= 2) ? 3 : 1 });
   }
   if (owed.length) return owed[Math.floor(rand() * owed.length)];
-  if (idle.length && rand() < CHANCE) return idle[Math.floor(rand() * idle.length)];
+  if (idle.length && rand() < CHANCE) {
+    let r = rand() * idle.reduce((s, x) => s + x.w, 0);
+    for (const x of idle) {
+      r -= x.w;
+      if (r < 0) return x;
+    }
+    return idle[idle.length - 1];
+  }
   return null;
 }
 
@@ -859,3 +872,27 @@ export function onTick(_ctx, host) {
   writeClub(fsx, pick.club);
   host.llm.request("cl:" + pick.club.id + ":" + pick.speaker.id, buildRequest(fsx, settings, pick.club, pick.speaker));
 }
+
+// <city-shared>
+/** Where character `id` is now, from the city's file (read only): {place: {id, name}, here: [profile ids]}, or null (at home, no city, a file of another band). Identical in every plugin that reads it: test/city-readers.test.ts pins the copies. */
+function cityNow(fsx, id, now, tz) {
+  try {
+    const off = Number.isFinite(tz) ? tz : new Date(now).getTimezoneOffset();
+    const local = new Date(now - off * 60000);
+    const band = local.toISOString().slice(0, 10) + "#" + Math.floor(local.getUTCHours() / 3);
+    const d = JSON.parse(fsx.read("city/now.json"));
+    if (!d || typeof d !== "object" || d.id !== band || !d.where || typeof d.where !== "object") return null;
+    const ok = (s) => typeof s === "string" && /^[A-Za-z0-9_-]{1,60}$/.test(s);
+    const at = d.where[id];
+    if (!ok(at) || at === "home") return null;
+    const town = JSON.parse(fsx.read("city/places.json"));
+    const place = town && Array.isArray(town.places) ? town.places.find((p) => p && p.id === at) : null;
+    if (!place || typeof place.name !== "string") return null;
+    const name = place.name.replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+    if (!name) return null;
+    return { place: { id: at, name }, here: Object.keys(d.where).filter((k) => k !== id && d.where[k] === at && ok(k)) };
+  } catch {
+    return null;
+  }
+}
+// </city-shared>
