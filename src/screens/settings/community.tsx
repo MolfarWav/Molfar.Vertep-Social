@@ -77,6 +77,15 @@ export function CommunityRows({ s, set, phone = false }: { s: SettingsMock; set:
         </Row>
       </div>
 
+      <Row title={t("settings.community.journalComments")} hint={hint("settings.community.journalComments.hint", "settings.community.journalComments.phone.hint")}>
+        {(id) => <Switch labelledBy={id} checked={c.journalComments} onChange={(v) => change({ journalComments: v })} />}
+      </Row>
+      <div className={`pictures-more${c.journalComments ? "" : " is-off"}`} aria-disabled={!c.journalComments || undefined}>
+        <Row title={t("settings.community.journalComments.limit")}>
+          {() => <Stepper name={t("settings.community.journalComments.limit")} value={c.journalCommentsPerDay} min={LIMITS.journalCommentsPerDay.min} max={LIMITS.journalCommentsPerDay.max} onChange={(v) => change({ journalCommentsPerDay: v })} />}
+        </Row>
+      </div>
+
       <Row title={t("settings.community.chats")} hint={hint("settings.community.chats.hint", "settings.community.chats.phone.hint")}>
         {(id) => <Switch labelledBy={id} checked={c.chats} onChange={(v) => change({ chats: v })} />}
       </Row>

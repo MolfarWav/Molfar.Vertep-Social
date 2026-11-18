@@ -18,7 +18,19 @@
  * {id, by, at, text, image?}}, done: [storyIds]} (`done`: stories already filed or removed, so one the user removed is not filed
  * again while the stories file still holds it). `visible` is stored for the later phases (J4); in J1 only the user reads the journal.
  *
+ * J3 (the same issue): comments and follows. journal/comments/<postId>.json {comments: [{id, by: profile id | "you", at, text}]} (100); the user
+ * comments freely, and a character may comment under a post of someone it follows or is close to (Life's list, read only), or answer the
+ * user's comment under its own post: switch `community.journalComments` (off by default), a cap per day per character
+ * (`journalCommentsPerDay`), at most 4 comments by characters under one post, only posts of the last 3 days with `visible: "all"`, one model
+ * call a comment, key `jc:<commenter>:<owner>:<post>`. A reply owed to the user ignores the chance. journal/follows.json {you: [profile ids]}: the
+ * journals the user follows (the "Following" feed). The state file also holds {ccounts, cpending, cfailedAt}.
+ *
  * Routes (relative to /v1/apps/social):
+ *   GET  /journal/comments?owner=&post=   {comments: [{id, by, name, hue, picture, at, text, mine, view?}]}; `view` is what the post's author
+ *                                         remembers of the commenter (Life's note, read only), only under a character's own post
+ *   POST /journal/comment {owner, post, text}   the user comments
+ *   POST /journal/comment/remove {owner, post, id}
+ *   POST /journal/follow {id, on}         follow or unfollow a character's journal
  *   GET  /journal/feed?owner=<id|you>&before=<at>   {on, posts: [view], more}: newest first, 30 a page, all journals or one
  *   POST /journal/post {title?, text, mood?, tags?, visible?}   the user writes a post
  *   POST /journal/edit {id, title?, text?, mood?, tags?, visible?}   the user edits one of their own posts
@@ -32,7 +44,7 @@
 const ID = /^[A-Za-z0-9_-]{1,60}$/;
 const YOU = "you";
 /** File names in journal/ that are not a journal. A profile can not have these ids. */
-const RESERVED = ["mirror", "state"];
+const RESERVED = ["mirror", "state", "follows"];
 const STORY_MS = 24 * 3600 * 1000;
 const PAGE = 30;
 const MAX_POSTS = 500;
@@ -50,6 +62,14 @@ const CHANCE = 0.08;
 const FAIL_WAIT_MS = 30 * 60 * 1000;
 const PENDING_MS = 10 * 60 * 1000;
 const MATERIAL = 3;
+const COMMENT_MAX = 600;
+const AI_COMMENT_MAX = 280;
+const COMMENTS_KEEP = 100;
+const AI_PER_POST = 4;
+const FRESH_MS = 3 * 24 * 3600 * 1000;
+const LEVELS = ["stranger", "slight", "acquaintance", "penfriend", "friend", "close", "confidant"];
+const CLOSE_FROM = 3;
+const FOLLOWS = "journal/follows.json";
 const ASSET = /^\/v1\/assets\/[A-Za-z0-9_-]{1,80}$/;
 const MIRROR = "journal/mirror.json";
 const STORIES = "stories/items.json";
@@ -104,6 +124,8 @@ export function readSettings(fsx) {
     keep: c.storiesToJournal !== false,
     imageModel: modelRef(im.model) || modelRef(m.image),
     posts: c.journalPosts === true,
+    comments: c.journalComments === true,
+    commentsPerDay: Number.isInteger(c.journalCommentsPerDay) && c.journalCommentsPerDay >= 0 && c.journalCommentsPerDay <= 10 ? c.journalCommentsPerDay : 2,
     perDay: Number.isInteger(c.journalPerDay) && c.journalPerDay >= 0 && c.journalPerDay <= 5 ? c.journalPerDay : 1,
     lifeOn: l.on !== false,
     model: modelRef(m.forum),
@@ -303,7 +325,9 @@ export function readState(fsx, now, tz) {
       if (ID.test(k) && isObj(v) && num(v.at) > 0) pending[k] = { at: num(v.at), entries: (Array.isArray(v.entries) ? v.entries : []).filter((x) => typeof x === "string" && ID.test(x)).slice(0, MATERIAL) };
     }
   }
-  return { day, counts, used, pending, failedAt: timeMap(r.failedAt) };
+  const ccounts = {};
+  if (r.day === day && isObj(r.ccounts)) for (const [k, v] of Object.entries(r.ccounts)) if (ID.test(k) && num(v) > 0) ccounts[k] = Math.floor(num(v));
+  return { day, counts, used, pending, failedAt: timeMap(r.failedAt), ccounts, cpending: timeMap(r.cpending), cfailedAt: timeMap(r.cfailedAt) };
 }
 
 const writeState = (fsx, s) => fsx.write(STATE, JSON.stringify(s));
@@ -389,6 +413,167 @@ export function fileWriterResult(fsx, key, result, now, tz) {
   return { post };
 }
 
+// ---------- comments and follows (J3) ----------
+
+const commentsPath = (post) => "journal/comments/" + post + ".json";
+
+export function cleanComment(x) {
+  if (!isObj(x) || typeof x.id !== "string" || !ID.test(x.id) || typeof x.by !== "string" || !(x.by === YOU || ID.test(x.by)) || !Number.isFinite(x.at) || x.at <= 0) return null;
+  const text = body(x.text, COMMENT_MAX);
+  return text ? { id: x.id, by: x.by, at: x.at, text } : null;
+}
+
+export function readComments(fsx, post) {
+  if (!ID.test(String(post))) return [];
+  const d = readJson(fsx, commentsPath(post), null);
+  const seen = new Set();
+  const out = [];
+  for (const x of isObj(d) && Array.isArray(d.comments) ? d.comments : []) {
+    const c = cleanComment(x);
+    if (c && !seen.has(c.id)) {
+      seen.add(c.id);
+      out.push(c);
+    }
+  }
+  return out.slice(-COMMENTS_KEEP);
+}
+
+const writeComments = (fsx, post, list) => fsx.write(commentsPath(post), JSON.stringify({ comments: list.slice(-COMMENTS_KEEP) }));
+const removeComments = (fsx, post) => {
+  try {
+    fsx.remove(commentsPath(post));
+  } catch {
+    // nothing to remove
+  }
+};
+
+export function readFollows(fsx) {
+  const d = readJson(fsx, FOLLOWS, null);
+  const out = [];
+  for (const x of isObj(d) && Array.isArray(d.you) ? d.you : []) if (typeof x === "string" && ID.test(x) && x !== YOU && !RESERVED.includes(x) && !out.includes(x)) out.push(x);
+  return out.slice(0, 300);
+}
+const writeFollows = (fsx, list) => fsx.write(FOLLOWS, JSON.stringify({ you: list }));
+
+/** The id and name of the user's active persona ("" and "" when there is none). */
+function youOf(fsx) {
+  const y = readJson(fsx, "you.json", null);
+  const list = (isObj(y) && Array.isArray(y.personas) ? y.personas : []).filter((x) => isObj(x) && typeof x.id === "string" && ID.test(x.id) && str(x.name));
+  const p = list.find((x) => isObj(y) && x.id === y.active) || list[0];
+  return p ? { id: p.id, name: oneLine(p.name, 80) } : { id: "", name: "" };
+}
+
+/** What `id` holds of the people in its Life list: Map key ("c:<id>" or "u:<persona>") -> {fol, lvl, note}. Read only. */
+function peopleOf(fsx, id) {
+  const d = readJson(fsx, "life/people/" + id + ".json", null);
+  const out = new Map();
+  for (const p of isObj(d) && Array.isArray(d.people) ? d.people : []) {
+    if (isObj(p) && typeof p.key === "string") out.set(p.key, { fol: p.fol === true, lvl: Math.max(0, LEVELS.indexOf(p.lvl)), note: oneLine(p.note, 300) });
+  }
+  return out;
+}
+const closeTo = (r) => !!r && (r.fol || r.lvl >= CLOSE_FROM);
+
+/**
+ * One comment that could be written now: {profile, owner, post, comments, owed, note} or null. Rules only: the switch, Life on, a character
+ * that is around, under its daily cap, a post of the last 3 days that anyone may read, not yet commented by it, under four comments by
+ * characters, by someone it follows or is close to (the user's posts weigh more). `owed`: the user commented under a post of this very
+ * character and nobody answered since: it comes first. `only: "owed"` looks for those alone (they ignore the chance).
+ */
+export function pickCommenter(c, rand, only) {
+  const { fsx, settings, state, profiles, now } = c;
+  if (!settings.comments || settings.commentsPerDay <= 0 || !settings.lifeOn) return null;
+  const awake = profiles.filter((p) => p.lifeOn && ["online", "away"].includes(statusAt(p.schedule, new Date(now), settings.tz)) && (state.ccounts[p.id] || 0) < settings.commentsPerDay && now - (state.cfailedAt[p.id] || 0) >= FAIL_WAIT_MS && !(state.cpending[p.id] && now - state.cpending[p.id] < PENDING_MS));
+  if (!awake.length) return null;
+  const you = youOf(fsx);
+  const people = new Map();
+  const peopleFor = (id) => {
+    if (!people.has(id)) people.set(id, peopleOf(fsx, id));
+    return people.get(id);
+  };
+  const byId = new Map(profiles.map((p) => [p.id, p]));
+  const cands = [];
+  for (const owner of [YOU, ...ownerIds(fsx).filter((x) => x !== YOU)]) {
+    if (owner !== YOU && !byId.has(owner)) continue;
+    for (const post of readPosts(fsx, owner)) {
+      if (post.visible !== "all" || now - post.at > FRESH_MS) continue;
+      const comments = readComments(fsx, post.id);
+      const aiCount = comments.filter((m) => m.by !== YOU).length;
+      const last = comments[comments.length - 1];
+      for (const p of awake) {
+        if (p.id === owner) {
+          if (last && last.by === YOU) cands.push({ profile: p, owner, post, comments, owed: true, w: 6, note: "" });
+          continue;
+        }
+        if (only === "owed" || aiCount >= AI_PER_POST || comments.some((m) => m.by === p.id)) continue;
+        const rel = peopleFor(p.id).get(owner === YOU ? "u:" + you.id : "c:" + owner);
+        if (!closeTo(rel)) continue;
+        cands.push({ profile: p, owner, post, comments, owed: false, w: (rel.fol ? 1.5 : 0) + (rel.lvl >= CLOSE_FROM ? 1 : 0) + rel.lvl * 0.2 + (owner === YOU ? 2 : 0), note: rel.note });
+      }
+    }
+  }
+  if (!cands.length) return null;
+  const owed = cands.filter((x) => x.owed);
+  const pool = owed.length ? owed : cands;
+  let r = rand() * pool.reduce((s, x) => s + x.w, 0);
+  for (const x of pool) {
+    r -= x.w;
+    if (r < 0) return x;
+  }
+  return pool[pool.length - 1];
+}
+
+export function commentSystem(p, ownerName, owed) {
+  const lines = ["You are " + p.name + ", a character. You are reading a post in " + (owed ? "your own" : ownerName + "'s") + " journal and writing a short comment under it, in your own voice."];
+  if (p.about) lines.push("Who you are: " + cut(p.about, 800));
+  if (str(p.voice.text)) lines.push("How you write: " + cut(str(p.voice.text), 400));
+  lines.push("Write in the language of your description above. One or two sentences, at most " + AI_COMMENT_MAX + " characters, plain text only: no hashtags, no quotation marks around it, no name label.");
+  if (owed) lines.push("The last comment under your post is from someone who answered you: reply to them.");
+  return lines.join("\n");
+}
+
+/** The post and the talk under it, quoted as data (no angle brackets). `names`: Map id -> name; "you" is the user's persona. */
+export function commentUser(post, ownerName, comments, names, note) {
+  const lines = ["Post by " + ownerName + (post.title ? ' titled "' + cut(post.title, 120) + '"' : "") + ":", cut(post.text, 800)];
+  if (comments.length) {
+    lines.push("", "Comments so far:");
+    for (const m of comments.slice(-6)) lines.push("- " + (names.get(m.by) || "Someone") + ": " + cut(m.text.replace(/\s+/g, " "), 280));
+  }
+  if (note) lines.push("", "What you remember of " + ownerName + ": " + cut(note, 300));
+  return lines.join("\n");
+}
+
+/** Files the model's comment ("jc:<commenter>:<owner>:<post>"). Returns {comment} or {error}. */
+export function fileCommentResult(fsx, key, result, now, tz) {
+  const m = /^jc:([A-Za-z0-9_-]{1,60}):([A-Za-z0-9_-]{1,60}):([A-Za-z0-9_-]{1,60})$/.exec(String(key));
+  if (!m) return { error: "bad key" };
+  const [, by, owner, postId] = m;
+  const state = readState(fsx, now, tz);
+  delete state.cpending[by];
+  const fail = (error) => {
+    state.cfailedAt[by] = now;
+    writeState(fsx, state);
+    return { error };
+  };
+  const profile = readProfile(fsx, by);
+  if (!profile) return fail("the profile is gone");
+  const post = readPosts(fsx, owner).find((p) => p.id === postId);
+  if (!post || post.visible !== "all") return fail("the post is gone");
+  const r = isObj(result) ? result : {};
+  if (r.error || !str(r.text)) return fail(r.error || "the model returned nothing");
+  // a stray quotation mark around the answer, or the commenter's own name as a label, is not part of the comment
+  const bare = String(r.text).trim().replace(/^["“”]+|["“”]+$/g, "");
+  const text = body(bare.startsWith(profile.name + ":") ? bare.slice(profile.name.length + 1) : bare, AI_COMMENT_MAX);
+  if (!text) return fail("the model returned no text");
+  const list = readComments(fsx, postId);
+  list.push({ id: "c-" + now + "-" + rid(), by, at: now, text });
+  writeComments(fsx, postId, list);
+  state.ccounts[by] = (state.ccounts[by] || 0) + 1;
+  delete state.cfailedAt[by];
+  writeState(fsx, state);
+  return { comment: list[list.length - 1] };
+}
+
 // ---------- views ----------
 
 const view = (owner, who, p) => ({
@@ -436,7 +621,8 @@ export function handleRoute(req, host) {
   if (path === "/journal/feed" && req.method === "GET") {
     const owner = typeof q.owner === "string" ? q.owner : "";
     const before = Number(q.before);
-    const owners = owner ? (ID.test(owner) ? [owner] : []) : [YOU, ...ownerIds(fsx).filter((x) => x !== YOU)];
+    const follows = readFollows(fsx);
+    const owners = owner ? (ID.test(owner) ? [owner] : []) : q.follow === "1" ? follows : [YOU, ...ownerIds(fsx).filter((x) => x !== YOU)];
     const all = [];
     for (const o of owners) {
       const who = o === YOU ? YOU_WHO : readProfile(fsx, o);
@@ -444,7 +630,8 @@ export function handleRoute(req, host) {
       for (const p of readPosts(fsx, o)) all.push(view(o, who, p));
     }
     const sorted = all.filter((p) => !(before > 0) || p.at < before).sort((a, c) => c.at - a.at || (a.id < c.id ? 1 : -1));
-    return ok({ on: settings.keep, posts: sorted.slice(0, PAGE), more: sorted.length > PAGE });
+    const page = sorted.slice(0, PAGE).map((p) => ({ ...p, comments: readComments(fsx, p.id).length, following: follows.includes(p.owner) }));
+    return ok({ on: settings.keep, posts: page, more: sorted.length > PAGE });
   }
 
   if (path === "/journal/post" && req.method === "POST") {
@@ -479,6 +666,7 @@ export function handleRoute(req, host) {
       const gone = posts.find((p) => p.id === id);
       if (!gone) continue;
       writePosts(fsx, o, posts.filter((p) => p.id !== id));
+      removeComments(fsx, id);
       if (gone.from.startsWith("story:")) {
         const m = readMirror(fsx);
         if (!m.done.includes(gone.from.slice(6))) writeMirror(fsx, { stories: m.stories, done: [...m.done, gone.from.slice(6)] });
@@ -509,6 +697,63 @@ export function handleRoute(req, host) {
     return ok({ ok: true, state: p.image.state });
   }
 
+  if (path === "/journal/comments" && req.method === "GET") {
+    const owner = typeof q.owner === "string" ? q.owner : "";
+    const postId = typeof q.post === "string" ? q.post : "";
+    const post = ID.test(owner) && ID.test(postId) ? readPosts(fsx, owner).find((p) => p.id === postId) : null;
+    if (!post) return ok({ error: "no such post" }, 404);
+    const you = youOf(fsx);
+    const ownerPeople = owner === YOU ? null : peopleOf(fsx, owner);
+    const comments = [];
+    for (const m of readComments(fsx, postId)) {
+      if (m.by === YOU) {
+        const opinion = ownerPeople && you.id ? ownerPeople.get("u:" + you.id) : null;
+        comments.push({ id: m.id, by: YOU, name: you.name, hue: 210, picture: "", at: m.at, text: m.text, mine: true, ...(opinion && opinion.note ? { view: opinion.note } : {}) });
+        continue;
+      }
+      const p = readProfile(fsx, m.by);
+      if (!p) continue;
+      const opinion = ownerPeople && m.by !== owner ? ownerPeople.get("c:" + m.by) : null;
+      comments.push({ id: m.id, by: m.by, name: p.name, hue: p.hue, picture: p.picture, at: m.at, text: m.text, mine: false, ...(opinion && opinion.note ? { view: opinion.note } : {}) });
+    }
+    return ok({ comments });
+  }
+
+  if (path === "/journal/comment" && req.method === "POST") {
+    const owner = String(b.owner || "");
+    const postId = String(b.post || "");
+    const post = ID.test(owner) && ID.test(postId) ? readPosts(fsx, owner).find((p) => p.id === postId) : null;
+    if (!post) return ok({ error: "no such post" }, 404);
+    if (post.visible === "me" && owner !== YOU) return ok({ error: "no such post" }, 404);
+    const text = body(b.text, COMMENT_MAX);
+    if (!text) return ok({ error: "write something first" }, 400);
+    const list = readComments(fsx, postId);
+    if (list.length >= COMMENTS_KEEP) return ok({ error: "this post has too many comments" }, 409);
+    const c = { id: "c-" + now + "-" + rid(), by: YOU, at: now, text };
+    list.push(c);
+    writeComments(fsx, postId, list);
+    return ok({ comment: { ...c, name: youOf(fsx).name, hue: 210, picture: "", mine: true } });
+  }
+
+  if (path === "/journal/comment/remove" && req.method === "POST") {
+    const postId = String(b.post || "");
+    if (!ID.test(postId)) return ok({ error: "no such comment" }, 404);
+    const list = readComments(fsx, postId);
+    const id = String(b.id || "");
+    if (!list.some((m) => m.id === id)) return ok({ error: "no such comment" }, 404);
+    writeComments(fsx, postId, list.filter((m) => m.id !== id));
+    return ok({ ok: true });
+  }
+
+  if (path === "/journal/follow" && req.method === "POST") {
+    const id = String(b.id || "");
+    if (!ID.test(id) || id === YOU || !readProfile(fsx, id)) return ok({ error: "no such character" }, 404);
+    const list = readFollows(fsx).filter((x) => x !== id);
+    if (b.on !== false) list.push(id);
+    writeFollows(fsx, list);
+    return ok({ ok: true, following: b.on !== false });
+  }
+
   return ok({ error: "not found" }, 404);
 }
 
@@ -535,27 +780,55 @@ export function onTick(_ctx, host) {
   writeNow(fsx, host, settings, now);
 }
 
-/** J2: file the posts the model wrote, else (a chance a tick) ask one character to write. */
+/** J2 and J3: file what the model wrote (posts and comments), else ask for one thing: an owed reply first, then, by chance, a comment or a post. */
 function writeNow(fsx, host, settings, now) {
   if (!host.llm) return;
   const results = host.llm.results || {};
-  const keys = Object.keys(results).filter((k) => k.startsWith("jp:"));
+  const keys = Object.keys(results).filter((k) => k.startsWith("jp:") || k.startsWith("jc:"));
   if (keys.length) {
-    for (const k of keys) fileWriterResult(fsx, k, results[k], now, settings.tz);
+    for (const k of keys) {
+      if (k.startsWith("jp:")) fileWriterResult(fsx, k, results[k], now, settings.tz);
+      else fileCommentResult(fsx, k, results[k], now, settings.tz);
+    }
     return;
   }
-  if (!settings.posts || Math.random() >= CHANCE) return;
+  if (!settings.posts && !settings.comments) return;
   const state = readState(fsx, now, settings.tz);
   const profiles = profileIds(fsx).map((id) => readProfile(fsx, id)).filter(Boolean);
-  const pick = pickWriter({ fsx, settings, state, profiles, now }, Math.random);
-  if (!pick) return;
-  state.pending[pick.profile.id] = { at: now, entries: pick.entries.map((e) => e.id) };
-  writeState(fsx, state);
-  const model = pick.profile.model || settings.model;
-  host.llm.request("jp:" + pick.profile.id, {
-    ...(model ? { model } : {}),
-    systemPrompt: postSystem(pick.profile),
-    messages: [{ role: "user", content: postUser(pick.entries) }],
-    presetParams: { temperature: 0.9, max_tokens: 400 },
-  });
+  const c = { fsx, settings, state, profiles, now };
+  const askComment = (pick) => {
+    state.cpending[pick.profile.id] = now;
+    writeState(fsx, state);
+    const ownerName = pick.owner === YOU ? youOf(fsx).name || "the user" : (profiles.find((p) => p.id === pick.owner) || { name: "someone" }).name;
+    const names = new Map(profiles.map((p) => [p.id, p.name]));
+    names.set(YOU, youOf(fsx).name || "The user");
+    const model = pick.profile.model || settings.model;
+    host.llm.request("jc:" + pick.profile.id + ":" + pick.owner + ":" + pick.post.id, {
+      ...(model ? { model } : {}),
+      systemPrompt: commentSystem(pick.profile, ownerName, pick.owed),
+      messages: [{ role: "user", content: commentUser(pick.post, ownerName, pick.comments, names, pick.note) }],
+      presetParams: { temperature: 0.9, max_tokens: 160 },
+    });
+  };
+  const askPost = (pick) => {
+    state.pending[pick.profile.id] = { at: now, entries: pick.entries.map((e) => e.id) };
+    writeState(fsx, state);
+    const model = pick.profile.model || settings.model;
+    host.llm.request("jp:" + pick.profile.id, {
+      ...(model ? { model } : {}),
+      systemPrompt: postSystem(pick.profile),
+      messages: [{ role: "user", content: postUser(pick.entries) }],
+      presetParams: { temperature: 0.9, max_tokens: 400 },
+    });
+  };
+  // someone answered a character under its own post: it replies, whatever the chance
+  const owed = pickCommenter(c, Math.random, "owed");
+  if (owed) return askComment(owed);
+  if (Math.random() >= CHANCE) return;
+  const tries = Math.random() < 0.5 ? ["comment", "post"] : ["post", "comment"];
+  for (const t of tries) {
+    const pick = t === "comment" ? pickCommenter(c, Math.random) : pickWriter(c, Math.random);
+    if (!pick) continue;
+    return t === "comment" ? askComment(pick) : askPost(pick);
+  }
 }

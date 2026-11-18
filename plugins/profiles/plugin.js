@@ -438,7 +438,7 @@ export const DEFAULT_SETTINGS = {
    * flirty (hints and teasing); never anything explicit. `chronicle` is the Moderator's daily digest (one model request a day, only when there is something to tell). `gossip` (at most `gossipPerDay`) and `jealousy` are rules that give the forum topics
    * and a sharper answer from the characters' own ties (#367); neither costs a model call.
    */
-  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, storiesToJournal: true, journalPosts: false, journalPerDay: 1, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
+  community: { reactions: true, reactionsPerDay: 8, events: "weekly", modComments: "rare", modCloses: true, chronicle: true, stories: false, storiesPerDay: 1, storiesToJournal: true, journalPosts: false, journalPerDay: 1, journalComments: false, journalCommentsPerDay: 2, chats: false, chatsPerDay: 4, clubs: false, clubsPerDay: 12, clubsAnswers: 20, clubsMod: true, tone: "warm", gossip: true, gossipPerDay: 2, jealousy: true, reposts: true, repostsPerDay: 2 },
   /**
    * Life (issue #311): characters keep a diary and bring its topics to the messenger and the forum; the world feed is one shared daily
    * fetch from a fixed list of sites, switched by category (all on: no default of "no politics"); `place` is typed by the user for the weather.
@@ -511,6 +511,8 @@ export function mergeSettings(base, patch) {
       storiesToJournal: bool(cm.storiesToJournal, bool(bcm.storiesToJournal, true)),
       journalPosts: bool(cm.journalPosts, bool(bcm.journalPosts, false)),
       journalPerDay: clampInt(cm.journalPerDay, 0, 5, Number.isInteger(bcm.journalPerDay) ? bcm.journalPerDay : 1),
+      journalComments: bool(cm.journalComments, bool(bcm.journalComments, false)),
+      journalCommentsPerDay: clampInt(cm.journalCommentsPerDay, 0, 10, Number.isInteger(bcm.journalCommentsPerDay) ? bcm.journalCommentsPerDay : 2),
       chats: bool(cm.chats, bool(bcm.chats, false)),
       chatsPerDay: clampInt(cm.chatsPerDay, 0, 30, Number.isInteger(bcm.chatsPerDay) ? bcm.chatsPerDay : 4),
       clubs: bool(cm.clubs, bool(bcm.clubs, false)),
@@ -689,7 +691,7 @@ export function resetParts(asked) {
 /** How many journals there are: the files of journal/ that are not the plugin's own bookkeeping. */
 const journalCount = (fsx) => {
   try {
-    return fsx.list("journal").filter((n) => String(n).endsWith(".json") && n !== "mirror.json" && n !== "state.json").length;
+    return fsx.list("journal").filter((n) => String(n).endsWith(".json") && n !== "mirror.json" && n !== "state.json" && n !== "follows.json").length;
   } catch {
     return 0;
   }

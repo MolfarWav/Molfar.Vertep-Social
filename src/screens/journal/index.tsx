@@ -12,7 +12,7 @@ import { useIsPhone } from "@/lib/use-phone";
 import { refreshImages } from "@/pictures/worker";
 import { useChrome, useNav } from "@/shell/nav";
 import { useYou } from "../you/store";
-import { editPost, loadFeed, removePost, writePost, type JournalPost, type PostInput } from "./api";
+import { addComment, editPost, loadComments, loadFeed, removeComment, removePost, setFollow, writePost, type JournalComment, type JournalPost, type PostInput } from "./api";
 
 const param = (k: string): string => {
   if (!PREVIEW) return "";
@@ -80,11 +80,75 @@ function Form({ initial, submitLabel, onSubmit, onCancel }: { initial: PostInput
   );
 }
 
-function Post({ p, name, when, onChanged, onRemoved }: { p: JournalPost; name: string; when: string; onChanged: (p: JournalPost) => void; onRemoved: (id: string) => void }) {
+/** The talk under a post: who wrote what, a box to add yours, remove any. */
+function Comments({ p, name, when, onCount }: { p: JournalPost; name: string; when: (ms: number) => string; onCount: (n: number) => void }) {
+  const t = useT();
+  const [list, setList] = useState<JournalComment[] | null>(null);
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  useEffect(() => {
+    let alive = true;
+    loadComments(p.owner, p.id).then((l) => alive && setList(l)).catch((e) => alive && (setErr(e instanceof Error ? e.message : String(e)), setList([])));
+    return () => { alive = false; };
+  }, [p.owner, p.id]);
+  const send = async () => {
+    const text = draft.trim();
+    if (!text || busy) return;
+    setBusy(true);
+    setErr("");
+    try {
+      const c = await addComment(p.owner, p.id, text);
+      const next = [...(list ?? []), c];
+      setList(next);
+      onCount(next.length);
+      setDraft("");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    }
+    setBusy(false);
+  };
+  const remove = async (c: JournalComment) => {
+    try {
+      await removeComment(p.id, c.id);
+      const next = (list ?? []).filter((x) => x.id !== c.id);
+      setList(next);
+      onCount(next.length);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    }
+  };
+  return (
+    <div className="jr-comments" role="group" aria-label={t("journal.comments")}>
+      {list === null && <span className="k">{t("journal.loading")}</span>}
+      {list !== null && list.length === 0 && <span className="k">{t("journal.comments.none")}</span>}
+      {list?.map((c) => (
+        <div key={c.id} className="jr-comment">
+          <Avatar name={c.name || t("journal.you")} hue={c.hue} size={28} picture={c.picture || undefined} />
+          <div className="jr-cbody">
+            <div className="jr-chead"><b>{c.name || t("journal.you")}</b><span className="k">{when(c.at)}</span></div>
+            <div className="jr-ctext">{c.text}</div>
+            {c.view && <div className="k jr-view">{t("journal.view", { name, text: c.view })}</div>}
+          </div>
+          <button type="button" className="jr-x" aria-label={t("journal.comment.remove")} title={t("journal.comment.remove")} onClick={() => void remove(c)}>×</button>
+        </div>
+      ))}
+      <form className="jr-cform" onSubmit={(e) => { e.preventDefault(); void send(); }}>
+        <label className="lb jr-sr" htmlFor={`jr-c-${p.id}`}>{t("journal.comment.add")}</label>
+        <textarea id={`jr-c-${p.id}`} className="inp inp-area jr-carea" maxLength={600} placeholder={t("journal.comment.ph")} value={draft} onChange={(e) => setDraft(e.target.value)} />
+        <button type="submit" className="btn cta" disabled={busy || !draft.trim()}>{t("journal.comment.send")}</button>
+      </form>
+      {err && <div className="jr-err" role="alert">{err}</div>}
+    </div>
+  );
+}
+
+function Post({ p, name, when, whenOf, onChanged, onRemoved, onFollow }: { p: JournalPost; name: string; when: string; whenOf: (ms: number) => string; onChanged: (p: JournalPost) => void; onRemoved: (id: string) => void; onFollow: (owner: string, on: boolean) => void }) {
   const t = useT();
   const [editing, setEditing] = useState(false);
   const [asking, setAsking] = useState(false);
   const [problem, setProblem] = useState("");
+  const [talk, setTalk] = useState(false);
   if (editing) {
     return (
       <Form
@@ -98,6 +162,14 @@ function Post({ p, name, when, onChanged, onRemoved }: { p: JournalPost; name: s
       />
     );
   }
+  const follow = async () => {
+    try {
+      await setFollow(p.owner, !p.following);
+      onFollow(p.owner, !p.following);
+    } catch (e) {
+      setProblem(e instanceof Error ? e.message : String(e));
+    }
+  };
   const remove = async () => {
     try {
       await removePost(p);
@@ -134,10 +206,15 @@ function Post({ p, name, when, onChanged, onRemoved }: { p: JournalPost; name: s
         </div>
       ) : (
         <div className="jr-acts">
+          <button type="button" className="btn" aria-expanded={talk} onClick={() => setTalk(!talk)}>{t("journal.comments.n", { n: p.comments ?? 0 })}</button>
           {p.mine && <button type="button" className="btn" onClick={() => setEditing(true)}>{t("journal.edit")}</button>}
+          {!p.mine && (
+            <button type="button" className="btn" aria-pressed={!!p.following} onClick={() => void follow()}>{t(p.following ? "journal.following" : "journal.follow")}</button>
+          )}
           <button type="button" className="btn" onClick={() => setAsking(true)}>{t("journal.remove")}</button>
         </div>
       )}
+      {talk && <Comments p={p} name={name} when={whenOf} onCount={(n) => onChanged({ ...p, comments: n })} />}
     </article>
   );
 }
@@ -150,7 +227,7 @@ export function Journal() {
   const { go } = useNav();
   const you = useYou();
   const myName = you?.personas.find((p) => p.id === you.active)?.name || t("journal.you");
-  const [owner, setOwner] = useState<"" | "you">("");
+  const [owner, setOwner] = useState<"" | "you" | "follow">("");
   const [posts, setPosts] = useState<JournalPost[]>([]);
   const [more, setMore] = useState(false);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -223,6 +300,7 @@ export function Journal() {
           <div className="jr-bar">
             <div className="jr-filter" role="group" aria-label={t("journal.filter")}>
               <button type="button" className={`chip${owner === "" ? " on" : ""}`} aria-pressed={owner === ""} onClick={() => setOwner("")}>{t("journal.filter.all")}</button>
+              <button type="button" className={`chip${owner === "follow" ? " on" : ""}`} aria-pressed={owner === "follow"} onClick={() => setOwner("follow")}>{t("journal.filter.follow")}</button>
               <button type="button" className={`chip${owner === "you" ? " on" : ""}`} aria-pressed={owner === "you"} onClick={() => setOwner("you")}>{t("journal.filter.you")}</button>
             </div>
             {!writing && <button type="button" className="btn cta" onClick={() => setWriting(true)}>{t("journal.write")}</button>}
@@ -250,12 +328,12 @@ export function Journal() {
           {state === "ready" && posts.length === 0 && !writing && (
             <div className="jr-empty">
               <h2>{t("journal.empty.title")}</h2>
-              <p className="k">{owner === "you" ? t("journal.empty.you.text") : t("journal.empty.text")}</p>
+              <p className="k">{owner === "you" ? t("journal.empty.you.text") : owner === "follow" ? t("journal.empty.follow.text") : t("journal.empty.text")}</p>
             </div>
           )}
           {state === "ready" &&
             posts.map((p) => (
-              <Post key={p.id} p={p} name={nameOf(p)} when={when(p.at)} onChanged={(n) => setPosts((x) => x.map((o) => (o.id === n.id ? n : o)))} onRemoved={(id) => setPosts((x) => x.filter((o) => o.id !== id))} />
+              <Post key={p.id} p={p} name={nameOf(p)} when={when(p.at)} whenOf={when} onChanged={(n) => setPosts((x) => x.map((o) => (o.id === n.id ? n : o)))} onRemoved={(id) => setPosts((x) => x.filter((o) => o.id !== id))} onFollow={(who, on) => setPosts((x) => (owner === "follow" && !on ? x.filter((o) => o.owner !== who) : x.map((o) => (o.owner === who ? { ...o, following: on } : o))))} />
             ))}
           {state === "ready" && more && <button type="button" className="btn" onClick={() => void olderPage()}>{t("journal.more")}</button>}
         </div>
