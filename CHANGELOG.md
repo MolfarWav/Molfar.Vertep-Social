@@ -5,6 +5,10 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.18.1 (2026-11-18)
+
+- Fixed: **the City and the Journal used only the left part of a wide screen** (owner's screenshot). The Journal's column is centred; the City is centred and, from 1000 px wide, shows the drawing on the left (it stays in view while the list scrolls) and the tiles, forms and doors on the right. The drawing sits lower in its frame and the Homes buildings are lower, so a tall building at the back and its pin are no longer cut off at the top. Checked: a new test (every roof of every kind on every grid has room for its pin, without the clamp), the whole suite, the preview at 1280 and 390 px.
+
 ## 0.18.0 (2026-11-18)
 
 Pictures and a drawing for the City, and the follow-ups of the Journal and the City. App 0.18.0; plugins: City 0.2.0, Journal 0.2.0, Clubs 0.3.0, Messenger 0.12.0, Life 0.9.0, Profiles 0.18.0. Nothing to migrate: new fields are optional, everything that costs a call is off by default. Molfar.Vertep#452 and #453. Tried with unit tests and the design preview; NOT with a real engine or a real model.

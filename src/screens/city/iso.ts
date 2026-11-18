@@ -18,7 +18,9 @@ export interface IsoFrame {
 export function isoFrame(phone: boolean): IsoFrame {
   const W = 800;
   const H = phone ? 600 : 450;
-  return { W, H, K: W * 0.235, cx: W / 2, cy: H * (phone ? 0.5 : 0.52) };
+  // the plate sits low in the frame, so tall buildings at the back and their pins have room above it
+  const K = W * (phone ? 0.235 : 0.2);
+  return { W, H, K, cx: W / 2, cy: H - K - 22 };
 }
 
 /** A point of the plate (u, v) at height z, in SVG units. */
@@ -68,10 +70,10 @@ export const KIND_LOOK: Record<string, { h: number; fill: string }> = {
   library: { h: 88, fill: "color-mix(in srgb, var(--cta) 30%, var(--raised))" },
   shop: { h: 52, fill: "color-mix(in srgb, var(--ok) 30%, var(--raised))" },
   club: { h: 70, fill: "color-mix(in srgb, var(--ink) 22%, var(--raised))" },
-  workplace: { h: 118, fill: "color-mix(in srgb, var(--cta) 22%, var(--raised))" },
+  workplace: { h: 96, fill: "color-mix(in srgb, var(--cta) 22%, var(--raised))" },
   park: { h: 16, fill: "color-mix(in srgb, var(--ok) 28%, var(--raised))" },
   custom: { h: 58, fill: "color-mix(in srgb, var(--warn) 26%, var(--raised))" },
-  home: { h: 120, fill: "color-mix(in srgb, var(--ink) 16%, var(--raised))" },
+  home: { h: 84, fill: "color-mix(in srgb, var(--ink) 16%, var(--raised))" },
 };
 
 /** The height of a building on a grid of side `g` (smaller lots, lower buildings), scaled to the frame. */
