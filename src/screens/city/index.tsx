@@ -12,7 +12,7 @@ import { useIsPhone } from "@/lib/use-phone";
 import { useChrome, useNav } from "@/shell/nav";
 import { useYou } from "../you/store";
 import { loadClubs } from "@/screens/messenger/clubs-api";
-import { loadCity, loadListen, removeDistrict, removePlace, resetTown, saveDistrict, savePlace, walkIn, type CityDoor, type CityPlace, type CityView, type ListenLine } from "./api";
+import { loadCity, loadListen, removeDistrict, removePlace, resetTown, saveDistrict, saveLayout, savePlace, walkIn, type CityDoor, type DistrictLots, type CityPlace, type CityView, type ListenLine } from "./api";
 import { DistrictForm, PlaceForm, draftOf, type PlaceDraft } from "./editors";
 import { IsoMap, type IsoSpot } from "./iso-map";
 
@@ -198,6 +198,17 @@ export function City() {
     if (districtId) setDistrict(districtId);
     if (placeId) setOpen(placeId);
   };
+  // (#458) the user moved a building on the drawing: show it at once, save it, and look again if the save failed
+  const moveBuildings = async (lots: DistrictLots | null) => {
+    if (!currentDistrict) return;
+    const id = currentDistrict.id;
+    setView((v) => (v ? { ...v, districts: v.districts.map((d) => { if (d.id !== id) return d; const { lots: _was, ...rest } = d; return lots ? { ...rest, lots } : rest; }) } : v));
+    try {
+      await saveLayout(id, lots);
+    } catch {
+      await load();
+    }
+  };
   const editedPlace = editor?.kind === "place" && editor.id ? view?.districts.flatMap((d) => d.places).find((p) => p.id === editor.id) ?? null : null;
   const pickDistricts = (view?.districts ?? []).map((d) => ({ id: d.id, name: districtName(d) }));
 
@@ -277,6 +288,8 @@ export function City() {
                     phone={phone}
                     selected={isHomes ? "" : open}
                     onPick={pickOnMap}
+                    saved={isHomes ? undefined : currentDistrict?.lots}
+                    onLayout={isHomes || !currentDistrict ? undefined : moveBuildings}
                   />
                 </div>
               )}

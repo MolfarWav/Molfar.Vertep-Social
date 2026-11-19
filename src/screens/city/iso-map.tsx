@@ -4,9 +4,10 @@
 // picture (#452) shows the picture under the same pins instead of the drawing.
 //
 // The SVG is built as a string from numbers and theme tokens only (no text from the user goes into it), so it follows the three themes.
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { useT } from "@/i18n/index";
-import { ISO_MAX, KIND_LOOK, isoAllLots, isoFrame, isoGrid, isoHeight, isoLots, isoPin, isoPoint, type IsoFrame, type IsoLot } from "./iso";
+import { ISO_MAX, KIND_LOOK, isoAllLots, isoFrame, isoGrid, isoHeight, isoPin, isoPoint, isoSlots, type IsoFrame, type IsoLot } from "./iso";
+import type { DistrictLots } from "./api";
 
 export interface IsoSpot {
   id: string;
@@ -97,8 +98,10 @@ function building(f: IsoFrame, lot: IsoLot, spot: IsoSpot, h: number): string {
 }
 
 /** The whole drawing: the plate, the roads between the lots, a few trees, and the buildings back to front. */
-export function isoSvg(f: IsoFrame, spots: IsoSpot[], districtKind: string): string {
-  const lots = isoLots(spots.length);
+export function isoSvg(f: IsoFrame, spots: IsoSpot[], districtKind: string, slots?: number[]): string {
+  const all = isoAllLots(spots.length);
+  const at = slots ?? spots.map((_, i) => i);
+  const lots = at.map((k) => all[k]);
   const g = isoGrid(Math.min(spots.length, ISO_MAX));
   const T = 14;
   const nature = districtKind === "nature";
@@ -129,7 +132,8 @@ export function isoSvg(f: IsoFrame, spots: IsoSpot[], districtKind: string): str
     return { z: lot.u + lot.v, s: building(f, lot, spot, isoHeight(f, spot.kind, g)) };
   });
   // a lot nobody uses is a small green with two trees
-  for (const lot of isoAllLots(spots.length).slice(lots.length)) {
+  const used = new Set(at);
+  for (const lot of all.filter((_, k) => !used.has(k))) {
     const q = lot.size * 0.4;
     const tr = 10 * (f.K / 192) * lot.size;
     items.push({ z: lot.u + lot.v, s: quad(f, lot.u - q, lot.v - q, lot.u + q, lot.v + q, GRASS, EDGE) + tree(f, lot.u - q * 0.4, lot.v - q * 0.2, tr) + tree(f, lot.u + q * 0.35, lot.v + q * 0.3, tr * 0.85) });
@@ -138,30 +142,67 @@ export function isoSvg(f: IsoFrame, spots: IsoSpot[], districtKind: string): str
   return s + items.map((x) => x.s).join("");
 }
 
-export function IsoMap({ spots, districtKind, name, picture, phone, selected, onPick }: { spots: IsoSpot[]; districtKind: string; name: string; picture?: string; phone: boolean; selected: string; onPick: (id: string) => void }) {
+export function IsoMap({ spots, districtKind, name, picture, phone, selected, onPick, saved, onLayout }: { spots: IsoSpot[]; districtKind: string; name: string; picture?: string; phone: boolean; selected: string; onPick: (id: string) => void; saved?: DistrictLots | null; onLayout?: (lots: DistrictLots | null) => void }) {
   const t = useT();
   const f = useMemo(() => isoFrame(phone), [phone]);
   const shown = spots.slice(0, ISO_MAX);
-  const lots = useMemo(() => isoLots(shown.length), [shown.length]);
+  const ids = shown.map((x) => x.id);
+  const idsKey = ids.join(",");
+  // where each place stands: the user's own order (#458) while it fits the grid, else the tiles' order
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `idsKey` stands for `ids`
+  const slots = useMemo(() => isoSlots(ids, saved), [idsKey, saved]);
+  const all = useMemo(() => isoAllLots(shown.length), [shown.length]);
   const g = isoGrid(shown.length);
+  const [moving, setMoving] = useState(false);
+  const [grab, setGrab] = useState("");
   // the drawing changes only with what it shows: kinds, open or not, the doors' windows (not with names or counts)
   const look = JSON.stringify(shown.map((x) => [x.kind, x.open, x.doors ?? null]));
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `look` stands for `shown`
-  const svg = useMemo(() => (picture ? "" : isoSvg(f, shown, districtKind)), [f, look, districtKind, picture]);
+  const slotsKey = slots.join(",");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `look` stands for `shown`, `slotsKey` for `slots`
+  const svg = useMemo(() => (picture ? "" : isoSvg(f, shown, districtKind, slots)), [f, look, districtKind, picture, slotsKey]);
   if (!shown.length) return null;
   // names stay readable only on a small grid of a wide screen; otherwise the selected place is named under the drawing
   const labels = !phone && g <= 3;
   const sel = shown.find((x) => x.id === selected);
+  // Rearrange (#458): pick a place, then a free lot or another place (they swap); every move is saved at once
+  const canMove = !!onLayout && shown.length >= 2;
+  const edit = canMove && moving;
+  const grabbed = shown.find((x) => x.id === grab);
+  const put = (i: number, slot: number) => {
+    if (!onLayout) return;
+    const next = slots.slice();
+    const j = next.indexOf(slot);
+    if (j >= 0 && j !== i) next[j] = next[i];
+    next[i] = slot;
+    onLayout({ g, at: Object.fromEntries(ids.map((id, k) => [id, next[k]])) });
+    setGrab("");
+  };
+  const onPin = (i: number) => {
+    const x = shown[i];
+    if (!edit) return onPick(x.id);
+    if (!grab) return setGrab(x.id);
+    if (grab === x.id) return setGrab("");
+    put(ids.indexOf(grab), slots[i]);
+  };
+  const free = edit && grab ? all.map((lot, k) => ({ lot, k })).filter(({ k }) => !slots.includes(k)) : [];
+  const hasOwn = !!saved && saved.g === g;
   return (
     <div className="ct-iso-wrap">
-      <div className={`ct-iso${phone ? " is-phone" : ""}${picture ? " has-pic" : ""}`} style={picture ? ({ "--bd": `url("${picture}")` } as CSSProperties) : undefined} role="group" aria-label={t("city.map.label", { name })}>
+      <div className={`ct-iso${phone ? " is-phone" : ""}${picture ? " has-pic" : ""}${edit ? " is-moving" : ""}`} style={picture ? ({ "--bd": `url("${picture}")` } as CSSProperties) : undefined} role="group" aria-label={t("city.map.label", { name })}>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: the string is built from numbers and theme tokens only (isoSvg), no user text */}
         {!picture && <svg viewBox={`0 0 ${f.W} ${f.H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false" dangerouslySetInnerHTML={{ __html: svg }} />}
-        {shown.map((x, i) => {
-          const pin = isoPin(f, lots[i], isoHeight(f, x.kind, g));
-          const label = x.doors ? t("city.map.pin.homes", { name: x.name, n: x.count }) : t(x.open ? "city.map.pin.open" : "city.map.pin.closed", { name: x.name, n: x.count });
+        {free.map(({ lot, k }) => {
+          const at = isoPin(f, lot, 0);
           return (
-            <button key={x.id} type="button" className={`ct-pin${x.id === selected ? " on" : ""}${x.open ? "" : " is-closed"}`} style={{ left: `${pin.x * 100}%`, top: `${pin.y * 100}%` }} aria-pressed={x.id === selected} aria-label={label} title={x.name} onClick={() => onPick(x.id)}>
+            <button key={`lot-${k}`} type="button" className="ct-lot" style={{ left: `${at.x * 100}%`, top: `${Math.min(0.92, at.y) * 100}%` }} aria-label={t("city.map.moveHere", { name: grabbed?.name ?? "" })} title={t("city.map.moveHere", { name: grabbed?.name ?? "" })} onClick={() => put(ids.indexOf(grab), k)} />
+          );
+        })}
+        {shown.map((x, i) => {
+          const pin = isoPin(f, all[slots[i]], isoHeight(f, x.kind, g));
+          const label = x.doors ? t("city.map.pin.homes", { name: x.name, n: x.count }) : t(x.open ? "city.map.pin.open" : "city.map.pin.closed", { name: x.name, n: x.count });
+          const on = edit ? x.id === grab : x.id === selected;
+          return (
+            <button key={x.id} type="button" className={`ct-pin${on ? " on" : ""}${x.open ? "" : " is-closed"}`} style={{ left: `${pin.x * 100}%`, top: `${pin.y * 100}%` }} aria-pressed={on} aria-label={label} title={x.name} onClick={() => onPin(i)}>
               <span className="ct-pin-dot" aria-hidden="true">
                 {x.icon}
                 <span className={`ct-pin-n${x.count === 0 ? " zero" : ""}`}>{x.count}</span>
@@ -177,7 +218,14 @@ export function IsoMap({ spots, districtKind, name, picture, phone, selected, on
         })}
         <span className="ct-iso-name" aria-hidden="true">{name}</span>
       </div>
-      {!labels && sel && <p className="k ct-iso-cap" aria-hidden="true">{sel.icon} {sel.name}{sel.open ? "" : ` · ${t("city.closed")}`}</p>}
+      {canMove && (
+        <div className={`ct-iso-tools${phone ? " is-phone" : ""}`}>
+          <button type="button" className={`chip${edit ? " on" : ""}`} aria-pressed={edit} onClick={() => { setMoving(!moving); setGrab(""); }}>{edit ? t("city.map.moveDone") : t("city.map.move")}</button>
+          {edit && hasOwn && <button type="button" className="chip" onClick={() => { onLayout?.(null); setGrab(""); }}>{t("city.map.moveReset")}</button>}
+        </div>
+      )}
+      {edit && <p className="k ct-iso-cap" role="status">{grabbed ? t("city.map.moveGrabbed", { name: `${grabbed.icon} ${grabbed.name}` }) : t("city.map.moveHint")}</p>}
+      {!edit && !labels && sel && <p className="k ct-iso-cap" aria-hidden="true">{sel.icon} {sel.name}{sel.open ? "" : ` · ${t("city.closed")}`}</p>}
       {spots.length > ISO_MAX && <p className="k">{t("city.map.more", { n: spots.length - ISO_MAX })}</p>}
     </div>
   );

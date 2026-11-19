@@ -431,7 +431,16 @@ The owner picked style C, isometric, from a clickable mock of three (map, street
 - **Pins are the controls.** A button per place laid over the SVG in percent (40 px, 44 on a phone), the place's icon and a count, "Closed" in words; a pin opens the place like its tile and scrolls to it; in Homes it scrolls to the building's doors. Names under the pins only on a wide screen with up to 9 places; otherwise the picked one is named under the drawing.
 - **The district's own picture (#452)** replaces the drawing under the same pins, so the #452 band is gone: one block above the tiles, not two.
 - **Frame.** 16:9 wide, 4:3 on a phone; the plate stays inside the width and a pin is kept inside the frame (a test checks every lot for the tallest building).
-- **Not done:** moving a building by hand, several styles (the owner picked one), labels for every place on a phone.
+- **Not done:** several styles (the owner picked one), labels for every place on a phone. Moving a building by hand was done later (#458, below).
+
+## City, rearranging the drawing (#458, 2026-11-19)
+- **What.** "Rearrange" under the drawing: tap a place, then a free lot (a dashed circle) to put it there, or another place to swap. Saved at once. "Back to the list order" forgets it. Not on Homes (its buildings are not places).
+- **Where it is kept.** On the district, `lots: { g, at: { <place id>: lot index } }` in `city/places.json`, written by `POST /city/layout`. Not a field of the place: saving a place marks it `by: "you"`, and a stock place would lose its translated name only because the user moved it. The lots are numbered back to front on the grid of `g` lots a side (`isoAllLots`).
+- **Why the grid size is stored.** The grid grows when places are added (1, 2, 3, 4, 5 a side), and then lot 7 is a different spot. A layout made for another grid size is ignored and the drawing follows the tiles' order again, rather than guess where the buildings should go. Places without a saved lot (added since) take the free lots in order (`isoSlots`, pure, tested).
+- **Why the cap stays 25.** Raising it was considered. At 6 lots a side a lot is about 28 px on a 390 px phone and a pin is 44 px, so the pins would sit on each other; at 5 they already almost do. A district with more than 25 places keeps the list for the rest.
+- **Not done / not checked.** Dragging (a tap-tap move works with a keyboard and on a phone; a drag would need pointer handling and still a non-drag way). Checked in the design preview only (desktop and 375 px), not with a real engine.
+
+## The facts ledger, M1 (#446, 2026-11-18)
 
 ## The facts ledger, M1 (#446, 2026-11-18)
 - **Why.** The note is rewritten whole at every fold, so a fact survives only if the model copies it each time. The ledger keeps details apart: `chat.facts`, one sentence each `{id, text, kind, at, from, private, pinned, by}`. Facts belong to a chat (a pair of character and persona), as decided by the owner; `private` is the default for messenger facts.

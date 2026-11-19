@@ -47,6 +47,31 @@ export function isoLots(n: number): IsoLot[] {
   return isoAllLots(n).slice(0, Math.min(n, ISO_MAX));
 }
 
+/**
+ * The lot each place stands on (#458): an index into `isoAllLots(n)`. A place the user put somewhere (`saved`, made for a grid of this
+ * size) keeps its lot; the others take the free lots in order, so with nothing saved the places stand in their tiles' order.
+ */
+export function isoSlots(ids: string[], saved?: { g: number; at: Record<string, number> } | null): number[] {
+  const n = Math.min(ids.length, ISO_MAX);
+  const g = isoGrid(n);
+  const taken = new Set<number>();
+  const slots: (number | null)[] = ids.slice(0, n).map((id) => {
+    const i = saved && saved.g === g ? saved.at[id] : undefined;
+    if (typeof i === "number" && Number.isInteger(i) && i >= 0 && i < g * g && !taken.has(i)) {
+      taken.add(i);
+      return i;
+    }
+    return null;
+  });
+  let next = 0;
+  return slots.map((v) => {
+    if (v !== null) return v;
+    while (taken.has(next)) next++;
+    taken.add(next);
+    return next;
+  });
+}
+
 /** Every lot of the grid for `n` places, the empty ones after the used ones (they are drawn as green). */
 export function isoAllLots(n: number): IsoLot[] {
   const g = isoGrid(Math.min(n, ISO_MAX));

@@ -3,8 +3,10 @@
  * character is right now. All by rules, no model call, read-only for the user in this phase.
  *
  * Data (this plugin is the only writer of city/*):
- *   city/places.json  {districts: [{id, name, kind, order, by, background?}], places: [{id, district, name, kind, icon, text, picture?, background?, open, tags, seats, by}]}
+ *   city/places.json  {districts: [{id, name, kind, order, by, background?, lots?}], places: [{id, district, name, kind, icon, text, picture?, background?, open, tags, seats, by}]}
  *                     (#452) `background`: the wide picture of a place or district (an asset url); `picture` is the small one of before.
+ *                     (#458) `lots`: {g, at: {<place id>: lot index}}, where the user put the buildings of the district's drawing (grid g a
+ *                     side, lots numbered back to front); dropped from the drawing when the grid size is no longer g.
  *                     `open` is 8 bands of 3 hours by 7 days from Monday (the schedule's shape), 1 = open. The stock town is an ordinary
  *                     present-day town with no real city, country or brand: plain names. It is written once, so later phases (own places,
  *                     packs) edit records, not code.
@@ -31,7 +33,8 @@
  *   GET /city/listen?place=   {place, present, lines: [{id, by, name, hue, picture, at, text, via: "chatter" | "club"}]}: the last lines (at most 6, from
  *                             the last 3 days) that characters who are at this place now wrote to each other in chatter or in a club; read only
  *                             (the chatter and clubs files are those plugins'; the user's own lines are left out)
- *   GET /city   {band, from, to, districts: [{id, name, kind, by, places: [{id, name, kind, icon, text, by, open, seats, people: [person]}]}],
+ *   POST /city/layout  {district, lots: {g, at} | null}  the hand-made order of a district's drawing (null: the tiles' order again)
+ *   GET /city   {band, from, to, districts: [{id, name, kind, by, lots?, places: [{id, name, kind, icon, text, by, open, seats, people: [person]}]}],
  *                homes: {buildings: [{id, n, doors: [{id, name, hue, picture, flat, state: "lit"|"dark"|"out", where?}]}]}, you: {...}, empty}
  *
  * Permissions: routes, fs, schedule.
@@ -147,6 +150,23 @@ function cleanPlace(x, districtIds) {
   };
 }
 
+/**
+ * The hand-made order of a district's drawing (#458): `{ g, at: { <place id>: lot index } }`, the lots of a grid `g` a side (the drawing's
+ * own geometry, src/screens/city/iso.ts) numbered back to front. Kept only while the grid is still that size: a district that gained
+ * places and grew a row is drawn in its tiles' order again. Not a place field, so moving a building never turns a stock place into "yours".
+ */
+export function cleanLots(v) {
+  if (!isObj(v) || !Number.isInteger(v.g) || v.g < 1 || v.g > 8 || !isObj(v.at)) return null;
+  const at = {};
+  const used = new Set();
+  for (const [id, i] of Object.entries(v.at)) {
+    if (!ID.test(id) || !Number.isInteger(i) || i < 0 || i >= v.g * v.g || used.has(i)) continue;
+    used.add(i);
+    at[id] = i;
+  }
+  return Object.keys(at).length ? { g: v.g, at } : null;
+}
+
 /** The places file as stored, or the stock town when it is missing or unreadable. */
 export function readTown(fsx) {
   const d = readJson(fsx, "city/places.json", null);
@@ -156,7 +176,8 @@ export function readTown(fsx) {
   for (const x of d.districts) {
     if (!isObj(x) || typeof x.id !== "string" || !ID.test(x.id) || seen.has(x.id) || !str(x.name)) continue;
     seen.add(x.id);
-    districts.push({ id: x.id, name: oneLine(x.name, 40), kind: DISTRICT_KINDS.includes(x.kind) ? x.kind : "custom", order: Number.isFinite(x.order) ? x.order : 99, by: x.by === "you" ? "you" : "stock", ...(typeof x.background === "string" && ASSET.test(x.background) ? { background: x.background } : {}) });
+    const lots = cleanLots(x.lots);
+    districts.push({ id: x.id, name: oneLine(x.name, 40), kind: DISTRICT_KINDS.includes(x.kind) ? x.kind : "custom", order: Number.isFinite(x.order) ? x.order : 99, by: x.by === "you" ? "you" : "stock", ...(lots ? { lots } : {}), ...(typeof x.background === "string" && ASSET.test(x.background) ? { background: x.background } : {}) });
     if (districts.length >= MAX_DISTRICTS) break;
   }
   const ids = new Set(districts.map((x) => x.id));
@@ -462,6 +483,7 @@ export function cityView(fsx, now) {
       kind: d.kind,
       by: d.by,
       ...(d.background ? { background: d.background } : {}),
+      ...(d.lots ? { lots: d.lots } : {}),
       places: town.places
         .filter((p) => p.district === d.id)
         .map((p) => ({
@@ -579,6 +601,28 @@ function placeRoute(fsx, b) {
   return ok({ ok: true, id: place.id });
 }
 
+/** Save the hand-made order of a district's drawing (#458); `lots: null` puts the drawing back in the tiles' order. */
+function layoutRoute(fsx, b) {
+  const town = readTown(fsx);
+  const d = town.districts.find((x) => x.id === String(b.district || ""));
+  if (!d) return ok({ error: "no such district" }, 404);
+  if (d.kind === "homes") return ok({ error: "the Homes drawing is not rearranged" }, 400);
+  let lots = null;
+  if (b.lots !== null && b.lots !== undefined) {
+    const mine = new Set(town.places.filter((p) => p.district === d.id).map((p) => p.id));
+    const asked = isObj(b.lots) && isObj(b.lots.at) ? { g: b.lots.g, at: Object.fromEntries(Object.entries(b.lots.at).filter(([id]) => mine.has(id))) } : null;
+    lots = cleanLots(asked);
+    if (!lots) return ok({ error: "the layout needs a grid size and a lot for at least one place of this district" }, 400);
+  }
+  town.districts = town.districts.map((x) => {
+    if (x.id !== d.id) return x;
+    const { lots: _was, ...rest } = x;
+    return lots ? { ...rest, lots } : rest;
+  });
+  writeTown(fsx, town);
+  return ok({ ok: true });
+}
+
 function districtRoute(fsx, b) {
   const town = readTown(fsx);
   const old = typeof b.id === "string" && b.id ? town.districts.find((d) => d.id === b.id) : null;
@@ -667,6 +711,7 @@ export function handleRoute(req, host) {
       return ok({ ok: true });
     }
     if (path === "/city/district") return districtRoute(host.fs, b);
+    if (path === "/city/layout") return layoutRoute(host.fs, b);
     if (path === "/city/district/remove") {
       const town = readTown(host.fs);
       const d = town.districts.find((x) => x.id === String(b.id || ""));
