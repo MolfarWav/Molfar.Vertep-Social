@@ -162,6 +162,37 @@ export function FactsPage(p: { id: string; name: string; onBack: () => void; onC
         {ledger && shown.length > 0 && <ul className="facts">{shown.map((f) => row(f, filter === "archive"))}</ul>}
         {ledger && filter === "archive" && <p className="k">{t("messenger.facts.archiveNote")}</p>}
         {ledger && ledger.dropped > 0 && filter === "archive" && <p className="k">{t("messenger.facts.dropped", { n: ledger.dropped })}</p>}
+        {ledger && filter !== "archive" && ledger.learned.length > 0 && (
+          <section className="fact-learned" aria-label={t("messenger.facts.learned.title")}>
+            <h3 className="fact-learned-title">{t("messenger.facts.learned.title")}</h3>
+            <p className="k">{t("messenger.facts.learned.intro", { name: p.name })}</p>
+            <ul className="facts">
+              {ledger.learned.map((f) => {
+                const key = `${f.src}:${f.id}`;
+                return (
+                  <li key={key} className="fact">
+                    <div className="fact-head">
+                      <span className="chip">{t(f.src === "forum" ? "messenger.facts.learned.forum" : "messenger.facts.learned.clubs")}</span>
+                      <span className="chip">{kindLabel(f.kind)}</span>
+                    </div>
+                    <p className="fact-text">{f.text}</p>
+                    {asking === key ? (
+                      <div className="fact-btns" role="group" aria-label={t("messenger.facts.learned.deleteAsk")}>
+                        <span className="k">{t("messenger.facts.learned.deleteAsk")}</span>
+                        <button type="button" className="btn danger" disabled={busy} onClick={() => void run({ op: "forget", src: f.src, factId: f.id }).then(() => setAsking(""))}>{t("messenger.facts.deleteYes")}</button>
+                        <button type="button" className="btn" disabled={busy} onClick={() => setAsking("")}>{t("messenger.memory.cancel")}</button>
+                      </div>
+                    ) : (
+                      <div className="fact-btns">
+                        <button type="button" className="btn" disabled={busy} onClick={() => setAsking(key)}>{t("messenger.facts.delete")}</button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
         {error && (
           <div className="form-err" role="alert">
             {error}{" "}

@@ -5,6 +5,7 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+- Added: **the forum and the clubs remember what you say (Molfar.Vertep#446, phase M4; #458).** When a forum topic you wrote in has been quiet for 6 hours, or a club 30 minutes after your last line, one short model call reads what you said openly about yourself and notes it as public facts for the characters who were there (one file per character and persona, `forum/facts/…`, `clubs/facts/…`). They use these facts on the forum, in clubs and in your chat with them. At most 6 calls a day for each; the facts are listed on the Facts page under "Noted in the forum and clubs", where any can be deleted (and is not noted again). New switch Settings > Messenger > "Forum and clubs remember what you say" (on). Start over and deleting a character or persona remove these files. Plugins: Forum, Clubs, Messenger, Profiles.
 - Added: **move a building on a district's drawing (Molfar.Vertep#458).** "Rearrange" under the City drawing: tap a place, then a free spot to put it there or another place to swap; every move is saved at once, "Back to the list order" forgets it. The order is kept on the district (`lots` in `city/places.json`), never on a place, so moving a building does not turn a stock place into one of yours, and it is dropped when the grid changes size. Route `POST /city/layout`; Homes cannot be rearranged. The drawing still holds 25 places. Checked in the design preview only. Tests: `test/city-layout.test.ts`.
 ## 0.21.0 (2026-11-18)
 

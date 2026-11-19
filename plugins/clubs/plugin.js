@@ -181,30 +181,117 @@ export function knowsOf(fsx, profile) {
 }
 
 // <public-facts-shared>
-// (#446, M3) What a character knows of the user from their private chat, for every place but that chat (the forum, the clubs): only the facts the
-// messenger marks public (`private: false`, strictly: a fact with no flag is private), never the memory note, which is free text and may hold anything.
-// Read from `chats/<profile>[.<persona>].json` `facts`. Nothing when Settings > Messenger "Public facts leave the chat" is off, when the messenger's
-// memory switch is off, or when the character is a stranger to the user. Identical in the forum and the clubs (test/public-facts.test.ts pins it).
+// (#446, M3 and M4) What a character knows of the user outside the private chat, for the forum, the clubs and (the learned part only) the messenger.
+// Two sources, joined: (1) the facts of the private chat that the messenger marks public (`private: false`, strictly: a fact with no flag is private),
+// never the memory note, which is free text and may hold anything; (2) what the forum and the clubs learned from what the user said openly there,
+// one file per character and persona (`forum/facts/<profile>[.<persona>].json`, `clubs/facts/...`), written only by that surface, public by
+// construction. Nothing when Settings > Messenger "Public facts leave the chat" is off, when the messenger's memory switch is off, or when the
+// character is a stranger to the user. Identical in the forum, the clubs and the messenger (test/public-facts.test.ts pins it).
 const PUBLIC_FACTS_MAX = 1000;
 const PUBLIC_FACTS_COUNT = 12;
-export function publicFacts(fsx, profile, pid) {
+const LEARNED_TEXT_MAX = 160;
+const LEARNED_CEILING = 60;
+const LEARNED_FORGOT_MAX = 100;
+const LEARNED_PER_CALL = 6;
+export const LEARNED_SOURCES = ["forum", "clubs"];
+export const LEARNED_KINDS = ["about_you", "plan", "promise", "shared", "joke"];
+const learnedKey = (s) => String(s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const learnedText = (s) => cut(noControls(str(s)).replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim(), LEARNED_TEXT_MAX);
+const learnedSeq = (id) => Number((/^l(\d{1,6})$/.exec(String(id)) || [])[1] || 0);
+/** Where a surface keeps what it learned about the user for one character and persona (the same naming as `chats/`). */
+export const learnedPath = (src, profileId, pid) => src + "/facts/" + profileId + (pid ? "." + pid : "") + ".json";
+
+/** The file cleaned: {facts: [{id, text, kind, at, from}], forgot: [normalised texts the user deleted], dropped}. A missing or broken file is empty. */
+export function readLearned(fsx, src, profileId, pid) {
+  const j = readJson(fsx, learnedPath(src, profileId, pid), null);
+  const used = new Set();
+  let seq = 0;
+  const raw = isObj(j) && Array.isArray(j.facts) ? j.facts.filter(isObj) : [];
+  for (const f of raw) seq = Math.max(seq, learnedSeq(f.id));
+  const facts = [];
+  for (const f of raw) {
+    const text = learnedText(f.text);
+    if (!text) continue;
+    const id = learnedSeq(f.id) > 0 && !used.has(f.id) ? f.id : "l" + ++seq;
+    used.add(id);
+    facts.push({ id, text, kind: LEARNED_KINDS.includes(f.kind) ? f.kind : "about_you", at: Number.isFinite(f.at) ? f.at : 0, from: cut(noControls(str(f.from)), 60) });
+  }
+  const forgot = (isObj(j) && Array.isArray(j.forgot) ? j.forgot : []).filter((k) => typeof k === "string" && k).slice(-LEARNED_FORGOT_MAX);
+  return { facts: facts.slice(-LEARNED_CEILING), forgot, dropped: isObj(j) && Number.isFinite(j.dropped) ? Math.max(0, Math.floor(j.dropped)) : 0 };
+}
+
+/** Adds what a call learned: the same words only refresh `at`; a text the user deleted is never added again; over the ceiling the oldest go (counted in `dropped`). Returns how many were added. */
+export function mergeLearned(file, incoming, now, from) {
+  let added = 0;
+  const forgot = new Set(file.forgot);
+  for (const raw of (Array.isArray(incoming) ? incoming : []).slice(0, LEARNED_PER_CALL)) {
+    const item = typeof raw === "string" ? { text: raw } : raw;
+    if (!isObj(item)) continue;
+    const text = learnedText(item.text);
+    const k = learnedKey(text);
+    if (!text || forgot.has(k)) continue;
+    const same = file.facts.find((f) => learnedKey(f.text) === k);
+    if (same) {
+      same.at = now;
+      continue;
+    }
+    const id = "l" + (Math.max(0, ...file.facts.map((f) => learnedSeq(f.id))) + 1);
+    file.facts.push({ id, text, kind: LEARNED_KINDS.includes(item.kind) ? item.kind : "about_you", at: now, from: cut(noControls(str(from)), 60) });
+    added += 1;
+  }
+  while (file.facts.length > LEARNED_CEILING) {
+    file.facts.sort((a, b) => a.at - b.at);
+    file.facts.shift();
+    file.dropped += 1;
+  }
+  return added;
+}
+
+/** Writes the file back (the ids and the forgotten list as they are). */
+export function writeLearned(fsx, src, profileId, pid, file) {
+  fsx.write(learnedPath(src, profileId, pid), JSON.stringify({ facts: file.facts, forgot: file.forgot.slice(-LEARNED_FORGOT_MAX), dropped: file.dropped }));
+}
+
+/** What a model answered when asked what the user said openly: the array of facts from a JSON object `{facts: [...]}` (or a bare array); [] when it is not one. */
+export function parseLearned(text) {
+  const s = String(text || "").replace(/<think(?:ing)?>[\s\S]*?(?:<\/think(?:ing)?>|$)/gi, "");
+  const o = s.indexOf("{");
+  const a = s.indexOf("[");
+  const pick = a >= 0 && (o < 0 || a < o) ? [a, s.lastIndexOf("]")] : [o, s.lastIndexOf("}")];
+  if (pick[0] < 0 || pick[1] <= pick[0]) return [];
+  try {
+    const j = JSON.parse(s.slice(pick[0], pick[1] + 1));
+    return Array.isArray(j) ? j : isObj(j) && Array.isArray(j.facts) ? j.facts : [];
+  } catch {
+    return [];
+  }
+}
+
+/** The public facts about the user for one character and persona, newest first, at most PUBLIC_FACTS_COUNT and PUBLIC_FACTS_MAX characters; `skipChat` leaves out the private chat's own (the messenger already sends them all). */
+export function publicFacts(fsx, profile, pid, skipChat) {
   const s = readJson(fsx, "settings.json", null);
   if (isObj(s) && (s.messengerSummary === false || s.factsShare === false)) return [];
   if (!isObj(profile) || knowsOf(fsx, profile) === "stranger") return [];
   const who = pid || activePersonaId(fsx);
-  let chat = readJson(fsx, "chats/" + profile.id + (who ? "." + who : "") + ".json", null);
-  // a chat from before personas had their own is adopted by the active persona the first time the messenger runs; until then it is theirs
-  if (!isObj(chat) && who && who === activePersonaId(fsx)) chat = readJson(fsx, "chats/" + profile.id + ".json", null);
-  const list = isObj(chat) && Array.isArray(chat.facts) ? chat.facts : [];
-  const open = list
-    .filter((f) => isObj(f) && f.private === false && typeof f.text === "string")
-    .map((f) => ({ pinned: f.pinned === true, from: Number.isFinite(f.from) ? f.from : 0, text: cut(noControls(str(f.text)).replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim(), 160) }))
-    .filter((f) => f.text)
-    .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.from - a.from);
+  const open = [];
+  if (!skipChat) {
+    let chat = readJson(fsx, "chats/" + profile.id + (who ? "." + who : "") + ".json", null);
+    // a chat from before personas had their own is adopted by the active persona the first time the messenger runs; until then it is theirs
+    if (!isObj(chat) && who && who === activePersonaId(fsx)) chat = readJson(fsx, "chats/" + profile.id + ".json", null);
+    for (const f of isObj(chat) && Array.isArray(chat.facts) ? chat.facts : []) {
+      if (isObj(f) && f.private === false && typeof f.text === "string") open.push({ pinned: f.pinned === true, from: Number.isFinite(f.from) ? f.from : 0, text: learnedText(f.text) });
+    }
+  }
+  for (const src of LEARNED_SOURCES) for (const f of readLearned(fsx, src, profile.id, who).facts) open.push({ pinned: false, from: f.at, text: f.text });
+  open.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.from - a.from);
   const out = [];
+  const seen = new Set();
   let size = 0;
   for (const f of open) {
+    const k = learnedKey(f.text);
+    if (!f.text || seen.has(k)) continue;
     if (out.length >= PUBLIC_FACTS_COUNT || (size + f.text.length > PUBLIC_FACTS_MAX && out.length)) break;
+    seen.add(k);
     out.push(f.text);
     size += f.text.length;
   }
@@ -925,6 +1012,142 @@ export function handleRoute(req, host) {
   return ok({ error: "not found" }, 404);
 }
 
+// ---------- what the clubs learn about the user (issue #446, M4) ----------
+// When a club the user talked in has been quiet for LEARN_QUIET_MS (the session is over), one small call reads what the user said and files the public
+// facts into the files of the members who were there (`clubs/facts/<profile>[.<persona>].json`, read by the shared reader). Same rules as the forum's
+// (its learner has the long note): facts only about the user, only what they said openly, off with `factsLearn`, `factsShare` and the messenger's memory
+// switch, at most LEARN_DAY_MAX calls a day, one at a time. What was read is kept in clubs/learn/state.json {day, calls, failAt, pending, clubs: {<id>: {upto, fails}}}.
+const LEARN_STATE = "clubs/learn/state.json";
+export const LEARN_QUIET_MS = 30 * 60 * 1000;
+export const LEARN_DAY_MAX = 6;
+const LEARN_FAIL_WAIT_MS = 30 * 60 * 1000;
+const LEARN_PENDING_MS = 10 * 60 * 1000;
+const LEARN_FAILS_MAX = 3;
+const LEARN_MIN_CHARS = 30;
+const LEARN_LINES = 24;
+const LEARN_LINE_MAX = 400;
+
+export function learnOn(fsx) {
+  const s = readJson(fsx, "settings.json", null);
+  return !(isObj(s) && (s.messengerSummary === false || s.factsShare === false || s.factsLearn === false));
+}
+
+function readLearnState(fsx, now, tz) {
+  const j = readJson(fsx, LEARN_STATE, null);
+  const r = isObj(j) ? j : {};
+  const day = localDay(now, tz);
+  const clubs = {};
+  if (isObj(r.clubs)) {
+    for (const [id, v] of Object.entries(r.clubs)) if (ID.test(id) && isObj(v)) clubs[id] = { upto: num(v.upto), fails: Math.max(0, Math.floor(num(v.fails))) };
+  }
+  return { day, calls: r.day === day ? Math.max(0, Math.floor(num(r.calls))) : 0, failAt: num(r.failAt), pending: num(r.pending), clubs };
+}
+
+function writeLearnState(fsx, st) {
+  fsx.write(LEARN_STATE, JSON.stringify({ day: st.day, calls: st.calls, failAt: st.failAt, pending: st.pending, clubs: st.clubs }));
+}
+
+/** What a call for this club would read: the user's lines since the last one read, the persona who wrote them and the members to file the facts for; null when there is nothing new. */
+export function learnPlan(fsx, club, st) {
+  const seen = (st.clubs[club.id] || { upto: 0 }).upto;
+  const mine = club.messages.filter((m) => m.by === "me" && m.at > seen);
+  if (!mine.length) return null;
+  const persona = mine[mine.length - 1].persona || activePersonaId(fsx);
+  const mineOfPersona = mine.filter((m) => (m.persona || activePersonaId(fsx)) === persona);
+  const upto = mine[mine.length - 1].at;
+  if (mineOfPersona.reduce((n, m) => n + m.text.trim().length, 0) < LEARN_MIN_CHARS) return { skip: true, club: club.id, upto };
+  const authors = club.members.map((id) => readProfile(fsx, id)).filter((p) => p && knowsOf(fsx, p) !== "stranger");
+  return { skip: !authors.length, club: club.id, upto, persona, authors, lines: club.messages.slice(-LEARN_LINES) };
+}
+
+/** The club to read next: quiet long enough, with the user's unread lines; the oldest such lines first. */
+export function pickLearn(fsx, clubs, st, now) {
+  const found = [];
+  for (const c of clubs) {
+    if (!c.messages.length || now - c.messages[c.messages.length - 1].at < LEARN_QUIET_MS || c.pending) continue;
+    const plan = learnPlan(fsx, c, st);
+    if (plan) found.push(plan);
+  }
+  found.sort((a, b) => a.upto - b.upto);
+  return found.length ? found[0] : null;
+}
+
+function learnRequest(host, plan, club, model) {
+  const you = (personaOf(host.fs, plan.persona) || { name: "the user" }).name;
+  const nameOf = (m) => (m.by === "me" ? "[" + you + " (the user)]" : (readProfile(host.fs, m.by) || { name: "Someone" }).name);
+  const lines = plan.lines.map((m) => nameOf(m) + ": " + cut(noControls(m.text).replace(/\s+/g, " ").trim(), LEARN_LINE_MAX));
+  host.llm.request("cf:" + plan.club + ":" + plan.upto, {
+    ...(model ? { model } : {}),
+    systemPrompt:
+      "You read a group chat of a club and note what " + you + " (the user, lines marked [" + you + " (the user)]) said openly about themselves, so that the club's members can remember it later. " +
+      "Reply with one JSON object and nothing else: {\"facts\": [{\"text\": \"...\", \"kind\": \"about_you\"}]}. " +
+      "Only facts about " + you + " that would still be worth knowing a month from now (a name, a job, a city, a hobby, a plan, a promise, a running joke), only from the user's own lines, none from what the others wrote, nothing private or sensitive (health, money, passwords, addresses, other people's secrets), no passing moods or small talk, at most " + LEARNED_PER_CALL + ". " +
+      "One short sentence each, at most " + LEARNED_TEXT_MAX + " characters, in the third person, names, numbers and dates exactly as written, in the language of the chat. kind is one of: about_you, plan, promise, shared, joke. An empty list is the usual answer.",
+    messages: [{ role: "user", content: "Club: " + cut(club.name, 60) + (club.interest ? " (" + club.interest + ")" : "") + "\n\n" + lines.join("\n") }],
+    presetParams: { temperature: 0.2, max_tokens: 500 },
+  });
+}
+
+/** One tick: asks for the next club to read (true when a call went out). */
+export function learnTick(host, settings, clubs, now, tz) {
+  const fsx = host.fs;
+  if (!learnOn(fsx)) return false;
+  const st = readLearnState(fsx, now, tz);
+  if (st.calls >= LEARN_DAY_MAX || now - st.failAt < LEARN_FAIL_WAIT_MS || now - st.pending < LEARN_PENDING_MS) return false;
+  const plan = pickLearn(fsx, clubs, st, now);
+  if (!plan) return false;
+  if (plan.skip) {
+    // nothing worth a call (too short, or nobody to tell): mark it read
+    st.clubs[plan.club] = { upto: plan.upto, fails: 0 };
+    writeLearnState(fsx, st);
+    return false;
+  }
+  st.pending = now;
+  writeLearnState(fsx, st);
+  learnRequest(host, plan, clubs.find((c) => c.id === plan.club), settings.model);
+  return true;
+}
+
+/** Files a call's answer (key `<club>:<upto>`): the facts go to each member's file, the club is marked read. A failed call waits half an hour and is given up after three. */
+export function fileLearn(fsx, key, result, now, tz) {
+  const m = /^([A-Za-z0-9_-]{1,60}):(\d{1,16})$/.exec(String(key));
+  const st = readLearnState(fsx, now, tz);
+  st.pending = 0;
+  const club = m ? readClub(fsx, m[1], now, tz) : null;
+  const plan = club ? learnPlan(fsx, club, st) : null;
+  // what the call read ends where it was asked to (a line the user added since is read by the next one)
+  if (plan && m) plan.upto = Math.min(plan.upto, Number(m[2]));
+  if (!club || !plan || plan.skip) {
+    writeLearnState(fsx, st);
+    return 0;
+  }
+  const r = isObj(result) ? result : {};
+  st.calls += 1;
+  if (r.error || typeof r.text !== "string" || !r.text.trim()) {
+    const fails = (st.clubs[club.id] ? st.clubs[club.id].fails : 0) + 1;
+    st.failAt = now;
+    st.clubs[club.id] = { upto: fails >= LEARN_FAILS_MAX ? plan.upto : (st.clubs[club.id] || { upto: 0 }).upto, fails: fails >= LEARN_FAILS_MAX ? 0 : fails };
+    writeLearnState(fsx, st);
+    return 0;
+  }
+  const facts = parseLearned(r.text);
+  let added = 0;
+  if (facts.length) {
+    for (const a of plan.authors) {
+      const file = readLearned(fsx, "clubs", a.id, plan.persona);
+      const n = mergeLearned(file, facts, now, "c:" + club.id);
+      if (n || file.dropped) writeLearned(fsx, "clubs", a.id, plan.persona, file);
+      added += n;
+    }
+  }
+  st.failAt = 0;
+  st.clubs[club.id] = { upto: plan.upto, fails: 0 };
+  const ids = Object.keys(st.clubs);
+  if (ids.length > 100) for (const id of ids.sort((a, b) => st.clubs[a].upto - st.clubs[b].upto).slice(0, ids.length - 100)) delete st.clubs[id];
+  writeLearnState(fsx, st);
+  return added;
+}
+
 // ---------- onTick ----------
 
 export function onTick(_ctx, host) {
@@ -934,12 +1157,17 @@ export function onTick(_ctx, host) {
   const settings = readSettings(fsx);
   sweepRooms(fsx, now, settings.tz);
   const results = host.llm.results || {};
-  const keys = Object.keys(results).filter((k) => k.startsWith("cl:"));
+  const keys = Object.keys(results).filter((k) => k.startsWith("cl:") || k.startsWith("cf:"));
   if (keys.length) {
-    for (const k of keys) fileClubResult(fsx, k, results[k], now, settings.tz);
+    for (const k of keys) {
+      if (k.startsWith("cf:")) fileLearn(fsx, k.slice(3), results[k], now, settings.tz);
+      else fileClubResult(fsx, k, results[k], now, settings.tz);
+    }
     return;
   }
   if (!settings.on) return;
+  // what the user said in a club that has gone quiet becomes facts for its members (#446, M4); every fifth minute is enough
+  if (Math.floor(now / 60000) % 5 === 0 && learnTick(host, settings, clubIds(fsx).map((id) => readClub(fsx, id, now, settings.tz)).filter(Boolean), now, settings.tz)) return;
   // the Moderator may start a club (rules only, now and then)
   if (settings.mod && Math.random() < MOD_CHANCE && modClub(fsx, settings, now, Math.random)) return;
   const pick = pickTurn(fsx, settings, now, Math.random);

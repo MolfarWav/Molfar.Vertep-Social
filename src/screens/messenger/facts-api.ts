@@ -18,8 +18,20 @@ export interface Fact {
   by: "model" | "you";
 }
 
+/** A fact the forum or a club noted about the user from what they said openly there (M4): public by nature, no private or pin. */
+export interface LearnedFact {
+  id: string;
+  src: "forum" | "clubs";
+  text: string;
+  kind: FactKind;
+  at: number;
+  from: string;
+}
+
 export interface Ledger {
   facts: Fact[];
+  /** What the forum and the clubs learned about the user for this character; the user may delete any of it. */
+  learned: LearnedFact[];
   /** Facts over the ceiling of 200: not sent to the model, kept here. */
   archive: Fact[];
   /** Archived facts that fell off the end of the archive. */
@@ -32,7 +44,8 @@ export type FactOp =
   | { op: "add"; text: string; kind?: FactKind; private?: boolean }
   | { op: "update"; factId: string; text?: string; kind?: FactKind; private?: boolean; pinned?: boolean }
   | { op: "delete"; factId: string }
-  | { op: "restore"; factId: string };
+  | { op: "restore"; factId: string }
+  | { op: "forget"; src: LearnedFact["src"]; factId: string };
 
 // The design preview has no engine: a made-up ledger that the page can change (the same rules as the plugin, roughly).
 const T = Date.parse("2026-11-12T12:00:00Z");
@@ -49,6 +62,10 @@ let previewLedger: Ledger = {
   ],
   archive: [fake(8, "They once argued about whether a chorus pedal sounds like a submarine.", "joke")],
   dropped: 0,
+  learned: [
+    { id: "l1", src: "forum", text: "Serhii is learning to solder and is building a guitar pedal.", kind: "about_you", at: T + 20 * 3600_000, from: "t:topic1" },
+    { id: "l2", src: "clubs", text: "Serhii will bring his bass to the club meeting on Saturday.", kind: "plan", at: T + 30 * 3600_000, from: "c:cl-1" },
+  ],
 };
 const nextPreviewId = (): string => "f" + (Math.max(0, ...previewLedger.facts.concat(previewLedger.archive).map((f) => Number(f.id.slice(1)))) + 1);
 
@@ -61,6 +78,7 @@ export async function changeFacts(id: string, change: FactOp): Promise<Ledger> {
   if (PREVIEW) {
     const l = previewLedger;
     if (change.op === "add") l.facts.push(fake(Number(nextPreviewId().slice(1)), change.text, change.kind ?? "about_you", { by: "you", at: Date.now(), from: Date.now() }));
+    else if (change.op === "forget") previewLedger = { ...l, learned: l.learned.filter((f) => !(f.id === change.factId && f.src === change.src)) };
     else if (change.op === "delete") previewLedger = { ...l, facts: l.facts.filter((f) => f.id !== change.factId), archive: l.archive.filter((f) => f.id !== change.factId) };
     else if (change.op === "restore") {
       const f = l.archive.find((x) => x.id === change.factId);

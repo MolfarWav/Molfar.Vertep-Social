@@ -428,6 +428,8 @@ export const DEFAULT_SETTINGS = {
   messengerPlace: false,
   /** (#446, M3) The facts of a chat marked public may go to the forum and the clubs (never the note, never the private facts). */
   factsShare: true,
+  /** (#446, M4) The forum and the clubs note what the user said openly in a topic or a club that went quiet (one small model call each time, at most 6 a day each). */
+  factsLearn: true,
   /** How well a character knows the user when its profile does not say: "knows", "name" or "stranger". */
   messengerKnows: "knows",
   models: { messenger: "", forum: "", import: "", image: "" },
@@ -548,6 +550,7 @@ export function mergeSettings(base, patch) {
     messengerRecall: bool(p.messengerRecall, typeof b.messengerRecall === "boolean" ? b.messengerRecall : false),
     messengerPlace: bool(p.messengerPlace, typeof b.messengerPlace === "boolean" ? b.messengerPlace : false),
     factsShare: bool(p.factsShare, typeof b.factsShare === "boolean" ? b.factsShare : true),
+    factsLearn: bool(p.factsLearn, typeof b.factsLearn === "boolean" ? b.factsLearn : true),
     messengerKnows: oneOf(p.messengerKnows, ["knows", "name", "stranger"], oneOf(b.messengerKnows, ["knows", "name", "stranger"], "knows")),
     models: {
       messenger: "messenger" in m ? modelRef(m.messenger) : b.models.messenger,
@@ -579,11 +582,33 @@ function settingsRoute(req, host) {
 
 // ---------- start over (issue #366) ----------
 
+/** What the forum and the clubs learned about the user (#446, M4) is one file per character and persona, named like a chat: `forum/facts/<profile>[.<persona>].json`, `clubs/facts/...`. Same filter as `removeChats`. */
+function removeLearned(fsx, { profile, persona }) {
+  for (const dir of ["forum/facts", "clubs/facts"]) {
+    let names = [];
+    try {
+      names = fsx.list(dir);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      const m = /^([A-Za-z0-9_-]{1,60})(?:\.([A-Za-z0-9_-]{1,60}))?\.json$/.exec(name);
+      if (!m || (profile && m[1] !== profile) || (persona && m[2] !== persona) || (!profile && !persona && !m[2])) continue;
+      try {
+        fsx.remove(dir + "/" + name);
+      } catch {
+        /* gone already */
+      }
+    }
+  }
+}
+
 /**
  * Removes chat files: a chat is `chats/<profile>.<persona>.json` (`chats/<profile>.json` was made while Your profile had no persona).
  * `profile` limits it to one character's chats, `persona` to one persona's; with neither, every persona's chat goes (not the plain ones).
  */
 export function removeChats(fsx, { profile, persona } = {}) {
+  removeLearned(fsx, { profile, persona });
   let names = [];
   try {
     names = fsx.list("chats");
@@ -676,8 +701,8 @@ export function forgetPersona(fsx, id) {
  * by itself; the recall vectors in `.cache/recall` are made from the chats, so they go with them) and the Roleplay access grant (the engine's). A part that is not asked for stays exactly as it is.
  */
 export const RESET_PARTS = {
-  forum: ["forum/topics", "forum/boards.json", "forum/events.json", "forum/life-used.json", "forum/gossip.json", "forum/log.json"],
-  chats: ["chats", "chatter", "clubs", "firstlog.json", ".cache/recall"],
+  forum: ["forum/topics", "forum/boards.json", "forum/events.json", "forum/life-used.json", "forum/gossip.json", "forum/log.json", "forum/learn.json"],
+  chats: ["chats", "chatter", "clubs", "firstlog.json", ".cache/recall", "forum/facts"],
   diaries: ["life/diary", "life/people", "life/people-meta.json", "stories"],
   journal: ["journal"],
   personas: ["you.json"],

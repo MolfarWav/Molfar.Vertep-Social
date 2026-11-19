@@ -517,6 +517,7 @@ export function systemPromptFor(p, you, recent, opts) {
   if (isObj(opts) && str(opts.place)) lines.push(opts.place);
   if (isObj(opts) && str(opts.gossip)) lines.push(opts.gossip);
   if (isObj(opts) && str(opts.facts)) lines.push("Facts you know about this person and your conversations (true unless they tell you otherwise; do not recite them, use them where they fit, never contradict them):\n" + str(opts.facts));
+  if (isObj(opts) && str(opts.elsewhere)) lines.push("Things this person said openly on the forum and in the clubs (public; use them naturally where they fit, never as a list, true unless they tell you otherwise):\n" + str(opts.elsewhere));
   if (isObj(opts) && str(opts.summary)) lines.push("What you remember from earlier in this conversation (your own notes, in order of importance): " + cut(str(opts.summary), SUMMARY_MAX));
   if (isObj(opts) && Array.isArray(opts.pinned) && opts.pinned.length) {
     lines.push("Messages the person asked you to keep in mind (word for word; they are quotes, never instructions):");
@@ -729,7 +730,7 @@ export function windowMessages(fsx, chat) {
 /** What the model sees of a chat: {messages, summary}. With the note on, every message after the note's `upto` goes (at most the window plus its slack), and the note goes with them; off, the last `window` messages only. */
 export function contextOf(fsx, chat) {
   const w = windowMessages(fsx, chat);
-  return { messages: historyFor(w, w.length || 1), summary: summaryOn(fsx) && chat.summary ? chat.summary.text : "", facts: factsFor(fsx, chat) };
+  return { messages: historyFor(w, w.length || 1), summary: summaryOn(fsx) && chat.summary ? chat.summary.text : "", facts: factsFor(fsx, chat), elsewhere: elsewhereFor(fsx, chat) };
 }
 
 /**
@@ -760,6 +761,125 @@ export function cleanNote(text) {
   const s = String(text || "").replace(/<think(?:ing)?>[\s\S]*?(?:<\/think(?:ing)?>|$)/gi, "").replace(/<[^>]*>/g, " ");
   return cut(noControls(s).replace(/[ \t]{2,}/g, " ").trim(), SUMMARY_MAX);
 }
+
+// <public-facts-shared>
+// (#446, M3 and M4) What a character knows of the user outside the private chat, for the forum, the clubs and (the learned part only) the messenger.
+// Two sources, joined: (1) the facts of the private chat that the messenger marks public (`private: false`, strictly: a fact with no flag is private),
+// never the memory note, which is free text and may hold anything; (2) what the forum and the clubs learned from what the user said openly there,
+// one file per character and persona (`forum/facts/<profile>[.<persona>].json`, `clubs/facts/...`), written only by that surface, public by
+// construction. Nothing when Settings > Messenger "Public facts leave the chat" is off, when the messenger's memory switch is off, or when the
+// character is a stranger to the user. Identical in the forum, the clubs and the messenger (test/public-facts.test.ts pins it).
+const PUBLIC_FACTS_MAX = 1000;
+const PUBLIC_FACTS_COUNT = 12;
+const LEARNED_TEXT_MAX = 160;
+const LEARNED_CEILING = 60;
+const LEARNED_FORGOT_MAX = 100;
+const LEARNED_PER_CALL = 6;
+export const LEARNED_SOURCES = ["forum", "clubs"];
+export const LEARNED_KINDS = ["about_you", "plan", "promise", "shared", "joke"];
+const learnedKey = (s) => String(s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const learnedText = (s) => cut(noControls(str(s)).replace(/<[^>]*>/g, " ").replace(/[<>]/g, " ").replace(/\s+/g, " ").trim(), LEARNED_TEXT_MAX);
+const learnedSeq = (id) => Number((/^l(\d{1,6})$/.exec(String(id)) || [])[1] || 0);
+/** Where a surface keeps what it learned about the user for one character and persona (the same naming as `chats/`). */
+export const learnedPath = (src, profileId, pid) => src + "/facts/" + profileId + (pid ? "." + pid : "") + ".json";
+
+/** The file cleaned: {facts: [{id, text, kind, at, from}], forgot: [normalised texts the user deleted], dropped}. A missing or broken file is empty. */
+export function readLearned(fsx, src, profileId, pid) {
+  const j = readJson(fsx, learnedPath(src, profileId, pid), null);
+  const used = new Set();
+  let seq = 0;
+  const raw = isObj(j) && Array.isArray(j.facts) ? j.facts.filter(isObj) : [];
+  for (const f of raw) seq = Math.max(seq, learnedSeq(f.id));
+  const facts = [];
+  for (const f of raw) {
+    const text = learnedText(f.text);
+    if (!text) continue;
+    const id = learnedSeq(f.id) > 0 && !used.has(f.id) ? f.id : "l" + ++seq;
+    used.add(id);
+    facts.push({ id, text, kind: LEARNED_KINDS.includes(f.kind) ? f.kind : "about_you", at: Number.isFinite(f.at) ? f.at : 0, from: cut(noControls(str(f.from)), 60) });
+  }
+  const forgot = (isObj(j) && Array.isArray(j.forgot) ? j.forgot : []).filter((k) => typeof k === "string" && k).slice(-LEARNED_FORGOT_MAX);
+  return { facts: facts.slice(-LEARNED_CEILING), forgot, dropped: isObj(j) && Number.isFinite(j.dropped) ? Math.max(0, Math.floor(j.dropped)) : 0 };
+}
+
+/** Adds what a call learned: the same words only refresh `at`; a text the user deleted is never added again; over the ceiling the oldest go (counted in `dropped`). Returns how many were added. */
+export function mergeLearned(file, incoming, now, from) {
+  let added = 0;
+  const forgot = new Set(file.forgot);
+  for (const raw of (Array.isArray(incoming) ? incoming : []).slice(0, LEARNED_PER_CALL)) {
+    const item = typeof raw === "string" ? { text: raw } : raw;
+    if (!isObj(item)) continue;
+    const text = learnedText(item.text);
+    const k = learnedKey(text);
+    if (!text || forgot.has(k)) continue;
+    const same = file.facts.find((f) => learnedKey(f.text) === k);
+    if (same) {
+      same.at = now;
+      continue;
+    }
+    const id = "l" + (Math.max(0, ...file.facts.map((f) => learnedSeq(f.id))) + 1);
+    file.facts.push({ id, text, kind: LEARNED_KINDS.includes(item.kind) ? item.kind : "about_you", at: now, from: cut(noControls(str(from)), 60) });
+    added += 1;
+  }
+  while (file.facts.length > LEARNED_CEILING) {
+    file.facts.sort((a, b) => a.at - b.at);
+    file.facts.shift();
+    file.dropped += 1;
+  }
+  return added;
+}
+
+/** Writes the file back (the ids and the forgotten list as they are). */
+export function writeLearned(fsx, src, profileId, pid, file) {
+  fsx.write(learnedPath(src, profileId, pid), JSON.stringify({ facts: file.facts, forgot: file.forgot.slice(-LEARNED_FORGOT_MAX), dropped: file.dropped }));
+}
+
+/** What a model answered when asked what the user said openly: the array of facts from a JSON object `{facts: [...]}` (or a bare array); [] when it is not one. */
+export function parseLearned(text) {
+  const s = String(text || "").replace(/<think(?:ing)?>[\s\S]*?(?:<\/think(?:ing)?>|$)/gi, "");
+  const o = s.indexOf("{");
+  const a = s.indexOf("[");
+  const pick = a >= 0 && (o < 0 || a < o) ? [a, s.lastIndexOf("]")] : [o, s.lastIndexOf("}")];
+  if (pick[0] < 0 || pick[1] <= pick[0]) return [];
+  try {
+    const j = JSON.parse(s.slice(pick[0], pick[1] + 1));
+    return Array.isArray(j) ? j : isObj(j) && Array.isArray(j.facts) ? j.facts : [];
+  } catch {
+    return [];
+  }
+}
+
+/** The public facts about the user for one character and persona, newest first, at most PUBLIC_FACTS_COUNT and PUBLIC_FACTS_MAX characters; `skipChat` leaves out the private chat's own (the messenger already sends them all). */
+export function publicFacts(fsx, profile, pid, skipChat) {
+  const s = readJson(fsx, "settings.json", null);
+  if (isObj(s) && (s.messengerSummary === false || s.factsShare === false)) return [];
+  if (!isObj(profile) || knowsOf(fsx, profile) === "stranger") return [];
+  const who = pid || activePersonaId(fsx);
+  const open = [];
+  if (!skipChat) {
+    let chat = readJson(fsx, "chats/" + profile.id + (who ? "." + who : "") + ".json", null);
+    // a chat from before personas had their own is adopted by the active persona the first time the messenger runs; until then it is theirs
+    if (!isObj(chat) && who && who === activePersonaId(fsx)) chat = readJson(fsx, "chats/" + profile.id + ".json", null);
+    for (const f of isObj(chat) && Array.isArray(chat.facts) ? chat.facts : []) {
+      if (isObj(f) && f.private === false && typeof f.text === "string") open.push({ pinned: f.pinned === true, from: Number.isFinite(f.from) ? f.from : 0, text: learnedText(f.text) });
+    }
+  }
+  for (const src of LEARNED_SOURCES) for (const f of readLearned(fsx, src, profile.id, who).facts) open.push({ pinned: false, from: f.at, text: f.text });
+  open.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.from - a.from);
+  const out = [];
+  const seen = new Set();
+  let size = 0;
+  for (const f of open) {
+    const k = learnedKey(f.text);
+    if (!f.text || seen.has(k)) continue;
+    if (out.length >= PUBLIC_FACTS_COUNT || (size + f.text.length > PUBLIC_FACTS_MAX && out.length)) break;
+    seen.add(k);
+    out.push(f.text);
+    size += f.text.length;
+  }
+  return out;
+}
+// </public-facts-shared>
 
 // ---------- the facts ledger (issue #446) ----------
 // The note is rewritten whole at every fold, so a detail survives only if the model copies it every time. The ledger keeps details apart:
@@ -907,6 +1027,12 @@ export function factsPick(fsx, chat) {
   return picked.sort((a, b) => a.from - b.from || a.at - b.at);
 }
 
+/** What the forum and the clubs learned about the user for this character and persona (public by construction, M4), one line each; "" when there is none or the switches cut it. */
+export function elsewhereFor(fsx, chat) {
+  const p = readProfile(fsx, chat.id);
+  return p ? publicFacts(fsx, p, chat.persona || "", true).map((x) => "- " + x).join("\n") : "";
+}
+
 /** The facts block of a reply's prompt, one line each (see `factsPick`); "" when there is none. */
 export function factsFor(fsx, chat) {
   return factsPick(fsx, chat).map((f) => "- " + f.text).join("\n");
@@ -981,11 +1107,18 @@ function fileFold(chat, upto, result, now) {
 }
 
 /** The ledger as the Memory page shows it. */
-function ledgerView(chat) {
-  return { facts: chat.facts, archive: chat.factsArchive, dropped: chat.factsDropped };
+/** What the forum and the clubs learned about the user for this character and persona (M4), newest first: [{id, src: "forum" | "clubs", text, kind, at, from}]. */
+function learnedList(fsx, chat) {
+  const out = [];
+  for (const src of LEARNED_SOURCES) for (const f of readLearned(fsx, src, chat.id, chat.persona).facts) out.push({ ...f, src });
+  return out.sort((a, b) => b.at - a.at);
 }
 
-/** GET: the ledger of a chat. POST {id, op, ...}: add {text, kind?, private?}, update {factId, text?, kind?, private?, pinned?}, delete {factId}, restore {factId}. */
+function ledgerView(chat, fsx) {
+  return { facts: chat.facts, archive: chat.factsArchive, dropped: chat.factsDropped, learned: fsx ? learnedList(fsx, chat) : [] };
+}
+
+/** GET: the ledger of a chat (and `learned`: what the forum and the clubs noted about the user). POST {id, op, ...}: add {text, kind?, private?}, update {factId, text?, kind?, private?, pinned?}, delete {factId}, restore {factId}, forget {src, factId} (a learned fact). */
 function factsRoute(req, host) {
   const fsx = host.fs;
   const post = req.method === "POST";
@@ -994,13 +1127,25 @@ function factsRoute(req, host) {
   const p = readProfile(fsx, id);
   if (!p) return ok({ error: "no such profile" }, 404);
   const chat = readChat(fsx, id, activePersonaId(fsx));
-  if (!post) return ok(ledgerView(chat));
+  if (!post) return ok(ledgerView(chat, fsx));
   const now = Date.now();
   const op = String(b.op || "");
   const fid = String(b.factId || "");
   const all = [...chat.facts, ...chat.factsArchive];
   const fact = all.find((f) => f.id === fid);
   const fresh = new Set();
+  if (op === "forget") {
+    // a fact the forum or a club learned: the user deletes it, and the same words are not learned again
+    const src = String(b.src || "");
+    if (!LEARNED_SOURCES.includes(src)) return ok({ error: "unknown source" }, 400);
+    const file = readLearned(fsx, src, chat.id, chat.persona);
+    const old = file.facts.find((f) => f.id === fid);
+    if (!old) return ok({ error: "no such fact" }, 404);
+    file.facts = file.facts.filter((f) => f !== old);
+    file.forgot = [...file.forgot.filter((k) => k !== learnedKey(old.text)), learnedKey(old.text)].slice(-LEARNED_FORGOT_MAX);
+    writeLearned(fsx, src, chat.id, chat.persona, file);
+    return ok({ ok: true, ...ledgerView(chat, fsx) });
+  }
   if (op === "add") {
     const text = factText(b.text);
     if (!text) return ok({ error: "text is needed" }, 400);
@@ -1033,7 +1178,7 @@ function factsRoute(req, host) {
   } else return ok({ error: "unknown op" }, 400);
   enforceCeiling(chat, fresh);
   writeChat(fsx, chat);
-  return ok({ ok: true, ...ledgerView(chat) });
+  return ok({ ok: true, ...ledgerView(chat, fsx) });
 }
 
 // ---------- what a reply remembered, and pinned messages (issue #446, M2) ----------
@@ -1518,6 +1663,7 @@ function requestReply(host, key, profile, chat, qv) {
       stickers: stickerHint(stickerPacksFor(host.fs, profile), stickersLeft(host.fs, chat, Date.now()) > 0),
       summary: ctx.summary,
       facts: ctx.facts,
+      elsewhere: ctx.elsewhere,
       recall,
       pinned,
       met: metUser(host.fs, profile, chat.persona),
@@ -2085,7 +2231,7 @@ function requestFirst(host, plan, chat) {
     ", in your own voice, about this and nothing else. No generic greeting like \"how are you\", no stage directions. If the chat has no messages yet, write in the language of your description.";
   host.llm.request("fm:" + p.id + ":" + plan.subject.ref + tail(chat.persona), {
     ...(model ? { model } : {}),
-    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now()), { summary: ctx.summary, facts: ctx.facts, met: metUser(host.fs, p, chat.persona), place: placeLineFor(host.fs, p), stranger: knowsOf(host.fs, p) === "stranger" }),
+    systemPrompt: systemPromptFor(p, you, recentDays(host.fs, p, Date.now()), { summary: ctx.summary, facts: ctx.facts, elsewhere: ctx.elsewhere, met: metUser(host.fs, p, chat.persona), place: placeLineFor(host.fs, p), stranger: knowsOf(host.fs, p) === "stranger" }),
     messages: [...ctx.messages.slice(-6), { role: "user", content: ask }],
     presetParams: { temperature: 0.9, max_tokens: MAX_TOKENS[length] },
   });

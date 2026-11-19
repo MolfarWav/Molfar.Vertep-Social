@@ -102,6 +102,7 @@ export interface SettingsMock {
   messengerPlace: boolean;
   /** (#446, M3) Public facts of a chat may go to the forum and the clubs. */
   factsShare: boolean;
+  factsLearn: boolean;
   /** The default for characters that have no choice of their own. */
   messengerKnows: Knows;
   /** Model choices: preview uses the four ids below; real mode uses "provider/model" or "" (engine default). */
@@ -133,6 +134,7 @@ export const SETTINGS_MOCK: SettingsMock = {
   messengerRecall: false,
   messengerPlace: false,
   factsShare: true,
+  factsLearn: true,
   messengerKnows: "knows",
   models: { messenger: "default", forum: "default", import: "default", image: "" },
   notify: { tab: true, system: true, sound: false },
