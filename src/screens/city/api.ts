@@ -37,11 +37,19 @@ export interface CityPlace {
   people: CityPerson[];
 }
 
+/** (#458) Where the user put the buildings of a district's drawing: the lots of a grid `g` a side, numbered back to front. */
+export interface DistrictLots {
+  g: number;
+  at: Record<string, number>;
+}
+
 export interface CityDistrict {
   id: string;
   name: string;
   kind: string;
   by: "stock" | "you";
+  /** (#458) The hand-made order of the drawing; ignored while the grid has another size. */
+  lots?: DistrictLots;
   /** (#452) The district's picture: behind its tiles. */
   background?: string;
   places: CityPlace[];
@@ -188,6 +196,12 @@ export async function removePlace(id: string): Promise<void> {
 export async function saveDistrict(v: { id?: string; name: string; kind: string; background?: string }): Promise<void> {
   if (PREVIEW) return;
   await call("POST", "/city/district", v).catch(fail);
+}
+
+/** (#458) Save where the buildings of a district stand; `null` puts them back in the tiles' order. */
+export async function saveLayout(district: string, lots: DistrictLots | null): Promise<void> {
+  if (PREVIEW) return;
+  await call("POST", "/city/layout", { district, lots }).catch(fail);
 }
 
 export async function removeDistrict(id: string): Promise<void> {

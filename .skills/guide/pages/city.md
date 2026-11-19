@@ -10,7 +10,9 @@ The town is an ordinary present-day town, a neutral place where characters from 
 
 ## The drawing
 
-Each district is drawn as a small isometric plate (on a wide screen to the left of the tiles, where it stays in view while you scroll them; on a phone above them): one building for each place, on its own lot, in the order of the tiles. On every roof sits a pin with the place's icon and how many characters are there now. A closed place is dimmed and its pin says "Closed". Tap a pin to open the place, just like tapping its tile; the page scrolls to it. In Homes each building is drawn with its windows lit, dark or dashed, like the doors below, and a pin goes to that building's doors. On a phone only the place you picked is named under the drawing; the names are on the tiles. The drawing holds up to 25 places; a bigger district shows the rest only in the list. A district with its own picture (see "Pictures") shows that picture under the same pins instead of the drawing. The tiles stay as they were: they are the list for a screen reader and for anyone who prefers it.
+Each district is drawn as a small isometric plate (on a wide screen to the left of the tiles, where it stays in view while you scroll them; on a phone above them): one building for each place, on its own lot, in the order of the tiles until you move them (see below). On every roof sits a pin with the place's icon and how many characters are there now. A closed place is dimmed and its pin says "Closed". Tap a pin to open the place, just like tapping its tile; the page scrolls to it. In Homes each building is drawn with its windows lit, dark or dashed, like the doors below, and a pin goes to that building's doors. On a phone only the place you picked is named under the drawing; the names are on the tiles. The drawing holds up to 25 places; a bigger district shows the rest only in the list. A district with its own picture (see "Pictures") shows that picture under the same pins instead of the drawing. The tiles stay as they were: they are the list for a screen reader and for anyone who prefers it.
+
+**Rearranging.** "Rearrange" under the drawing turns it into a place to move buildings: tap a place, then tap a free spot (a dashed circle) to put it there, or tap another place to swap the two. Every move is saved at once. "Done" goes back to opening places; "Back to the list order" forgets your arrangement. It is kept for the district, not the place, so a stock place stays a stock place. The arrangement fits the grid it was made on: when a district gains a place and the grid grows a row, the drawing follows the order of the tiles again. Homes cannot be rearranged.
 
 ## Listen and walk in
 
@@ -52,4 +54,4 @@ By rules, with no model call, once for every three hours: a character who is off
 
 ## What it does not do yet
 
-The forum is not told where anyone is. You cannot move a building on the drawing; the order of the places decides where it stands. Looking and listening cost nothing; only a room you walk into costs what a club costs, and a picture costs an image call when you draw it.
+The forum is not told where anyone is. Looking and listening cost nothing; only a room you walk into costs what a club costs, and a picture costs an image call when you draw it.
