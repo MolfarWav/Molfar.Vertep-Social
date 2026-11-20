@@ -18,7 +18,7 @@ When you write or edit a post you choose who can read it: "Everyone", "Friends" 
 
 Under every post, "Comments (n)" opens the talk: who wrote what, a box for yours, and a "x" to remove any comment. Under a character's post each comment also shows what the character thinks of the commenter: its note from Life's list of people, or, when there is none and "Journal comments" is on, one sentence the character words once from what the commenter wrote (one model call, at most three a day).
 
-New comments by characters under your posts, and answers after your own comment under someone else's post, are counted on the Journal tab (on a phone, on "More" and on its Journal row) and marked "N new" on the post. Opening the journal counts them as seen.
+New comments by characters under your posts, and answers after your own comment under someone else's post, are counted on the Journal tab (on a phone, on "More" and on its Journal tile) and marked "N new" on the post. Opening the journal counts them as seen.
 
 With "Journal comments" on (Settings > Community, off by default, needs Life), awake characters comment too: under a post of the last three days that anyone may read, by someone they follow or are close to (pen friend or closer); your posts count for more. At most four comments by characters under one post, and at most the daily number you set for each character (2 by default). When you comment under a character's own post it answers you, even when the day's chance would say no; that answer counts toward its day too. One model call per comment.
 

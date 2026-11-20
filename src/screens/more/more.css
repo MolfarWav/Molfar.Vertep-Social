@@ -1,0 +1,25 @@
+/* The More page (phone): a grid of icon tiles. Every rule is under .s-more. The tones are the settings blocks' (one hue per kind of content). */
+.s-more { flex: 1; min-height: 0; overflow: auto; padding: 16px 14px 20px; display: flex; flex-direction: column; gap: 14px; }
+.s-more .mh { margin: 0; font: 400 20px/1.2 Kurale, Georgia, serif; }
+.s-more .mg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; max-width: 560px; }
+.s-more [data-tone="violet"] { --tn: #8b5cf6; --tt: #c4b5fd; }
+.s-more [data-tone="amber"] { --tn: #f59e0b; --tt: #fcd34d; }
+.s-more [data-tone="sky"] { --tn: #0ea5e9; --tt: #7dd3fc; }
+.s-more [data-tone="teal"] { --tn: #14b8a6; --tt: #5eead4; }
+[data-theme="light"] .s-more [data-tone="violet"] { --tt: #6d28d9; }
+[data-theme="light"] .s-more [data-tone="amber"] { --tt: #b45309; }
+[data-theme="light"] .s-more [data-tone="sky"] { --tt: #0369a1; }
+[data-theme="light"] .s-more [data-tone="teal"] { --tt: #0f766e; }
+.s-more .mt {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; min-height: 128px; padding: 14px;
+  text-align: left; font: inherit; color: var(--ink); cursor: pointer;
+  background: color-mix(in srgb, var(--tn) 10%, var(--panel)); border: 1px solid color-mix(in srgb, var(--tn) 36%, var(--line)); border-radius: 12px;
+}
+.s-more .mt:active { background: color-mix(in srgb, var(--tn) 18%, var(--panel)); }
+.s-more .mi { width: 44px; height: 44px; flex: none; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; color: var(--tt); background: color-mix(in srgb, var(--tn) 20%, var(--panel)); overflow: hidden; }
+.s-more .mt b { font-size: 15px; font-weight: 600; }
+.s-more .mt .k { color: var(--muted); font-size: 12.5px; line-height: 1.35; overflow-wrap: anywhere; }
+.s-more .mb { position: absolute; top: 10px; right: 10px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; line-height: 20px; text-align: center; }
+@media (min-width: 768px) {
+  .s-more { align-items: flex-start; padding: 24px; }
+}

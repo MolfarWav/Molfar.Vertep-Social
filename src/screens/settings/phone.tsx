@@ -1,7 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Avatar } from "@/components/Avatar";
 import { useNav } from "@/shell/nav";
-import { useYou } from "@/screens/you/store";
 import { useT, useLangPref } from "@/i18n/index";
 import { LIMITS, type SettingsMock } from "@/mock/settings";
 import { PREVIEW, type ModelChoice } from "@/lib/api";
@@ -10,7 +8,8 @@ import { CommunityRows, MembersRows } from "./community";
 import { LifeMain, LifeWorld } from "./life";
 import { PicturesRows } from "./pictures";
 import { ResetRows } from "./reset";
-import { AccessControl, GroupHead, LanguageRows, languageHint, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
+import { AccessControl, GroupFold, LanguageRows, languageHint, ModelRows, Notice, NotifyRows, Patch, Summary } from "./parts";
+import { foldSummary, type FoldGroup } from "./fold-summary";
 import type { SettingsError } from "./state";
 
 type Open = "quiet" | "life" | "models" | "notify" | "access" | "language" | "reset" | null;
@@ -38,15 +37,15 @@ function Disclosure({ id, open, onToggle, title, hint, children }: { id: Exclude
   );
 }
 
-/** Phone layout: one scrolling page with its own header. The shell's bottom tabs stay (tab "More"). */
+/** Phone layout: one scrolling page with its own header and seven groups that open and close. The shell's bottom tabs
+ *  stay (tab "More", which also opens Your profile, the Journal and the City). */
 export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set: Patch; choices: ModelChoice[]; error: SettingsError | null }) {
   const t = useT();
-  const { go, badges } = useNav();
-  const you = useYou();
+  const { go } = useNav();
   const { pref, lang } = useLangPref();
-  const me = you?.personas.find((p) => p.id === you.active);
   const [open, setOpen] = useState<Open>(null);
   const toggle = (id: Open) => setOpen(id);
+  const sum = (g: FoldGroup) => foldSummary(t as never, s, g);
 
   const activity: Opt<SettingsMock["activity"]>[] = [
     { value: "quiet", label: t("settings.activity.quiet") },
@@ -64,7 +63,7 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
   return (
     <div className="s-settings is-phone">
       <header className="hd">
-        <button type="button" className="hd-back" aria-label={t("settings.back")} onClick={() => go("messenger")}>
+        <button type="button" className="hd-back" aria-label={t("settings.back")} onClick={() => go("more")}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -74,35 +73,7 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
 
       <div className="pg">
         <Notice error={error} />
-        <section className="sec" aria-label={t("you.title")}>
-          <button type="button" className="ln row" onClick={() => go("you")}>
-            <Avatar name={me?.name ?? t("shell.me")} hue={me?.hue ?? 210} size={36} picture={me?.picture || undefined} />
-            <span className="t">
-              <b>{t("you.title")}</b>
-              <span className="k">{me ? me.name : t("you.subtitle")}</span>
-            </span>
-            <span className="go" aria-hidden="true">›</span>
-          </button>
-        </section>
-        <section className="sec" aria-label={t("journal.title")}>
-          <button type="button" className="ln row" onClick={() => go("journal")}>
-            <span className="t">
-              <b>{t("journal.title")}</b>
-              <span className="k">{t("settings.journal.hint")}</span>
-            </span>
-            {badges.journal > 0 && <span className="pbadge row-badge" aria-label={t("journal.comments.new", { n: badges.journal })}>{badges.journal}</span>}
-            <span className="go" aria-hidden="true">›</span>
-          </button>
-          <button type="button" className="ln row" onClick={() => go("city")}>
-            <span className="t">
-              <b>{t("city.title")}</b>
-              <span className="k">{t("settings.city.hint")}</span>
-            </span>
-            <span className="go" aria-hidden="true">›</span>
-          </button>
-        </section>
-        <GroupHead title={t("settings.group.forum")} glyph="forum" />
-        <section className="sec" aria-label={t("settings.group.forum")}>
+        <GroupFold id="forum" title={t("settings.group.forum")} glyph="forum" summary={sum("forum")}>
           <Row title={t("settings.autonomous.phone")}>
             {(id) => <Switch labelledBy={id} checked={s.autonomous} onChange={(v) => set({ autonomous: v })} />}
           </Row>
@@ -123,11 +94,10 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
           <Disclosure id="quiet" open={open} onToggle={toggle} title={t("settings.quiet")} hint={quietRange}>
             <TimeRange from={s.quietFrom} to={s.quietTo} onFrom={(v) => set({ quietFrom: v })} onTo={(v) => set({ quietTo: v })} />
           </Disclosure>
-        </section>
-        <Summary s={s} phone />
+          <Summary s={s} phone />
+        </GroupFold>
 
-        <GroupHead title={t("settings.group.messenger")} glyph="messenger" />
-        <section className="sec" aria-label={t("settings.group.messenger")}>
+        <GroupFold id="messenger" title={t("settings.group.messenger")} glyph="messenger" summary={sum("messenger")}>
           <Row title={t("settings.messenger.first.phone")}>
             {(id) => <Switch labelledBy={id} checked={s.messengerFirst} onChange={(v) => set({ messengerFirst: v })} />}
           </Row>
@@ -156,33 +126,28 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
           <Row className="stack" title={t("settings.messenger.knows")} hint={t("settings.messenger.knows.phone.hint")}>
             {(id) => <Segmented labelledBy={id} options={knows} value={s.messengerKnows} onChange={(v) => set({ messengerKnows: v })} />}
           </Row>
-        </section>
+        </GroupFold>
 
-        <GroupHead title={t("settings.group.life")} glyph="life" />
-        <section className="sec" aria-label={t("settings.group.life")}>
+        <GroupFold id="life" title={t("settings.group.life")} glyph="life" summary={sum("life")}>
           <LifeMain s={s} set={set} phone />
           <Disclosure id="life" open={open} onToggle={toggle} title={t("settings.life.world.phone")} hint={t("settings.life.world.phone.hint")}>
             <LifeWorld s={s} set={set} />
           </Disclosure>
-        </section>
+        </GroupFold>
 
-        <GroupHead title={t("settings.group.community")} glyph="community" />
-        <section className="sec" aria-label={t("settings.group.community")}>
+        <GroupFold id="community" title={t("settings.group.community")} glyph="community" summary={sum("community")}>
           <CommunityRows s={s} set={set} phone />
-        </section>
+        </GroupFold>
 
-        <GroupHead title={t("settings.group.members")} glyph="members" />
-        <section className="sec" aria-label={t("settings.group.members")}>
+        <GroupFold id="members" title={t("settings.group.members")} glyph="members" summary={sum("members")}>
           <MembersRows s={s} set={set} phone />
-        </section>
+        </GroupFold>
 
-        <GroupHead title={t("settings.group.pictures")} glyph="pictures" />
-        <section className="sec" aria-label={t("settings.group.pictures")}>
+        <GroupFold id="pictures" title={t("settings.group.pictures")} glyph="pictures" summary={sum("pictures")}>
           <PicturesRows s={s} set={set} phone />
-        </section>
+        </GroupFold>
 
-        <GroupHead title={t("settings.group.other")} glyph="other" />
-        <section className="sec" aria-label={t("settings.group.other")}>
+        <GroupFold id="other" title={t("settings.group.other")} glyph="other">
           <Disclosure id="language" open={open} onToggle={toggle} title={t("settings.section.language")} hint={languageHint(t, pref, lang)}>
             <LanguageRows />
           </Disclosure>
@@ -204,7 +169,7 @@ export function PhoneSettings({ s, set, choices, error }: { s: SettingsMock; set
           <Disclosure id="reset" open={open} onToggle={toggle} title={t("settings.section.reset")} hint={t("settings.reset.phone.hint")}>
             <ResetRows />
           </Disclosure>
-        </section>
+        </GroupFold>
       </div>
     </div>
   );

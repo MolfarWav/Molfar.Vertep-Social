@@ -349,7 +349,7 @@ export function Journal() {
 
   const header = phone ? (
     <header className="hd">
-      <button type="button" className="hbtn" aria-label={t("journal.back")} onClick={() => go("settings")}>
+      <button type="button" className="hbtn" aria-label={t("journal.back")} onClick={() => go("more")}>
         <BackIcon />
       </button>
       <h1 className="hd-title jr-title">{t("journal.title")}</h1>

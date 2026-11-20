@@ -4,6 +4,7 @@ import { Avatar } from "@/components/Avatar";
 import { useT } from "@/i18n/index";
 import { useIsPhone } from "@/lib/use-phone";
 import { NavProvider, useNav, type Tab } from "@/shell/nav";
+import { Gear, TabIcon } from "@/shell/icons";
 import { Messenger } from "@/screens/messenger";
 import { Forum } from "@/screens/forum";
 import { useBadgePoll } from "@/lib/badges";
@@ -11,35 +12,13 @@ import { onShellView } from "@/lib/shell-view";
 import { useImageWorker } from "@/pictures/worker";
 import { City } from "@/screens/city";
 import { Journal } from "@/screens/journal";
+import { More } from "@/screens/more";
 import { Profiles } from "@/screens/profiles";
 import { Settings } from "@/screens/settings";
 import { You } from "@/screens/you";
 import { ensureYou, useYou } from "@/screens/you/store";
 
 const MAIN: Tab[] = ["messenger", "forum", "profiles", "journal", "city"];
-
-function TabIcon({ tab, size = 22 }: { tab: Tab; size?: number }) {
-  const p = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true } as const;
-  if (tab === "messenger") return <svg {...p}><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /></svg>;
-  if (tab === "forum") return <svg {...p}><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
-  if (tab === "journal") return <svg {...p}><path d="M6 4h11a1 1 0 0 1 1 1v15H7a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /><path d="M9.5 9h5M9.5 13h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
-  if (tab === "city") return <svg {...p}><path d="M4 20V10l5-3v13M9 20V5l6 3v12M15 20v-8l5 2v6M3 20h18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" /></svg>;
-  if (tab === "profiles") return <svg {...p}><circle cx="12" cy="9" r="3.5" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
-  return <svg {...p}><circle cx="5.5" cy="12" r="1.6" fill="currentColor" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /><circle cx="18.5" cy="12" r="1.6" fill="currentColor" /></svg>;
-}
-
-const GEAR = (
-  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-    <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
-    <path
-      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
 
 function Screen() {
   const { tab } = useNav();
@@ -49,6 +28,7 @@ function Screen() {
   if (tab === "city") return <City />;
   if (tab === "settings") return <Settings />;
   if (tab === "you") return <You />;
+  if (tab === "more") return <More />;
   return <Messenger />;
 }
 
@@ -64,10 +44,10 @@ function Chrome() {
   useEffect(() => onShellView((v) => { if (v === "settings") go("settings"); }), [go]);
   const you = useYou();
   const me = you?.personas.find((p) => p.id === you.active);
-  // a phone has no "You" chip and no Journal or City tab: More (Settings) opens Your profile, the Journal and the City, so it stays lit while they are open
-  const lit: Tab = tab === "you" || tab === "journal" || tab === "city" ? "settings" : tab;
-  // (#453) the journal's new comments: on its tab on desktop, on More on a phone (the Journal row there shows it too)
-  const badgeOf = (x: Tab) => (x === "messenger" ? badges.messenger : x === "forum" ? badges.forum : x === "journal" && !phone ? badges.journal : x === "settings" && phone ? badges.journal : 0);
+  // a phone has no "You" chip, no gear and no Journal or City tab: More opens Your profile, the Journal, the City and Settings, so it stays lit while they are open
+  const lit: Tab = tab === "you" || tab === "journal" || tab === "city" || tab === "settings" ? "more" : tab;
+  // (#453) the journal's new comments: on its tab on desktop, on More on a phone (the Journal tile there shows it too)
+  const badgeOf = (x: Tab) => (x === "messenger" ? badges.messenger : x === "forum" ? badges.forum : x === "journal" && !phone ? badges.journal : x === "more" && phone ? badges.journal : 0);
 
   return (
     <div className="soc">
@@ -88,7 +68,7 @@ function Chrome() {
               <Avatar name={me?.name ?? t("shell.me")} hue={me?.hue ?? 210} size={28} picture={me?.picture || undefined} />
               <span className="mename">{me?.name ?? t("shell.me")}</span>
             </button>
-            <button className={`gear${tab === "settings" ? " on" : ""}`} aria-label={t("shell.settings")} onClick={() => go("settings")}>{GEAR}</button>
+            <button className={`gear${tab === "settings" ? " on" : ""}`} aria-label={t("shell.settings")} onClick={() => go("settings")}><Gear /></button>
           </div>
         </header>
       )}
@@ -101,10 +81,10 @@ function Chrome() {
       <main className="main"><Screen /></main>
       {phone && chrome.tabs && (
         <nav className="ptabs" aria-label="Social">
-          {(["messenger", "forum", "profiles", "settings"] as Tab[]).map((x) => (
+          {(["messenger", "forum", "profiles", "more"] as Tab[]).map((x) => (
             <button key={x} data-tab={x} className={`ptab${lit === x ? " on" : ""}`} aria-current={lit === x ? "page" : undefined} onClick={() => go(x)}>
               <TabIcon tab={x} />
-              {t(x === "settings" ? "shell.more" : `shell.${x}`)}
+              {t(`shell.${x}`)}
               {badgeOf(x) > 0 && <span className="pbadge">{badgeOf(x)}</span>}
             </button>
           ))}

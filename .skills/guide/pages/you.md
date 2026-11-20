@@ -1,6 +1,6 @@
 # Social: Your profile
 
-Your profile says who you are to the characters. It is not a character: it has no chat, no schedule and never appears in the contact list or on the forum. Open it with your name at the top right (on a phone: Settings, the first row).
+Your profile says who you are to the characters. It is not a character: it has no chat, no schedule and never appears in the contact list or on the forum. Open it with your name at the top right (on a phone: the "Your profile" tile on "More").
 
 ## Personas
 

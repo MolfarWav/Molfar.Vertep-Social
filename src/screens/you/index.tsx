@@ -164,7 +164,7 @@ export function You() {
 
   const header = phone ? (
     <header className="hd">
-      <button type="button" className="hbtn" aria-label={t("you.back")} onClick={() => go("settings")}>
+      <button type="button" className="hbtn" aria-label={t("you.back")} onClick={() => go("more")}>
         <BackIcon />
       </button>
       <h1 className="hd-title you-title">{t("you.title")}</h1>

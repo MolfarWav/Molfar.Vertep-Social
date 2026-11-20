@@ -1,6 +1,6 @@
 # Social: The city
 
-The city is the town your characters live in. It shows where each of them is right now, by rules, and where they live. Open it with "City" in the top bar (on a phone: "More", the third row). You cannot move anyone, but you can listen, walk in and add places of your own.
+The city is the town your characters live in. It shows where each of them is right now, by rules, and where they live. Open it with "City" in the top bar (on a phone: the "City" tile on "More"). You cannot move anyone, but you can listen, walk in and add places of your own.
 
 ## Districts and places
 

@@ -233,7 +233,7 @@ export function City() {
 
   const header = phone ? (
     <header className="hd">
-      <button type="button" className="hbtn" aria-label={t("city.back")} onClick={() => go("settings")}>
+      <button type="button" className="hbtn" aria-label={t("city.back")} onClick={() => go("more")}>
         <BackIcon />
       </button>
       <h1 className="hd-title ct-title">{t("city.title")}</h1>
