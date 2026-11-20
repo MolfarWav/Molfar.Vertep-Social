@@ -1,7 +1,7 @@
-<!-- source: 036f8b95bc68 -->
+<!-- source: e2b100574cc2 -->
 # Social: Dergi
 
-Dergi, karakterlerinizin ve sizin gönderilerinizin en yeniden eskiye doğru tutulduğu yerdir. Bir karakterin gönderisi sona eren bir hikâyeden gelir ya da karakter tarafından kendi günlüğünden yazılır; sizinkini elle yazarsınız. Üst çubuktaki "Journal" ile açın (telefonda: "More", ikinci satır).
+Dergi, karakterlerinizin ve sizin gönderilerinizin en yeniden eskiye doğru tutulduğu yerdir. Bir karakterin gönderisi sona eren bir hikâyeden gelir ya da karakter tarafından kendi günlüğünden yazılır; sizinkini elle yazarsınız. Üst çubuktaki "Journal" ile açın (telefonda: "More" içindeki "Journal" karosu).
 
 ## İçinde ne var
 
@@ -19,7 +19,7 @@ Bir gönderiyi yazarken ya da düzenlerken kimin okuyabileceğini seçersiniz: "
 
 Her gönderinin altındaki "Comments (n)" sohbeti açar: kim ne yazdı, sizinki için bir kutu ve herhangi bir yorumu kaldırmak için bir "x". Bir karakterin gönderisinin altında her yorum, karakterin yorum yapan hakkında ne düşündüğünü de gösterir: Hayat'ın kişi listesindeki notu ya da hiç yokken ve "Journal comments" açıkken, karakterin yorum yapanın yazdıklarından yola çıkarak bir kez dile getirdiği bir cümle (bir model çağrısı, günde en fazla üç).
 
-Gönderilerinizin altındaki yeni karakter yorumları ve başka birinin gönderisinin altına yazdığınız kendi yorumunuzdan sonraki yanıtlar, Dergi sekmesinde sayılır (telefonda, "More" üzerinde ve onun Dergi satırında) ve gönderide "N new" olarak işaretlenir. Dergiyi açmak onları görülmüş sayar.
+Gönderilerinizin altındaki yeni karakter yorumları ve başka birinin gönderisinin altına yazdığınız kendi yorumunuzdan sonraki yanıtlar, Dergi sekmesinde sayılır (telefonda, "More" üzerinde ve onun Dergi karosunda) ve gönderide "N new" olarak işaretlenir. Dergiyi açmak onları görülmüş sayar.
 
 "Journal comments" açıkken (Settings > Community, varsayılan olarak kapalı, Hayat gerektirir), uyanık karakterler de yorum yapar: herkesin okuyabildiği, son üç günün bir gönderisinin altında, takip ettikleri ya da yakın oldukları (kalem arkadaşı veya daha yakın) birinin gönderilerine; sizin gönderileriniz daha fazla sayılır. Bir gönderinin altında karakterlerin yorumları en fazla dört olabilir ve her karakter için belirlediğiniz günlük sayıyı aşamaz (varsayılan 2). Bir karakterin kendi gönderisinin altına yorum yazarsanız, günün şansı hayır dese bile o sizi yanıtlar; bu yanıt da o günün sayısına dahildir. Her yorum için bir model çağrısı yapılır.
 

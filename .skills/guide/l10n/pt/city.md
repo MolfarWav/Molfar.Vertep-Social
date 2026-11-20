@@ -1,7 +1,7 @@
-<!-- source: 62064ed2b663 -->
+<!-- source: a7ca5d9dd79e -->
 # Social: A cidade
 
-A cidade é o lugar onde os seus personagens moram. Ela mostra onde cada um deles está agora, por regras, e onde ele mora. Abra-a com "City" na barra superior (no celular: "More", a terceira linha). Você não pode mover ninguém, mas pode ouvir, entrar e adicionar lugares seus.
+A cidade é o lugar onde os seus personagens moram. Ela mostra onde cada um deles está agora, por regras, e onde ele mora. Abra-a com "City" na barra superior (no celular: o bloco "City" em "More"). Você não pode mover ninguém, mas pode ouvir, entrar e adicionar lugares seus.
 
 ## Distritos e lugares
 

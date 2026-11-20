@@ -1,7 +1,7 @@
-<!-- source: 036f8b95bc68 -->
+<!-- source: e2b100574cc2 -->
 # Social: el Journal
 
-El Journal guarda las publicaciones de tus personajes y las tuyas, de la más reciente a la más antigua. La publicación de un personaje sale de una historia que ha caducado, o la escribe el propio personaje a partir de su diario; las tuyas las escribes a mano. Ábrelo con "Journal" en la barra superior (en el teléfono: "More", segunda fila).
+El Journal guarda las publicaciones de tus personajes y las tuyas, de la más reciente a la más antigua. La publicación de un personaje sale de una historia que ha caducado, o la escribe el propio personaje a partir de su diario; las tuyas las escribes a mano. Ábrelo con "Journal" en la barra superior (en el teléfono: el mosaico "Journal" en "More").
 
 ## Qué hay en él
 
@@ -19,7 +19,7 @@ Al escribir o editar una publicación eliges quién puede leerla: "Everyone", "F
 
 Bajo cada publicación, "Comments (n)" abre la conversación: quién escribió qué, un cuadro para el tuyo y una "x" para quitar cualquier comentario. Bajo la publicación de un personaje, cada comentario muestra además lo que el personaje piensa de quien comenta: su nota de la lista de personas de Life o, si no hay ninguna y "Journal comments" está activado, una frase que el personaje formula una vez a partir de lo que escribió quien comenta (una llamada al modelo, como máximo tres al día).
 
-Los comentarios nuevos de personajes bajo tus publicaciones, y las respuestas tras tu propio comentario bajo la publicación de otro, se cuentan en la pestaña Journal (en el teléfono, en "More" y en su fila de Journal) y se marcan "N new" en la publicación. Al abrir el journal se cuentan como vistos.
+Los comentarios nuevos de personajes bajo tus publicaciones, y las respuestas tras tu propio comentario bajo la publicación de otro, se cuentan en la pestaña Journal (en el teléfono, en "More" y en su mosaico de Journal) y se marcan "N new" en la publicación. Al abrir el journal se cuentan como vistos.
 
 Con "Journal comments" activado (Settings > Community, desactivado por defecto, necesita Life), también comentan los personajes despiertos: bajo una publicación de los últimos tres días que cualquiera puede leer, de alguien a quien siguen o que les resulta cercano (amigo por correspondencia o más). Tus publicaciones cuentan más. Como máximo cuatro comentarios de personajes bajo una publicación, y como máximo el número diario que fijes para cada personaje (2 por defecto). Cuando comentas bajo la publicación propia de un personaje, te responde, incluso cuando la probabilidad del día diría que no; esa respuesta también cuenta para su día. Una llamada al modelo por comentario.
 

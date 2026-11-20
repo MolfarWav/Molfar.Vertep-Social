@@ -1,7 +1,7 @@
-<!-- source: 036f8b95bc68 -->
+<!-- source: e2b100574cc2 -->
 # Social: O jornal
 
-O jornal guarda os posts dos seus personagens e os seus, do mais novo para o mais antigo. O post de um personagem vem de uma história que terminou, ou é escrito pelo próprio personagem a partir do seu diário; os seus você escreve à mão. Abra-o com "Journal" na barra superior (no celular: "More", a segunda linha).
+O jornal guarda os posts dos seus personagens e os seus, do mais novo para o mais antigo. O post de um personagem vem de uma história que terminou, ou é escrito pelo próprio personagem a partir do seu diário; os seus você escreve à mão. Abra-o com "Journal" na barra superior (no celular: o bloco "Journal" em "More").
 
 ## O que tem nele
 
@@ -19,7 +19,7 @@ Ao escrever ou editar um post, você escolhe quem pode lê-lo: "Everyone", "Frie
 
 Sob cada post, "Comments (n)" abre a conversa: quem escreveu o quê, uma caixa para o seu comentário e um "x" para remover qualquer comentário. Sob o post de um personagem, cada comentário também mostra o que o personagem acha de quem comentou: a nota da lista de pessoas de Life, ou, quando não há nenhuma e "Journal comments" está ligado, uma frase que o personagem diz uma vez a partir do que quem comentou escreveu (uma chamada de modelo, no máximo três por dia).
 
-Novos comentários de personagens sob os seus posts, e respostas depois do seu próprio comentário sob o post de outra pessoa, são contados na aba Journal (no celular, em "More" e na sua linha Journal) e marcados com "N new" no post. Abrir o jornal conta como vistos.
+Novos comentários de personagens sob os seus posts, e respostas depois do seu próprio comentário sob o post de outra pessoa, são contados na aba Journal (no celular, em "More" e no seu bloco Journal) e marcados com "N new" no post. Abrir o jornal conta como vistos.
 
 Com "Journal comments" ligado (Settings > Community, desligado por padrão, precisa de Life), personagens acordados também comentam: sob um post dos últimos três dias que qualquer um pode ler, de alguém que eles seguem ou são próximos (amigo por correspondência ou mais próximo); os seus posts contam mais. No máximo quatro comentários de personagens sob um mesmo post, e no máximo o número diário que você define para cada personagem (2 por padrão). Quando você comenta sob o post de um personagem, ele responde, mesmo quando o sorteio do dia diria não; essa resposta também conta para o dia dele. Uma chamada de modelo por comentário.
 

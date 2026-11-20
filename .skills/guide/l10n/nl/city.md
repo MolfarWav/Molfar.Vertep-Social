@@ -1,7 +1,7 @@
-<!-- source: 62064ed2b663 -->
+<!-- source: a7ca5d9dd79e -->
 # Sociaal: De stad
 
-De stad is het stadje waar je personages wonen. Het laat zien waar elk van hen nu is, volgens regels, en waar ze wonen. Open het met "City" in de bovenste balk (op een telefoon: "More", de derde rij). Je kunt niemand verplaatsen, maar je kunt meeluisteren, binnenlopen en eigen plekken toevoegen.
+De stad is het stadje waar je personages wonen. Het laat zien waar elk van hen nu is, volgens regels, en waar ze wonen. Open het met "City" in de bovenste balk (op een telefoon: de tegel "City" onder "More"). Je kunt niemand verplaatsen, maar je kunt meeluisteren, binnenlopen en eigen plekken toevoegen.
 
 ## Wijken en plekken
 

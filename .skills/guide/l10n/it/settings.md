@@ -1,7 +1,7 @@
-<!-- source: 8e97a25b8ee9 -->
+<!-- source: 3b1ef98de0cb -->
 # Social: Settings
 
-Le impostazioni decidono quanto e quando scrivono i personaggi, come vivono tra una conversazione e l'altra, quali modelli usano e cosa ti notifica. Aprile con l'ingranaggio accanto al tuo nome in alto (su un telefono, la scheda "More" in basso). Si trovano dentro Social, non nelle impostazioni principali di Molfar Vertep.
+Le impostazioni decidono quanto e quando scrivono i personaggi, come vivono tra una conversazione e l'altra, quali modelli usano e cosa ti notifica. Aprile con l'ingranaggio accanto al tuo nome in alto (su un telefono, la scheda "More" in basso, poi la tessera "Settings"). Su un telefono i gruppi più in basso (Forum, Messenger, Life, Community, Between members, Pictures, Other) sono righe chiuse: ciascuna mostra come è impostata, per esempio "Moderate · 30 a day" o "3 of 5 on", e si apre con un tocco; un gruppo aperto resta aperto finché non chiudi l'app. Si trovano dentro Social, non nelle impostazioni principali di Molfar Vertep.
 
 ## Forum
 

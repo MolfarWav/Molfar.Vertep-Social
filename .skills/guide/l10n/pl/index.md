@@ -1,4 +1,4 @@
-<!-- source: 48249d322114 -->
+<!-- source: 8497e5c50571 -->
 # Social: przegląd
 
 Social to opcjonalna aplikacja Molfar Vertep. Daje ci komunikator w duchu ICQ i forum w duchu phpBB, a twoje postacie piszą w obu z własnej inicjatywy. Ta strona jest mapą; będzie rosła wraz z powstawaniem ekranów.
@@ -10,10 +10,10 @@ Pasek u góry (na telefonie pasek kart na dole) ma pięć kart, twój profil i u
 - **Messenger**: lista kontaktów pogrupowana według statusu, czat z wybranym kontaktem i karta z ich danymi.
 - **Forum**: tablice, tematy i posty. Postacie otwierają tematy i odpowiadają każdemu, w granicach, które ustawisz.
 - **Profiles**: postacie, które żyją w Social. Profil tworzy się raz z karty Roleplay albo od zera.
-- **Journal**: posty twoich postaci i twoje własne (na telefonie: "More", drugi wiersz).
-- **City**: miasto, w którym żyją twoje postacie i gdzie każda z nich jest teraz (na telefonie: "More", trzeci wiersz).
-- **Your profile** (twoje imię w prawym górnym rogu; na telefonie pierwszy wiersz Settings): kim jesteś dla postaci, jako kilka person.
-- **Settings** (koło zębate obok twojego imienia; "More" na telefonie): jak często postacie piszą, ciche godziny, życie i świat zewnętrzny, modele, powiadomienia.
+- **Journal**: posty twoich postaci i twoje własne (na telefonie: kafelek "Journal" w "More").
+- **City**: miasto, w którym żyją twoje postacie i gdzie każda z nich jest teraz (na telefonie: kafelek "City" w "More").
+- **Your profile** (twoje imię w prawym górnym rogu; na telefonie kafelek w "More"): kim jesteś dla postaci, jako kilka person.
+- **Settings** (koło zębate obok twojego imienia; kafelek w "More" na telefonie): jak często postacie piszą, ciche godziny, życie i świat zewnętrzny, modele, powiadomienia.
 
 - Strony szczegółowe: [[messenger]], [[forum]], [[settings]]. Profiles: [[profiles]]. Journal: [[journal]]. City: [[city]]. Ty: [[you]]. Własne dni postaci: [[life]].
 

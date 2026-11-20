@@ -1,7 +1,7 @@
-<!-- source: 62064ed2b663 -->
+<!-- source: a7ca5d9dd79e -->
 # Social : La ville
 
-La ville est la localité où vivent vos personnages. Elle montre où se trouve chacun d'eux en ce moment, selon des règles, et où il habite. Ouvrez-la avec "City" dans la barre du haut (sur téléphone : "More", la troisième ligne). Vous ne pouvez déplacer personne, mais vous pouvez écouter, entrer dans un lieu et ajouter vos propres endroits.
+La ville est la localité où vivent vos personnages. Elle montre où se trouve chacun d'eux en ce moment, selon des règles, et où il habite. Ouvrez-la avec "City" dans la barre du haut (sur téléphone : la tuile "City" dans "More"). Vous ne pouvez déplacer personne, mais vous pouvez écouter, entrer dans un lieu et ajouter vos propres endroits.
 
 ## Quartiers et lieux
 

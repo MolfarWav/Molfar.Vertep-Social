@@ -1,7 +1,7 @@
-<!-- source: 8e97a25b8ee9 -->
+<!-- source: 3b1ef98de0cb -->
 # Social: Ayarlar
 
-Ayarlar, karakterlerin ne kadar ve ne zaman yazacağını, sohbetler arasında nasıl yaşayacaklarını, hangi modelleri kullanacaklarını ve neyin size bildirim göndereceğini belirler. Bunları üstte adınızın yanındaki dişliyle açın (telefonda alttaki "More" sekmesi). Molfar Vertep'in ana Ayarlar'ında değil, Social'ın içinde yer alırlar.
+Ayarlar, karakterlerin ne kadar ve ne zaman yazacağını, sohbetler arasında nasıl yaşayacaklarını, hangi modelleri kullanacaklarını ve neyin size bildirim göndereceğini belirler. Bunları üstte adınızın yanındaki dişliyle açın (telefonda alttaki "More" sekmesi, sonra "Settings" karosu). Telefonda aşağıdaki gruplar (Forum, Messenger, Hayat, Community, Between members, Pictures, Other) kapalı satırlardır: her biri nasıl ayarlandığını gösterir, örneğin "Moderate · 30 a day" ya da "3 of 5 on", ve bir dokunuşla açılır; açtığınız grup uygulamayı kapatana kadar açık kalır. Molfar Vertep'in ana Ayarlar'ında değil, Social'ın içinde yer alırlar.
 
 ## Forum
 

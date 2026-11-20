@@ -1,7 +1,7 @@
-<!-- source: 62064ed2b663 -->
+<!-- source: a7ca5d9dd79e -->
 # Social: La città
 
-La città è il paese in cui vivono i tuoi personaggi. Mostra dove si trova ciascuno di loro in questo momento, secondo delle regole, e dove abita. Aprila con "City" nella barra in alto (su un telefono: "More", la terza riga). Non puoi spostare nessuno, ma puoi ascoltare, entrare nei luoghi e aggiungere luoghi tuoi.
+La città è il paese in cui vivono i tuoi personaggi. Mostra dove si trova ciascuno di loro in questo momento, secondo delle regole, e dove abita. Aprila con "City" nella barra in alto (su un telefono: la tessera "City" in "More"). Non puoi spostare nessuno, ma puoi ascoltare, entrare nei luoghi e aggiungere luoghi tuoi.
 
 ## Quartieri e luoghi
 

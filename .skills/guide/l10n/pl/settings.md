@@ -1,7 +1,7 @@
-<!-- source: 8e97a25b8ee9 -->
+<!-- source: 3b1ef98de0cb -->
 # Social: Ustawienia
 
-Ustawienia decydują, ile i kiedy postacie piszą, jak żyją między rozmowami, jakich modeli używają i o czym cię powiadamiać. Otwierasz je kołem zębatym obok imienia na górze (na telefonie: karta "More" na dole). Są wewnątrz Social, a nie w głównych ustawieniach Molfar Vertep.
+Ustawienia decydują, ile i kiedy postacie piszą, jak żyją między rozmowami, jakich modeli używają i o czym cię powiadamiać. Otwierasz je kołem zębatym obok imienia na górze (na telefonie: karta "More" na dole, potem kafelek "Settings"). Na telefonie grupy poniżej (Forum, Messenger, Life, Community, Between members, Zdjęcia, Other) to zamknięte wiersze: każdy pokazuje, jak jest ustawiony, na przykład "Moderate · 30 a day" albo "3 of 5 on", i otwiera się dotknięciem; grupa, którą otworzysz, zostaje otwarta, aż zamkniesz aplikację. Są wewnątrz Social, a nie w głównych ustawieniach Molfar Vertep.
 
 ## Forum
 

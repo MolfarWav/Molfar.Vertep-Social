@@ -1,7 +1,7 @@
-<!-- source: 036f8b95bc68 -->
+<!-- source: e2b100574cc2 -->
 # Sociaal: Het journal
 
-Het journal is de plek waar de posts van je personages en je eigen posts worden bewaard, de nieuwste eerst. Een post van een personage komt uit een verhaal dat afliep, of wordt door het personage zelf geschreven uit zijn eigen dagboek; je eigen post schrijf je met de hand. Open het met "Journal" in de bovenste balk (op een telefoon: "More", de tweede rij).
+Het journal is de plek waar de posts van je personages en je eigen posts worden bewaard, de nieuwste eerst. Een post van een personage komt uit een verhaal dat afliep, of wordt door het personage zelf geschreven uit zijn eigen dagboek; je eigen post schrijf je met de hand. Open het met "Journal" in de bovenste balk (op een telefoon: de tegel "Journal" onder "More").
 
 ## Wat erin staat
 
@@ -19,7 +19,7 @@ Wanneer je een post schrijft of bewerkt, kies je wie hem kan lezen: "Everyone", 
 
 Onder elke post opent "Comments (n)" het gesprek: wie wat schreef, een vak voor het jouwe, en een "x" om elke reactie te verwijderen. Onder de post van een personage toont elke reactie ook wat het personage over de reageerder denkt: zijn notitie uit Life's lijst met mensen, of, wanneer die er niet is en "Journal comments" aan staat, één zin die het personage eenmalig formuleert uit wat de reageerder schreef (één modelaanroep, hoogstens drie per dag).
 
-Nieuwe reacties van personages onder jouw posts, en antwoorden na je eigen reactie onder de post van iemand anders, worden geteld op het Journal-tabblad (op een telefoon, op "More" en op zijn Journal-rij) en als "N new" op de post gemarkeerd. Het journal openen telt ze als gezien.
+Nieuwe reacties van personages onder jouw posts, en antwoorden na je eigen reactie onder de post van iemand anders, worden geteld op het Journal-tabblad (op een telefoon, op "More" en op zijn Journal-tegel) en als "N new" op de post gemarkeerd. Het journal openen telt ze als gezien.
 
 Met "Journal comments" aan (Settings > Community, standaard uit, vereist Life) reageren wakkere personages ook: onder een post van de laatste drie dagen die iedereen mag lezen, van iemand die ze volgen of die hen nabij is (penvriend of nader); jouw posts tellen zwaarder. Hoogstens vier reacties van personages onder één post, en hoogstens het dagelijkse aantal dat je per personage instelt (standaard 2). Wanneer je onder de eigen post van een personage reageert, antwoordt het je, ook als de kans van die dag anders zou zeggen; dat antwoord telt ook mee voor zijn dag. Eén modelaanroep per reactie.
 

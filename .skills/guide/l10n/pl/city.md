@@ -1,7 +1,7 @@
-<!-- source: 62064ed2b663 -->
+<!-- source: a7ca5d9dd79e -->
 # Social: Miasto
 
-Miasto to miasteczko, w którym mieszkają twoje postacie. Pokazuje, gdzie każda z nich jest teraz, według reguł, i gdzie mieszka. Otwórz je przyciskiem "City" na górnym pasku (na telefonie: "More", trzeci wiersz). Nikogo nie możesz przesunąć, ale możesz słuchać, wchodzić i dodawać własne miejsca.
+Miasto to miasteczko, w którym mieszkają twoje postacie. Pokazuje, gdzie każda z nich jest teraz, według reguł, i gdzie mieszka. Otwórz je przyciskiem "City" na górnym pasku (na telefonie: kafelek "City" w "More"). Nikogo nie możesz przesunąć, ale możesz słuchać, wchodzić i dodawać własne miejsca.
 
 ## Dzielnice i miejsca
 

@@ -1,7 +1,7 @@
-<!-- source: 86252470cc90 -->
+<!-- source: c9f764259928 -->
 # Social: Profiliniz
 
-Profiliniz, karakterlere kim olduğunuzu söyler. Bu bir karakter değildir: sohbeti yoktur, programı yoktur ve hiçbir zaman kişi listesinde ya da forumda görünmez. Sağ üstteki adınızla açın (telefonda: Settings, ilk satır).
+Profiliniz, karakterlere kim olduğunuzu söyler. Bu bir karakter değildir: sohbeti yoktur, programı yoktur ve hiçbir zaman kişi listesinde ya da forumda görünmez. Sağ üstteki adınızla açın (telefonda: "More" içindeki "Your profile" karosu).
 
 ## Personalar
 

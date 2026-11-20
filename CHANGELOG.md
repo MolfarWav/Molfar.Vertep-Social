@@ -5,9 +5,12 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.22.0 (2026-11-20)
+
 - Changed: **on a phone, "More" is a grid of icon tiles and Settings is compact (Molfar.Vertep#471).** The More tab used to open Settings, with Your profile, the Journal and the City as rows at its top. It now opens a page of four tiles (Your profile, Journal with its new-comments badge, City, Settings), like the "All sections" sheet in Roleplay; the Back arrow of each returns to it, and More stays lit while one is open. Settings on a phone is seven groups (Forum, Messenger, Life, Community, Between members, Pictures, Other) that open and close, closed at first, each with a line saying what it is set to ("Moderate · 30 a day", "3 of 5 on"); a group you open stays open until the app is closed. Every control and hint is still there. Desktop is unchanged. Files: `src/screens/more/`, `src/screens/settings/{phone.tsx,parts.tsx,fold-summary.ts}`, `src/shell/`; tests `fold-summary.test.ts`.
 
 - Added: **move a building on a district's drawing (Molfar.Vertep#458).** "Rearrange" under the City drawing: tap a place, then a free spot to put it there or another place to swap; every move is saved at once, "Back to the list order" forgets it. The order is kept on the district (`lots` in `city/places.json`), never on a place, so moving a building does not turn a stock place into one of yours, and it is dropped when the grid changes size. Route `POST /city/layout`; Homes cannot be rearranged. The drawing still holds 25 places. Checked in the design preview only. Tests: `test/city-layout.test.ts`.
+
 ## 0.21.0 (2026-11-18)
 
 Privacy as a rule of the program (the third phase of Molfar.Vertep#446). App 0.21.0; plugins: Forum 0.12.0, Clubs 0.4.0, Profiles 0.19.0. Nothing to migrate: the new switch is on, and facts made before it keep the flag they have (private unless marked public).

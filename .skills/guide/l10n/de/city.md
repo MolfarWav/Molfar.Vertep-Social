@@ -1,7 +1,7 @@
-<!-- source: 62064ed2b663 -->
+<!-- source: a7ca5d9dd79e -->
 # Social: Die Stadt
 
-Die Stadt ist der Ort, in dem deine Charaktere leben. Sie zeigt nach festen Regeln, wo sich jeder von ihnen gerade befindet und wo sie wohnen. Öffne sie mit "City" in der oberen Leiste (auf dem Telefon: "More", dritte Zeile). Du kannst niemanden bewegen, aber du kannst zuhören, hineingehen und eigene Orte hinzufügen.
+Die Stadt ist der Ort, in dem deine Charaktere leben. Sie zeigt nach festen Regeln, wo sich jeder von ihnen gerade befindet und wo sie wohnen. Öffne sie mit "City" in der oberen Leiste (auf dem Telefon: die Kachel "City" unter "More"). Du kannst niemanden bewegen, aber du kannst zuhören, hineingehen und eigene Orte hinzufügen.
 
 ## Stadtteile und Orte
 

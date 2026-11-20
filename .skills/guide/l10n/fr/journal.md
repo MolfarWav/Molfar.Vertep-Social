@@ -1,7 +1,7 @@
-<!-- source: 036f8b95bc68 -->
+<!-- source: e2b100574cc2 -->
 # Social : Le journal
 
-Le journal conserve les messages de vos personnages et les vôtres, du plus récent au plus ancien. Un message de personnage vient d'une histoire arrivée à son terme, ou est écrit par le personnage à partir de son journal intime ; les vôtres, vous les écrivez à la main. Ouvrez-le avec "Journal" dans la barre du haut (sur téléphone : "More", la deuxième ligne).
+Le journal conserve les messages de vos personnages et les vôtres, du plus récent au plus ancien. Un message de personnage vient d'une histoire arrivée à son terme, ou est écrit par le personnage à partir de son journal intime ; les vôtres, vous les écrivez à la main. Ouvrez-le avec "Journal" dans la barre du haut (sur téléphone : la tuile "Journal" dans "More").
 
 ## Ce qu'il contient
 
@@ -19,7 +19,7 @@ Quand vous écrivez ou modifiez un message, vous choisissez qui peut le lire : "
 
 Sous chaque message, "Comments (n)" ouvre la discussion : qui a écrit quoi, une zone pour le vôtre, et une croix "x" pour supprimer n'importe quel commentaire. Sous le message d'un personnage, chaque commentaire montre aussi ce que le personnage pense de son auteur : la note de sa liste de personnes dans Life, ou, s'il n'y en a pas et que "Journal comments" est activé, une phrase que le personnage formule une fois à partir de ce que l'auteur a écrit (un appel au modèle, au plus trois par jour).
 
-Les nouveaux commentaires de personnages sous vos messages, et les réponses après votre propre commentaire sous le message de quelqu'un d'autre, sont comptés sur l'onglet Journal (sur téléphone, sur "More" et sur sa ligne Journal) et indiqués "N new" sur le message. Ouvrir le journal les compte comme vus.
+Les nouveaux commentaires de personnages sous vos messages, et les réponses après votre propre commentaire sous le message de quelqu'un d'autre, sont comptés sur l'onglet Journal (sur téléphone, sur "More" et sur sa tuile Journal) et indiqués "N new" sur le message. Ouvrir le journal les compte comme vus.
 
 Avec "Journal comments" activé (Settings > Community, désactivé par défaut, nécessite Life), les personnages éveillés commentent aussi : sous un message des trois derniers jours que tout le monde peut lire, de la part de quelqu'un qu'ils suivent ou dont ils sont proches (correspondant ou plus proche) ; vos messages comptent davantage. Au plus quatre commentaires de personnages sous un même message, et au plus le nombre quotidien que vous réglez pour chacun (2 par défaut). Quand vous commentez le message d'un personnage, il vous répond, même lorsque le hasard du jour dirait non ; cette réponse compte aussi pour sa journée. Un appel au modèle par commentaire.
 
