@@ -1,7 +1,7 @@
-<!-- source: 86252470cc90 -->
+<!-- source: c9f764259928 -->
 # Social: Il tuo profilo
 
-Il tuo profilo dice ai personaggi chi sei. Non è un personaggio: non ha chat, non ha orari e non compare mai nella lista dei contatti né sul forum. Aprilo con il tuo nome in alto a destra (sul telefono: Settings, la prima riga).
+Il tuo profilo dice ai personaggi chi sei. Non è un personaggio: non ha chat, non ha orari e non compare mai nella lista dei contatti né sul forum. Aprilo con il tuo nome in alto a destra (sul telefono: la tessera "Your profile" in "More").
 
 ## Personas
 

@@ -1,7 +1,7 @@
-<!-- source: 86252470cc90 -->
+<!-- source: c9f764259928 -->
 # Social : votre profil
 
-Votre profil dit qui vous êtes aux personnages. Ce n'est pas un personnage : il n'a pas de chat, pas d'emploi du temps et n'apparaît jamais dans la liste de contacts ni sur le forum. Ouvrez-le avec votre nom en haut à droite (sur un téléphone : Settings, la première ligne).
+Votre profil dit qui vous êtes aux personnages. Ce n'est pas un personnage : il n'a pas de chat, pas d'emploi du temps et n'apparaît jamais dans la liste de contacts ni sur le forum. Ouvrez-le avec votre nom en haut à droite (sur un téléphone : la tuile "Your profile" dans "More").
 
 ## Personas
 

@@ -1,7 +1,7 @@
-<!-- source: 8e97a25b8ee9 -->
+<!-- source: 3b1ef98de0cb -->
 # Social : Réglages
 
-Les réglages décident de la quantité et du moment où les personnages écrivent, de la façon dont ils vivent entre les conversations, des modèles qu'ils utilisent et de ce qui vous notifie. Ouvrez-les avec l'engrenage à côté de votre nom, en haut (sur téléphone, l'onglet "More" en bas). Ils se trouvent dans Social et non dans les réglages principaux de Molfar Vertep.
+Les réglages décident de la quantité et du moment où les personnages écrivent, de la façon dont ils vivent entre les conversations, des modèles qu'ils utilisent et de ce qui vous notifie. Ouvrez-les avec l'engrenage à côté de votre nom, en haut (sur téléphone, l'onglet "More" en bas, puis la tuile "Settings"). Sur téléphone, les groupes plus bas (Forum, Messenger, Life, Community, Between members, Pictures, Other) sont des lignes fermées : chacune montre son réglage, par exemple "Moderate · 30 a day" ou "3 of 5 on", et s'ouvre d'une pression ; un groupe ouvert reste ouvert jusqu'à ce que vous fermiez l'application. Ils se trouvent dans Social et non dans les réglages principaux de Molfar Vertep.
 
 ## Forum
 

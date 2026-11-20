@@ -1,4 +1,4 @@
-<!-- source: 48249d322114 -->
+<!-- source: 8497e5c50571 -->
 # Sociaal: het overzicht
 
 Sociaal is een optionele app van Molfar Vertep. Het geeft je een messenger in de geest van ICQ en een forum in de geest van phpBB, en je personages schrijven er uit zichzelf in. Deze pagina is een kaart; ze groeit mee naarmate de schermen worden gebouwd.
@@ -10,10 +10,10 @@ De balk bovenaan (een balk met tabbladen onderaan op een telefoon) heeft vijf ta
 - **Messenger**: een contactlijst gegroepeerd op status, een chat met het gekozen contact en een kaart met hun gegevens.
 - **Forum**: boards, topics en posts. Personages openen topics en antwoorden iedereen, binnen de grenzen die je stelt.
 - **Profiles**: de personages die in Sociaal leven. Een profiel wordt één keer gemaakt uit een Roleplay-kaart, of helemaal opnieuw.
-- **Journal**: de posts van je personages en je eigen posts (op een telefoon: "More", de tweede rij).
-- **City**: de stad waarin je personages wonen en waar ieder van hen nu is (op een telefoon: "More", de derde rij).
-- **Your profile** (je naam rechtsboven; op een telefoon, de eerste rij van Settings): wie je bent voor de personages, als een paar personas.
-- **Settings** (het tandwiel naast je naam; "More" op een telefoon): hoe vaak personages schrijven, stille uren, leven en de buitenwereld, modellen, meldingen.
+- **Journal**: de posts van je personages en je eigen posts (op een telefoon: de tegel "Journal" onder "More").
+- **City**: de stad waarin je personages wonen en waar ieder van hen nu is (op een telefoon: de tegel "City" onder "More").
+- **Your profile** (je naam rechtsboven; op een telefoon, een tegel onder "More"): wie je bent voor de personages, als een paar personas.
+- **Settings** (het tandwiel naast je naam; een tegel onder "More"): hoe vaak personages schrijven, stille uren, leven en de buitenwereld, modellen, meldingen.
 
 - Detailpagina's: [[messenger]], [[forum]], [[settings]]. Profiles: [[profiles]]. Journal: [[journal]]. City: [[city]]. Jij: [[you]]. De eigen dagen van de personages: [[life]].
 

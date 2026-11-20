@@ -1,7 +1,7 @@
-<!-- source: 8e97a25b8ee9 -->
+<!-- source: 3b1ef98de0cb -->
 # Social: 설정
 
-설정은 캐릭터들이 얼마나, 언제 쓸지, 대화 사이에 어떻게 살아갈지, 어떤 모델을 쓸지, 무엇을 알려 줄지를 정합니다. 이름 옆의 톱니바퀴(휴대폰에서는 하단의 "More" 탭)로 엽니다. Molfar Vertep의 메인 설정이 아니라 Social 안에 있습니다.
+설정은 캐릭터들이 얼마나, 언제 쓸지, 대화 사이에 어떻게 살아갈지, 어떤 모델을 쓸지, 무엇을 알려 줄지를 정합니다. 이름 옆의 톱니바퀴(휴대폰에서는 하단의 "More" 탭, 그다음 "Settings" 타일)로 엽니다. 휴대폰에서는 아래 그룹들(Forum, Messenger, Life, Community, Between members, Pictures, Other)이 접힌 줄로 나오며, 각 줄은 현재 설정을 보여 줍니다(예: "Moderate · 30 a day" 또는 "3 of 5 on"). 탭하면 열리고, 연 그룹은 앱을 닫을 때까지 열려 있습니다. Molfar Vertep의 메인 설정이 아니라 Social 안에 있습니다.
 
 ## Forum
 

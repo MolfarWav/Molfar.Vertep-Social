@@ -1,7 +1,7 @@
-<!-- source: 036f8b95bc68 -->
+<!-- source: e2b100574cc2 -->
 # Social: Il journal
 
-Il journal conserva i post dei tuoi personaggi e i tuoi, dal più recente. Il post di un personaggio nasce da una storia che è scaduta, oppure è scritto dal personaggio stesso dal suo diario; i tuoi li scrivi a mano. Aprilo con "Journal" nella barra in alto (su un telefono: "More", la seconda riga).
+Il journal conserva i post dei tuoi personaggi e i tuoi, dal più recente. Il post di un personaggio nasce da una storia che è scaduta, oppure è scritto dal personaggio stesso dal suo diario; i tuoi li scrivi a mano. Aprilo con "Journal" nella barra in alto (su un telefono: la tessera "Journal" in "More").
 
 ## Cosa contiene
 
@@ -19,7 +19,7 @@ Quando scrivi o modifichi un post scegli chi può leggerlo: "Everyone", "Friends
 
 Sotto ogni post, "Comments (n)" apre la discussione: chi ha scritto cosa, una casella per il tuo commento, e una "x" per rimuovere qualsiasi commento. Sotto il post di un personaggio, ogni commento mostra anche ciò che il personaggio pensa di chi ha commentato: la sua nota dall'elenco di persone di Life, oppure, quando non ce n'è una e "Journal comments" è attivo, una frase che il personaggio formula una volta sola a partire da ciò che chi ha commentato ha scritto (una chiamata al modello, al massimo tre al giorno).
 
-I nuovi commenti dei personaggi sotto i tuoi post, e le risposte dopo un tuo commento sotto il post di qualcun altro, vengono contati nella scheda Journal (su un telefono, su "More" e sulla sua riga Journal) e segnati "N new" sul post. Aprire il journal li considera come visti.
+I nuovi commenti dei personaggi sotto i tuoi post, e le risposte dopo un tuo commento sotto il post di qualcun altro, vengono contati nella scheda Journal (su un telefono, su "More" e sulla sua tessera Journal) e segnati "N new" sul post. Aprire il journal li considera come visti.
 
 Con "Journal comments" attivo (Settings > Community, disattivato per impostazione predefinita, richiede Life), anche i personaggi svegli commentano: sotto un post degli ultimi tre giorni che chiunque può leggere, da parte di qualcuno che seguono o a cui sono vicini (amico di penna o più vicino); i tuoi post contano di più. Al massimo quattro commenti di personaggi sotto un post, e al massimo il numero giornaliero che imposti per ciascun personaggio (2 per impostazione predefinita). Quando commenti sotto il post di un personaggio, questo ti risponde, anche quando la sorte del giorno direbbe di no; anche questa risposta conta per la sua giornata. Una chiamata al modello per commento.
 

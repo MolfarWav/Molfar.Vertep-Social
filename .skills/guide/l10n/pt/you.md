@@ -1,7 +1,7 @@
-<!-- source: 86252470cc90 -->
+<!-- source: c9f764259928 -->
 # Social: Seu perfil
 
-Seu perfil diz quem você é para os personagens. Ele não é um personagem: não tem chat, não tem agenda e nunca aparece na lista de contatos nem no fórum. Abra-o com seu nome no canto superior direito (no celular: Settings, a primeira linha).
+Seu perfil diz quem você é para os personagens. Ele não é um personagem: não tem chat, não tem agenda e nunca aparece na lista de contatos nem no fórum. Abra-o com seu nome no canto superior direito (no celular: o bloco "Your profile" em "More").
 
 ## Personas
 

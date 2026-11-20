@@ -26,13 +26,38 @@ export function Card({ title, glyph, children }: { title: string; glyph: Glyph; 
   );
 }
 
-/** Phone group heading: the same tinted bar as a desktop card's title, sitting on top of the section that follows. */
-export function GroupHead({ title, glyph }: { title: string; glyph: Glyph }) {
+/** Groups left open stay open while the app runs: Settings is left for More and Journal and opened again. */
+const openGroups = new Set<string>();
+
+/** Phone: a group that opens and closes. The header holds the icon, the title and what the group is set to, in the
+ *  tone of the block; closed by default, so the page is a short list of seven lines. */
+export function GroupFold({ id, title, glyph, summary, children }: { id: string; title: string; glyph: Glyph; summary?: string; children: ReactNode }) {
+  const [open, setOpen] = useState(() => openGroups.has(id));
+  const panel = useId();
+  const toggle = () => {
+    const next = !open;
+    if (next) openGroups.add(id);
+    else openGroups.delete(id);
+    setOpen(next);
+  };
   return (
-    <h2 className="gl" data-tone={LOOK[glyph]}>
-      <BlockIcon glyph={glyph} />
-      <span>{title}</span>
-    </h2>
+    <div className={`gf${open ? " is-open" : ""}`} data-tone={LOOK[glyph]}>
+      <h2 className="gf-h">
+        <button type="button" className="gf-b" aria-expanded={open} aria-controls={open ? panel : undefined} onClick={toggle}>
+          <BlockIcon glyph={glyph} />
+          <span className="gf-t">
+            <b>{title}</b>
+            {summary ? <span className="k">{summary}</span> : null}
+          </span>
+          <span className="go" aria-hidden="true">›</span>
+        </button>
+      </h2>
+      {open && (
+        <section className="sec" id={panel} aria-label={title}>
+          {children}
+        </section>
+      )}
+    </div>
   );
 }
 

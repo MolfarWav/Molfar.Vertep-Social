@@ -1,7 +1,7 @@
-<!-- source: 86252470cc90 -->
+<!-- source: c9f764259928 -->
 # Social: Twój profil
 
-Twój profil mówi postaciom, kim jesteś. To nie jest postać: nie ma czatu, planu i nigdy nie pojawia się na liście kontaktów ani na forum. Otwórz go swoim imieniem w prawym górnym rogu (na telefonie: Settings, pierwszy wiersz).
+Twój profil mówi postaciom, kim jesteś. To nie jest postać: nie ma czatu, planu i nigdy nie pojawia się na liście kontaktów ani na forum. Otwórz go swoim imieniem w prawym górnym rogu (na telefonie: kafelek "Your profile" w "More").
 
 ## Persony
 

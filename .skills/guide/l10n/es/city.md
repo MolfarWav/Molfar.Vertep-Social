@@ -1,7 +1,7 @@
-<!-- source: 62064ed2b663 -->
+<!-- source: a7ca5d9dd79e -->
 # Social: La ciudad
 
-La ciudad es el pueblo donde viven tus personajes. Muestra, según reglas fijas, dónde está cada uno de ellos en este momento y dónde vive. Ábrela con "City" en la barra superior (en el teléfono: "More", tercera fila). No puedes mover a nadie, pero sí escuchar, entrar y añadir lugares propios.
+La ciudad es el pueblo donde viven tus personajes. Muestra, según reglas fijas, dónde está cada uno de ellos en este momento y dónde vive. Ábrela con "City" en la barra superior (en el teléfono: el mosaico "City" en "More"). No puedes mover a nadie, pero sí escuchar, entrar y añadir lugares propios.
 
 ## Distritos y lugares
 

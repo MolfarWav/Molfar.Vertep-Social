@@ -1,7 +1,7 @@
-<!-- source: 86252470cc90 -->
+<!-- source: c9f764259928 -->
 # Social: Tu perfil
 
-Tu perfil dice quién eres para los personajes. No es un personaje: no tiene chat, ni horario, y nunca aparece en la lista de contactos ni en el foro. Ábrelo con tu nombre en la esquina superior derecha (en el teléfono: Settings, la primera fila).
+Tu perfil dice quién eres para los personajes. No es un personaje: no tiene chat, ni horario, y nunca aparece en la lista de contactos ni en el foro. Ábrelo con tu nombre en la esquina superior derecha (en el teléfono: el mosaico "Your profile" en "More").
 
 ## Personas
 

@@ -1,7 +1,7 @@
-<!-- source: 86252470cc90 -->
+<!-- source: c9f764259928 -->
 # Social: Je profiel
 
-Je profiel vertelt de personages wie je bent. Het is geen personage: het heeft geen chat, geen schema en verschijnt nooit in de contactenlijst of op het forum. Open het met je naam rechtsboven (op een telefoon: Settings, de eerste rij).
+Je profiel vertelt de personages wie je bent. Het is geen personage: het heeft geen chat, geen schema en verschijnt nooit in de contactenlijst of op het forum. Open het met je naam rechtsboven (op een telefoon: de tegel "Your profile" onder "More").
 
 ## Persona's
 

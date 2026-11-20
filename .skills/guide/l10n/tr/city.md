@@ -1,7 +1,7 @@
-<!-- source: 62064ed2b663 -->
+<!-- source: a7ca5d9dd79e -->
 # Social: Şehir
 
-Şehir, karakterlerinizin yaşadığı kasabadır. Her birinin şu an nerede olduğunu, kurallara göre, ve nerede yaşadığını gösterir. Onu üst çubuktaki "City" ile açın (telefonda: "More", üçüncü satır). Kimseyi taşıyamazsınız, ama dinleyebilir, içeri girebilir ve kendi yerlerinizi ekleyebilirsiniz.
+Şehir, karakterlerinizin yaşadığı kasabadır. Her birinin şu an nerede olduğunu, kurallara göre, ve nerede yaşadığını gösterir. Onu üst çubuktaki "City" ile açın (telefonda: "More" içindeki "City" karosu). Kimseyi taşıyamazsınız, ama dinleyebilir, içeri girebilir ve kendi yerlerinizi ekleyebilirsiniz.
 
 ## Bölgeler ve yerler
 

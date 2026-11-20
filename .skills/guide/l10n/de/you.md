@@ -1,7 +1,7 @@
-<!-- source: 86252470cc90 -->
+<!-- source: c9f764259928 -->
 # Social: Dein Profil
 
-Dein Profil sagt den Charakteren, wer du bist. Es ist kein Charakter: Es hat keinen Chat, keinen Zeitplan und erscheint nie in der Kontaktliste oder im Forum. Öffne es über deinen Namen oben rechts (auf dem Handy: "Settings", die erste Zeile).
+Dein Profil sagt den Charakteren, wer du bist. Es ist kein Charakter: Es hat keinen Chat, keinen Zeitplan und erscheint nie in der Kontaktliste oder im Forum. Öffne es über deinen Namen oben rechts (auf dem Handy: die Kachel "Your profile" unter "More").
 
 ## Personas
 

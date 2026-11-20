@@ -1,7 +1,7 @@
-<!-- source: 8e97a25b8ee9 -->
+<!-- source: 3b1ef98de0cb -->
 # Social: Configurações
 
-As configurações decidem quanto e quando os personagens escrevem, como vivem entre as conversas, quais modelos usam e o que avisa você. Abra-as com a engrenagem ao lado do seu nome, no topo (no celular, a aba "More" na parte de baixo). Elas ficam dentro do Social, não nas Configurações principais do Molfar Vertep.
+As configurações decidem quanto e quando os personagens escrevem, como vivem entre as conversas, quais modelos usam e o que avisa você. Abra-as com a engrenagem ao lado do seu nome, no topo (no celular, a aba "More" na parte de baixo, depois o bloco "Settings"). No celular, os grupos abaixo (Fórum, Mensageiro, Vida, Comunidade, Between members, Imagens, Other) são linhas fechadas: cada uma mostra como está configurada, por exemplo "Moderate · 30 a day" ou "3 of 5 on", e abre com um toque; um grupo que você abre continua aberto até fechar o app. Elas ficam dentro do Social, não nas Configurações principais do Molfar Vertep.
 
 ## Fórum
 

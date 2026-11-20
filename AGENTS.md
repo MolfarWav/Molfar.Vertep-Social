@@ -13,7 +13,7 @@ the app changes shape. Plan and decisions: Molfar.Vertep issue #309.
 - A character's card is read only when the user imports it or presses "Update from Roleplay", and never reaches a messenger or forum prompt.
 
 ## Layout
-- `src/main.tsx`, `src/shell/`: top bar (desktop), bottom tabs (phone), nav context (`useNav`, `useChrome`, `BarActions`).
+- `src/main.tsx`, `src/shell/`: top bar (desktop), bottom tabs (phone), nav context (`useNav`, `useChrome`, `BarActions`), `icons.tsx` (tab icons, the gear). On a phone the tab "more" (`src/screens/more/`) is a grid of icon tiles: Your profile, Journal, City, Settings (Molfar.Vertep#471). Phone Settings is seven groups that open and close (`GroupFold` in `settings/parts.tsx`, the state line from `settings/fold-summary.ts`).
 - `src/screens/<messenger|forum|profiles|settings|you>/`: one folder per screen with `index.tsx`, `<name>.css` (every rule scoped
   under `.s-<name>`), `strings.ts`, and the mock data it needs in `src/mock/`.
 - `src/components/`: `Flower` (status flower + `Envelope`), `Avatar`, `Logo`. Shared, small.
