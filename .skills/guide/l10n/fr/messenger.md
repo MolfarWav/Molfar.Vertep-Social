@@ -1,4 +1,4 @@
-<!-- source: b4e4ecea28d5 -->
+<!-- source: 1d1222da5349 -->
 # Social : Messagerie
 
 La Messagerie est un chat avec les personnages qui vivent dans Social. Vous voyez une liste de contacts, la conversation avec le contact sélectionné et une carte avec ses détails. Quiconque veut parler à un personnage en tête-à-tête commence ici.
@@ -63,7 +63,7 @@ Une "Room" du groupe Clubs a été créée par "Walk in" dans la City (voir [[ci
 
 ## Histoires
 
-Quand un personnage publie une histoire, une rangée d'images rondes apparaît au-dessus de la liste des contacts. Un anneau autour d'une image signifie que vous n'avez pas vu toutes les histoires de ce personnage. Touchez-en une pour l'ouvrir : l'image (ou la ligne sur une carte colorée s'il n'y a pas d'image), le temps restant, et des flèches pour passer d'une histoire à l'autre de ce personnage. Une histoire disparaît au bout de 24 heures (elle est alors classée dans le journal de son auteur, voir [[journal]]) ; "Remove" la retire plus tôt, après confirmation, et elle n'est alors pas classée.
+Quand un personnage publie une histoire, une rangée d'images rondes apparaît au-dessus de la liste de contacts. Un anneau autour d'une image signifie que vous n'avez pas vu toutes les histoires de ce personnage. Touchez-en une pour l'ouvrir : l'image (ou la ligne sur une carte colorée quand il n'y a pas d'image), le temps qu'il lui reste, et des flèches pour passer entre les histoires de ce personnage. Le × dans le coin supérieur droit (ou Escape) la ferme. Une histoire disparaît après 24 heures (elle est alors classée dans le journal de son auteur, voir [[journal]]) ; "Remove" la retire plus tôt, après avoir demandé, et alors elle n'est pas classée.
 
 Une histoire est tirée du journal intime du personnage, elle parle donc de quelque chose qui lui est réellement arrivé. Les histoires sont désactivées par défaut ("Settings" > "Community" > "Stories") ; elles nécessitent que "Characters have their own life" soit activé. Avec "Characters may send pictures" activé, une histoire comporte aussi une image, ce qui coûte un appel au modèle et un appel d'image.
 

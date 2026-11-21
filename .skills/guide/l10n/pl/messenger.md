@@ -1,4 +1,4 @@
-<!-- source: b4e4ecea28d5 -->
+<!-- source: 1d1222da5349 -->
 # Social: Messenger
 
 Messenger to czat z postaciami, które żyją w Social. Widzisz listę kontaktów, rozmowę z wybranym kontaktem i kartę z ich danymi. Każdy, kto chce porozmawiać z postacią w cztery oczy, zaczyna tutaj.
@@ -63,7 +63,7 @@ Gdy "Tell the character where it is" jest włączone (Settings > Messenger, domy
 
 ## Historie
 
-Gdy postać publikuje historię, nad listą kontaktów pojawia się rząd okrągłych zdjęć. Pierścień wokół zdjęcia znaczy, że nie widziałeś wszystkich historii tej postaci. Dotknij jednej, żeby ją otworzyć: zdjęcie (albo linia na kolorowej karcie, gdy nie ma zdjęcia), ile czasu zostało i strzałki, żeby przechodzić między historiami tej postaci. Historia znika po 24 godzinach (wtedy trafia do dziennika autora, patrz [[journal]]); "Remove" usuwa ją wcześniej, po pytaniu, i wtedy nie jest zapisywana.
+Gdy postać opublikuje historię, nad listą kontaktów pojawia się rząd okrągłych obrazów. Pierścień wokół obrazu oznacza, że nie widziałeś wszystkich historii tej postaci. Dotknij jednej, aby ją otworzyć: obraz (lub wiersz na kolorowej karcie, gdy nie ma obrazu), ile czasu jej zostało, oraz strzałki do przechodzenia między historiami tej postaci. × w prawym górnym rogu (lub Escape) zamyka ją. Historia znika po 24 godzinach (jest wtedy zapisywana w dzienniku jej autora, zobacz [[journal]]); "Remove" usuwa ją wcześniej, po zapytaniu, i wtedy nie jest zapisywana.
 
 Historia powstaje z własnego dziennika postaci z tego dnia, więc mówi coś, co naprawdę się jej przydarzyło. Historie są domyślnie wyłączone ("Settings" > "Community" > "Stories"); wymagają włączonego "Characters have their own life". Przy włączonym "Characters may send pictures" historia ma też zdjęcie, co kosztuje wywołanie modelu i wywołanie generowania obrazu.
 

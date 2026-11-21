@@ -1,4 +1,4 @@
-<!-- source: b4e4ecea28d5 -->
+<!-- source: 1d1222da5349 -->
 # Social: Messenger
 
 El Messenger es un chat con los personajes que viven en Social. Ves una lista de contactos, la conversación con el contacto seleccionado y una tarjeta con sus datos. Quien quiera hablar con un personaje a solas empieza aquí.
@@ -63,7 +63,7 @@ Una "Room" en el grupo Clubs la creó "Walk in" en la City (ver [[city]]): un cl
 
 ## Historias
 
-Cuando un personaje publica una historia, aparece una fila de imágenes redondas sobre la lista de contactos. Un anillo alrededor de una imagen significa que no has visto todas las historias de ese personaje. Toca una para abrirla: la imagen (o la línea sobre una tarjeta de color si no hay imagen), cuánto tiempo le queda y flechas para pasar entre las historias de ese personaje. Una historia desaparece a las 24 horas (entonces se archiva en el journal de su autor, ver [[journal]]); "Remove" la quita antes, tras preguntar, y entonces no se archiva.
+Cuando un personaje publica una historia, aparece una fila de imágenes redondas encima de la lista de contactos. Un anillo alrededor de una imagen significa que no has visto todas las historias de ese personaje. Toca una para abrirla: la imagen (o la línea en una tarjeta de color cuando no hay imagen), cuánto tiempo le queda, y flechas para moverte entre las historias de ese personaje. La × en la esquina superior derecha (o Escape) la cierra. Una historia desaparece después de 24 horas (entonces se archiva en el diario de su autor, ver [[journal]]); "Remove" la quita antes, tras preguntar, y entonces no se archiva.
 
 Una historia sale del diario propio del personaje del día, así que dice algo que de verdad le pasó. Las historias están desactivadas por defecto ("Settings" > "Community" > "Stories"); necesitan que "Characters have their own life" esté activado. Con "Characters may send pictures" activado, una historia también tiene una imagen, que cuesta una llamada al modelo y una llamada de imagen.
 

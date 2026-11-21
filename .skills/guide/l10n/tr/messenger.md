@@ -1,4 +1,4 @@
-<!-- source: b4e4ecea28d5 -->
+<!-- source: 1d1222da5349 -->
 # Social: Messenger
 
 Messenger, Social'da yaşayan karakterlerle yapılan bir sohbettir. Bir kişi listesi, seçili kişiyle konuşma ve kişinin bilgilerinin olduğu bir kart görürsünüz. Bir karakterle birebir konuşmak isteyen herkes buradan başlar.
@@ -63,7 +63,7 @@ Paketin ilk resminin olduğu bir sekme sırada belirir. Bir çıkartmaya dokunma
 
 ## Hikâyeler
 
-Bir karakter hikâye paylaştığında, kişi listesinin üstünde yuvarlak resimlerden oluşan bir sıra belirir. Bir resmin etrafındaki halka, o karakterin tüm hikâyelerini görmediğiniz anlamına gelir. Açmak için birine dokunun: resim (ya da resim yoksa renkli bir karttaki satır), kalan süre ve o karakterin hikâyeleri arasında geçiş okları. Hikâye 24 saat sonra kaybolur (sonra yazarının dergisine kaydedilir, bkz. [[journal]]); "Remove" sorduktan sonra onu daha erken kaldırır ve o zaman kaydedilmez.
+Bir karakter bir hikâye paylaştığında, kişi listesinin üstünde bir sıra yuvarlak resim belirir. Bir resmin etrafındaki halka, o karakterin tüm hikâyelerini görmediğiniz anlamına gelir. Açmak için birine dokunun: resim (resim yoksa renkli bir karttaki satır), ne kadar kaldığı ve o karakterin hikâyeleri arasında geçmek için oklar. Sağ üst köşedeki × (veya Escape) onu kapatır. Bir hikâye 24 saat sonra kaybolur (o zaman yazarının günlüğüne kaydedilir, bkz. [[journal]]); "Remove" sorduktan sonra onu daha erken kaldırır ve o zaman kaydedilmez.
 
 Bir hikâye, karakterin o günkü kendi günlüğünden yapılır, bu yüzden gerçekten başına gelmiş bir şeyi anlatır. Hikâyeler varsayılan olarak kapalıdır ("Settings" > "Community" > "Stories"); "Characters have their own life" açık olmalıdır. "Characters may send pictures" açıksa bir hikâyenin bir resmi de olur; bu bir model çağrısı ve bir görüntü çağrısına mal olur.
 

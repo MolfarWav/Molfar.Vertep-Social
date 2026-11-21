@@ -5,6 +5,8 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+## 0.22.1 (2026-11-21)
+
 - Fixed: **the stories viewer can be closed on a phone (Molfar.Vertep#481).** It opened as a bottom sheet with no way out: the shared dialog closes on Escape only, and the viewer added no control of its own. It now has a × in its title bar (the same one the person picker uses, 44 px on a phone), labelled "Close stories" ("Закрити історії"); the stories are still there when it is reopened.
 
 ## 0.22.0 (2026-11-20)
