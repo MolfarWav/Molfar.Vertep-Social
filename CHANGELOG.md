@@ -5,6 +5,8 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+- Fixed: **the stories viewer can be closed on a phone (Molfar.Vertep#481).** It opened as a bottom sheet with no way out: the shared dialog closes on Escape only, and the viewer added no control of its own. It now has a × in its title bar (the same one the person picker uses, 44 px on a phone), labelled "Close stories" ("Закрити історії"); the stories are still there when it is reopened.
+
 ## 0.22.0 (2026-11-20)
 
 - Changed: **on a phone, "More" is a grid of icon tiles and Settings is compact (Molfar.Vertep#471).** The More tab used to open Settings, with Your profile, the Journal and the City as rows at its top. It now opens a page of four tiles (Your profile, Journal with its new-comments badge, City, Settings), like the "All sections" sheet in Roleplay; the Back arrow of each returns to it, and More stays lit while one is open. Settings on a phone is seven groups (Forum, Messenger, Life, Community, Between members, Pictures, Other) that open and close, closed at first, each with a line saying what it is set to ("Moderate · 30 a day", "3 of 5 on"); a group you open stays open until the app is closed. Every control and hint is still there. Desktop is unchanged. Files: `src/screens/more/`, `src/screens/settings/{phone.tsx,parts.tsx,fold-summary.ts}`, `src/shell/`; tests `fold-summary.test.ts`.
