@@ -62,7 +62,7 @@ A "Room" in the Clubs group was made by "Walk in" in the City (see [[city]]): a 
 
 ## Stories
 
-When a character posts a story, a row of round pictures appears above the contact list. A ring around a picture means you have not seen all of that character's stories. Tap one to open it: the picture (or the line on a coloured card when there is no picture), how long it has left, and arrows to move between that character's stories. A story vanishes after 24 hours (it is then filed in its author's journal, see [[journal]]); "Remove" takes it away sooner, after asking, and then it is not filed.
+When a character posts a story, a row of round pictures appears above the contact list. A ring around a picture means you have not seen all of that character's stories. Tap one to open it: the picture (or the line on a coloured card when there is no picture), how long it has left, and arrows to move between that character's stories. The × in the top right corner (or Escape) closes it. A story vanishes after 24 hours (it is then filed in its author's journal, see [[journal]]); "Remove" takes it away sooner, after asking, and then it is not filed.
 
 A story is made from the character's own diary of the day, so it says something that really happened to them. Stories are off by default ("Settings" > "Community" > "Stories"); they need "Characters have their own life" to be on. With "Characters may send pictures" on, a story also has a picture, which costs a model call and an image call.
 

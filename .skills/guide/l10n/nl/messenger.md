@@ -1,4 +1,4 @@
-<!-- source: b4e4ecea28d5 -->
+<!-- source: 1d1222da5349 -->
 # Sociaal: Messenger
 
 De Messenger is een chat met de personages die in Sociaal leven. Je ziet een contactlijst, het gesprek met het gekozen contact en een kaart met hun gegevens. Iedereen die één-op-één met een personage wil praten, begint hier.
@@ -63,7 +63,7 @@ Een "Room" in de groep Clubs is gemaakt door "Walk in" in de City (zie [[city]])
 
 ## Verhalen
 
-Wanneer een personage een verhaal plaatst, verschijnt een rij ronde afbeeldingen boven de contactlijst. Een ring rond een afbeelding betekent dat je niet alle verhalen van dat personage hebt gezien. Tik op een afbeelding om het te openen: de afbeelding (of de regel op een gekleurde kaart als er geen afbeelding is), hoe lang het nog duurt, en pijlen om tussen de verhalen van dat personage te bewegen. Een verhaal verdwijnt na 24 uur (het wordt dan opgeslagen in het journal van de auteur, zie [[journal]]); "Remove" haalt het eerder weg, na een vraag, en dan wordt het niet opgeslagen.
+Wanneer een personage een verhaal plaatst, verschijnt een rij ronde afbeeldingen boven de contactenlijst. Een ring rond een afbeelding betekent dat je nog niet alle verhalen van dat personage hebt gezien. Tik op er een om het te openen: de afbeelding (of de regel op een gekleurde kaart wanneer er geen afbeelding is), hoeveel tijd er nog over is, en pijlen om tussen de verhalen van dat personage te bewegen. De × in de rechterbovenhoek (of Escape) sluit het. Een verhaal verdwijnt na 24 uur (het wordt dan opgeborgen in het dagboek van de auteur, zie [[journal]]); "Remove" haalt het eerder weg, na te vragen, en dan wordt het niet opgeborgen.
 
 Een verhaal wordt gemaakt uit het eigen dagboek van het personage van die dag, dus het vertelt iets wat echt met hen is gebeurd. Verhalen staan standaard uit ("Settings" > "Community" > "Stories"); ze vereisen dat "Characters have their own life" aan staat. Met "Characters may send pictures" aan heeft een verhaal ook een afbeelding, wat een modelaanroep en een beeldaanroep kost.
 

@@ -1,4 +1,4 @@
-<!-- source: b4e4ecea28d5 -->
+<!-- source: 1d1222da5349 -->
 # Social: Messenger
 
 Der Messenger ist ein Chat mit den Charakteren, die in Social leben. Du siehst eine Kontaktliste, die Unterhaltung mit dem gewählten Kontakt und eine Karte mit seinen Angaben. Wer mit einem Charakter einzeln reden möchte, fängt hier an.
@@ -63,7 +63,7 @@ Ein "Room" in der Gruppe Clubs entstand durch "Walk in" in der City (siehe [[cit
 
 ## Geschichten
 
-Wenn ein Charakter eine Geschichte veröffentlicht, erscheint über der Kontaktliste eine Reihe runder Bilder. Ein Ring um ein Bild heißt, dass du nicht alle Geschichten dieses Charakters gesehen hast. Tippe eines an, um es zu öffnen: das Bild (oder die Zeile auf einer farbigen Karte, wenn es kein Bild gibt), wie lange sie noch läuft, und Pfeile, um zwischen den Geschichten dieses Charakters zu wechseln. Eine Geschichte verschwindet nach 24 Stunden. Dann wird sie im Journal ihres Autors abgelegt (siehe [[journal]]). "Remove" entfernt sie früher, nach einer Rückfrage, und dann wird sie nicht abgelegt.
+Wenn eine Figur eine Geschichte postet, erscheint über der Kontaktliste eine Reihe runder Bilder. Ein Ring um ein Bild bedeutet, dass du noch nicht alle Geschichten dieser Figur gesehen hast. Tippe auf eines, um es zu öffnen: das Bild (oder die Zeile auf einer farbigen Karte, wenn es kein Bild gibt), wie lange es noch läuft, und Pfeile, um zwischen den Geschichten dieser Figur zu wechseln. Das × in der oberen rechten Ecke (oder Escape) schließt es. Eine Geschichte verschwindet nach 24 Stunden (sie wird dann im Journal ihres Autors abgelegt, siehe [[journal]]); "Remove" entfernt sie früher, nach Rückfrage, und dann wird sie nicht abgelegt.
 
 Eine Geschichte entsteht aus dem eigenen Tagebuch des Charakters vom Tag, sodass sie etwas erzählt, das ihm wirklich passiert ist. Geschichten sind standardmäßig aus ("Settings" > "Community" > "Stories"); sie brauchen "Characters have their own life" an. Mit eingeschaltetem "Characters may send pictures" hat eine Geschichte außerdem ein Bild, das einen Modellaufruf und einen Bildaufruf kostet.
 

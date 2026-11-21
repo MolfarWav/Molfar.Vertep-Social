@@ -700,6 +700,7 @@
 .s-profiles .pf-title { flex: 1; min-width: 0; }
 .s-profiles .pick-x { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer; }
 .s-profiles .pick-x:hover { background: var(--hover); color: var(--ink); }
+.s-profiles .pf-dlg.sheet .pick-x { width: 44px; height: 44px; }
 .s-profiles .pick-body { gap: 10px; }
 .s-profiles .pick-search { position: relative; display: flex; align-items: center; }
 .s-profiles .pick-search .gl { position: absolute; left: 10px; color: var(--faint); pointer-events: none; }

@@ -9,6 +9,7 @@ import { usePlaceName } from "@/screens/city/place-name";
 import { MsgPicture } from "@/pictures/MsgPicture";
 import { refreshImages } from "@/pictures/worker";
 import { Dialog } from "@/screens/profiles/dialog";
+import { Gl } from "@/screens/profiles/glyphs";
 import { themColor } from "@/components/Avatar";
 import { loadPairChat, loadPairs, loadStories, markSeen, removePair, removeStory, setPair, type Pair, type PairMessage, type Story } from "./community-api";
 
@@ -134,7 +135,12 @@ function StoryViewer({ who, start, phone, onClose }: { who: Who; start: number; 
     setI((x) => Math.max(0, Math.min(x, list.length - 2)));
   };
   return (
-    <Dialog title={who.name} width={420} sheet={phone} onClose={onClose}>
+    <Dialog
+      title={<><span className="pf-title">{who.name}</span><button type="button" className="pick-x" aria-label={t("messenger.stories.close")} onClick={onClose}><Gl name="x" size={18} /></button></>}
+      width={420}
+      sheet={phone}
+      onClose={onClose}
+    >
       <div className="pf-body story-view">
         <div className="story-head">
           <Avatar name={who.name} hue={who.hue} size={36} picture={who.picture || undefined} />

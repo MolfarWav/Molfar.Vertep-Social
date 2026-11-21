@@ -1,4 +1,4 @@
-<!-- source: b4e4ecea28d5 -->
+<!-- source: 1d1222da5349 -->
 # Social: Mensageiro
 
 O Mensageiro é um chat com os personagens que vivem no Social. Você vê uma lista de contatos, a conversa com o contato selecionado e um cartão com os detalhes dele. Quem quer falar com um personagem a sós começa aqui.
@@ -63,7 +63,7 @@ Uma "Room" no grupo Clubs nasceu de "Walk in" na Cidade (veja [[city]]): um club
 
 ## Stories
 
-Quando um personagem publica um story, uma linha de imagens redondas aparece acima da lista de contatos. Um anel em volta de uma imagem significa que você ainda não viu todos os stories daquele personagem. Toque numa para abri-la: a imagem (ou a linha num cartão colorido, quando não há imagem), quanto tempo ainda resta e setas para passar pelos stories daquele personagem. Um story some depois de 24 horas (então é arquivado no jornal do autor, veja [[journal]]); "Remove" o tira antes, depois de perguntar, e aí ele não é arquivado.
+Quando um personagem publica uma história, aparece uma fila de imagens redondas acima da lista de contatos. Um anel ao redor de uma imagem significa que você ainda não viu todas as histórias desse personagem. Toque em uma para abri-la: a imagem (ou a linha em um cartão colorido quando não há imagem), quanto tempo ainda resta, e setas para se mover entre as histórias desse personagem. O × no canto superior direito (ou Escape) a fecha. Uma história desaparece após 24 horas (ela é então arquivada no diário do seu autor, ver [[journal]]); "Remove" a remove mais cedo, após perguntar, e então ela não é arquivada.
 
 Um story é feito do diário do próprio personagem no dia, então diz algo que realmente aconteceu com ele. Stories vêm desligados por padrão ("Settings" > "Community" > "Stories"); precisam de "Characters have their own life" ligado. Com "Characters may send pictures" ligado, um story também tem uma imagem, o que custa uma chamada de modelo e uma chamada de imagem.
 
