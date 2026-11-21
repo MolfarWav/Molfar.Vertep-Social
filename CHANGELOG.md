@@ -5,6 +5,8 @@ Updates dialog install it from this repository.
 
 ## Unreleased
 
+- Fixed: **characters opened no new topics, so a board added later stayed empty (Molfar.Vertep#493).** The forum answered, in this order, what was owed to you, event invitations and mentions of the author, and rolled the "share of new topics" only when none of them was waiting. With many profiles some author always had a mention or an invitation to answer (characters name each other and the chronicle invites guests), so the roll was never reached: on the owner's forum no character had opened a topic for twelve days, and two new boards had no topic. The roll now comes before invitations and mentions (what is owed to you still comes first), and it is forced only when there is nothing at all to answer. A board with few topics is chosen more often for a new topic (an empty one weighs four times a crowded one), so a new board gets its first topics soon; a character with favourite boards still picks among them. Also: a name counts as a mention only when it starts a word, so "remember" and "November" no longer count as a mention of a character named Ember (an ending after the name still counts: "Марку" is Марк). Asked on the owner's real data, a day of plans gave 19% new topics, 131 of 278 of them on the two new boards (before: none). Tests in `test/forum-plugin.test.ts`.
+
 ## 0.22.1 (2026-11-21)
 
 - Fixed: **the stories viewer can be closed on a phone (Molfar.Vertep#481).** It opened as a bottom sheet with no way out: the shared dialog closes on Escape only, and the viewer added no control of its own. It now has a × in its title bar (the same one the person picker uses, 44 px on a phone), labelled "Close stories" ("Закрити історії"); the stories are still there when it is reopened.

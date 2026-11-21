@@ -1360,7 +1360,17 @@ function weightedPick(items, weight, rand) {
   return items[items.length - 1];
 }
 
-const mentions = (text, name) => !!name && text.toLowerCase().includes(name.toLowerCase());
+/**
+ * Is the character's name in the text? It must start a word: "remember" and "November" do not name Ember, but an ending after the
+ * name still counts ("Марку", "Марка" name Марк; #493). A name inside a longer word was a standing "mention to answer" for some author.
+ */
+const mentions = (text, name) => {
+  if (!name) return false;
+  const t = String(text).toLowerCase();
+  const n = String(name).toLowerCase();
+  for (let i = t.indexOf(n); i >= 0; i = t.indexOf(n, i + 1)) if (i === 0 || !/[\p{L}\p{N}]/u.test(t[i - 1])) return true;
+  return false;
+};
 
 /**
  * Is `name` written as "@Name" (what the reply box's "@" list puts in)? The name must end there: "@Al" is not "@Alice", and
@@ -1475,25 +1485,32 @@ export function planAction(c, rand) {
   if (addressed) return addressed;
   const owed = reply((t) => t.owed, oldest);
   if (owed) return owed;
-  const event = reply((t) => t.event, oldest);
-  if (event) return event;
-  const mention = reply((t) => t.mention, oldest);
-  if (mention) return mention;
-
+  // (#493) A new topic is rolled BEFORE the invitations and mentions. They are answered first only when the user is owed an answer; with
+  // many profiles some author always has an invitation or a mention waiting (characters name each other, the chronicle invites guests), so
+  // when they came first the roll was never reached: nobody opened a topic, and a board added later stayed empty for ever.
   const boardList = scope && scope.topic ? [] : [...bmap.values()].filter((x) => !scope || !scope.board || x.board.id === scope.board);
   const canOpen = (a) => a.forum.opensOwn && boardList.length > 0 && topics.length < MAX_TOPICS;
+  // a board with few topics weighs more (1 + 3 for an empty one, 1.5 for one with five), so a new board gets its first topics soon
+  const inBoard = new Map();
+  for (const t of topics) inBoard.set(t.board, (inBoard.get(t.board) || 0) + 1);
+  const emptiness = (b) => 1 + 3 / (1 + (inBoard.get(b.board.id) || 0));
   const newTopic = () => {
     const x = weightedPick(eligible.filter(canOpen), weightOf, rand);
     if (!x) return null;
     const fav = boardList.filter((b) => x.forum.favourites.includes(b.board.name.toLowerCase()));
-    const b = weightedPick(fav.length ? fav : boardList, () => 1, rand);
+    const b = weightedPick(fav.length ? fav : boardList, emptiness, rand);
     return { kind: "topic", author: x, board: b.board };
   };
-  const anyLive = withTargets.some((x) => x.t.live.length);
+  // forced only when there is nothing at all to answer: no live topic, no invitation, no mention
+  const anyLive = withTargets.some((x) => x.t.live.length || x.t.event.length || x.t.mention.length);
   if (!anyLive || rand() * 100 < settings.newTopicShare) {
     const n = newTopic();
     if (n) return n;
   }
+  const event = reply((t) => t.event, oldest);
+  if (event) return event;
+  const mention = reply((t) => t.mention, oldest);
+  if (mention) return mention;
   // a live topic: newer ones weigh more, and a board the author likes weighs three times
   const live = reply(
     (t) => t.live,
