@@ -833,3 +833,67 @@ test("a search snippet never starts or ends in the middle of an emoji", () => {
     expect(hasLoneSurrogate(s)).toBe(false);
   }
 });
+
+// ---------- a new topic is not starved by waiting mentions and invitations (#493) ----------
+
+test("a new topic is still rolled when a mention is waiting; with a roll above the share the mention is answered", () => {
+  const h = makeHost();
+  seedBoards(h);
+  seedProfile(h, "m1", "Мавка");
+  seedSettings(h, { newTopicShare: 20 });
+  const now = at("2026-11-10T11:50:00Z");
+  seedTopic(h, "t1", "b1", now, [{ id: "p1", by: "x9", name: "Хтось", hue: 150, at: now, text: "Мавка, що скажеш?" }]);
+  // the roll lands under the share: a new topic, though a mention waits
+  expect(plan(h, () => 0.05).kind).toBe("topic");
+  // above it: the mention is answered as before
+  const p = plan(h, () => 0.5);
+  expect(p.kind).toBe("reply");
+  expect(p.topic.id).toBe("t1");
+  // a user's owed post still comes first, whatever the roll
+  seedTopic(h, "mine", "b2", now, [{ id: "u1", by: "me", name: "", hue: 200, at: now, text: "Anyone here?" }], { owe: 1 });
+  expect(plan(h, () => 0.05).topic.id).toBe("mine");
+});
+
+test("over many plans with mentions always waiting, new topics are opened, and an empty board gets the most", () => {
+  const h = makeHost();
+  put(h, "forum/boards.json", { categories: [{ id: "c1", name: "General", boards: [{ id: "b1", name: "Guest", desc: "" }, { id: "b2", name: "Tales", desc: "" }, { id: "b3", name: "Fresh", desc: "" }] }] });
+  for (const [id, name] of [["m1", "Мавка"], ["m2", "Лісовик"], ["m3", "Русалка"]] as const) seedProfile(h, id, name);
+  seedSettings(h, { newTopicShare: 20 });
+  const now = at("2026-11-10T11:50:00Z");
+  // two crowded boards, each with a post naming a different character; the third board has no topic yet
+  for (let i = 0; i < 6; i++) seedTopic(h, "g" + i, "b1", now - 1000 * i, [{ id: "pg" + i, by: "x9", name: "Хтось", hue: 150, at: now - 1000 * i, text: "plain talk " + i }]);
+  for (let i = 0; i < 6; i++) seedTopic(h, "t" + i, "b2", now - 1000 * i, [{ id: "pt" + i, by: "x9", name: "Хтось", hue: 150, at: now - 1000 * i, text: i === 0 ? "Мавка, ти тут?" : i === 1 ? "Лісовик, а ти?" : "plain talk " + i }]);
+  const seen: Record<string, number> = { b1: 0, b2: 0, b3: 0 };
+  let replies = 0;
+  const rand = seeded(7);
+  for (let i = 0; i < 600; i++) {
+    const p = plan(h, rand);
+    if (p?.kind === "topic") seen[p.board.id]++;
+    else if (p?.kind === "reply") replies++;
+  }
+  const topics = seen.b1 + seen.b2 + seen.b3;
+  expect(topics).toBeGreaterThan(60); // about a fifth of 600, not none
+  expect(replies).toBeGreaterThan(300);
+  expect(seen.b3).toBeGreaterThan(seen.b1);
+  expect(seen.b3).toBeGreaterThan(seen.b2);
+  expect(seen.b1).toBeGreaterThan(0);
+});
+
+test("a name is mentioned when it starts a word: 'remember' and 'November' are not Ember, 'Марку' is Марк", () => {
+  const h = makeHost();
+  seedBoards(h);
+  seedProfile(h, "e1", "Ember");
+  seedProfile(h, "k1", "Марк");
+  const now = at("2026-11-10T11:50:00Z");
+  const says = (text: string) => [{ id: "pm", by: "x9", name: "Хтось", hue: 150, at: now - 1000, text }];
+  const mentionsOf = (id: string, text: string) => {
+    seedTopic(h, "tm", "b1", now - 1000, says(text));
+    const a = plugin.loadProfiles(h.host.fs).find((p: any) => p.id === id);
+    return plugin.targetsFor(a, plugin.loadTopics(h.host.fs), now).mention.length;
+  };
+  expect(mentionsOf("e1", "Do you remember it? It is already November.")).toBe(0);
+  expect(mentionsOf("e1", "Ember, you there?")).toBe(1);
+  expect(mentionsOf("e1", "(ask EMBER)")).toBe(1);
+  expect(mentionsOf("k1", "Привіт, Марку!")).toBe(1);
+  expect(mentionsOf("k1", "Це супермаркет")).toBe(0);
+});
